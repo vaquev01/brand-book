@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
           quality: "hd",
           style: isLogo ? "natural" : "vivid",
         });
-        const url = response.data[0]?.url;
+        const url = response.data?.[0]?.url;
         if (!url) throw new Error("DALL-E 3 não retornou URL de imagem");
         return NextResponse.json({ url, provider: "dalle3", size, aspectRatio });
       }
