@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const out = await zip.generateAsync({ type: "arraybuffer", compression: "DEFLATE" });
+    const out = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
 
     return new NextResponse(out, {
       headers: {
