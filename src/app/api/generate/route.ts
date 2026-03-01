@@ -1,0 +1,119 @@
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
+import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
+import { migrateBrandbook } from "@/lib/brandbookMigration";
+
+export async function POST(request: NextRequest) {
+  try {
+    const { brandName, industry, briefing, openaiKey } = await request.json() as {
+      brandName: string;
+      industry: string;
+      briefing?: string;
+      openaiKey?: string;
+    };
+
+    if (!brandName || !industry) {
+      return NextResponse.json(
+        { error: "brandName e industry são obrigatórios." },
+        { status: 400 }
+      );
+    }
+
+    const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "OPENAI_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho para configurar." },
+        { status: 500 }
+      );
+    }
+
+    const openai = new OpenAI({ apiKey });
+
+    const systemPrompt = buildSystemPrompt();
+
+    async function generateOnce(userContent: string, temperature = 0.7) {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        temperature,
+        max_tokens: 8192,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+      });
+      return completion.choices[0]?.message?.content;
+    }
+
+    const content = await generateOnce(buildUserPrompt(brandName, industry, briefing || ""), 0.7);
+    if (!content) {
+      return NextResponse.json(
+        { error: "A IA não retornou conteúdo." },
+        { status: 500 }
+      );
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return NextResponse.json(
+        { error: "A IA retornou JSON inválido." },
+        { status: 500 }
+      );
+    }
+
+    const migrated1 = migrateBrandbook(parsed);
+    const validated1 = BrandbookSchemaV2.safeParse(migrated1);
+    if (validated1.success) {
+      return NextResponse.json(validated1.data);
+    }
+
+    const fixPrompt =
+      "Você gerou um JSON que NÃO passou na validação do schema. Reescreva o JSON COMPLETO e válido, " +
+      "mantendo o máximo de conteúdo possível, mas corrigindo campos obrigatórios, tipos e arrays mínimos. " +
+      "NÃO adicione texto fora do JSON.\n\n" +
+      "Erros de validação:\n" +
+      formatZodIssues(validated1.error.issues) +
+      "\n\nJSON atual (corrija):\n" +
+      content;
+
+    const fixedContent = await generateOnce(fixPrompt, 0.2);
+    if (!fixedContent) {
+      return NextResponse.json(
+        { error: "A IA não retornou conteúdo ao tentar corrigir o JSON." },
+        { status: 500 }
+      );
+    }
+
+    let fixedParsed: unknown;
+    try {
+      fixedParsed = JSON.parse(fixedContent);
+    } catch {
+      return NextResponse.json(
+        { error: "A IA retornou JSON inválido na correção." },
+        { status: 500 }
+      );
+    }
+
+    const migrated2 = migrateBrandbook(fixedParsed);
+    const validated2 = BrandbookSchemaV2.safeParse(migrated2);
+    if (!validated2.success) {
+      return NextResponse.json(
+        {
+          error:
+            "Brandbook gerado mas inválido/incompleto. Erros:\n" +
+            formatZodIssues(validated2.error.issues),
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(validated2.data);
+  } catch (error: unknown) {
+    console.error("Erro na geração:", error);
+    const message = error instanceof Error ? error.message : "Erro desconhecido";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
