@@ -203,9 +203,39 @@ export async function POST(request: NextRequest) {
         }
         const ai = new GoogleGenAI({ apiKey });
         const { positive } = extractNegativePrompt(prompt);
+        const model = googleImageModel?.trim() || "imagen-3.0-generate-002";
+
+        if (model.startsWith("gemini")) {
+          const ratioHints: Record<AspectRatioKey, string> = {
+            "1:1": "square 1:1 aspect ratio",
+            "16:9": "wide landscape 16:9 aspect ratio",
+            "9:16": "tall portrait 9:16 aspect ratio",
+            "4:3": "standard 4:3 landscape aspect ratio",
+            "21:9": "ultra-wide cinematic 21:9 aspect ratio",
+          };
+          const fullPrompt = `${positive.slice(0, 1800)}\n\nGenerate as ${ratioHints[aspectRatio]} image.`;
+          const resp = await ai.models.generateContent({
+            model,
+            contents: fullPrompt,
+            config: { responseModalities: ["IMAGE", "TEXT"] },
+          });
+          const parts = resp.candidates?.[0]?.content?.parts ?? [];
+          for (const part of parts) {
+            if (part.inlineData?.data) {
+              const mimeType = part.inlineData.mimeType ?? "image/png";
+              return NextResponse.json({
+                url: `data:${mimeType};base64,${part.inlineData.data}`,
+                provider: "imagen",
+                aspectRatio,
+              });
+            }
+          }
+          throw new Error("Gemini não retornou imagem. Verifique se o modelo selecionado suporta geração de imagens.");
+        }
+
         const imagenRatio = IMAGEN_RATIOS[aspectRatio];
         const resp = await ai.models.generateImages({
-          model: googleImageModel?.trim() || "imagen-3.0-generate-002",
+          model,
           prompt: positive.slice(0, 2000),
           config: {
             numberOfImages: 1,
@@ -214,7 +244,7 @@ export async function POST(request: NextRequest) {
           },
         });
         const imageBytes = resp.generatedImages?.[0]?.image?.imageBytes;
-        if (!imageBytes) throw new Error("Imagen 3 não retornou imagem");
+        if (!imageBytes) throw new Error("Imagen não retornou imagem");
         const b64 = typeof imageBytes === "string" ? imageBytes : Buffer.from(imageBytes).toString("base64");
         return NextResponse.json({
           url: `data:image/png;base64,${b64}`,

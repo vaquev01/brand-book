@@ -43,15 +43,14 @@ async function fetchGoogleModels(apiKey: string): Promise<ProviderModels> {
   for (const m of data.models ?? []) {
     const short = m.name.replace("models/", "");
     const methods = m.supportedGenerationMethods ?? [];
+    if (short.includes("embedding") || short.includes("aqa")) continue;
     if (short.includes("imagen")) {
       imageModels.push(short);
-    } else if (
-      short.includes("gemini") &&
-      methods.includes("generateContent") &&
-      !short.includes("embedding") &&
-      !short.includes("aqa")
-    ) {
+    } else if (short.includes("gemini") && methods.includes("generateContent")) {
       textModels.push(short);
+      if (short.includes("image")) {
+        imageModels.push(short);
+      }
     }
   }
   return { textModels: textModels.sort(), imageModels: imageModels.sort() };
