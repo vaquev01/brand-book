@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
+import { ASSET_CATALOG } from "@/lib/imagePrompts";
 
 type AspectRatioKey = "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
 
@@ -36,24 +37,9 @@ const IDEOGRAM_RATIOS: Record<AspectRatioKey, string> = {
   "21:9": "ASPECT_16_9",
 };
 
-const ASSET_ASPECT_RATIOS: Record<string, AspectRatioKey> = {
-  logo_primary: "1:1",
-  logo_dark_bg: "1:1",
-  brand_pattern: "1:1",
-  hero_visual: "16:9",
-  hero_lifestyle: "16:9",
-  youtube_thumbnail: "16:9",
-  presentation_bg: "16:9",
-  email_header: "21:9",
-  instagram_carousel: "1:1",
-  instagram_story: "9:16",
-  social_cover: "16:9",
-  social_post_square: "1:1",
-  app_mockup: "9:16",
-  business_card: "16:9",
-  brand_collateral: "4:3",
-  outdoor_billboard: "16:9",
-};
+const ASSET_ASPECT_RATIOS: Record<string, AspectRatioKey> = Object.fromEntries(
+  ASSET_CATALOG.map((a) => [a.key, a.aspectRatio as AspectRatioKey])
+) as Record<string, AspectRatioKey>;
 
 function extractNegativePrompt(prompt: string): { positive: string; negative: string } {
   const negIdx = prompt.indexOf(" --neg ");

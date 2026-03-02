@@ -4,10 +4,11 @@ import type { BrandbookData } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   try {
-    const { brandbook, style, openaiKey } = await request.json() as {
+    const { brandbook, style, openaiKey, imageModel } = await request.json() as {
       brandbook: BrandbookData;
       style?: string;
       openaiKey?: string;
+      imageModel?: string;
     };
 
     if (!brandbook) {
@@ -49,14 +50,16 @@ export async function POST(request: NextRequest) {
 
     const openai = new OpenAI({ apiKey });
 
+    const resolvedImageModel = imageModel?.trim() || "dall-e-3";
+
     const response = await openai.images.generate({
-      model: "dall-e-3",
+      model: resolvedImageModel,
       prompt,
       n: 1,
       size: "1024x1024",
-      quality: "hd",
+      quality: resolvedImageModel === "dall-e-3" ? "hd" : undefined,
       response_format: "url",
-    });
+    } as Parameters<typeof openai.images.generate>[0]);
 
     const imageUrl = response.data?.[0]?.url;
     if (!imageUrl) {

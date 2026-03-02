@@ -49,6 +49,7 @@ export function LogoConceptPanel({ brandbook, apiKeys }: Props) {
           brandbook,
           style,
           openaiKey: apiKeys.openai || undefined,
+          imageModel: apiKeys.openaiImageModel || undefined,
         }),
       });
 

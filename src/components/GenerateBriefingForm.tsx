@@ -24,6 +24,7 @@ export interface GenerateBriefingData {
   creativityLevel: CreativityLevel;
   intentionality: boolean;
   referenceImages: UploadedAsset[];
+  logoImage?: UploadedAsset;
 }
 
 interface Props {
@@ -115,6 +116,7 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   const [intentionality, setIntentionality] = useState(false);
   const [showGuided, setShowGuided] = useState(false);
   const [referenceImages, setReferenceImages] = useState<UploadedAsset[]>([]);
+  const [logoImage, setLogoImage] = useState<UploadedAsset | null>(null);
   const [guided, setGuided] = useState<GuidedBriefing>({
     whatItDoes: "",
     targetAudience: "",
@@ -153,13 +155,82 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
       creativityLevel: creativity,
       intentionality,
       referenceImages,
+      logoImage: logoImage ?? undefined,
     });
   }
 
   const selectedCreativity = CREATIVITY_OPTIONS.find((o) => o.value === creativity)!;
 
+  function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setLogoImage({ id: `logo-${Date.now()}`, name: file.name, dataUrl, type: "logo" });
+    };
+    reader.readAsDataURL(file);
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+
+      {/* HERO: Logo Upload */}
+      <div className={`rounded-2xl border-2 transition-all ${
+        logoImage ? "border-gray-900 bg-gray-50" : "border-dashed border-gray-300 hover:border-gray-400 bg-gray-50"
+      }`}>
+        <label className="flex flex-col items-center justify-center cursor-pointer p-8 text-center" htmlFor="logo-upload-input">
+          {logoImage ? (
+            <>
+              <div className="w-24 h-24 rounded-xl bg-white border flex items-center justify-center mb-4 shadow-sm overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoImage.dataUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+              </div>
+              <p className="font-semibold text-gray-900 text-sm">{logoImage.name}</p>
+              <p className="text-xs text-gray-500 mt-1">A IA vai analisar e construir o brandbook a partir deste logo</p>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setLogoImage(null); }}
+                className="mt-3 text-xs text-red-500 hover:text-red-700 underline"
+              >
+                Remover logo
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-2xl bg-white border-2 border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <span className="text-3xl">⬡</span>
+              </div>
+              <p className="font-bold text-gray-900">Arraste seu logo aqui</p>
+              <p className="text-sm text-gray-500 mt-1">PNG, SVG, JPG — a IA extrai cores, estilo e personalidade</p>
+              <span className="mt-4 bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-lg">
+                Selecionar arquivo
+              </span>
+              <p className="text-xs text-gray-400 mt-3">
+                Opcional — sem logo, a IA cria a identidade do zero
+              </p>
+            </>
+          )}
+        </label>
+        <input
+          id="logo-upload-input"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleLogoUpload}
+        />
+      </div>
+
+      {logoImage && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <p className="text-sm text-amber-900 font-semibold">✦ Modo logo-first ativo</p>
+          <p className="text-xs text-amber-700 mt-0.5">
+            A IA vai fazer análise visual forense do seu logo — extraindo cores exatas, estilo tipográfico,
+            geometria e mood — e construir todo o brandbook coerente com essa identidade.
+          </p>
+        </div>
+      )}
+
       {/* Basic Info */}
       <div className="space-y-4">
         <div>

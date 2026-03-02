@@ -1,4 +1,7 @@
 import type { GenerateScope, CreativityLevel } from "./types";
+import { ASSET_CATALOG } from "./imagePrompts";
+
+const IMAGE_KEY_OPTIONS = ASSET_CATALOG.map((a) => a.key).join(" | ");
 
 const CREATIVITY_LAYER: Record<CreativityLevel, string> = {
   conservative: `POSTURA CRIATIVA — CLÁSSICA: Adote uma abordagem atemporal e de confiança máxima. Forme paletas com no máximo 3 cores, preferindo tons dessaturados, neutros sofisticados e um único acento forte. Tipografia: fontes com herança cultural consolidada (serifs clássicas ou sans-serifs neutras de alta legibilidade). Formas geométricas simples, limpas. Evite qualquer tendência passageira. Pense em marcas como IBM, Rolex, McKinsey, Apple (era Jobs). Resultado esperado: confiança imediata, autoridade atemporal, profissionalismo máximo.`,
@@ -259,7 +262,7 @@ ESTRUTURA JSON EXIGIDA:
       "type": "string",
       "description": "string",
       "imagePlaceholder": "string (URL placehold.co com cores da paleta)",
-      "imageKey": "string (um de: logo_primary | logo_dark_bg | brand_pattern | hero_visual | hero_lifestyle | youtube_thumbnail | presentation_bg | instagram_carousel | instagram_story | social_cover | social_post_square | app_mockup | business_card | brand_collateral | email_header | outdoor_billboard)"
+      "imageKey": "string (um de: ${IMAGE_KEY_OPTIONS})"
     }
   ],
   "productionGuidelines": {
@@ -305,7 +308,8 @@ export function buildUserPrompt(
   briefing: string,
   scope: GenerateScope = "full",
   hasReferenceImages?: boolean,
-  referenceImageDescriptions?: string[]
+  referenceImageDescriptions?: string[],
+  hasLogoImage?: boolean
 ): string {
   const scopeLabels: Record<GenerateScope, string> = {
     full: "BRANDBOOK COMPLETO",
@@ -316,12 +320,52 @@ export function buildUserPrompt(
 
   let prompt = `GERE O ${scopeLabels[scope]} PARA:
 Nome da Marca: ${brandName}
-Nicho/Indústria: ${industry}
-Briefing Completo: ${briefing}`;
+Nicho/Indústria: ${industry}`;
+
+  if (briefing?.trim()) {
+    prompt += `\nBriefing: ${briefing.trim()}`;
+  }
+
+  if (hasLogoImage) {
+    prompt += `
+
+════════════════════════════════════════
+LOGO REAL DA MARCA — ANÁLISE OBRIGATÓRIA
+════════════════════════════════════════
+A primeira imagem anexada É O LOGO REAL DA MARCA. Não é referência, não é inspiração — é a IDENTIDADE EXISTENTE.
+
+Execute análise visual forense e completa:
+
+1. CORES EXATAS → Extraia todos os hexadecimais visíveis no logo. Use essas cores como base da paleta primária do brandbook. Se o logo tem 2 cores, essas são as 2 primeiras cores primárias. Não invente cores incompatíveis com o logo.
+
+2. ESTILO TIPOGRÁFICO → Identifique o estilo do wordmark/logotipo:
+   - Categoria: serif clássica / sans-serif geométrica / sans-serif humanista / script / display / condensed / monospace?
+   - Peso: thin, regular, bold, black?
+   - Características: alto contraste de hastes? Formas orgânicas ou geométricas? Kerning apertado ou aberto?
+   → Sugira fontes Google Fonts que correspondam FIELMENTE a esse estilo para "marketing" e "ui".
+
+3. GEOMETRIA DO SÍMBOLO → Identifique as formas fundamentais:
+   - Circular / oval / quadrado / triangular / hexagonal / orgânico / abstrato?
+   - Linhas retas ou curvas? Ângulos agudos ou arredondados?
+   - Complexidade: simples mark / combination mark / wordmark only / emblema?
+   → Essa geometria deve definir o "keyVisual.elements" e o design system (border-radius, formas dos componentes).
+
+4. MOOD E REGISTRO EMOCIONAL → Classifique:
+   - Temperatura: frio (azuis, cinzas) / neutro / quente (vermelhos, laranjas, terrosos)?
+   - Registro: sério/corporativo / amigável/acessível / luxuoso/premium / tech/digital / artesanal/orgânico / jovem/energético?
+   - Complexidade visual: minimalista / moderado / rico/detalhado?
+   → Esse mood deve definir o "brandConcept.personality", "brandConcept.toneOfVoice" e toda a estratégia.
+
+5. ARQUÉTIPO E POSICIONAMENTO IMPLÍCITO → O que o logo comunica implicitamente sobre o posicionamento da marca? Use isso para construir a estratégia.
+
+REGRA FUNDAMENTAL: O logo fornecido é a ÂNCORA IMUTÁVEL da identidade. TODAS as decisões devem ser coerentes com ele — cores, tipografia, estilo visual, tom de voz, personalidade. O brandbook é a EXTENSÃO do logo, não o contrário.`;
+  }
 
   if (hasReferenceImages) {
-    const count = referenceImageDescriptions?.length ?? 1;
-    prompt += `\n\n--- IMAGENS DE REFERÊNCIA FORNECIDAS (${count} imagem${count > 1 ? "ns" : ""} anexadas) ---\nAnalise METICULOSAMENTE as imagens enviadas junto a esta mensagem. Extraia e incorpore no brandbook:\n• Paleta de cores exata (hex aproximados) e temperatura cromática\n• Estilo visual e movimento artístico (minimalista, editorial, expressionista, etc.)\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico (iluminação, composição, profundidade de campo)\n• Nível de complexidade e densidade visual\nReplique fielmente esses atributos em TODAS as seções relevantes: colors, typography mood, keyVisual, imageGenerationBriefing, brandConcept.personality e quaisquer decisões estéticas.`;
+    const imgLabel = hasLogoImage ? "IMAGENS DE REFERÊNCIA ADICIONAIS" : "IMAGENS DE REFERÊNCIA FORNECIDAS";
+    const count = (referenceImageDescriptions?.length ?? 1) + (hasLogoImage ? 0 : 0);
+    const startIndex = hasLogoImage ? 2 : 1;
+    prompt += `\n\n--- ${imgLabel} (a partir da imagem ${startIndex}, ${count} imagem${count > 1 ? "ns" : ""}) ---\nAnalise as imagens de referência. Extraia e incorpore no brandbook:\n• Paleta de cores e temperatura cromática\n• Estilo visual e movimento artístico\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico\nIncorpore esses atributos nas seções: colors, keyVisual, imageGenerationBriefing.`;
     if (referenceImageDescriptions && referenceImageDescriptions.length > 0) {
       referenceImageDescriptions.forEach((desc, i) => {
         if (desc) prompt += `\nReferência ${i + 1}: ${desc}`;

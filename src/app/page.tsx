@@ -156,6 +156,7 @@ export default function Home() {
           referenceImages: formData.referenceImages.length > 0
             ? formData.referenceImages.map((img) => img.dataUrl)
             : undefined,
+          logoImage: formData.logoImage?.dataUrl ?? undefined,
           scope: formData.scope,
           creativityLevel: formData.creativityLevel,
           intentionality: formData.intentionality,

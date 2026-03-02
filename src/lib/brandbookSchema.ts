@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ASSET_CATALOG } from "@/lib/imagePrompts";
 
 const NonEmptyString = z.string().min(1);
 
@@ -144,20 +145,8 @@ const KeyVisualSchema = z.object({
   patterns: z.array(NonEmptyString).optional(),
 });
 
-export const AssetKeySchema = z.enum([
-  "logo_primary",
-  "logo_dark_bg",
-  "brand_pattern",
-  "hero_visual",
-  "hero_lifestyle",
-  "business_card",
-  "social_cover",
-  "social_post_square",
-  "app_mockup",
-  "brand_collateral",
-  "email_header",
-  "outdoor_billboard",
-]);
+const ASSET_KEYS = ASSET_CATALOG.map((a) => a.key);
+export const AssetKeySchema = z.enum(ASSET_KEYS as [string, ...string[]]);
 
 export type AssetKey = z.infer<typeof AssetKeySchema>;
 

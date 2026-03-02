@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     openaiModel?: string;
     googleModel?: string;
     referenceImages?: string[];
+    logoImage?: string;
     scope?: GenerateScope;
     creativityLevel?: CreativityLevel;
     intentionality?: boolean;
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
     openaiModel,
     googleModel,
     referenceImages,
+    logoImage,
     scope = "full",
     creativityLevel = "balanced",
     intentionality = false,
@@ -79,13 +81,17 @@ export async function POST(request: NextRequest) {
         }
 
         const temperature = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
+        const hasLogoImage = !!logoImage;
         const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
         const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
-        const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages);
+        const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages, undefined, hasLogoImage);
         const useGemini = provider === "gemini";
         const ESTIMATED_CHARS = 13000;
 
-        send({ type: "progress", phase: "Preparando geração...", pct: 2 });
+        const firstPhase = hasLogoImage
+          ? "Analisando logo da marca..."
+          : "Preparando geração...";
+        send({ type: "progress", phase: firstPhase, pct: 2 });
 
         let fullContent = "";
 
@@ -95,6 +101,10 @@ export async function POST(request: NextRequest) {
 
           const ai = new GoogleGenAI({ apiKey });
           const contentParts: unknown[] = [{ text: userPromptText }];
+          if (hasLogoImage) {
+            const m = logoImage!.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+            if (m) contentParts.push({ inlineData: { mimeType: m[1], data: m[2] } });
+          }
           if (hasImages) {
             for (const imgDataUrl of referenceImages!) {
               const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
@@ -154,6 +164,9 @@ export async function POST(request: NextRequest) {
             | { type: "text"; text: string }
             | { type: "image_url"; image_url: { url: string; detail: "high" } };
           const userMsgContent: ContentPart[] = [{ type: "text", text: userPromptText }];
+          if (hasLogoImage) {
+            userMsgContent.push({ type: "image_url", image_url: { url: logoImage!, detail: "high" } });
+          }
           if (hasImages) {
             for (const imgDataUrl of referenceImages!) {
               userMsgContent.push({ type: "image_url", image_url: { url: imgDataUrl, detail: "high" } });
@@ -170,7 +183,7 @@ export async function POST(request: NextRequest) {
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: systemPrompt },
-              { role: "user", content: hasImages ? userMsgContent : userPromptText },
+              { role: "user", content: (hasLogoImage || hasImages) ? userMsgContent : userPromptText },
             ],
           });
 
