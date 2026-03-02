@@ -332,9 +332,15 @@ export interface UploadedAsset {
   description?: string;
 }
 
+export type GenerateScope = "full" | "logo_identity" | "strategy" | "design_system";
+export type CreativityLevel = "conservative" | "balanced" | "creative" | "experimental";
+
 export interface GenerateRequest {
   brandName: string;
   industry: string;
   briefing: string;
   referenceImages?: string[];
+  scope?: GenerateScope;
+  creativityLevel?: CreativityLevel;
+  intentionality?: boolean;
 }

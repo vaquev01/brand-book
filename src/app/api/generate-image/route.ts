@@ -42,12 +42,16 @@ const ASSET_ASPECT_RATIOS: Record<string, AspectRatioKey> = {
   brand_pattern: "1:1",
   hero_visual: "16:9",
   hero_lifestyle: "16:9",
-  business_card: "16:9",
+  youtube_thumbnail: "16:9",
+  presentation_bg: "16:9",
+  email_header: "21:9",
+  instagram_carousel: "1:1",
+  instagram_story: "9:16",
   social_cover: "16:9",
   social_post_square: "1:1",
   app_mockup: "9:16",
+  business_card: "16:9",
   brand_collateral: "4:3",
-  email_header: "21:9",
   outdoor_billboard: "16:9",
 };
 
