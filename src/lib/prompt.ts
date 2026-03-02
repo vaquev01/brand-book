@@ -259,7 +259,7 @@ ESTRUTURA JSON EXIGIDA:
       "type": "string",
       "description": "string",
       "imagePlaceholder": "string (URL placehold.co com cores da paleta)",
-      "imageKey": "string (um de: logo_primary | logo_dark_bg | brand_pattern | hero_visual | hero_lifestyle | business_card | social_cover | social_post_square | app_mockup | brand_collateral | email_header | outdoor_billboard)"
+      "imageKey": "string (um de: logo_primary | logo_dark_bg | brand_pattern | hero_visual | hero_lifestyle | youtube_thumbnail | presentation_bg | instagram_carousel | instagram_story | social_cover | social_post_square | app_mockup | business_card | brand_collateral | email_header | outdoor_billboard)"
     }
   ],
   "productionGuidelines": {
@@ -304,6 +304,7 @@ export function buildUserPrompt(
   industry: string,
   briefing: string,
   scope: GenerateScope = "full",
+  hasReferenceImages?: boolean,
   referenceImageDescriptions?: string[]
 ): string {
   const scopeLabels: Record<GenerateScope, string> = {
@@ -318,11 +319,14 @@ Nome da Marca: ${brandName}
 Nicho/Indústria: ${industry}
 Briefing Completo: ${briefing}`;
 
-  if (referenceImageDescriptions && referenceImageDescriptions.length > 0) {
-    prompt += `\n\n--- IMAGENS DE REFERÊNCIA FORNECIDAS (${referenceImageDescriptions.length} imagem${referenceImageDescriptions.length > 1 ? "ns" : ""}) ---\nAnalise METICULOSAMENTE as imagens enviadas. Extraia: paleta de cores exata, estilo de composição, atmosfera, elementos gráficos, estilo fotográfico, nível de complexidade visual. Replique fielmente esses atributos em TODO o brandbook — especialmente em: keyVisual, imageGenerationBriefing, colors, typography mood e quaisquer decisões estéticas.\n`;
-    referenceImageDescriptions.forEach((desc, i) => {
-      if (desc) prompt += `\nReferência ${i + 1}: ${desc}`;
-    });
+  if (hasReferenceImages) {
+    const count = referenceImageDescriptions?.length ?? 1;
+    prompt += `\n\n--- IMAGENS DE REFERÊNCIA FORNECIDAS (${count} imagem${count > 1 ? "ns" : ""} anexadas) ---\nAnalise METICULOSAMENTE as imagens enviadas junto a esta mensagem. Extraia e incorpore no brandbook:\n• Paleta de cores exata (hex aproximados) e temperatura cromática\n• Estilo visual e movimento artístico (minimalista, editorial, expressionista, etc.)\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico (iluminação, composição, profundidade de campo)\n• Nível de complexidade e densidade visual\nReplique fielmente esses atributos em TODAS as seções relevantes: colors, typography mood, keyVisual, imageGenerationBriefing, brandConcept.personality e quaisquer decisões estéticas.`;
+    if (referenceImageDescriptions && referenceImageDescriptions.length > 0) {
+      referenceImageDescriptions.forEach((desc, i) => {
+        if (desc) prompt += `\nReferência ${i + 1}: ${desc}`;
+      });
+    }
   }
 
   return prompt;

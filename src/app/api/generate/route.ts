@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
@@ -13,183 +13,271 @@ const CREATIVITY_TEMPERATURE: Record<CreativityLevel, number> = {
   experimental: 1.0,
 };
 
+const PROGRESS_PHASES: [number, number, string][] = [
+  [0, 8, "Analisando briefing e preparando IA..."],
+  [8, 18, "Definindo DNA e propósito da marca..."],
+  [18, 30, "Criando posicionamento e personas..."],
+  [30, 44, "Desenvolvendo identidade verbal e tagline..."],
+  [44, 58, "Construindo identidade visual e logo..."],
+  [58, 72, "Criando design system e componentes..."],
+  [72, 84, "Finalizando aplicações da marca..."],
+  [84, 92, "Compondo briefing de geração de imagens..."],
+  [92, 98, "Validando estrutura do brandbook..."],
+];
+
+function getPhaseLabel(pct: number): string {
+  for (const [start, end, label] of PROGRESS_PHASES) {
+    if (pct >= start && pct < end) return label;
+  }
+  return "Finalizando...";
+}
+
 export async function POST(request: NextRequest) {
-  try {
-    const {
-      brandName,
-      industry,
-      briefing,
-      openaiKey,
-      googleKey,
-      provider = "openai",
-      openaiModel,
-      googleModel,
-      referenceImages,
-      scope = "full",
-      creativityLevel = "balanced",
-      intentionality = false,
-    } = await request.json() as {
-      brandName: string;
-      industry: string;
-      briefing?: string;
-      openaiKey?: string;
-      googleKey?: string;
-      provider?: string;
-      openaiModel?: string;
-      googleModel?: string;
-      referenceImages?: string[];
-      scope?: GenerateScope;
-      creativityLevel?: CreativityLevel;
-      intentionality?: boolean;
-    };
+  const encoder = new TextEncoder();
 
-    if (!brandName || !industry) {
-      return NextResponse.json(
-        { error: "brandName e industry são obrigatórios." },
-        { status: 400 }
-      );
-    }
+  const body = await request.json() as {
+    brandName: string;
+    industry: string;
+    briefing?: string;
+    openaiKey?: string;
+    googleKey?: string;
+    provider?: string;
+    openaiModel?: string;
+    googleModel?: string;
+    referenceImages?: string[];
+    scope?: GenerateScope;
+    creativityLevel?: CreativityLevel;
+    intentionality?: boolean;
+  };
 
-    const temperature = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
-    const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
-    const useGemini = provider === "gemini";
-    const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+  const {
+    brandName,
+    industry,
+    briefing,
+    openaiKey,
+    googleKey,
+    provider = "openai",
+    openaiModel,
+    googleModel,
+    referenceImages,
+    scope = "full",
+    creativityLevel = "balanced",
+    intentionality = false,
+  } = body;
 
-    let generateOnce: (userContent: string, temperature?: number) => Promise<string | null | undefined>;
-
-    if (useGemini) {
-      const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
-      if (!apiKey) {
-        return NextResponse.json(
-          { error: "GOOGLE_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho para configurar." },
-          { status: 500 }
-        );
+  const stream = new ReadableStream({
+    async start(controller) {
+      function send(data: object) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       }
-      const ai = new GoogleGenAI({ apiKey });
-      generateOnce = async (userContent: string, temp = temperature) => {
-        const contentParts: unknown[] = [{ text: userContent }];
-        if (hasImages) {
-          for (const imgDataUrl of referenceImages!) {
-            const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
-            if (match) {
-              contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+
+      try {
+        if (!brandName || !industry) {
+          send({ type: "error", error: "brandName e industry são obrigatórios." });
+          controller.close();
+          return;
+        }
+
+        const temperature = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
+        const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+        const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
+        const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages);
+        const useGemini = provider === "gemini";
+        const ESTIMATED_CHARS = 13000;
+
+        send({ type: "progress", phase: "Preparando geração...", pct: 2 });
+
+        let fullContent = "";
+
+        if (useGemini) {
+          const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
+          if (!apiKey) throw new Error("GOOGLE_API_KEY não configurada. Configure em ⚙ APIs.");
+
+          const ai = new GoogleGenAI({ apiKey });
+          const contentParts: unknown[] = [{ text: userPromptText }];
+          if (hasImages) {
+            for (const imgDataUrl of referenceImages!) {
+              const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+              if (match) contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+            }
+          }
+
+          send({ type: "progress", phase: "Iniciando Gemini...", pct: 5 });
+
+          const geminiContents = contentParts.length === 1
+            ? userPromptText
+            : (contentParts as Parameters<typeof ai.models.generateContent>[0]["contents"]);
+
+          let lastPct = 5;
+          try {
+            const genStream = await ai.models.generateContentStream({
+              model: googleModel?.trim() || "gemini-2.0-flash",
+              contents: geminiContents,
+              config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+                temperature,
+                maxOutputTokens: 8192,
+              },
+            });
+            for await (const chunk of genStream) {
+              const text = (chunk as { text?: string }).text ?? "";
+              fullContent += text;
+              const pct = Math.min(90, Math.round((fullContent.length / ESTIMATED_CHARS) * 85) + 5);
+              if (pct >= lastPct + 2) {
+                send({ type: "progress", phase: getPhaseLabel(pct), pct });
+                lastPct = pct;
+              }
+            }
+          } catch {
+            send({ type: "progress", phase: "Gerando brandbook com Gemini...", pct: 20 });
+            const resp = await ai.models.generateContent({
+              model: googleModel?.trim() || "gemini-2.0-flash",
+              contents: geminiContents,
+              config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+                temperature,
+                maxOutputTokens: 8192,
+              },
+            });
+            fullContent = resp.text ?? "";
+          }
+        } else {
+          const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
+          if (!apiKey) throw new Error("OPENAI_API_KEY não configurada. Configure em ⚙ APIs.");
+
+          const openai = new OpenAI({ apiKey });
+          const resolvedModel = openaiModel?.trim() || "gpt-4o";
+
+          type ContentPart =
+            | { type: "text"; text: string }
+            | { type: "image_url"; image_url: { url: string; detail: "high" } };
+          const userMsgContent: ContentPart[] = [{ type: "text", text: userPromptText }];
+          if (hasImages) {
+            for (const imgDataUrl of referenceImages!) {
+              userMsgContent.push({ type: "image_url", image_url: { url: imgDataUrl, detail: "high" } });
+            }
+          }
+
+          send({ type: "progress", phase: "Iniciando GPT-4o...", pct: 5 });
+
+          const openaiStream = await openai.chat.completions.create({
+            model: resolvedModel,
+            stream: true,
+            temperature,
+            max_tokens: 8192,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: hasImages ? userMsgContent : userPromptText },
+            ],
+          });
+
+          let lastPct = 5;
+          for await (const chunk of openaiStream) {
+            const text = chunk.choices[0]?.delta?.content || "";
+            fullContent += text;
+            const pct = Math.min(90, Math.round((fullContent.length / ESTIMATED_CHARS) * 85) + 5);
+            if (pct >= lastPct + 2) {
+              send({ type: "progress", phase: getPhaseLabel(pct), pct });
+              lastPct = pct;
             }
           }
         }
-        const resp = await ai.models.generateContent({
-          model: googleModel?.trim() || "gemini-2.0-flash",
-          contents: contentParts.length === 1 ? userContent : (contentParts as Parameters<typeof ai.models.generateContent>[0]["contents"]),
-          config: {
-            systemInstruction: systemPrompt,
-            responseMimeType: "application/json",
-            temperature: temp,
-            maxOutputTokens: 8192,
-          },
-        });
-        return resp.text;
-      };
-    } else {
-      const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        return NextResponse.json(
-          { error: "OPENAI_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho para configurar." },
-          { status: 500 }
-        );
-      }
-      const openai = new OpenAI({ apiKey });
-      const resolvedOpenAIModel = openaiModel?.trim() || "gpt-4o";
-      generateOnce = async (userContent: string, temp = temperature) => {
-        type ContentPart =
-          | { type: "text"; text: string }
-          | { type: "image_url"; image_url: { url: string; detail: "high" } };
-        const userMessageContent: ContentPart[] = [{ type: "text", text: userContent }];
-        if (hasImages) {
-          for (const imgDataUrl of referenceImages!) {
-            userMessageContent.push({ type: "image_url", image_url: { url: imgDataUrl, detail: "high" } });
-          }
+
+        send({ type: "progress", phase: "Validando estrutura do brandbook...", pct: 92 });
+
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(fullContent);
+        } catch {
+          throw new Error("A IA retornou JSON inválido. Tente novamente.");
         }
-        const completion = await openai.chat.completions.create({
-          model: resolvedOpenAIModel,
-          temperature: temp,
-          max_tokens: 8192,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: hasImages ? userMessageContent : userContent },
-          ],
-        });
-        return completion.choices[0]?.message?.content;
-      };
-    }
 
-    const content = await generateOnce(buildUserPrompt(brandName, industry, briefing || "", scope));
-    if (!content) {
-      return NextResponse.json(
-        { error: "A IA não retornou conteúdo." },
-        { status: 500 }
-      );
-    }
+        const migrated1 = migrateBrandbook(parsed);
+        const validated1 = BrandbookSchemaV2.safeParse(migrated1);
 
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      return NextResponse.json(
-        { error: "A IA retornou JSON inválido." },
-        { status: 500 }
-      );
-    }
+        if (validated1.success) {
+          send({ type: "progress", phase: "Brandbook pronto! ✓", pct: 100 });
+          send({ type: "complete", data: validated1.data });
+          controller.close();
+          return;
+        }
 
-    const migrated1 = migrateBrandbook(parsed);
-    const validated1 = BrandbookSchemaV2.safeParse(migrated1);
-    if (validated1.success) {
-      return NextResponse.json(validated1.data);
-    }
+        send({ type: "progress", phase: "Corrigindo e refinando brandbook...", pct: 94 });
 
-    const fixPrompt =
-      "Você gerou um JSON que NÃO passou na validação do schema. Reescreva o JSON COMPLETO e válido, " +
-      "mantendo o máximo de conteúdo possível, mas corrigindo campos obrigatórios, tipos e arrays mínimos. " +
-      "NÃO adicione texto fora do JSON.\n\n" +
-      "Erros de validação:\n" +
-      formatZodIssues(validated1.error.issues) +
-      "\n\nJSON atual (corrija):\n" +
-      content;
+        const fixPrompt =
+          "Você gerou um JSON que NÃO passou na validação do schema. Reescreva o JSON COMPLETO e válido, " +
+          "mantendo o máximo de conteúdo possível, mas corrigindo campos obrigatórios, tipos e arrays mínimos. " +
+          "NÃO adicione texto fora do JSON.\n\nErros:\n" +
+          formatZodIssues(validated1.error.issues) +
+          "\n\nJSON atual (corrija):\n" +
+          fullContent;
 
-    const fixedContent = await generateOnce(fixPrompt, 0.2);
-    if (!fixedContent) {
-      return NextResponse.json(
-        { error: "A IA não retornou conteúdo ao tentar corrigir o JSON." },
-        { status: 500 }
-      );
-    }
+        let fixedContent = "";
+        if (useGemini) {
+          const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
+          const ai = new GoogleGenAI({ apiKey: apiKey! });
+          const resp = await ai.models.generateContent({
+            model: googleModel?.trim() || "gemini-2.0-flash",
+            contents: fixPrompt,
+            config: {
+              systemInstruction: buildSystemPrompt(scope, creativityLevel, intentionality),
+              responseMimeType: "application/json",
+              temperature: 0.2,
+              maxOutputTokens: 8192,
+            },
+          });
+          fixedContent = resp.text ?? "";
+        } else {
+          const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
+          const openai = new OpenAI({ apiKey: apiKey! });
+          const completion = await openai.chat.completions.create({
+            model: openaiModel?.trim() || "gpt-4o",
+            temperature: 0.2,
+            max_tokens: 8192,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: buildSystemPrompt(scope, creativityLevel, intentionality) },
+              { role: "user", content: fixPrompt },
+            ],
+          });
+          fixedContent = completion.choices[0]?.message?.content ?? "";
+        }
 
-    let fixedParsed: unknown;
-    try {
-      fixedParsed = JSON.parse(fixedContent);
-    } catch {
-      return NextResponse.json(
-        { error: "A IA retornou JSON inválido na correção." },
-        { status: 500 }
-      );
-    }
+        let fixedParsed: unknown;
+        try {
+          fixedParsed = JSON.parse(fixedContent);
+        } catch {
+          throw new Error("A IA retornou JSON inválido na correção.");
+        }
 
-    const migrated2 = migrateBrandbook(fixedParsed);
-    const validated2 = BrandbookSchemaV2.safeParse(migrated2);
-    if (!validated2.success) {
-      return NextResponse.json(
-        {
-          error:
-            "Brandbook gerado mas inválido/incompleto. Erros:\n" +
-            formatZodIssues(validated2.error.issues),
-        },
-        { status: 500 }
-      );
-    }
+        const migrated2 = migrateBrandbook(fixedParsed);
+        const validated2 = BrandbookSchemaV2.safeParse(migrated2);
 
-    return NextResponse.json(validated2.data);
-  } catch (error: unknown) {
-    console.error("Erro na geração:", error);
-    const message = error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+        if (!validated2.success) {
+          throw new Error(
+            "Brandbook gerado mas inválido. Erros:\n" + formatZodIssues(validated2.error.issues)
+          );
+        }
+
+        send({ type: "progress", phase: "Brandbook pronto! ✓", pct: 100 });
+        send({ type: "complete", data: validated2.data });
+        controller.close();
+      } catch (error: unknown) {
+        console.error("Erro na geração:", error);
+        send({ type: "error", error: error instanceof Error ? error.message : "Erro desconhecido" });
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+    },
+  });
 }

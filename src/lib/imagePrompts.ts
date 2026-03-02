@@ -158,6 +158,20 @@ function extractBrandContext(data: BrandbookData) {
     .map((a) => `${a.type}: ${a.description}`)
     .join(" | ");
 
+  // Messaging pillar depth
+  const firstPillar = vi?.messagingPillars?.[0];
+  const pillarProofPoints = firstPillar?.proofPoints?.slice(0, 3).join(", ") ?? reasonsToBelieve;
+  const pillarCopy = firstPillar?.exampleCopy?.[0] ?? vi?.sampleHeadlines?.[0] ?? "";
+
+  // Persona pain points (the "before" state)
+  const painPoints = persona?.painPoints?.slice(0, 2).join("; ") ?? `challenges in ${data.industry}`;
+
+  // Verbal identity — vocabulary to avoid (feeds negative prompts)
+  const verbAvoid = vi?.vocabulary?.avoid?.slice(0, 4).join(", ") ?? "";
+
+  // CTAs
+  const sampleCTA = vi?.sampleCTAs?.[0] ?? "";
+
   return {
     primaryColor, primaryColorName, secondaryColor, accentColor,
     allPrimaryColors, allColors,
@@ -171,6 +185,7 @@ function extractBrandContext(data: BrandbookData) {
     audienceDesc, messagingPillar, preferredVocab, reasonsToBelieve,
     userPsychographics, marketingArch, competitiveAngle, purpose, visualMetaphor,
     industryLang, brandApplications,
+    pillarProofPoints, pillarCopy, painPoints, verbAvoid, sampleCTA,
   };
 }
 
@@ -319,9 +334,10 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       return parts(
         prefix,
         `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — website hero, paid media, social ads.`,
-        `MARKETING INTENT: Aspiration + emotional relatability. Viewer sees themselves transformed after using ${B}.`,
-        `SUBJECT: ${ctx.userPsychographics}. Authentic unstaged moment of this person in their real environment.`,
-        `SCENE: ${ctx.audienceDesc} in a realistic ${data.industry} context — the "after" state, post-transformation.`,
+        `MARKETING INTENT: Aspiration + emotional relatability. Viewer sees themselves after the transformation ${B} provides.`,
+        `SUBJECT: ${ctx.userPsychographics}. Authentic unstaged moment in their real environment.`,
+        `PAIN CONTEXT (the problem being solved): ${ctx.painPoints} — the image shows the AFTER state, not the pain itself.`,
+        `SCENE: ${ctx.audienceDesc} in a realistic ${data.industry} context — relaxed, confident, successful outcome.`,
         `INDUSTRY SCENE LANGUAGE: ${ctx.industryLang}.`,
         `VISUAL LANGUAGE: ${ctx.photoStyle}. ${ctx.colorMood}.`,
         `Brand color ${ctx.primaryColor} organically present in environment, clothing detail, or prop — subtle, never forced.`,
@@ -332,7 +348,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PEOPLE: Authentic, diverse, non-model-perfect. Real emotion — not corporate smiling. Candid or near-candid.`,
         `${ctx.artisticRef} editorial approach. Wide 16:9. Left or center clear zone for optional copy overlay.`,
         `No logos visible, no text on clothing, pure documentary editorial quality.`,
-        q, neg(ctx, provider, "overly posed, fake corporate smile, stock photo aesthetic, generic office, plastic-looking, HDR"),
+        q, neg(ctx, provider, `overly posed, fake corporate smile, stock photo aesthetic, generic office, plastic-looking, HDR${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -342,7 +358,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PLATFORM: Instagram carousel FIRST SLIDE — perfect square 1:1 format. This is the hook that determines if anyone sees the rest.`,
         `MARKETING INTENT: Arrest thumb-scroll in 0.3 seconds. Create visual curiosity gap — must feel incomplete, make viewer SWIPE RIGHT.`,
         `WHO STOPS: ${ctx.userPsychographics} — they stop for ${ctx.moodWords} content that feels ${ctx.personality}.`,
-        `VISUAL HOOK TYPE: Bold editorial — single dominant brand element suggesting ${ctx.messagingPillar}.`,
+        `VISUAL HOOK CONCEPT: Bold editorial visual suggesting "${ctx.pillarCopy || ctx.messagingPillar}" without showing text.`,
         ctx.tagline,
         `BRAND: ${B} — ${ctx.personality}. Industry: ${data.industry}.`,
         `VISUAL DESIGN: ${ctx.marketingArch}. Full-bleed ${ctx.primaryColor} dominant background.`,
@@ -351,10 +367,11 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COLOR PALETTE (strict, no others): ${ctx.allPrimaryColors}. High-contrast accent pop: ${ctx.accentColor}.`,
         `COMPOSITION: Asymmetric tension — dominant element occupies 60% of frame, remaining 40% is intentional negative space.`,
         `TEXT ZONE: Reserve lower 25% as flat ${ctx.secondaryColor} strip for text overlay (not rendered in image).`,
+        `PROOF POINTS to visualize: ${ctx.pillarProofPoints}.`,
         `MOOD: ${ctx.moodWords}. Energy: high-impact, thumb-stopping, premium, social-native.`,
         `${ctx.competitiveAngle}`,
         `Reference: Spotify, Apple, top-performing ${data.industry} carousel decks. No actual text.`,
-        q, neg(ctx, provider, "cluttered, multiple competing elements, generic gradient, centered symmetry"),
+        q, neg(ctx, provider, `cluttered, multiple competing elements, generic gradient, centered symmetry${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -413,6 +430,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MARKETING INTENT: Brand presence + saves + shares. Must be recognizable as ${B} in a feed thumbnail.`,
         `BRAND: ${B} — ${ctx.personality}. Core message: ${ctx.messagingPillar}.`,
         ctx.tagline,
+        ctx.sampleCTA ? `VISUAL CTA ENERGY: The post visually suggests the feeling of "${ctx.sampleCTA}" — action, forward motion.` : "",
         `VISUAL CONCEPT: ${ctx.marketingArch}. Bold, single-minded composition.`,
         `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `VISUAL SUBJECT: ${ctx.visualMetaphor} — rendered with maximum graphic intention.`,
@@ -423,7 +441,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PHOTOGRAPHY (if lifestyle): ${ctx.photoStyle}. Camera: 35mm, f/2.0, square crop.`,
         `${ctx.competitiveAngle}`,
         `No text in image — pure brand visual language.`,
-        q, neg(ctx, provider, "generic stock imagery, overcrowded, multiple competing focal points, symmetry without intention"),
+        q, neg(ctx, provider, `generic stock imagery, overcrowded, multiple competing focal points${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -472,7 +490,8 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PLATFORM: E-mail marketing header banner — ultra-wide 21:9 (600px email standard, will render as thin horizontal strip).`,
         `MARKETING INTENT: Increase open-to-click rate. First visual after subject line. 70% of opens are mobile — must work at 320px wide.`,
         `Viewer context: ${ctx.audienceDesc} who just opened a ${B} email. They have 2 seconds before deciding to scroll or close.`,
-        `CORE MESSAGE TO SUPPORT: ${ctx.messagingPillar}.`,
+        `CORE MESSAGE TO SUPPORT: ${ctx.messagingPillar}. Proof: ${ctx.pillarProofPoints}.`,
+        ctx.sampleCTA ? `EMOTIONAL DIRECTION: The banner visually primes the viewer for the CTA "${ctx.sampleCTA}" below it.` : "",
         ctx.tagline,
         `VISUAL DESIGN: ${ctx.marketingArch}. Clean, horizontal, immediately branded.`,
         `COLOR: ${ctx.primaryColor} dominant field. ${ctx.secondaryColor} accent. Flat or subtle gradient — never photographic background.`,
@@ -480,7 +499,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COMPOSITION: Left 30%: brand visual/motif in ${ctx.accentColor} or ${ctx.secondaryColor}. Right 70%: clean flat ${ctx.primaryColor} field for headline text overlay.`,
         `MOOD: ${ctx.moodWords}. Tone: ${ctx.toneOfVoice}. Minimal, premium, brand-consistent.`,
         `${ctx.visualStyle}. No actual text — graphic background layer only.`,
-        q, neg(ctx, provider, "text, lorem ipsum, photographic busy background, centered composition, multiple elements"),
+        q, neg(ctx, provider, `text, lorem ipsum, photographic busy background, centered composition, multiple elements${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
