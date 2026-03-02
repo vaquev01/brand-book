@@ -81,6 +81,10 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
           stabilityKey: apiKeys.stability || undefined,
           ideogramKey: apiKeys.ideogram || undefined,
           googleKey: apiKeys.google || undefined,
+          openaiImageModel: apiKeys.openaiImageModel || undefined,
+          stabilityModel: apiKeys.stabilityModel || undefined,
+          ideogramModel: apiKeys.ideogramModel || undefined,
+          googleImageModel: apiKeys.googleImageModel || undefined,
         }),
       });
       const result = await res.json() as { url?: string; error?: string };

@@ -7,13 +7,15 @@ import { migrateBrandbook } from "@/lib/brandbookMigration";
 
 export async function POST(request: NextRequest) {
   try {
-    const { brandName, industry, briefing, openaiKey, googleKey, provider = "openai" } = await request.json() as {
+    const { brandName, industry, briefing, openaiKey, googleKey, provider = "openai", openaiModel, googleModel } = await request.json() as {
       brandName: string;
       industry: string;
       briefing?: string;
       openaiKey?: string;
       googleKey?: string;
       provider?: string;
+      openaiModel?: string;
+      googleModel?: string;
     };
 
     if (!brandName || !industry) {
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
       const ai = new GoogleGenAI({ apiKey });
       generateOnce = async (userContent: string, temperature = 0.7) => {
         const resp = await ai.models.generateContent({
-          model: "gemini-2.0-flash",
+          model: googleModel?.trim() || "gemini-2.0-flash",
           contents: userContent,
           config: {
             systemInstruction: systemPrompt,
@@ -59,9 +61,10 @@ export async function POST(request: NextRequest) {
         );
       }
       const openai = new OpenAI({ apiKey });
+      const resolvedOpenAIModel = openaiModel?.trim() || "gpt-4o";
       generateOnce = async (userContent: string, temperature = 0.7) => {
         const completion = await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: resolvedOpenAIModel,
           temperature,
           max_tokens: 8192,
           response_format: { type: "json_object" },

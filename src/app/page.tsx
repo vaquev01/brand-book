@@ -3,7 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
 import { ImageGenPanel } from "@/components/ImageGenPanel";
-import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, type ApiKeys } from "@/components/ApiKeyConfig";
+import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookData, GeneratedAsset } from "@/lib/types";
 import { saasExample, barExample, sushiExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
@@ -62,7 +62,7 @@ export default function Home() {
   const [jsonText, setJsonText] = useState("");
   const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
-  const [apiKeys, setApiKeys] = useState<ApiKeys>({ openai: "", stability: "", ideogram: "", google: "" });
+  const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [exportingPack, setExportingPack] = useState(false);
@@ -88,6 +88,8 @@ export default function Home() {
           provider: textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
+          openaiModel: apiKeys.openaiTextModel || undefined,
+          googleModel: apiKeys.googleTextModel || undefined,
         }),
       });
 

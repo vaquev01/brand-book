@@ -62,7 +62,8 @@ function extractNegativePrompt(prompt: string): { positive: string; negative: st
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, provider, assetKey, openaiKey, stabilityKey, ideogramKey, googleKey } = await request.json() as {
+    const { prompt, provider, assetKey, openaiKey, stabilityKey, ideogramKey, googleKey,
+      openaiImageModel, stabilityModel, ideogramModel, googleImageModel } = await request.json() as {
       prompt: string;
       provider: string;
       assetKey?: string;
@@ -70,6 +71,10 @@ export async function POST(request: NextRequest) {
       stabilityKey?: string;
       ideogramKey?: string;
       googleKey?: string;
+      openaiImageModel?: string;
+      stabilityModel?: string;
+      ideogramModel?: string;
+      googleImageModel?: string;
     };
 
     if (!prompt || !provider) {
@@ -88,7 +93,7 @@ export async function POST(request: NextRequest) {
         const size = DALLE3_SIZES[aspectRatio];
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
         const response = await openai.images.generate({
-          model: "dall-e-3",
+          model: openaiImageModel?.trim() || "dall-e-3",
           prompt: prompt.replace(" --neg ", ". Avoid: ").slice(0, 4000),
           n: 1,
           size,
@@ -141,7 +146,7 @@ export async function POST(request: NextRequest) {
           }
         );
         if (!res.ok) {
-          const err = await res.json().catch(() => ({})) as { message?: string; name?: string };
+          const err = await res.json().catch(() => ({})) as { message?: string; name?: string; errors?: string[] };
           throw new Error(err.message ?? err.name ?? `Stability AI erro ${res.status}`);
         }
         const sdData = await res.json() as { artifacts?: { base64: string; finishReason: string }[] };
@@ -173,7 +178,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             image_request: {
               prompt: positive.slice(0, 2000),
-              model: "V_2",
+              model: ideogramModel?.trim() || "V_2",
               aspect_ratio: IDEOGRAM_RATIOS[aspectRatio],
               magic_prompt_option: isLogo ? "OFF" : "AUTO",
               style_type: isLogo ? "DESIGN" : isDesign ? "DESIGN" : "REALISTIC",
@@ -199,7 +204,7 @@ export async function POST(request: NextRequest) {
         const { positive } = extractNegativePrompt(prompt);
         const imagenRatio = IMAGEN_RATIOS[aspectRatio];
         const resp = await ai.models.generateImages({
-          model: "imagen-3.0-generate-002",
+          model: googleImageModel?.trim() || "imagen-3.0-generate-002",
           prompt: positive.slice(0, 2000),
           config: {
             numberOfImages: 1,
