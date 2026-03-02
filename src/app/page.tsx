@@ -62,7 +62,8 @@ export default function Home() {
   const [jsonText, setJsonText] = useState("");
   const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
-  const [apiKeys, setApiKeys] = useState<ApiKeys>({ openai: "", stability: "", ideogram: "" });
+  const [apiKeys, setApiKeys] = useState<ApiKeys>({ openai: "", stability: "", ideogram: "", google: "" });
+  const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [exportingPack, setExportingPack] = useState(false);
 
@@ -80,7 +81,14 @@ export default function Home() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandName, industry, briefing, openaiKey: apiKeys.openai || undefined }),
+        body: JSON.stringify({
+          brandName,
+          industry,
+          briefing,
+          provider: textProvider,
+          openaiKey: apiKeys.openai || undefined,
+          googleKey: apiKeys.google || undefined,
+        }),
       });
 
       const data = await res.json();
@@ -326,6 +334,36 @@ export default function Home() {
                     className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">IA para gerar o Brandbook</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setTextProvider("openai")}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        textProvider === "openai"
+                          ? "border-gray-900 bg-gray-900 text-white"
+                          : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                    >
+                      <div className="font-bold text-sm">GPT-4o</div>
+                      <div className={`text-xs mt-0.5 ${textProvider === "openai" ? "text-gray-300" : "text-gray-500"}`}>OpenAI · OPENAI_API_KEY</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTextProvider("gemini")}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        textProvider === "gemini"
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : "border-gray-200 bg-white hover:border-gray-400"
+                      }`}
+                    >
+                      <div className="font-bold text-sm">Gemini 2.0 Flash</div>
+                      <div className={`text-xs mt-0.5 ${textProvider === "gemini" ? "text-blue-100" : "text-gray-500"}`}>Google · GOOGLE_API_KEY</div>
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}

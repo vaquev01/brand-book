@@ -243,7 +243,7 @@ export interface BrandbookData {
   imageGenerationBriefing?: ImageGenerationBriefing;
 }
 
-export type ImageProvider = "dalle3" | "stability" | "ideogram";
+export type ImageProvider = "dalle3" | "stability" | "ideogram" | "imagen";
 
 export interface GeneratedAsset {
   key: string;

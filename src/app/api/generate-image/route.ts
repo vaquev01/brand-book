@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
 type AspectRatioKey = "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
 
@@ -17,6 +18,14 @@ const STABILITY_SIZES: Record<AspectRatioKey, { width: number; height: number }>
   "9:16": { width: 768, height: 1344 },
   "4:3": { width: 1152, height: 896 },
   "21:9": { width: 1536, height: 640 },
+};
+
+const IMAGEN_RATIOS: Record<AspectRatioKey, string> = {
+  "1:1": "1:1",
+  "16:9": "16:9",
+  "9:16": "9:16",
+  "4:3": "4:3",
+  "21:9": "16:9",
 };
 
 const IDEOGRAM_RATIOS: Record<AspectRatioKey, string> = {
@@ -53,13 +62,14 @@ function extractNegativePrompt(prompt: string): { positive: string; negative: st
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, provider, assetKey, openaiKey, stabilityKey, ideogramKey } = await request.json() as {
+    const { prompt, provider, assetKey, openaiKey, stabilityKey, ideogramKey, googleKey } = await request.json() as {
       prompt: string;
       provider: string;
       assetKey?: string;
       openaiKey?: string;
       stabilityKey?: string;
       ideogramKey?: string;
+      googleKey?: string;
     };
 
     if (!prompt || !provider) {
@@ -180,9 +190,36 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ url, provider: "ideogram", aspectRatio });
       }
 
+      case "imagen": {
+        const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
+        if (!apiKey) {
+          return NextResponse.json({ error: "GOOGLE_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
+        }
+        const ai = new GoogleGenAI({ apiKey });
+        const { positive } = extractNegativePrompt(prompt);
+        const imagenRatio = IMAGEN_RATIOS[aspectRatio];
+        const resp = await ai.models.generateImages({
+          model: "imagen-3.0-generate-002",
+          prompt: positive.slice(0, 2000),
+          config: {
+            numberOfImages: 1,
+            aspectRatio: imagenRatio,
+            outputMimeType: "image/png",
+          },
+        });
+        const imageBytes = resp.generatedImages?.[0]?.image?.imageBytes;
+        if (!imageBytes) throw new Error("Imagen 3 não retornou imagem");
+        const b64 = typeof imageBytes === "string" ? imageBytes : Buffer.from(imageBytes).toString("base64");
+        return NextResponse.json({
+          url: `data:image/png;base64,${b64}`,
+          provider: "imagen",
+          aspectRatio,
+        });
+      }
+
       default:
         return NextResponse.json(
-          { error: "Provider inválido. Use: dalle3 | stability | ideogram" },
+          { error: "Provider inválido. Use: dalle3 | stability | ideogram | imagen" },
           { status: 400 }
         );
     }

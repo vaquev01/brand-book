@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
 import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 
 export async function POST(request: NextRequest) {
   try {
-    const { brandName, industry, briefing, openaiKey } = await request.json() as {
+    const { brandName, industry, briefing, openaiKey, googleKey, provider = "openai" } = await request.json() as {
       brandName: string;
       industry: string;
       briefing?: string;
       openaiKey?: string;
+      googleKey?: string;
+      provider?: string;
     };
 
     if (!brandName || !industry) {
@@ -20,30 +23,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "OPENAI_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho para configurar." },
-        { status: 500 }
-      );
-    }
-
-    const openai = new OpenAI({ apiKey });
-
     const systemPrompt = buildSystemPrompt();
+    const useGemini = provider === "gemini";
 
-    async function generateOnce(userContent: string, temperature = 0.7) {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        temperature,
-        max_tokens: 8192,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-      });
-      return completion.choices[0]?.message?.content;
+    let generateOnce: (userContent: string, temperature?: number) => Promise<string | null | undefined>;
+
+    if (useGemini) {
+      const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: "GOOGLE_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho para configurar." },
+          { status: 500 }
+        );
+      }
+      const ai = new GoogleGenAI({ apiKey });
+      generateOnce = async (userContent: string, temperature = 0.7) => {
+        const resp = await ai.models.generateContent({
+          model: "gemini-2.0-flash",
+          contents: userContent,
+          config: {
+            systemInstruction: systemPrompt,
+            responseMimeType: "application/json",
+            temperature,
+            maxOutputTokens: 8192,
+          },
+        });
+        return resp.text;
+      };
+    } else {
+      const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: "OPENAI_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho para configurar." },
+          { status: 500 }
+        );
+      }
+      const openai = new OpenAI({ apiKey });
+      generateOnce = async (userContent: string, temperature = 0.7) => {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          temperature,
+          max_tokens: 8192,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userContent },
+          ],
+        });
+        return completion.choices[0]?.message?.content;
+      };
     }
 
     const content = await generateOnce(buildUserPrompt(brandName, industry, briefing || ""), 0.7);

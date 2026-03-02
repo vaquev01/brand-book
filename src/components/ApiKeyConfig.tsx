@@ -6,20 +6,23 @@ export interface ApiKeys {
   openai: string;
   stability: string;
   ideogram: string;
+  google: string;
 }
 
 const LS_KEYS = {
   openai: "bb_openai_key",
   stability: "bb_stability_key",
   ideogram: "bb_ideogram_key",
+  google: "bb_google_key",
 } as const;
 
 export function loadApiKeys(): ApiKeys {
-  if (typeof window === "undefined") return { openai: "", stability: "", ideogram: "" };
+  if (typeof window === "undefined") return { openai: "", stability: "", ideogram: "", google: "" };
   return {
     openai: localStorage.getItem(LS_KEYS.openai) ?? "",
     stability: localStorage.getItem(LS_KEYS.stability) ?? "",
     ideogram: localStorage.getItem(LS_KEYS.ideogram) ?? "",
+    google: localStorage.getItem(LS_KEYS.google) ?? "",
   };
 }
 
@@ -31,6 +34,8 @@ export function saveApiKeys(keys: ApiKeys) {
   else localStorage.removeItem(LS_KEYS.stability);
   if (keys.ideogram) localStorage.setItem(LS_KEYS.ideogram, keys.ideogram);
   else localStorage.removeItem(LS_KEYS.ideogram);
+  if (keys.google) localStorage.setItem(LS_KEYS.google, keys.google);
+  else localStorage.removeItem(LS_KEYS.google);
 }
 
 interface Props {
@@ -39,7 +44,17 @@ interface Props {
   onSave: (keys: ApiKeys) => void;
 }
 
-const PROVIDER_INFO = [
+const PROVIDER_INFO: {
+  key: keyof ApiKeys;
+  name: string;
+  label: string;
+  description: string;
+  placeholder: string;
+  link: string;
+  color: string;
+  dot: string;
+  required: boolean;
+}[] = [
   {
     key: "openai" as const,
     name: "OpenAI",
@@ -63,7 +78,7 @@ const PROVIDER_INFO = [
     required: false,
   },
   {
-    key: "ideogram" as const,
+    key: "ideogram",
     name: "Ideogram",
     label: "IDEOGRAM_API_KEY",
     description: "Ideogram V2 — logos com texto e design gráfico",
@@ -73,10 +88,21 @@ const PROVIDER_INFO = [
     dot: "bg-orange-500",
     required: false,
   },
+  {
+    key: "google",
+    name: "Google AI",
+    label: "GOOGLE_API_KEY",
+    description: "Gemini 2.0 Flash (geração de brandbook) + Imagen 3 (imagens)",
+    placeholder: "AIza...",
+    link: "https://aistudio.google.com/app/apikey",
+    color: "text-blue-700 bg-blue-50 border-blue-200",
+    dot: "bg-blue-500",
+    required: false,
+  },
 ];
 
 export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
-  const [keys, setKeys] = useState<ApiKeys>({ openai: "", stability: "", ideogram: "" });
+  const [keys, setKeys] = useState<ApiKeys>({ openai: "", stability: "", ideogram: "", google: "" });
   const [visible, setVisible] = useState<Record<string, boolean>>({});
   const [saved, setSaved] = useState(false);
 
@@ -240,8 +266,8 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
 
 export function ApiKeyStatusBadge({ keys }: { keys: ApiKeys }) {
   const hasOpenai = !!keys.openai;
-  const hasAny = hasOpenai || !!keys.stability || !!keys.ideogram;
-  const count = [keys.openai, keys.stability, keys.ideogram].filter(Boolean).length;
+  const hasAny = hasOpenai || !!keys.stability || !!keys.ideogram || !!keys.google;
+  const count = [keys.openai, keys.stability, keys.ideogram, keys.google].filter(Boolean).length;
 
   if (!hasAny) {
     return (
@@ -255,7 +281,7 @@ export function ApiKeyStatusBadge({ keys }: { keys: ApiKeys }) {
   return (
     <span className="flex items-center gap-1.5 text-xs text-green-700 font-medium bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
       <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-      {count}/3 {count === 1 ? "chave" : "chaves"} configurada{count > 1 ? "s" : ""}
+      {count}/4 {count === 1 ? "chave" : "chaves"} configurada{count > 1 ? "s" : ""}
     </span>
   );
 }

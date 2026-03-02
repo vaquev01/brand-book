@@ -34,6 +34,13 @@ const PROVIDERS: { id: ImageProvider; name: string; desc: string; envKey: string
     envKey: "IDEOGRAM_API_KEY",
     color: "bg-orange-50 border-orange-200 text-orange-800",
   },
+  {
+    id: "imagen",
+    name: "Imagen 3",
+    desc: "Google · Alta fidelidade, fotorrealista e artístico",
+    envKey: "GOOGLE_API_KEY",
+    color: "bg-blue-50 border-blue-200 text-blue-800",
+  },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -73,6 +80,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
           openaiKey: apiKeys.openai || undefined,
           stabilityKey: apiKeys.stability || undefined,
           ideogramKey: apiKeys.ideogram || undefined,
+          googleKey: apiKeys.google || undefined,
         }),
       });
       const result = await res.json() as { url?: string; error?: string };
