@@ -21,8 +21,15 @@ function buildMessage() {
 }
 
 try {
+  console.log("⬇  Pulling latest from remote...");
+  try {
+    run("git pull --rebase --autostash");
+  } catch {
+    console.warn("Pull failed or nothing to pull, continuing...");
+  }
+
   if (!hasChanges()) {
-    console.log("No changes to sync.");
+    console.log("✅ No local changes to sync.");
     process.exit(0);
   }
 
@@ -37,8 +44,10 @@ try {
     process.exit(0);
   }
 
+  console.log("⬆  Pushing to remote...");
   run("git push");
+  console.log("✅ Sync done → Railway will auto-deploy from GitHub.");
 } catch (e) {
-  console.error("Sync failed.");
+  console.error("Sync failed:", e.message ?? e);
   process.exit(1);
 }
