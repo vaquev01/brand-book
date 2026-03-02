@@ -67,6 +67,7 @@ interface ProviderConfig {
   required: boolean;
   textModelKey?: keyof ApiKeys;
   imageModelKey?: keyof ApiKeys;
+  comingSoon?: boolean;
 }
 
 const PROVIDERS: ProviderConfig[] = [
@@ -104,6 +105,7 @@ const PROVIDERS: ProviderConfig[] = [
     dot: "bg-purple-500",
     required: false,
     imageModelKey: "stabilityModel",
+    comingSoon: true,
   },
   {
     key: "ideogram",
@@ -115,6 +117,7 @@ const PROVIDERS: ProviderConfig[] = [
     dot: "bg-orange-500",
     required: false,
     imageModelKey: "ideogramModel",
+    comingSoon: true,
   },
 ];
 
@@ -221,9 +224,15 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${isSet ? p.dot : "bg-gray-300"}`} />
                     <span className="font-bold text-sm">{p.name}</span>
-                    <span className={`text-[10px] font-bold bg-black/${p.required ? 10 : 5} px-1.5 py-0.5 rounded uppercase tracking-wide`}>
-                      {p.required ? "Obrigatória" : "Opcional"}
-                    </span>
+                    {p.comingSoon ? (
+                      <span className="text-[10px] font-bold bg-black/10 text-gray-500 px-1.5 py-0.5 rounded uppercase tracking-wide">
+                        Em breve
+                      </span>
+                    ) : (
+                      <span className={`text-[10px] font-bold bg-black/${p.required ? 10 : 5} px-1.5 py-0.5 rounded uppercase tracking-wide`}>
+                        {p.required ? "Obrigatória" : "Opcional"}
+                      </span>
+                    )}
                   </div>
                   <a href={p.link} target="_blank" rel="noopener noreferrer"
                     className="text-[11px] underline underline-offset-2 opacity-70 hover:opacity-100"
@@ -347,14 +356,15 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
 
 export function ApiKeyStatusBadge({ keys }: { keys: ApiKeys }) {
   const hasOpenai = !!keys.openai;
-  const hasAny = hasOpenai || !!keys.stability || !!keys.ideogram || !!keys.google;
-  const count = [keys.openai, keys.stability, keys.ideogram, keys.google].filter(Boolean).length;
+  const hasGoogle = !!keys.google;
+  const hasAny = hasOpenai || hasGoogle;
+  const count = [keys.openai, keys.google].filter(Boolean).length;
 
   if (!hasAny) {
     return (
       <span className="flex items-center gap-1.5 text-xs text-red-600 font-medium bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-        APIs não configuradas
+        Configure uma API para gerar
       </span>
     );
   }
@@ -362,7 +372,7 @@ export function ApiKeyStatusBadge({ keys }: { keys: ApiKeys }) {
   return (
     <span className="flex items-center gap-1.5 text-xs text-green-700 font-medium bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
       <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-      {count}/4 {count === 1 ? "chave" : "chaves"} configurada{count > 1 ? "s" : ""}
+      {count === 2 ? "OpenAI + Google" : hasOpenai ? "OpenAI" : "Google AI"} configurado
     </span>
   );
 }

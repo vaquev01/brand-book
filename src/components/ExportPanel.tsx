@@ -123,8 +123,8 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
         {
           key: "tokens" as const,
           icon: "🪙",
-          label: "W3C Design Tokens (JSON)",
-          sub: "Formato padrão de mercado, compatível com Style Dictionary",
+          label: "Design Tokens (JSON)",
+          sub: "Tokens de cores, tipografia e espaçamento em JSON — compatível com Style Dictionary e Figma Tokens",
           onClick: handleW3C,
         },
         {
