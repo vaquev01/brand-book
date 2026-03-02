@@ -64,12 +64,16 @@ export default function Home() {
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
+
+  useEffect(() => {
+    const keys = loadApiKeys();
+    setApiKeys(keys);
+    if (!keys.openai && keys.google) setTextProvider("gemini");
+    else if (keys.openai) setTextProvider("openai");
+  }, []);
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [exportingPack, setExportingPack] = useState(false);
 
-  useEffect(() => {
-    setApiKeys(loadApiKeys());
-  }, []);
 
   async function handleGenerate(e: FormEvent) {
     e.preventDefault();
@@ -345,11 +349,13 @@ export default function Home() {
                       className={`p-3 rounded-lg border-2 text-left transition-all ${
                         textProvider === "openai"
                           ? "border-gray-900 bg-gray-900 text-white"
-                          : "border-gray-200 bg-white hover:border-gray-400"
+                          : apiKeys.openai ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50 hover:border-red-400"
                       }`}
                     >
-                      <div className="font-bold text-sm">GPT-4o</div>
-                      <div className={`text-xs mt-0.5 ${textProvider === "openai" ? "text-gray-300" : "text-gray-500"}`}>OpenAI · OPENAI_API_KEY</div>
+                      <div className="font-bold text-sm">{apiKeys.openaiTextModel || "GPT-4o"}</div>
+                      <div className={`text-xs mt-0.5 ${textProvider === "openai" ? "text-gray-300" : apiKeys.openai ? "text-gray-500" : "text-red-500"}`}>
+                        {apiKeys.openai ? "✓ OpenAI configurado" : "⚠ OPENAI_API_KEY ausente"}
+                      </div>
                     </button>
                     <button
                       type="button"
@@ -357,13 +363,20 @@ export default function Home() {
                       className={`p-3 rounded-lg border-2 text-left transition-all ${
                         textProvider === "gemini"
                           ? "border-blue-600 bg-blue-600 text-white"
-                          : "border-gray-200 bg-white hover:border-gray-400"
+                          : apiKeys.google ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50 hover:border-red-400"
                       }`}
                     >
-                      <div className="font-bold text-sm">Gemini 2.0 Flash</div>
-                      <div className={`text-xs mt-0.5 ${textProvider === "gemini" ? "text-blue-100" : "text-gray-500"}`}>Google · GOOGLE_API_KEY</div>
+                      <div className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 2.0 Flash"}</div>
+                      <div className={`text-xs mt-0.5 ${textProvider === "gemini" ? "text-blue-100" : apiKeys.google ? "text-gray-500" : "text-red-500"}`}>
+                        {apiKeys.google ? "✓ Google AI configurado" : "⚠ GOOGLE_API_KEY ausente"}
+                      </div>
                     </button>
                   </div>
+                  {((textProvider === "openai" && !apiKeys.openai) || (textProvider === "gemini" && !apiKeys.google)) && (
+                    <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+                      ⚠ Configure a chave do provider selecionado em <strong>⚙ APIs</strong> antes de gerar.
+                    </p>
+                  )}
                 </div>
 
                 <button
