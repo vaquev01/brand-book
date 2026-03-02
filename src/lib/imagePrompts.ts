@@ -105,6 +105,23 @@ function extractBrandContext(data: BrandbookData) {
     ? `${persona.role} — ${persona.context} — goals: ${persona.goals.slice(0, 2).join(", ")}`
     : targetMarket;
 
+  // Messaging
+  const messagingPillar = vi?.messagingPillars?.[0]
+    ? `${vi.messagingPillars[0].title} — ${vi.messagingPillars[0].description}`
+    : uniqueValue;
+  const preferredVocab = vi?.vocabulary?.preferred?.slice(0, 5).join(", ") ?? "";
+  const reasonsToBelieve = [
+    ...(data.brandConcept.reasonsToBelieve ?? []),
+    ...(pos?.reasonsToBelieve ?? []),
+  ].slice(0, 3).join(", ") || differentiators;
+  const userPsychographics = data.brandConcept.userPsychographics ?? audienceDesc;
+  const marketingArch = data.keyVisual.marketingArchitecture ?? marketingLanguage;
+  const competitiveAngle = pos?.competitiveAlternatives?.length
+    ? `Visually distinct from ${pos.competitiveAlternatives.slice(0, 2).join(" / ")}: ${differentiators}.`
+    : `Visually superior to generic ${data.industry} imagery — ${differentiators}.`;
+  const purpose = data.brandConcept.purpose ?? mission;
+  const visualMetaphor = `${elements} — abstract representation of ${moodWords} through ${data.industry} lens`;
+
   return {
     primaryColor, primaryColorName, secondaryColor, accentColor,
     allPrimaryColors, allColors,
@@ -115,7 +132,8 @@ function extractBrandContext(data: BrandbookData) {
     photoStyle, elements, visualStyle, colorMood, composition,
     artisticRef, moodWords, marketingLanguage, negativeBase, avoid,
     logoSymbol, logoPrimary, logoStyle, patternStyle,
-    audienceDesc,
+    audienceDesc, messagingPillar, preferredVocab, reasonsToBelieve,
+    userPsychographics, marketingArch, competitiveAngle, purpose, visualMetaphor,
   };
 }
 

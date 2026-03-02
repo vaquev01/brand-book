@@ -4,6 +4,14 @@ import { GoogleGenAI } from "@google/genai";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
 import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
+import type { GenerateScope, CreativityLevel } from "@/lib/types";
+
+const CREATIVITY_TEMPERATURE: Record<CreativityLevel, number> = {
+  conservative: 0.45,
+  balanced: 0.72,
+  creative: 0.92,
+  experimental: 1.0,
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +25,9 @@ export async function POST(request: NextRequest) {
       openaiModel,
       googleModel,
       referenceImages,
+      scope = "full",
+      creativityLevel = "balanced",
+      intentionality = false,
     } = await request.json() as {
       brandName: string;
       industry: string;
@@ -27,6 +38,9 @@ export async function POST(request: NextRequest) {
       openaiModel?: string;
       googleModel?: string;
       referenceImages?: string[];
+      scope?: GenerateScope;
+      creativityLevel?: CreativityLevel;
+      intentionality?: boolean;
     };
 
     if (!brandName || !industry) {
@@ -36,7 +50,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = buildSystemPrompt();
+    const temperature = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
+    const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
     const useGemini = provider === "gemini";
     const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
 
@@ -51,7 +66,7 @@ export async function POST(request: NextRequest) {
         );
       }
       const ai = new GoogleGenAI({ apiKey });
-      generateOnce = async (userContent: string, temperature = 0.7) => {
+      generateOnce = async (userContent: string, temp = temperature) => {
         const contentParts: unknown[] = [{ text: userContent }];
         if (hasImages) {
           for (const imgDataUrl of referenceImages!) {
@@ -67,7 +82,7 @@ export async function POST(request: NextRequest) {
           config: {
             systemInstruction: systemPrompt,
             responseMimeType: "application/json",
-            temperature,
+            temperature: temp,
             maxOutputTokens: 8192,
           },
         });
@@ -83,7 +98,7 @@ export async function POST(request: NextRequest) {
       }
       const openai = new OpenAI({ apiKey });
       const resolvedOpenAIModel = openaiModel?.trim() || "gpt-4o";
-      generateOnce = async (userContent: string, temperature = 0.7) => {
+      generateOnce = async (userContent: string, temp = temperature) => {
         type ContentPart =
           | { type: "text"; text: string }
           | { type: "image_url"; image_url: { url: string; detail: "high" } };
@@ -95,7 +110,7 @@ export async function POST(request: NextRequest) {
         }
         const completion = await openai.chat.completions.create({
           model: resolvedOpenAIModel,
-          temperature,
+          temperature: temp,
           max_tokens: 8192,
           response_format: { type: "json_object" },
           messages: [
@@ -107,7 +122,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    const content = await generateOnce(buildUserPrompt(brandName, industry, briefing || ""), 0.7);
+    const content = await generateOnce(buildUserPrompt(brandName, industry, briefing || "", scope));
     if (!content) {
       return NextResponse.json(
         { error: "A IA não retornou conteúdo." },

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect } from "react";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
 import { ImageGenPanel } from "@/components/ImageGenPanel";
 import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
-import { BriefingImageUpload } from "@/components/BriefingImageUpload";
 import { BrandbookEditor } from "@/components/BrandbookEditor";
 import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
+import { GenerateBriefingForm, type GenerateBriefingData } from "@/components/GenerateBriefingForm";
 import { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { saasExample, barExample, sushiExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
@@ -81,16 +81,12 @@ function saveCachedBrandAssets(slug: string, assets: UploadedAsset[]) {
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>("examples");
-  const [brandName, setBrandName] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [briefing, setBriefing] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
   const [jsonText, setJsonText] = useState("");
   const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
-  const [uploadedBriefingImages, setUploadedBriefingImages] = useState<UploadedAsset[]>([]);
   const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
@@ -105,8 +101,7 @@ export default function Home() {
   const [exportingPack, setExportingPack] = useState(false);
 
 
-  async function handleGenerate(e: FormEvent) {
-    e.preventDefault();
+  async function handleGenerate(formData: GenerateBriefingData) {
     setLoading(true);
     setError("");
     setBrandbookData(null);
@@ -116,17 +111,20 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandName,
-          industry,
-          briefing,
+          brandName: formData.brandName,
+          industry: formData.industry,
+          briefing: formData.briefing,
           provider: textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
           openaiModel: apiKeys.openaiTextModel || undefined,
           googleModel: apiKeys.googleTextModel || undefined,
-          referenceImages: uploadedBriefingImages.length > 0
-            ? uploadedBriefingImages.map((img) => img.dataUrl)
+          referenceImages: formData.referenceImages.length > 0
+            ? formData.referenceImages.map((img) => img.dataUrl)
             : undefined,
+          scope: formData.scope,
+          creativityLevel: formData.creativityLevel,
+          intentionality: formData.intentionality,
         }),
       });
 
@@ -342,109 +340,60 @@ export default function Home() {
         {tab === "generate" && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white border rounded-xl p-8 shadow-sm">
-              <h2 className="text-2xl font-bold mb-2">Gerar Brandbook com IA</h2>
-              <p className="text-gray-500 mb-8">Preencha as informações abaixo e a IA criará um manual de marca completo.</p>
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <h2 className="text-2xl font-bold">Gerar Brandbook com IA</h2>
+                  <p className="text-gray-500 text-sm mt-1">Configure o briefing, escopo e criatividade — a IA cria sua identidade completa.</p>
+                </div>
+              </div>
 
-              <form onSubmit={handleGenerate} className="space-y-6">
-                <div>
-                  <label htmlFor="brandName" className="block text-sm font-semibold mb-2">Nome da Marca *</label>
-                  <input
-                    id="brandName"
-                    type="text"
-                    required
-                    value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
-                    placeholder="Ex: CloudFlow, Neon Tokyo Bar..."
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition"
-                  />
+              {/* API Provider selector */}
+              <div className="mt-5 mb-7 p-3 bg-gray-50 border rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Modelo de IA</span>
                 </div>
-                <div>
-                  <label htmlFor="industry" className="block text-sm font-semibold mb-2">Indústria / Nicho *</label>
-                  <input
-                    id="industry"
-                    type="text"
-                    required
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    placeholder="Ex: SaaS B2B, Restaurante Japonês, Bar Temático..."
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition"
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTextProvider("openai")}
+                    className={`p-2.5 rounded-lg border-2 text-left transition-all ${
+                      textProvider === "openai"
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : apiKeys.openai ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50"
+                    }`}
+                  >
+                    <div className="font-bold text-sm">{apiKeys.openaiTextModel || "GPT-4o"}</div>
+                    <div className={`text-xs mt-0.5 ${textProvider === "openai" ? "text-gray-300" : apiKeys.openai ? "text-gray-500" : "text-red-500"}`}>
+                      {apiKeys.openai ? "✓ OpenAI configurado" : "⚠ Chave ausente"}
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTextProvider("gemini")}
+                    className={`p-2.5 rounded-lg border-2 text-left transition-all ${
+                      textProvider === "gemini"
+                        ? "border-blue-600 bg-blue-600 text-white"
+                        : apiKeys.google ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50"
+                    }`}
+                  >
+                    <div className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 2.0 Flash"}</div>
+                    <div className={`text-xs mt-0.5 ${textProvider === "gemini" ? "text-blue-100" : apiKeys.google ? "text-gray-500" : "text-red-500"}`}>
+                      {apiKeys.google ? "✓ Google AI configurado" : "⚠ Chave ausente"}
+                    </div>
+                  </button>
                 </div>
-                <div>
-                  <label htmlFor="briefing" className="block text-sm font-semibold mb-2">Briefing / Contexto</label>
-                  <textarea
-                    id="briefing"
-                    rows={5}
-                    value={briefing}
-                    onChange={(e) => setBriefing(e.target.value)}
-                    placeholder="Descreva o público-alvo, diferenciais, estilo desejado, referências..."
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Imagens de Referência
-                    <span className="ml-2 text-xs font-normal text-gray-400">(opcional — a IA analisará e replicará o estilo)</span>
-                  </label>
-                  <BriefingImageUpload
-                    images={uploadedBriefingImages}
-                    onChange={setUploadedBriefingImages}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">IA para gerar o Brandbook</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setTextProvider("openai")}
-                      className={`p-3 rounded-lg border-2 text-left transition-all ${
-                        textProvider === "openai"
-                          ? "border-gray-900 bg-gray-900 text-white"
-                          : apiKeys.openai ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50 hover:border-red-400"
-                      }`}
-                    >
-                      <div className="font-bold text-sm">{apiKeys.openaiTextModel || "GPT-4o"}</div>
-                      <div className={`text-xs mt-0.5 ${textProvider === "openai" ? "text-gray-300" : apiKeys.openai ? "text-gray-500" : "text-red-500"}`}>
-                        {apiKeys.openai ? "✓ OpenAI configurado" : "⚠ OPENAI_API_KEY ausente"}
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTextProvider("gemini")}
-                      className={`p-3 rounded-lg border-2 text-left transition-all ${
-                        textProvider === "gemini"
-                          ? "border-blue-600 bg-blue-600 text-white"
-                          : apiKeys.google ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50 hover:border-red-400"
-                      }`}
-                    >
-                      <div className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 2.0 Flash"}</div>
-                      <div className={`text-xs mt-0.5 ${textProvider === "gemini" ? "text-blue-100" : apiKeys.google ? "text-gray-500" : "text-red-500"}`}>
-                        {apiKeys.google ? "✓ Google AI configurado" : "⚠ GOOGLE_API_KEY ausente"}
-                      </div>
-                    </button>
-                  </div>
-                  {((textProvider === "openai" && !apiKeys.openai) || (textProvider === "gemini" && !apiKeys.google)) && (
-                    <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-                      ⚠ Configure a chave do provider selecionado em <strong>⚙ APIs</strong> antes de gerar.
-                    </p>
-                  )}
-                </div>
+                {((textProvider === "openai" && !apiKeys.openai) || (textProvider === "gemini" && !apiKeys.google)) && (
+                  <p className="mt-2 text-xs text-red-600">
+                    ⚠ Configure a chave em <strong>⚙ APIs</strong> antes de gerar.
+                  </p>
+                )}
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Gerando... (pode levar até 30s)
-                    </span>
-                  ) : (
-                    "Gerar Brandbook"
-                  )}
-                </button>
-              </form>
+              <GenerateBriefingForm
+                onSubmit={handleGenerate}
+                loading={loading}
+                error={error}
+              />
 
               <div className="mt-8 pt-8 border-t">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Ou importe um JSON existente</h3>
@@ -452,8 +401,9 @@ export default function Home() {
                   rows={4}
                   value={jsonText}
                   onChange={(e) => setJsonText(e.target.value)}
-                  placeholder='Cole aqui o JSON do brandbook...'
+                  placeholder="Cole aqui o JSON do brandbook..."
                   className="w-full px-4 py-3 border rounded-lg font-mono text-xs focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
+                  aria-label="JSON do brandbook para importar"
                 />
                 <button
                   onClick={handleImportJson}
