@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BrandbookData, ImageProvider, GeneratedAsset } from "@/lib/types";
+import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { ASSET_CATALOG, buildImagePrompt, AssetKey } from "@/lib/imagePrompts";
 import { ApiKeys } from "@/components/ApiKeyConfig";
 
@@ -10,6 +10,8 @@ interface Props {
   generatedAssets: Record<string, GeneratedAsset>;
   onAssetGenerated: (key: string, asset: GeneratedAsset) => void;
   apiKeys: ApiKeys;
+  uploadedAssets?: UploadedAsset[];
+  textProvider: "openai" | "gemini";
 }
 
 const PROVIDERS: { id: ImageProvider; name: string; desc: string; envKey: string; color: string }[] = [
@@ -71,7 +73,7 @@ function pickDefaultProvider(keys: ApiKeys): ImageProvider {
   return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "dalle3";
 }
 
-export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys }: Props) {
+export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys, uploadedAssets = [], textProvider }: Props) {
   const [provider, setProvider] = useState<ImageProvider>(() => pickDefaultProvider(apiKeys));
 
   useEffect(() => {
@@ -83,12 +85,54 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
+  const [refineBeforeGenerate, setRefineBeforeGenerate] = useState(true);
+  const [useReferenceImages, setUseReferenceImages] = useState(true);
 
   async function generate(assetKey: AssetKey) {
     setLoadingKey(assetKey);
     setError(null);
-    const prompt = buildImagePrompt(assetKey, data, provider);
+    const basePrompt = buildImagePrompt(assetKey, data, provider);
     try {
+      let prompt = basePrompt;
+
+      if (refineBeforeGenerate) {
+        const canRefine = (provider !== "stability") || prompt.includes(" --neg ");
+        const hasTextKey = (textProvider === "openai" && !!apiKeys.openai) || (textProvider === "gemini" && !!apiKeys.google);
+        if (canRefine && hasTextKey) {
+          const refineRes = await fetch("/api/refine-image-prompt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              basePrompt,
+              imageProvider: provider,
+              assetKey,
+              textProvider,
+              openaiKey: apiKeys.openai || undefined,
+              googleKey: apiKeys.google || undefined,
+              openaiModel: apiKeys.openaiTextModel || undefined,
+              googleModel: apiKeys.googleTextModel || undefined,
+            }),
+          });
+          const refineJson = await refineRes.json() as { prompt?: string; error?: string };
+          if (refineRes.ok && refineJson.prompt) {
+            prompt = refineJson.prompt;
+          }
+        }
+      }
+
+      const canUseRefImages =
+        provider === "imagen" &&
+        !!apiKeys.google &&
+        (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini") &&
+        useReferenceImages;
+
+      const referenceImages = canUseRefImages
+        ? uploadedAssets
+          .filter((a: UploadedAsset) => a.type === "reference" || a.type === "pattern" || a.type === "element")
+          .slice(0, 2)
+          .map((a: UploadedAsset) => a.dataUrl)
+        : undefined;
+
       const res = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,6 +140,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
           prompt,
           provider,
           assetKey,
+          referenceImages,
           openaiKey: apiKeys.openai || undefined,
           stabilityKey: apiKeys.stability || undefined,
           ideogramKey: apiKeys.ideogram || undefined,
@@ -137,6 +182,48 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
 
   return (
     <div className="space-y-8">
+
+      <div className="bg-gray-50 border rounded-xl p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold">Qualidade avançada</h3>
+            <p className="text-xs text-gray-500 mt-1">
+              Opcional: refinar prompts automaticamente e usar imagens de referência (quando suportado).
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label className="flex items-start gap-2 text-xs text-gray-700">
+            <input
+              type="checkbox"
+              checked={refineBeforeGenerate}
+              onChange={(e) => setRefineBeforeGenerate(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-semibold">Refinar prompt antes de gerar</span>
+              <span className="block text-[10px] text-gray-500 mt-0.5">
+                Usa {textProvider === "openai" ? (apiKeys.openaiTextModel || "GPT") : (apiKeys.googleTextModel || "Gemini")} para reformatar o prompt no estilo ideal do provider.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-2 text-xs text-gray-700">
+            <input
+              type="checkbox"
+              checked={useReferenceImages}
+              onChange={(e) => setUseReferenceImages(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-semibold">Usar imagens de referência (Gemini imagem)</span>
+              <span className="block text-[10px] text-gray-500 mt-0.5">
+                Envia até 2 assets (reference/pattern/element) como guia de estilo quando o modelo selecionado for Gemini.
+              </span>
+            </span>
+          </label>
+        </div>
+      </div>
 
       {/* Provider selector */}
       <div>

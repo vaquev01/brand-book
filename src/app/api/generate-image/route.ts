@@ -53,7 +53,7 @@ function extractNegativePrompt(prompt: string): { positive: string; negative: st
 export async function POST(request: NextRequest) {
   try {
     const { prompt, provider, assetKey, openaiKey, stabilityKey, ideogramKey, googleKey,
-      openaiImageModel, stabilityModel, ideogramModel, googleImageModel } = await request.json() as {
+      openaiImageModel, stabilityModel, ideogramModel, googleImageModel, referenceImages } = await request.json() as {
       prompt: string;
       provider: string;
       assetKey?: string;
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       stabilityModel?: string;
       ideogramModel?: string;
       googleImageModel?: string;
+      referenceImages?: string[];
     };
 
     if (!prompt || !provider) {
@@ -204,9 +205,23 @@ export async function POST(request: NextRequest) {
             "21:9": "ultra-wide cinematic 21:9 aspect ratio",
           };
           const fullPrompt = `${positive.slice(0, 1800)}\n\nGenerate as ${ratioHints[aspectRatio]} image.`;
+
+          const hasRefImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+          const contentParts: unknown[] = [{ text: fullPrompt }];
+          if (hasRefImages) {
+            for (const imgDataUrl of referenceImages!) {
+              const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+              if (match) contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+            }
+          }
+
+          const contents = hasRefImages
+            ? (contentParts as Parameters<typeof ai.models.generateContent>[0]["contents"])
+            : fullPrompt;
+
           const resp = await ai.models.generateContent({
             model,
-            contents: fullPrompt,
+            contents,
             config: { responseModalities: ["IMAGE", "TEXT"] },
           });
           const parts = resp.candidates?.[0]?.content?.parts ?? [];

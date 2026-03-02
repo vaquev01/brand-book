@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { BrandbookData } from "@/lib/types";
 import type { ApiKeys } from "./ApiKeyConfig";
 import type { ConsistencyReport, ConsistencyIssue } from "@/app/api/check-consistency/route";
+import type { SystemHealthReport, Issue as SystemIssue } from "@/app/api/system-health/route";
 
 interface Props {
   brandbook: BrandbookData;
@@ -79,6 +80,46 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
   const [report, setReport] = useState<ConsistencyReport | null>(null);
   const [filter, setFilter] = useState<"all" | "critical" | "warning" | "suggestion">("all");
 
+  const [systemLoading, setSystemLoading] = useState(false);
+  const [systemError, setSystemError] = useState("");
+  const [systemReport, setSystemReport] = useState<SystemHealthReport | null>(null);
+
+  async function handleSystemHealth() {
+    setSystemLoading(true);
+    setSystemError("");
+    try {
+      const res = await fetch("/api/system-health");
+      const data = await res.json();
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "Erro ao verificar sistema");
+      setSystemReport(data as SystemHealthReport);
+    } catch (e: unknown) {
+      setSystemError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setSystemLoading(false);
+    }
+  }
+
+  function SystemIssueRow({ issue }: { issue: SystemIssue }) {
+    const color = issue.severity === "critical"
+      ? "bg-red-50 border-red-200 text-red-800"
+      : issue.severity === "warning"
+        ? "bg-amber-50 border-amber-200 text-amber-800"
+        : "bg-blue-50 border-blue-200 text-blue-800";
+    const icon = issue.severity === "critical" ? "🔴" : issue.severity === "warning" ? "🟡" : "🔵";
+    return (
+      <div className={`border rounded-xl p-4 ${color}`}>
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5">{icon}</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold uppercase tracking-wider opacity-70">{issue.area}</div>
+            <div className="text-sm mt-1">{issue.issue}</div>
+            <div className="text-xs mt-2 opacity-80"><span className="font-semibold">Fix:</span> {issue.fix}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   async function handleCheck() {
     setLoading(true);
     setError("");
@@ -125,6 +166,53 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
         <p className="text-sm text-gray-500">
           A IA analisa o brandbook e identifica inconsistências, oportunidades e pontos fortes.
         </p>
+      </div>
+
+      <div className="bg-white border rounded-xl p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h4 className="font-bold text-sm">Saúde do Sistema (sem IA)</h4>
+            <p className="text-xs text-gray-500 mt-1">
+              Verifica se catálogo de assets, schema e regras internas estão sincronizados.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSystemHealth}
+            disabled={systemLoading}
+            className="text-xs bg-gray-900 text-white px-3 py-2 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {systemLoading ? "Verificando..." : "Verificar"}
+          </button>
+        </div>
+
+        {systemError && (
+          <div className="mt-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700 text-sm">
+            {systemError}
+          </div>
+        )}
+
+        {systemReport && (
+          <div className="mt-4 space-y-3">
+            <div className={`border rounded-xl p-4 ${systemReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+              <div className="font-semibold text-sm">
+                {systemReport.ok ? "✓ Sistema OK" : "⚠ Sistema com inconsistências"}
+              </div>
+              <div className="text-xs mt-1 opacity-80">{systemReport.summary}</div>
+              <div className="text-[10px] font-mono mt-2 opacity-70">
+                assets={systemReport.stats.assets} · categories={JSON.stringify(systemReport.stats.categories)} · ratios={JSON.stringify(systemReport.stats.aspectRatios)}
+              </div>
+            </div>
+
+            {systemReport.issues.length > 0 && (
+              <div className="space-y-2">
+                {systemReport.issues.map((i, idx) => (
+                  <SystemIssueRow key={idx} issue={i} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {!report && !loading && (

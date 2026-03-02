@@ -681,6 +681,8 @@ export default function Home() {
                     data={brandbookData}
                     generatedAssets={generatedAssets}
                     apiKeys={apiKeys}
+                    uploadedAssets={uploadedBrandAssets}
+                    textProvider={textProvider}
                     onAssetGenerated={(key, asset) =>
                       setGeneratedAssets((prev) => ({ ...prev, [key]: asset }))
                     }
