@@ -61,7 +61,7 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
       {totalGenerated > 0 && (
         <div className="no-print mb-6 bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
           <span className="text-green-600 font-bold">✓</span>
-          <span>{totalGenerated} {totalGenerated === 1 ? "imagem gerada" : "imagens geradas"} com IA — substituindo os mockups abaixo.</span>
+          <span>{totalGenerated} {totalGenerated === 1 ? "imagem gerada" : "imagens geradas"} com IA — substituindo os mockups abaixo automaticamente.</span>
         </div>
       )}
 
@@ -71,7 +71,9 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
           const selectId = `application-image-key-${i}`;
           return (
             <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative">
-              <div className="aspect-video bg-gray-900 overflow-hidden">
+
+              {/* Image area */}
+              <div className="aspect-video bg-gray-900 overflow-hidden relative">
                 {aiImage ? (
                   <>
                     <img src={aiImage} alt={app.type} className="w-full h-full object-cover" />
@@ -80,31 +82,40 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
                     </span>
                   </>
                 ) : (
-                  <img
-                    src={app.imagePlaceholder}
-                    alt={app.type}
-                    className="w-full h-full object-cover opacity-80"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-4">
+                    <span className="text-white/20 text-5xl font-black tracking-tighter select-none">{app.type.slice(0, 2).toUpperCase()}</span>
+                    <span className="text-white/40 text-xs text-center font-medium">{app.type}</span>
+                    {onGoToImages && (
+                      <button
+                        onClick={onGoToImages}
+                        className="no-print mt-1 text-[11px] bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1 rounded-full transition"
+                      >
+                        + Gerar imagem
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
+
+              {/* Content */}
               <div className="p-5">
                 <h3 className="font-bold text-lg mb-2">{app.type}</h3>
                 <p className="text-gray-600 text-sm">{app.description}</p>
 
-                {onUpdateApplicationImageKey && (
-                  <div className="no-print mt-4">
+                {/* Override dropdown — only shown when there ARE generated images */}
+                {onUpdateApplicationImageKey && totalGenerated > 0 && (
+                  <div className="no-print mt-4 border-t pt-4">
                     <label
                       htmlFor={selectId}
                       className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2"
                     >
-                      Vincular imagem gerada
+                      {aiImage ? "Imagem vinculada" : "Vincular imagem gerada"}
                     </label>
                     <select
                       id={selectId}
-                      aria-label="Vincular imagem gerada"
+                      aria-label="Escolher qual imagem gerada usar nesta aplicação"
                       name={selectId}
-                      title="Vincular imagem gerada"
+                      title="Escolher qual imagem gerada usar nesta aplicação"
                       value={app.imageKey ?? ""}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -112,16 +123,13 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
                       }}
                       className="w-full bg-gray-50 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     >
-                      <option value="">Auto (por tipo)</option>
-                      {ASSET_CATALOG.map((a) => (
+                      <option value="">Automático</option>
+                      {ASSET_CATALOG.filter((a) => !!generatedImages[a.key]).map((a) => (
                         <option key={a.key} value={a.key}>
                           {a.label}
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-400 mt-2">
-                      Dica: escolha a peça que corresponde a esta aplicação para substituir o mockup com a imagem gerada.
-                    </p>
                   </div>
                 )}
               </div>
