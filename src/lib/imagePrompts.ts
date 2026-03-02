@@ -1,30 +1,6 @@
 import { BrandbookData, ImageProvider } from "./types";
 
-export type AssetKey =
-  | "logo_primary"
-  | "logo_dark_bg"
-  | "brand_pattern"
-  | "hero_visual"
-  | "hero_lifestyle"
-  | "youtube_thumbnail"
-  | "presentation_bg"
-  | "email_header"
-  | "instagram_carousel"
-  | "instagram_story"
-  | "social_cover"
-  | "social_post_square"
-  | "app_mockup"
-  | "business_card"
-  | "brand_collateral"
-  | "outdoor_billboard";
-
-export const ASSET_CATALOG: {
-  key: AssetKey;
-  label: string;
-  description: string;
-  aspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
-  category: "logo" | "digital" | "social" | "print" | "mockup";
-}[] = [
+export const ASSET_CATALOG = [
   // ─── LOGO ──────────────────────────────────────────────────────────────────
   { key: "logo_primary",       label: "Logo — Fundo Claro",           description: "Símbolo + wordmark sobre fundo branco — versão principal da identidade", aspectRatio: "1:1",  category: "logo"    },
   { key: "logo_dark_bg",       label: "Logo — Versão Invertida",      description: "Logo em negativo sobre fundo escuro — dark mode, vídeos, eventos",       aspectRatio: "1:1",  category: "logo"    },
@@ -46,7 +22,15 @@ export const ASSET_CATALOG: {
   { key: "brand_collateral",   label: "Kit Papelaria Corporativa",    description: "Flat-lay completo: cartão, letterhead, bloco, caneta, envelope, wax seal",  aspectRatio: "4:3",  category: "mockup"  },
   // ─── PRINT ─────────────────────────────────────────────────────────────────
   { key: "outdoor_billboard",  label: "Outdoor Urbano / OOH",         description: "Billboard em contexto urbano real — impacto máximo em 3 segundos",          aspectRatio: "16:9", category: "print"   },
-];
+ ] as const satisfies ReadonlyArray<{
+  key: string;
+  label: string;
+  description: string;
+  aspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
+  category: "logo" | "digital" | "social" | "print" | "mockup";
+}>;
+
+export type AssetKey = (typeof ASSET_CATALOG)[number]["key"];
 
 function industryVisualLanguage(industry: string): string {
   const i = industry.toLowerCase();
@@ -264,7 +248,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `VISUAL STYLE: ${ctx.visualStyle}. ${ctx.competitiveAngle}`,
         `TECHNICAL: Isolated logomark + wordmark lockup, crisp vector graphic, sharp edges, scalable symbol,`,
         `no drop shadows, no textures, pure white background, centered composition.`,
-        q, neg(ctx, provider),
+        sTags, q, neg(ctx, provider),
       );
     }
 
@@ -281,7 +265,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PERSONALITY: ${ctx.personality}. Tone: ${ctx.toneOfVoice}.`,
         `PURPOSE: Dark websites, video intros, event backdrops, dark mode UI, investor decks.`,
         `TECHNICAL: Maximum contrast inverted lockup, pure flat solid dark background, no textures, no halos, centered.`,
-        q, neg(ctx, provider),
+        sTags, q, neg(ctx, provider),
       );
     }
 
@@ -298,7 +282,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PURPOSE: Packaging, stationery, website backgrounds, slide decks, event materials.`,
         `TECHNICAL: Geometric precision, perfect tile zero visible seams, flat design,`,
         `consistent line weights, square composition, abstract shapes — no text, no logos, no photographic content.`,
-        q, neg(ctx, provider, "visible seams, text, logos, photographic content, random noise"),
+        sTags, q, neg(ctx, provider, "visible seams, text, logos, photographic content, random noise"),
       );
     }
 
@@ -348,7 +332,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PEOPLE: Authentic, diverse, non-model-perfect. Real emotion — not corporate smiling. Candid or near-candid.`,
         `${ctx.artisticRef} editorial approach. Wide 16:9. Left or center clear zone for optional copy overlay.`,
         `No logos visible, no text on clothing, pure documentary editorial quality.`,
-        q, neg(ctx, provider, `overly posed, fake corporate smile, stock photo aesthetic, generic office, plastic-looking, HDR${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
+        sTags, q, neg(ctx, provider, `overly posed, fake corporate smile, stock photo aesthetic, generic office, plastic-looking, HDR${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -371,7 +355,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MOOD: ${ctx.moodWords}. Energy: high-impact, thumb-stopping, premium, social-native.`,
         `${ctx.competitiveAngle}`,
         `Reference: Spotify, Apple, top-performing ${data.industry} carousel decks. No actual text.`,
-        q, neg(ctx, provider, `cluttered, multiple competing elements, generic gradient, centered symmetry${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
+        sTags, q, neg(ctx, provider, `cluttered, multiple competing elements, generic gradient, centered symmetry${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -396,7 +380,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MOOD: ${ctx.moodWords}. Immediate, bold, vertically dynamic, recognizable even as a 60px thumbnail.`,
         `${ctx.competitiveAngle}`,
         `Inspired by top brand stories: Apple, Spotify, Airbnb, Nike — adapted to ${data.industry}. No actual text.`,
-        q, neg(ctx, provider, "horizontal elements, landscape framing, cluttered bottom, multiple focal points"),
+        sTags, q, neg(ctx, provider, "horizontal elements, landscape framing, cluttered bottom, multiple focal points"),
       );
     }
 
@@ -419,7 +403,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `VISUAL ELEMENTS: ${ctx.elements}. Bold, architectural, professional. Not decorative — structural.`,
         `MOOD: ${ctx.moodWords}. Confident, credible, premium, memorable.`,
         `No text, no lorem ipsum — pure brand graphic authority.`,
-        q, neg(ctx, provider, "cluttered, multiple focal points, text overlays, generic corporate clip art, low contrast"),
+        sTags, q, neg(ctx, provider, "cluttered, multiple focal points, text overlays, generic corporate clip art, low contrast"),
       );
     }
 
@@ -441,7 +425,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PHOTOGRAPHY (if lifestyle): ${ctx.photoStyle}. Camera: 35mm, f/2.0, square crop.`,
         `${ctx.competitiveAngle}`,
         `No text in image — pure brand visual language.`,
-        q, neg(ctx, provider, `generic stock imagery, overcrowded, multiple competing focal points${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
+        sTags, q, neg(ctx, provider, `generic stock imagery, overcrowded, multiple competing focal points${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -462,7 +446,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MOOD: ${ctx.moodWords}. Energy: bold, premium, unmistakably clickable.`,
         `LIGHTING: Dramatic rim light in ${ctx.accentColor}, dark background shadow — creates depth and intrigue.`,
         `Reference: MrBeast, Kurzgesagt, top ${data.industry} premium channels. No actual text. Works at 1/10th scale.`,
-        q, neg(ctx, provider, "low contrast, muddy mid-tones, text, cluttered background, flat even lighting"),
+        sTags, q, neg(ctx, provider, "low contrast, muddy mid-tones, text, cluttered background, flat even lighting"),
       );
     }
 
@@ -480,7 +464,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COMPOSITION: Visual texture in far corners and edges. Center 60% of frame must be plain and flat — this is the content zone.`,
         `Bottom-left or top-right: subtle brand motif at 10% opacity.`,
         `MOOD: ${ctx.moodWords} — but whispered, not shouted. Background is the frame, not the art.`,
-        q, neg(ctx, provider, "busy pattern, high saturation, distracting, photographic, text, logos, centered elements"),
+        sTags, q, neg(ctx, provider, "busy pattern, high saturation, distracting, photographic, text, logos, centered elements"),
       );
     }
 
@@ -499,7 +483,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COMPOSITION: Left 30%: brand visual/motif in ${ctx.accentColor} or ${ctx.secondaryColor}. Right 70%: clean flat ${ctx.primaryColor} field for headline text overlay.`,
         `MOOD: ${ctx.moodWords}. Tone: ${ctx.toneOfVoice}. Minimal, premium, brand-consistent.`,
         `${ctx.visualStyle}. No actual text — graphic background layer only.`,
-        q, neg(ctx, provider, `text, lorem ipsum, photographic busy background, centered composition, multiple elements${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
+        sTags, q, neg(ctx, provider, `text, lorem ipsum, photographic busy background, centered composition, multiple elements${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -520,7 +504,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MOCKUP SCENE: Device on minimal studio desk surface. Soft ambient bokeh background in ${ctx.primaryColor} dark tint.`,
         `LIGHTING: Subtle edge screen glow, realistic device reflections, soft top-down studio light on device body.`,
         `Perspective: natural 3/4 tilt, 15–20° rotation, professional product photography angle.`,
-        q, neg(ctx, provider, "generic UI template, lorem ipsum, fake stock data, flat perspective, plastic device"),
+        sTags, q, neg(ctx, provider, "generic UI template, lorem ipsum, fake stock data, flat perspective, plastic device"),
       );
     }
 
@@ -538,7 +522,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `LIGHTING: Soft directional studio light 45°, long sharp shadow, premium paper stock texture visible.`,
         `Both cards arranged with intentional angle, depth of field, luxury photographic quality.`,
         `MOOD: ${ctx.moodWords}. Premium, confident, tasteful.`,
-        q, neg(ctx, provider, "flat illustration, cartoon style, plastic-looking surface, harsh or flat lighting"),
+        sTags, q, neg(ctx, provider, "flat illustration, cartoon style, plastic-looking surface, harsh or flat lighting"),
       );
     }
 
@@ -556,7 +540,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `LIGHTING: Soft natural window light from 45°, crisp soft shadows, luxury editorial feel.`,
         `COMPOSITION: ${ctx.composition}. Artfully arranged with intentional negative space, slight overlapping.`,
         `MOOD: ${ctx.moodWords}. Tasteful, editorial, premium.`,
-        q, neg(ctx, provider, "plastic surfaces, harsh shadows, poor lighting, off-brand colors, generic office supplies"),
+        sTags, q, neg(ctx, provider, "plastic surfaces, harsh shadows, poor lighting, off-brand colors, generic office supplies"),
       );
     }
 
@@ -578,7 +562,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `TIME OF DAY: Blue hour (just after sunset) — dramatic sky gradient, artificial street lighting creating depth.`,
         `LIGHTING on billboard: Bright billboard illumination against dim urban atmosphere — creates maximum contrast.`,
         `MOOD: ${ctx.moodWords}. Culturally present, confident, unmistakable at speed.`,
-        q, neg(ctx, provider, "CGI plastic billboard, flat daytime lighting, empty street, cartoon quality, dark unlit billboard"),
+        sTags, q, neg(ctx, provider, "CGI plastic billboard, flat daytime lighting, empty street, cartoon quality, dark unlit billboard"),
       );
     }
 
@@ -586,7 +570,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       return parts(
         `Professional brand visual for ${B} (${data.industry}).`,
         ctx.visualStyle, ctx.colorMood, ctx.composition, q,
-        neg(ctx, provider),
+        sTags, neg(ctx, provider),
       );
     }
   }
