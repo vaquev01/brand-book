@@ -48,6 +48,33 @@ export const ASSET_CATALOG: {
   { key: "outdoor_billboard",  label: "Outdoor Urbano / OOH",         description: "Billboard em contexto urbano real — impacto máximo em 3 segundos",          aspectRatio: "16:9", category: "print"   },
 ];
 
+function industryVisualLanguage(industry: string): string {
+  const i = industry.toLowerCase();
+  if (/saas|software|tech|cloud|ai|data|platform|digital|startup|api|b2b/.test(i))
+    return "glowing data nodes, interconnected digital flows, floating UI panels, luminous gradient fields, geometric circuit-like patterns, abstract network topology";
+  if (/restauran|food|gastro|caf|coffee|bar|sushi|pizza|chef|culin|bistr/.test(i))
+    return "food textures and macro close-ups, steam wisps, overhead plating photography, ingredient details, warm candlelit or amber kitchen light";
+  if (/fintech|financ|bank|invest|crédit|crypto|insurance|wealth|asset/.test(i))
+    return "geometric precision, golden ratio compositions, metallic gradient fields (gold/platinum), abstract data flow lines, architectural security-suggesting forms";
+  if (/health|saúde|medic|clinic|pharma|wellness|biotech|hospital/.test(i))
+    return "clean whites and calming blues, human touch moments, scientific precision, cell/molecular abstract forms, soft clinical lighting";
+  if (/fitness|gym|sport|treino|esport|atleta|performanc/.test(i))
+    return "kinetic motion blur, muscle definition close-ups, outdoor dramatic light, explosive energy gestures, high-contrast athletic body forms";
+  if (/fashion|moda|luxury|luxo|jewel|jóia|accessory|beauty|cosmetic|skin/.test(i))
+    return "editorial negative space, fabric texture close-ups, product on skin/body, dramatic shadow play, high-fashion side lighting";
+  if (/education|educação|cours|learn|school|universit|ensino/.test(i))
+    return "open knowledge metaphors, light streaming through windows, collaborative group moments, books and growth symbolism, bright optimistic environments";
+  if (/construc|constru|architect|real estate|imobil|engenharia/.test(i))
+    return "architectural perspective lines, material textures (concrete, glass, steel), spatial depth through structures, morning golden light on facades";
+  if (/ecommerc|retail|loja|shop|market|varejo/.test(i))
+    return "product hero shots, lifestyle-in-context, clean product-on-surface photography, packaging details, aspirational home/lifestyle environments";
+  if (/creat|design|agência|agency|media|publicidad|estúdio|studio/.test(i))
+    return "bold typographic compositions, Pantone color chips, creative process artifacts, sketches and screens, vibrant creative workspace environments";
+  if (/logistic|transport|frete|supply chain|entregas/.test(i))
+    return "movement and speed trails, infrastructure scale, precise mechanical systems, global network maps, urban logistics contexts";
+  return "clean geometric abstraction, purposeful negative space, brand color field compositions, minimal premium design language";
+}
+
 function extractBrandContext(data: BrandbookData) {
   const igb = data.imageGenerationBriefing;
   const pos = data.positioning;
@@ -122,6 +149,15 @@ function extractBrandContext(data: BrandbookData) {
   const purpose = data.brandConcept.purpose ?? mission;
   const visualMetaphor = `${elements} — abstract representation of ${moodWords} through ${data.industry} lens`;
 
+  // Industry visual language (specific to sector)
+  const industryLang = industryVisualLanguage(data.industry);
+
+  // Brand applications (real use cases defined in brandbook)
+  const brandApplications = data.applications
+    .slice(0, 5)
+    .map((a) => `${a.type}: ${a.description}`)
+    .join(" | ");
+
   return {
     primaryColor, primaryColorName, secondaryColor, accentColor,
     allPrimaryColors, allColors,
@@ -134,6 +170,7 @@ function extractBrandContext(data: BrandbookData) {
     logoSymbol, logoPrimary, logoStyle, patternStyle,
     audienceDesc, messagingPillar, preferredVocab, reasonsToBelieve,
     userPsychographics, marketingArch, competitiveAngle, purpose, visualMetaphor,
+    industryLang, brandApplications,
   };
 }
 
@@ -167,15 +204,31 @@ function providerQuality(provider: ImageProvider, key: AssetKey): string {
 }
 
 function neg(ctx: ReturnType<typeof extractBrandContext>, provider: ImageProvider, extra = ""): string {
-  if (provider !== "stability") return "";
-  const extras = extra ? `, ${extra}` : "";
-  return ` --neg ${ctx.negativeBase}, ${ctx.avoid}${extras}`.trim();
+  const all = [ctx.negativeBase, ctx.avoid, extra].filter(Boolean).join(", ");
+  if (provider === "stability") return ` --neg ${all}`;
+  if (provider === "dalle3")    return ` Avoid including: ${all}.`;
+  if (provider === "imagen")    return ` Do not include, do not generate: ${all}.`;
+  /* ideogram */                return ` Do not include: ${all}.`;
+}
+
+function providerPrefix(provider: ImageProvider): string {
+  if (provider === "imagen") return "Create a high-quality photorealistic image. ";
+  if (provider === "ideogram") return "Design a professional graphic image. ";
+  return "";
+}
+
+function stabilityTags(ctx: ReturnType<typeof extractBrandContext>, key: AssetKey): string {
+  const isPhoto = ["hero_visual","hero_lifestyle","app_mockup","business_card","brand_collateral","outdoor_billboard"].includes(key);
+  if (isPhoto) return `(masterpiece:1.4), (best quality:1.3), (photorealistic:1.3), (8k uhd:1.2), (sharp focus:1.2), ${ctx.primaryColor} color grade, ${ctx.moodWords}`;
+  return `(masterpiece:1.4), (best quality:1.3), (crisp vector:1.3), (sharp edges:1.2), professional graphic design, ${ctx.primaryColor} dominant`;
 }
 
 export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: ImageProvider): string {
   const ctx = extractBrandContext(data);
   const q = providerQuality(provider, key);
   const B = `"${data.brandName}"`;
+  const prefix = providerPrefix(provider);
+  const sTags = provider === "stability" ? stabilityTags(ctx, key) : "";
 
   const parts = (...lines: (string | false | undefined | null)[]): string =>
     lines.filter(Boolean).join(" ");
@@ -186,6 +239,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       const ideogramWord = provider === "ideogram"
         ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography.` : "";
       return parts(
+        prefix,
         `Professional brand identity logo for ${B}, a ${data.industry} company.`,
         ideogramWord,
         `BRAND PURPOSE: ${ctx.purpose}.`,
@@ -203,6 +257,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       const ideogramWord = provider === "ideogram"
         ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography, white/light version.` : "";
       return parts(
+        prefix,
         `Brand identity logo — dark background version for ${B} (${data.industry}).`,
         ideogramWord,
         `BRAND PURPOSE: ${ctx.purpose}.`,
@@ -220,6 +275,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         ? `Specific motifs: ${data.keyVisual.patterns.slice(0, 4).join(", ")}.`
         : `Derived from brand symbol: ${ctx.logoSymbol}.`;
       return parts(
+        prefix,
         `Seamless infinitely-tileable brand surface pattern for ${B} (${data.industry}).`,
         `PATTERN DESIGN: ${ctx.patternStyle}. ${patternEls}`,
         `STRICT COLOR PALETTE — no other colors: ${ctx.allPrimaryColors}.`,
@@ -236,6 +292,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         ? `This image appears beside headline: "${ctx.sampleHeadline}".`
         : `Must visually communicate: ${ctx.uniqueValue}.`;
       return parts(
+        prefix,
         `PLATFORM: Above-the-fold landing page hero for ${B} (${data.industry}) — 16:9 widescreen.`,
         `MARKETING INTENT: Convert first-time visitors into leads in under 3 seconds. Viewer should feel the brand promise immediately.`,
         `TARGET VIEWER: ${ctx.userPsychographics}.`,
@@ -243,6 +300,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         intentCopy,
         ctx.tagline,
         `VISUAL SUBJECT: Abstract-cinematic interpretation of ${ctx.visualMetaphor}.`,
+        `INDUSTRY-SPECIFIC VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `Art direction: ${ctx.photoStyle}. Visual language: ${ctx.marketingArch}.`,
         `CREDIBILITY SIGNALS embedded in imagery: ${ctx.reasonsToBelieve}.`,
         `${ctx.competitiveAngle}`,
@@ -251,6 +309,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `LIGHTING: Dramatic three-point studio-cinematic light. Key light warm ${ctx.primaryColor} from upper-left. Deep shadow falloff to right.`,
         `COMPOSITION: ${ctx.composition}. Strong depth of field, foreground-to-background layers. Rule of thirds.`,
         `MOOD: ${ctx.moodWords}. Mission: ${ctx.mission}.`,
+        sTags,
         `No text, no logos — pure visual storytelling that creates emotional desire and trust.`,
         q, neg(ctx, provider, "text overlays, logos, generic stock, flat even lighting, overcrowded scene"),
       );
@@ -258,10 +317,12 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "hero_lifestyle": {
       return parts(
+        prefix,
         `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — website hero, paid media, social ads.`,
         `MARKETING INTENT: Aspiration + emotional relatability. Viewer sees themselves transformed after using ${B}.`,
         `SUBJECT: ${ctx.userPsychographics}. Authentic unstaged moment of this person in their real environment.`,
         `SCENE: ${ctx.audienceDesc} in a realistic ${data.industry} context — the "after" state, post-transformation.`,
+        `INDUSTRY SCENE LANGUAGE: ${ctx.industryLang}.`,
         `VISUAL LANGUAGE: ${ctx.photoStyle}. ${ctx.colorMood}.`,
         `Brand color ${ctx.primaryColor} organically present in environment, clothing detail, or prop — subtle, never forced.`,
         `EMOTIONAL CORE: ${ctx.messagingPillar}. Viewer should feel: ${ctx.moodWords}.`,
@@ -277,6 +338,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "instagram_carousel": {
       return parts(
+        prefix,
         `PLATFORM: Instagram carousel FIRST SLIDE — perfect square 1:1 format. This is the hook that determines if anyone sees the rest.`,
         `MARKETING INTENT: Arrest thumb-scroll in 0.3 seconds. Create visual curiosity gap — must feel incomplete, make viewer SWIPE RIGHT.`,
         `WHO STOPS: ${ctx.userPsychographics} — they stop for ${ctx.moodWords} content that feels ${ctx.personality}.`,
@@ -284,6 +346,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         ctx.tagline,
         `BRAND: ${B} — ${ctx.personality}. Industry: ${data.industry}.`,
         `VISUAL DESIGN: ${ctx.marketingArch}. Full-bleed ${ctx.primaryColor} dominant background.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `CENTRAL SUBJECT: ${ctx.visualMetaphor} — one element, hyper-sharp, maximum visual weight.`,
         `COLOR PALETTE (strict, no others): ${ctx.allPrimaryColors}. High-contrast accent pop: ${ctx.accentColor}.`,
         `COMPOSITION: Asymmetric tension — dominant element occupies 60% of frame, remaining 40% is intentional negative space.`,
@@ -297,10 +360,12 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "instagram_story": {
       return parts(
+        prefix,
         `PLATFORM: Instagram Story / Reels cover — full-bleed vertical 9:16 format (1080×1920px).`,
         `MARKETING INTENT: Instant brand recognition in 3 seconds of full-screen mobile attention. Drive profile visits, product clicks.`,
         `BRAND PURPOSE: ${ctx.purpose}. Personality: ${ctx.personality}.`,
         `VISUAL SUBJECT: ${ctx.visualMetaphor} — central element in upper half, vertically oriented, bold and large.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `VISUAL DESIGN: Full-bleed vertical. Dominant color: ${ctx.primaryColor}. Secondary: ${ctx.secondaryColor}.`,
         `${ctx.visualStyle}. Key visual: ${ctx.elements}.`,
         ctx.tagline,
@@ -320,12 +385,14 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "social_cover": {
       return parts(
+        prefix,
         `PLATFORM: LinkedIn profile cover / YouTube channel banner — 16:9 widescreen (2560×1440px).`,
         `MARKETING INTENT: First impression on professional profile. Must establish authority and positioning in 1 second.`,
         `Viewer: ${ctx.targetMarket} — evaluating ${B} for the first time. They judge credibility instantly.`,
         `BRAND MESSAGE: ${ctx.messagingPillar}. Proof: ${ctx.reasonsToBelieve}.`,
         ctx.tagline,
         `${ctx.competitiveAngle}`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `VISUAL DESIGN: ${ctx.marketingArch}. ${ctx.visualStyle}.`,
         `COLOR: ${ctx.primaryColor} dominant background. ${ctx.secondaryColor} structural accent. ${ctx.accentColor} highlight.`,
         `COMPOSITION (strict horizontal zones):
@@ -341,11 +408,13 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "social_post_square": {
       return parts(
+        prefix,
         `PLATFORM: Instagram/Facebook feed post — perfect square 1:1 format. Competes in a dense feed of content.`,
         `MARKETING INTENT: Brand presence + saves + shares. Must be recognizable as ${B} in a feed thumbnail.`,
         `BRAND: ${B} — ${ctx.personality}. Core message: ${ctx.messagingPillar}.`,
         ctx.tagline,
         `VISUAL CONCEPT: ${ctx.marketingArch}. Bold, single-minded composition.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `VISUAL SUBJECT: ${ctx.visualMetaphor} — rendered with maximum graphic intention.`,
         `COLOR PALETTE (brand-strict): ${ctx.allColors}. Dominant: ${ctx.primaryColor}.`,
         `COMPOSITION: ${ctx.composition}. ONE dominant focal element — all other elements serve it. Perfect square balance.`,
@@ -360,11 +429,13 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "youtube_thumbnail": {
       return parts(
+        prefix,
         `PLATFORM: YouTube video thumbnail — 1280×720px 16:9 format. Will be shown at 168×94px in feed — must work at tiny scale.`,
         `MARKETING INTENT: Maximize CTR against competing thumbnails. Viewer must feel compelled in 0.5 seconds.`,
         `PSYCHOLOGICAL HOOK: ${ctx.messagingPillar} — create curiosity + authority simultaneously.`,
         `${ctx.competitiveAngle}`,
         `BRAND: ${B} (${data.industry}). ${ctx.tagline}`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `VISUAL SUBJECT: High-drama close-up — ${ctx.visualMetaphor}. Foreground element takes 50% of frame, hyper-sharp.`,
         `BACKGROUND: Solid bold ${ctx.primaryColor} or strong gradient ${ctx.primaryColor} → ${ctx.secondaryColor}. No photographic background.`,
         `COLOR: Maximum contrast. ${ctx.primaryColor} field, ${ctx.accentColor} focal highlight. Brand palette: ${ctx.allPrimaryColors}.`,
@@ -379,6 +450,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "presentation_bg": {
       return parts(
+        prefix,
         `PLATFORM: Presentation slide background — 16:9 widescreen for PowerPoint/Keynote/Google Slides.`,
         `DESIGN INTENT: Silent brand presence. Must NOT compete with slide text or charts. Audience reads the slide content, not the background.`,
         `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
@@ -396,6 +468,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "email_header": {
       return parts(
+        prefix,
         `PLATFORM: E-mail marketing header banner — ultra-wide 21:9 (600px email standard, will render as thin horizontal strip).`,
         `MARKETING INTENT: Increase open-to-click rate. First visual after subject line. 70% of opens are mobile — must work at 320px wide.`,
         `Viewer context: ${ctx.audienceDesc} who just opened a ${B} email. They have 2 seconds before deciding to scroll or close.`,
@@ -414,9 +487,11 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
     case "app_mockup": {
       const uxLayout = data.uxPatterns?.dashboardLayout ?? `clean ${data.industry} dashboard with data visualizations`;
       return parts(
+        prefix,
         `PLATFORM: Product UI mockup in modern iPhone 15 Pro (portrait) or MacBook Pro 14\" (landscape) device frame.`,
         `MARKETING INTENT: Show the actual product value, not a template. Viewer is ${ctx.targetMarket} in evaluation mode.`,
         `This must look like ${B}'s REAL interface — specific to ${data.industry}, not a generic UI kit.`,
+        `BRAND APPLICATIONS CONTEXT: ${ctx.brandApplications}.`,
         `UI LAYOUT: ${uxLayout}. Core feature shown: ${ctx.messagingPillar}.`,
         `COLOR SYSTEM: Primary ${ctx.primaryColor} for key actions/accents, ${ctx.secondaryColor} for surfaces, neutral for text/backgrounds.`,
         `TYPOGRAPHY on screen: ${ctx.displayFont} Bold for headers, ${ctx.bodyFont} Regular for body, ${ctx.primaryColor} for interactive labels.`,
@@ -432,8 +507,10 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "business_card": {
       return parts(
+        prefix,
         `PLATFORM: Premium business card mockup — both front and back visible, 16:9 scene.`,
         `MARKETING INTENT: Represent the brand's physical touchpoint — communicate quality and positioning at first touch.`,
+        `BRAND APPLICATIONS: ${ctx.brandApplications}.`,
         `CARD FRONT: ${ctx.logoPrimary}, dominant color ${ctx.primaryColor}, white space, minimal layout.`,
         `CARD BACK: ${ctx.primaryColor} solid or brand pattern (${ctx.patternStyle}), minimal.`,
         `Typography on card: ${ctx.displayFont} for name, ${ctx.bodyFont} for contact info.`,
@@ -448,8 +525,10 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "brand_collateral": {
       return parts(
+        prefix,
         `PLATFORM: Corporate stationery collection flat-lay — overhead 4:3 format.`,
         `MARKETING INTENT: Showcase the complete physical brand identity system for pitches and brand guidelines.`,
+        `BRAND APPLICATIONS IN USE: ${ctx.brandApplications}.`,
         `ITEMS: Business card front+back, A4 letterhead sheet, kraft/coated notebook with embossed logo,`,
         `quality ballpoint pen, branded envelope with wax seal, brand element sticker or stamp.`,
         `All items branded with ${B}: color ${ctx.primaryColor}, logo, pattern ${ctx.patternStyle}.`,
@@ -464,12 +543,14 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "outdoor_billboard": {
       return parts(
+        prefix,
         `PLATFORM: Large-format OOH billboard mockup in busy urban street — 16:9 landscape.`,
         `MARKETING INTENT: Single-message brand awareness at 60 km/h. No one reads paragraphs — one image, one feeling.`,
         `Viewer: ${ctx.userPsychographics} commuting through a city — 3-second attention maximum.`,
         `BILLBOARD MESSAGE: ${ctx.messagingPillar} — expressed in ONE dominant visual, no copy needed.`,
         ctx.tagline,
         `${ctx.competitiveAngle}`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         `BILLBOARD DESIGN: ${ctx.visualMetaphor} — maximum visual impact. Dominant color: ${ctx.primaryColor}.`,
         `Brand element: ${ctx.elements}. Visual style: ${ctx.marketingArch}.`,
         `COLOR: ${ctx.primaryColor} field, ${ctx.accentColor} focal highlight, ${ctx.secondaryColor} structural contrast.`,
