@@ -4,7 +4,10 @@ import { useState, useEffect, type FormEvent } from "react";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
 import { ImageGenPanel } from "@/components/ImageGenPanel";
 import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
-import { BrandbookData, GeneratedAsset } from "@/lib/types";
+import { BriefingImageUpload } from "@/components/BriefingImageUpload";
+import { BrandbookEditor } from "@/components/BrandbookEditor";
+import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
+import { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { saasExample, barExample, sushiExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
@@ -12,9 +15,10 @@ import { migrateBrandbook } from "@/lib/brandbookMigration";
 import type { AssetKey } from "@/lib/imagePrompts";
 
 type Tab = "generate" | "examples" | "viewer";
-type ViewerTab = "preview" | "images" | "json" | "sections";
+type ViewerTab = "preview" | "images" | "json" | "sections" | "edit" | "assets";
 
 const GENERATED_ASSETS_LS_PREFIX = "bb_generated_assets::";
+const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
 
 function slugifyForStorage(name: string): string {
   return name
@@ -51,6 +55,30 @@ function clearCachedGeneratedAssets(slug: string) {
   localStorage.removeItem(GENERATED_ASSETS_LS_PREFIX + slug);
 }
 
+function loadCachedBrandAssets(slug: string): UploadedAsset[] {
+  if (typeof window === "undefined") return [];
+  if (!slug) return [];
+  try {
+    const raw = localStorage.getItem(BRAND_ASSETS_LS_PREFIX + slug);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed as UploadedAsset[];
+  } catch {
+    return [];
+  }
+}
+
+function saveCachedBrandAssets(slug: string, assets: UploadedAsset[]) {
+  if (typeof window === "undefined") return;
+  if (!slug) return;
+  try {
+    localStorage.setItem(BRAND_ASSETS_LS_PREFIX + slug, JSON.stringify(assets));
+  } catch {
+    // ignore quota errors for large asset collections
+  }
+}
+
 export default function Home() {
   const [tab, setTab] = useState<Tab>("examples");
   const [brandName, setBrandName] = useState("");
@@ -62,6 +90,8 @@ export default function Home() {
   const [jsonText, setJsonText] = useState("");
   const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
+  const [uploadedBriefingImages, setUploadedBriefingImages] = useState<UploadedAsset[]>([]);
+  const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
 
@@ -94,6 +124,9 @@ export default function Home() {
           googleKey: apiKeys.google || undefined,
           openaiModel: apiKeys.openaiTextModel || undefined,
           googleModel: apiKeys.googleTextModel || undefined,
+          referenceImages: uploadedBriefingImages.length > 0
+            ? uploadedBriefingImages.map((img) => img.dataUrl)
+            : undefined,
         }),
       });
 
@@ -116,6 +149,7 @@ export default function Home() {
       const slug = slugifyForStorage(nextBrandbook.brandName);
       setBrandbookData(nextBrandbook);
       setGeneratedAssets(loadCachedGeneratedAssets(slug));
+      setUploadedBrandAssets(loadCachedBrandAssets(slug));
       setTab("viewer");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
@@ -131,6 +165,7 @@ export default function Home() {
       setBrandbookData(migrated);
       const slug = slugifyForStorage(migrated.brandName);
       setGeneratedAssets(loadCachedGeneratedAssets(slug));
+      setUploadedBrandAssets(loadCachedBrandAssets(slug));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao carregar exemplo");
       return;
@@ -218,6 +253,12 @@ export default function Home() {
     const slug = slugifyForStorage(brandbookData.brandName);
     saveCachedGeneratedAssets(slug, generatedAssets);
   }, [generatedAssets, brandbookData]);
+
+  useEffect(() => {
+    if (!brandbookData) return;
+    const slug = slugifyForStorage(brandbookData.brandName);
+    saveCachedBrandAssets(slug, uploadedBrandAssets);
+  }, [uploadedBrandAssets, brandbookData]);
 
   function handleClearImageCache() {
     if (!brandbookData) return;
@@ -338,6 +379,16 @@ export default function Home() {
                     onChange={(e) => setBriefing(e.target.value)}
                     placeholder="Descreva o público-alvo, diferenciais, estilo desejado, referências..."
                     className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Imagens de Referência
+                    <span className="ml-2 text-xs font-normal text-gray-400">(opcional — a IA analisará e replicará o estilo)</span>
+                  </label>
+                  <BriefingImageUpload
+                    images={uploadedBriefingImages}
+                    onChange={setUploadedBriefingImages}
                   />
                 </div>
                 <div>
@@ -500,18 +551,39 @@ export default function Home() {
 
             {/* Viewer Sub-tabs */}
             <div className="no-print sticky top-16 z-40 bg-gray-50 pt-2 pb-3 -mx-6 px-6">
-            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+            <div className="flex flex-wrap gap-1 bg-gray-100 rounded-xl p-1 w-fit">
               <button
                 onClick={() => setViewerTab("preview")}
-                className={`px-5 py-2 text-sm font-medium rounded-lg transition ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   viewerTab === "preview" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
                 }`}
               >
                 Brandbook
               </button>
               <button
+                onClick={() => setViewerTab("edit")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  viewerTab === "edit" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                ✏ Editar
+              </button>
+              <button
+                onClick={() => setViewerTab("assets")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  viewerTab === "assets" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                🖼️ Assets
+                {uploadedBrandAssets.length > 0 && (
+                  <span className="ml-1.5 bg-indigo-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {uploadedBrandAssets.length}
+                  </span>
+                )}
+              </button>
+              <button
                 onClick={() => setViewerTab("images")}
-                className={`px-5 py-2 text-sm font-medium rounded-lg transition ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   viewerTab === "images" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
                 }`}
               >
@@ -524,7 +596,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setViewerTab("json")}
-                className={`px-5 py-2 text-sm font-medium rounded-lg transition ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   viewerTab === "json" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
                 }`}
               >
@@ -532,7 +604,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setViewerTab("sections")}
-                className={`px-5 py-2 text-sm font-medium rounded-lg transition ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                   viewerTab === "sections" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
                 }`}
               >
@@ -548,6 +620,7 @@ export default function Home() {
                 generatedImages={Object.fromEntries(
                   Object.entries(generatedAssets).map(([k, v]) => [k, v.url])
                 )}
+                uploadedAssets={uploadedBrandAssets}
                 onGoToImages={() => setViewerTab("images")}
                 onUpdateApplicationImageKey={(index: number, imageKey: AssetKey | undefined) => {
                   setBrandbookData((prev) => {
@@ -559,6 +632,34 @@ export default function Home() {
                   });
                 }}
               />
+            )}
+
+            {/* Sub-tab: Edit Brandbook */}
+            {viewerTab === "edit" && (
+              <BrandbookEditor
+                data={brandbookData}
+                onUpdate={(updated) => {
+                  setBrandbookData(updated);
+                }}
+                onCancel={() => setViewerTab("preview")}
+              />
+            )}
+
+            {/* Sub-tab: Brand Assets */}
+            {viewerTab === "assets" && (
+              <div>
+                <div className="mb-4 bg-blue-50 border border-blue-100 rounded-xl px-5 py-4">
+                  <h3 className="font-bold text-blue-900 mb-1">Ativos de Marca</h3>
+                  <p className="text-sm text-blue-700">
+                    Faça upload de logos, mascotes, elementos gráficos e padrões. Eles aparecem automaticamente
+                    nas seções correspondentes do brandbook e são salvos localmente.
+                  </p>
+                </div>
+                <UploadedAssetsPanel
+                  assets={uploadedBrandAssets}
+                  onChange={setUploadedBrandAssets}
+                />
+              </div>
             )}
 
             {/* Sub-tab: Image Generation */}

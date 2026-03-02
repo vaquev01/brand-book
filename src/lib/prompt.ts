@@ -20,7 +20,7 @@ INSTRUÇÕES:
 14. "microcopy": Regras de UX Writing para botões, mensagens de erro e Empty States.
 15. "accessibility": Contraste (WCAG 2.2), estados de Focus e independência de cor.
 16. "motion": Transições, microinterações e estados de carregamento.
-17. "keyVisual": Elementos gráficos, Estilo Fotográfico, Iconografia, Ilustrações e Arquitetura de Marketing.
+17. "keyVisual": Elementos gráficos, Estilo Fotográfico, Iconografia, Ilustrações e Arquitetura de Marketing. OBRIGATÓRIO: Se a marca se beneficiar de mascotes ou personagens (especialmente marcas com personalidade forte, públicos jovens, restaurantes, bares, entretenimento, apps), crie de 1 a 3 mascotes em "mascots" com nome, descrição detalhada, personalidade e diretrizes de uso. Defina também "symbols" (símbolos/ícones definidores da marca) e "patterns" (padrões gráficos repetiveis).
 18. "applications": Mínimo 3 aplicações com "imagePlaceholder" via placehold.co e "imageKey" (chave do catálogo de imagens) para linkar imagens geradas de forma determinística.
 19. "productionGuidelines": Crie regras de produção/handoff: naming convention, checklist, specs de impressão (perfil, dpi, sangria, margem segura) e specs digitais (color space, scales, formatos, compressão), além de lista de entregáveis.
 20. "imageGenerationBriefing": CRÍTICO — Crie um briefing de direção de arte profissional para geração de imagens por IA (DALL-E 3, Stable Diffusion, Ideogram). Use linguagem técnica de fotografia, cinema e design gráfico. Inclua referências artísticas reais, instruções de composição e paleta de mood. O campo "negativePrompt" deve listar tudo que NÃO deve aparecer nas imagens.
@@ -168,7 +168,17 @@ ESTRUTURA JSON EXIGIDA:
     "photographyStyle": "string",
     "iconography": "string",
     "illustrations": "string",
-    "marketingArchitecture": "string"
+    "marketingArchitecture": "string",
+    "mascots": [
+      {
+        "name": "string (nome do mascote/personagem)",
+        "description": "string (descrição visual detalhada: aparência, cores, traços, estilo de ilustração)",
+        "personality": "string (personalidade, voz, como se comporta)",
+        "usageGuidelines": ["string (onde e como usar o mascote, restrições)"]
+      }
+    ],
+    "symbols": ["string (símbolos gráficos identitários da marca)"],
+    "patterns": ["string (padrões/texturas repetiveis da marca)"]
   },
   "applications": [
     {
@@ -215,9 +225,23 @@ ESTRUTURA JSON EXIGIDA:
 }`;
 }
 
-export function buildUserPrompt(brandName: string, industry: string, briefing: string): string {
-  return `GERE O BRANDBOOK COMPLETO PARA:
+export function buildUserPrompt(
+  brandName: string,
+  industry: string,
+  briefing: string,
+  referenceImageDescriptions?: string[]
+): string {
+  let prompt = `GERE O BRANDBOOK COMPLETO PARA:
 Nome da Marca: ${brandName}
 Nicho/Indústria: ${industry}
 Briefing/Contexto: ${briefing}`;
+
+  if (referenceImageDescriptions && referenceImageDescriptions.length > 0) {
+    prompt += `\n\n--- IMAGENS DE REFERÊNCIA FORNECIDAS (${referenceImageDescriptions.length} imagem${referenceImageDescriptions.length > 1 ? "ns" : ""}) ---\nAs seguintes imagens foram enviadas como referências visuais. Analise-as METICULOSAMENTE e replique fielmente o estilo, paleta de cores, composição, atmosfera e elementos visuais observados em TODO o brandbook. Esses elementos devem ser incorporados em: keyVisual, imageGenerationBriefing, colors, typography mood, uiGuidelines, illustrations, mascots e em qualquer outra seção relevante.\n`;
+    referenceImageDescriptions.forEach((desc, i) => {
+      if (desc) prompt += `\nReferência ${i + 1}: ${desc}`;
+    });
+  }
+
+  return prompt;
 }

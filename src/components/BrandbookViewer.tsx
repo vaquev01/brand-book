@@ -1,6 +1,6 @@
 "use client";
 
-import { BrandbookData } from "@/lib/types";
+import { BrandbookData, UploadedAsset } from "@/lib/types";
 import { SectionCover } from "./sections/SectionCover";
 import { SectionDNA } from "./sections/SectionDNA";
 import { SectionLogo } from "./sections/SectionLogo";
@@ -9,6 +9,7 @@ import { SectionTypography } from "./sections/SectionTypography";
 import { SectionTokensA11y } from "./sections/SectionTokensA11y";
 import { SectionUxMicrocopyMotion } from "./sections/SectionUxMicrocopyMotion";
 import { SectionKeyVisual } from "./sections/SectionKeyVisual";
+import { SectionMascots } from "./sections/SectionMascots";
 import { SectionApplications } from "./sections/SectionApplications";
 import { SectionPositioning } from "./sections/SectionPositioning";
 import { SectionAudiencePersonas } from "./sections/SectionAudiencePersonas";
@@ -38,11 +39,12 @@ type SectionDef = {
 interface Props {
   data: BrandbookData;
   generatedImages?: Record<string, string>;
+  uploadedAssets?: UploadedAsset[];
   onGoToImages?: () => void;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
 }
 
-export function BrandbookViewer({ data, generatedImages = {}, onGoToImages, onUpdateApplicationImageKey }: Props) {
+export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [], onGoToImages, onUpdateApplicationImageKey }: Props) {
   const isAdvanced = !!data.uxPatterns;
 
   useEffect(() => {
@@ -158,6 +160,18 @@ export function BrandbookViewer({ data, generatedImages = {}, onGoToImages, onUp
       category: "Ativos & Entrega",
       when: true,
       render: (num) => <SectionKeyVisual data={data} num={num} />,
+    },
+    {
+      id: "mascots",
+      title: "Mascotes & Símbolos",
+      category: "Ativos & Entrega",
+      when: !!(
+        (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
+        (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
+        (data.keyVisual.patterns && data.keyVisual.patterns.length > 0) ||
+        uploadedAssets.some((a) => a.type === "mascot" || a.type === "element" || a.type === "pattern")
+      ),
+      render: (num) => <SectionMascots data={data} num={num} uploadedAssets={uploadedAssets} />,
     },
     {
       id: "applications",

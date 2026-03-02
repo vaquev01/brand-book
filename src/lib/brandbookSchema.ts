@@ -126,12 +126,22 @@ const MotionSchema = z.object({
   loadingStates: NonEmptyString,
 });
 
+const MascotSchema = z.object({
+  name: NonEmptyString,
+  description: NonEmptyString,
+  personality: NonEmptyString,
+  usageGuidelines: z.array(NonEmptyString).min(1),
+});
+
 const KeyVisualSchema = z.object({
   elements: z.array(NonEmptyString).min(3),
   photographyStyle: NonEmptyString,
   iconography: z.string().optional(),
   illustrations: z.string().optional(),
   marketingArchitecture: z.string().optional(),
+  mascots: z.array(MascotSchema).optional(),
+  symbols: z.array(NonEmptyString).optional(),
+  patterns: z.array(NonEmptyString).optional(),
 });
 
 export const AssetKeySchema = z.enum([

@@ -83,12 +83,22 @@ export interface Motion {
   loadingStates: string;
 }
 
+export interface Mascot {
+  name: string;
+  description: string;
+  personality: string;
+  usageGuidelines: string[];
+}
+
 export interface KeyVisual {
   elements: string[];
   photographyStyle: string;
   iconography?: string;
   illustrations?: string;
   marketingArchitecture?: string;
+  mascots?: Mascot[];
+  symbols?: string[];
+  patterns?: string[];
 }
 
 export interface Application {
@@ -314,8 +324,17 @@ export interface ProductionManifest {
   };
 }
 
+export interface UploadedAsset {
+  id: string;
+  name: string;
+  type: "logo" | "mascot" | "element" | "pattern" | "reference" | "other";
+  dataUrl: string;
+  description?: string;
+}
+
 export interface GenerateRequest {
   brandName: string;
   industry: string;
   briefing: string;
+  referenceImages?: string[];
 }

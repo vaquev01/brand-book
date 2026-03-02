@@ -7,7 +7,17 @@ import { migrateBrandbook } from "@/lib/brandbookMigration";
 
 export async function POST(request: NextRequest) {
   try {
-    const { brandName, industry, briefing, openaiKey, googleKey, provider = "openai", openaiModel, googleModel } = await request.json() as {
+    const {
+      brandName,
+      industry,
+      briefing,
+      openaiKey,
+      googleKey,
+      provider = "openai",
+      openaiModel,
+      googleModel,
+      referenceImages,
+    } = await request.json() as {
       brandName: string;
       industry: string;
       briefing?: string;
@@ -16,6 +26,7 @@ export async function POST(request: NextRequest) {
       provider?: string;
       openaiModel?: string;
       googleModel?: string;
+      referenceImages?: string[];
     };
 
     if (!brandName || !industry) {
@@ -27,6 +38,7 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = buildSystemPrompt();
     const useGemini = provider === "gemini";
+    const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
 
     let generateOnce: (userContent: string, temperature?: number) => Promise<string | null | undefined>;
 
@@ -40,9 +52,18 @@ export async function POST(request: NextRequest) {
       }
       const ai = new GoogleGenAI({ apiKey });
       generateOnce = async (userContent: string, temperature = 0.7) => {
+        const contentParts: unknown[] = [{ text: userContent }];
+        if (hasImages) {
+          for (const imgDataUrl of referenceImages!) {
+            const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+            if (match) {
+              contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+            }
+          }
+        }
         const resp = await ai.models.generateContent({
           model: googleModel?.trim() || "gemini-2.0-flash",
-          contents: userContent,
+          contents: contentParts.length === 1 ? userContent : (contentParts as Parameters<typeof ai.models.generateContent>[0]["contents"]),
           config: {
             systemInstruction: systemPrompt,
             responseMimeType: "application/json",
@@ -63,6 +84,15 @@ export async function POST(request: NextRequest) {
       const openai = new OpenAI({ apiKey });
       const resolvedOpenAIModel = openaiModel?.trim() || "gpt-4o";
       generateOnce = async (userContent: string, temperature = 0.7) => {
+        type ContentPart =
+          | { type: "text"; text: string }
+          | { type: "image_url"; image_url: { url: string; detail: "high" } };
+        const userMessageContent: ContentPart[] = [{ type: "text", text: userContent }];
+        if (hasImages) {
+          for (const imgDataUrl of referenceImages!) {
+            userMessageContent.push({ type: "image_url", image_url: { url: imgDataUrl, detail: "high" } });
+          }
+        }
         const completion = await openai.chat.completions.create({
           model: resolvedOpenAIModel,
           temperature,
@@ -70,7 +100,7 @@ export async function POST(request: NextRequest) {
           response_format: { type: "json_object" },
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: userContent },
+            { role: "user", content: hasImages ? userMessageContent : userContent },
           ],
         });
         return completion.choices[0]?.message?.content;
