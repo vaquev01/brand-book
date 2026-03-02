@@ -188,10 +188,11 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       return parts(
         `Professional brand identity logo for ${B}, a ${data.industry} company.`,
         ideogramWord,
-        `LOGO CONCEPT: ${ctx.logoStyle}. Symbol: ${ctx.logoSymbol}.`,
-        `COLOR: ${ctx.primaryColor} (${ctx.primaryColorName}) on pure white (#FFFFFF) background.`,
+        `BRAND PURPOSE: ${ctx.purpose}.`,
+        `LOGO CONCEPT: ${ctx.logoStyle}. Symbol concept: ${ctx.logoSymbol} — evokes ${ctx.moodWords}.`,
+        `COLOR: ${ctx.primaryColor} (${ctx.primaryColorName}) on pure white (#FFFFFF). Accent: ${ctx.accentColor}.`,
         `TYPOGRAPHY: ${ctx.displayFont} wordmark. PERSONALITY: ${ctx.personality}. VALUES: ${ctx.values}.`,
-        `VISUAL STYLE: ${ctx.visualStyle}.`,
+        `VISUAL STYLE: ${ctx.visualStyle}. ${ctx.competitiveAngle}`,
         `TECHNICAL: Isolated logomark + wordmark lockup, crisp vector graphic, sharp edges, scalable symbol,`,
         `no drop shadows, no textures, pure white background, centered composition.`,
         q, neg(ctx, provider),
@@ -204,10 +205,12 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       return parts(
         `Brand identity logo — dark background version for ${B} (${data.industry}).`,
         ideogramWord,
-        `LOGO: ${ctx.logoPrimary} — inverted/reversed color version. ${ctx.logoSymbol}.`,
-        `COLOR: White or very light logo on solid dark background ${ctx.primaryColor}.`,
-        `PURPOSE: Dark websites, video intros, event backdrops, dark mode UI.`,
-        `TECHNICAL: High-contrast inverted lockup, pure flat dark background, no textures, no shadows, centered.`,
+        `BRAND PURPOSE: ${ctx.purpose}.`,
+        `LOGO: ${ctx.logoPrimary} — inverted/reversed color version. ${ctx.logoSymbol} — evokes ${ctx.moodWords}.`,
+        `COLOR: White or very light (#FFFFFF or near-white) logo on solid deep dark background ${ctx.primaryColor}.`,
+        `PERSONALITY: ${ctx.personality}. Tone: ${ctx.toneOfVoice}.`,
+        `PURPOSE: Dark websites, video intros, event backdrops, dark mode UI, investor decks.`,
+        `TECHNICAL: Maximum contrast inverted lockup, pure flat solid dark background, no textures, no halos, centered.`,
         q, neg(ctx, provider),
       );
     }
@@ -231,176 +234,199 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
     case "hero_visual": {
       const intentCopy = ctx.sampleHeadline
         ? `This image appears beside headline: "${ctx.sampleHeadline}".`
-        : `Communicates visually: ${ctx.uniqueValue}.`;
+        : `Must visually communicate: ${ctx.uniqueValue}.`;
       return parts(
         `PLATFORM: Above-the-fold landing page hero for ${B} (${data.industry}) — 16:9 widescreen.`,
-        `MARKETING INTENT: Convert first-time visitors into leads or trial users in under 3 seconds.`,
-        `TARGET VIEWER: ${ctx.audienceDesc}.`,
+        `MARKETING INTENT: Convert first-time visitors into leads in under 3 seconds. Viewer should feel the brand promise immediately.`,
+        `TARGET VIEWER: ${ctx.userPsychographics}.`,
+        `CORE MESSAGE TO VISUALIZE: ${ctx.messagingPillar}.`,
         intentCopy,
         ctx.tagline,
-        `VISUAL CONCEPT: ${ctx.visualStyle}. Art direction: ${ctx.photoStyle}.`,
-        `Cinematic concept visual that communicates ${ctx.uniqueValue} without any text.`,
+        `VISUAL SUBJECT: Abstract-cinematic interpretation of ${ctx.visualMetaphor}.`,
+        `Art direction: ${ctx.photoStyle}. Visual language: ${ctx.marketingArch}.`,
+        `CREDIBILITY SIGNALS embedded in imagery: ${ctx.reasonsToBelieve}.`,
+        `${ctx.competitiveAngle}`,
         `Brand elements present: ${ctx.elements}. References: ${ctx.artisticRef}.`,
-        `COLOR GRADING: ${ctx.colorMood}. Dominant ${ctx.primaryColor}, accent ${ctx.secondaryColor}.`,
-        `MOOD: ${ctx.moodWords}. Personality: ${ctx.personality}. Mission: ${ctx.mission}.`,
-        `COMPOSITION: ${ctx.composition}. Dramatic depth, professional lighting with ${ctx.primaryColor} color cast.`,
-        `No text, no logos, no watermarks — pure visual storytelling triggering emotion and desire.`,
-        q, neg(ctx, provider, "text overlays, logos, generic stock photography, flat lighting, overcrowded"),
+        `COLOR GRADING: ${ctx.colorMood}. Dominant ${ctx.primaryColor}, accent ${ctx.secondaryColor}. Cinematic color cast.`,
+        `LIGHTING: Dramatic three-point studio-cinematic light. Key light warm ${ctx.primaryColor} from upper-left. Deep shadow falloff to right.`,
+        `COMPOSITION: ${ctx.composition}. Strong depth of field, foreground-to-background layers. Rule of thirds.`,
+        `MOOD: ${ctx.moodWords}. Mission: ${ctx.mission}.`,
+        `No text, no logos — pure visual storytelling that creates emotional desire and trust.`,
+        q, neg(ctx, provider, "text overlays, logos, generic stock, flat even lighting, overcrowded scene"),
       );
     }
 
     case "hero_lifestyle": {
       return parts(
-        `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — website hero, paid media ads, social.`,
-        `MARKETING INTENT: Aspiration + relatability — viewer sees themselves succeeding with this product/service.`,
-        `SUBJECT: ${ctx.audienceDesc} — authentic moment of someone using/experiencing ${data.industry} in real context.`,
+        `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — website hero, paid media, social ads.`,
+        `MARKETING INTENT: Aspiration + emotional relatability. Viewer sees themselves transformed after using ${B}.`,
+        `SUBJECT: ${ctx.userPsychographics}. Authentic unstaged moment of this person in their real environment.`,
+        `SCENE: ${ctx.audienceDesc} in a realistic ${data.industry} context — the "after" state, post-transformation.`,
         `VISUAL LANGUAGE: ${ctx.photoStyle}. ${ctx.colorMood}.`,
-        `Brand color ${ctx.primaryColor} subtly present in props, clothing, or environment — not forced.`,
-        `MOOD: ${ctx.moodWords}. Tone: ${ctx.toneOfVoice}. Personality: ${ctx.personality}.`,
-        `COMPOSITION: 35–50mm lens feel, shallow depth of field, natural or soft directional light.`,
-        `People: authentic, diverse, genuine emotion — not model-perfect or corporate-posed.`,
-        `${ctx.artisticRef} editorial approach. Wide 16:9, left/center clear area for optional text overlay.`,
-        `No text on subjects, no logos visible, documentary editorial quality.`,
-        q, neg(ctx, provider, "overly posed, fake smile, stock photo aesthetic, generic office, plastic-looking"),
+        `Brand color ${ctx.primaryColor} organically present in environment, clothing detail, or prop — subtle, never forced.`,
+        `EMOTIONAL CORE: ${ctx.messagingPillar}. Viewer should feel: ${ctx.moodWords}.`,
+        `${ctx.competitiveAngle}`,
+        `CAMERA: 50mm f/1.8 lens, shallow depth of field, slight motion blur on background. Natural or soft window light.`,
+        `LIGHTING: Golden hour or diffused natural daylight. Warm key light, cool fill. Film-like tonal range.`,
+        `PEOPLE: Authentic, diverse, non-model-perfect. Real emotion — not corporate smiling. Candid or near-candid.`,
+        `${ctx.artisticRef} editorial approach. Wide 16:9. Left or center clear zone for optional copy overlay.`,
+        `No logos visible, no text on clothing, pure documentary editorial quality.`,
+        q, neg(ctx, provider, "overly posed, fake corporate smile, stock photo aesthetic, generic office, plastic-looking, HDR"),
       );
     }
 
     case "instagram_carousel": {
       return parts(
-        `PLATFORM: Instagram carousel FIRST SLIDE — perfect square 1:1 format.`,
-        `MARKETING INTENT: Stop the thumb-scroll in 0.3 seconds. Make the viewer SWIPE RIGHT to see next slides.`,
-        `This is the hook slide — bold, intriguing, visually unresolved (suggests there is more to see).`,
+        `PLATFORM: Instagram carousel FIRST SLIDE — perfect square 1:1 format. This is the hook that determines if anyone sees the rest.`,
+        `MARKETING INTENT: Arrest thumb-scroll in 0.3 seconds. Create visual curiosity gap — must feel incomplete, make viewer SWIPE RIGHT.`,
+        `WHO STOPS: ${ctx.userPsychographics} — they stop for ${ctx.moodWords} content that feels ${ctx.personality}.`,
+        `VISUAL HOOK TYPE: Bold editorial — single dominant brand element suggesting ${ctx.messagingPillar}.`,
         ctx.tagline,
-        `BRAND: ${B} — ${ctx.personality} personality. Industry: ${data.industry}.`,
-        `VISUAL DESIGN: ${ctx.marketingLanguage}. Full-bleed ${ctx.primaryColor} dominant background.`,
-        `Central focal element: single powerful brand visual — ${ctx.elements}.`,
-        `Color palette (strict): ${ctx.allPrimaryColors}. Accent pop: ${ctx.accentColor}.`,
-        `COMPOSITION: Bold, minimal, asymmetric. Strong visual tension. One dominant element, rest is breathing room.`,
-        `Reserve lower 20% as flat zone in ${ctx.secondaryColor} — space for text overlay (not included in image).`,
-        `MOOD: ${ctx.moodWords}. Energy: high-impact, confident, premium, social-native.`,
-        `Reference: top-performing ${data.industry} Instagram brand grids. No actual text in image.`,
-        q, neg(ctx, provider, "cluttered layout, multiple competing focal points, generic gradient"),
+        `BRAND: ${B} — ${ctx.personality}. Industry: ${data.industry}.`,
+        `VISUAL DESIGN: ${ctx.marketingArch}. Full-bleed ${ctx.primaryColor} dominant background.`,
+        `CENTRAL SUBJECT: ${ctx.visualMetaphor} — one element, hyper-sharp, maximum visual weight.`,
+        `COLOR PALETTE (strict, no others): ${ctx.allPrimaryColors}. High-contrast accent pop: ${ctx.accentColor}.`,
+        `COMPOSITION: Asymmetric tension — dominant element occupies 60% of frame, remaining 40% is intentional negative space.`,
+        `TEXT ZONE: Reserve lower 25% as flat ${ctx.secondaryColor} strip for text overlay (not rendered in image).`,
+        `MOOD: ${ctx.moodWords}. Energy: high-impact, thumb-stopping, premium, social-native.`,
+        `${ctx.competitiveAngle}`,
+        `Reference: Spotify, Apple, top-performing ${data.industry} carousel decks. No actual text.`,
+        q, neg(ctx, provider, "cluttered, multiple competing elements, generic gradient, centered symmetry"),
       );
     }
 
     case "instagram_story": {
       return parts(
         `PLATFORM: Instagram Story / Reels cover — full-bleed vertical 9:16 format (1080×1920px).`,
-        `MARKETING INTENT: Instant brand recognition in 3 seconds full-screen on mobile. Drive profile visits and swipe-up.`,
-        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
-        `VISUAL DESIGN: Full-bleed vertical composition. Dominant color: ${ctx.primaryColor}.`,
-        `Strong brand visual element in upper-center of frame (safe zone above bottom UI area).`,
-        `${ctx.visualStyle}. Key visual elements: ${ctx.elements}.`,
+        `MARKETING INTENT: Instant brand recognition in 3 seconds of full-screen mobile attention. Drive profile visits, product clicks.`,
+        `BRAND PURPOSE: ${ctx.purpose}. Personality: ${ctx.personality}.`,
+        `VISUAL SUBJECT: ${ctx.visualMetaphor} — central element in upper half, vertically oriented, bold and large.`,
+        `VISUAL DESIGN: Full-bleed vertical. Dominant color: ${ctx.primaryColor}. Secondary: ${ctx.secondaryColor}.`,
+        `${ctx.visualStyle}. Key visual: ${ctx.elements}.`,
         ctx.tagline,
-        `COMPOSITION: Visual weight in upper two-thirds. Reserve bottom 15% (link/sticker zone) as clean flat area.`,
-        `Reserve center vertical strip for 1–2 line headline text overlay (design shows the background only).`,
-        `MOOD: ${ctx.moodWords}. Bold, immediate, vertically dynamic, recognizable in thumbnail.`,
-        `Inspired by top-performing brand stories — Apple, Airbnb, Spotify adapted to ${data.industry}. No actual text.`,
-        q, neg(ctx, provider, "horizontal elements, landscape orientation, cluttered bottom area"),
+        `CORE MESSAGE: ${ctx.messagingPillar}.`,
+        `COMPOSITION (strict vertical zones):
+        - Top 10%: safe zone (status bar area) — keep clear
+        - Top 10–50%: dominant brand visual/graphic, maximum visual weight here
+        - Middle 50–75%: breathing space, soft continuation of visual
+        - Bottom 75–85%: text overlay zone (flat or gradient, design only — no actual text)
+        - Bottom 85–100%: CTA/link sticker zone — keep flat ${ctx.primaryColor} or ${ctx.secondaryColor}`,
+        `MOOD: ${ctx.moodWords}. Immediate, bold, vertically dynamic, recognizable even as a 60px thumbnail.`,
+        `${ctx.competitiveAngle}`,
+        `Inspired by top brand stories: Apple, Spotify, Airbnb, Nike — adapted to ${data.industry}. No actual text.`,
+        q, neg(ctx, provider, "horizontal elements, landscape framing, cluttered bottom, multiple focal points"),
       );
     }
 
     case "social_cover": {
       return parts(
         `PLATFORM: LinkedIn profile cover / YouTube channel banner — 16:9 widescreen (2560×1440px).`,
-        `MARKETING INTENT: First impression on professional profile — establish authority, positioning, brand identity.`,
-        `Viewer is ${ctx.targetMarket} evaluating ${B} for the first time.`,
-        `BRAND MESSAGE: ${ctx.uniqueValue}. Differentiators: ${ctx.differentiators}.`,
+        `MARKETING INTENT: First impression on professional profile. Must establish authority and positioning in 1 second.`,
+        `Viewer: ${ctx.targetMarket} — evaluating ${B} for the first time. They judge credibility instantly.`,
+        `BRAND MESSAGE: ${ctx.messagingPillar}. Proof: ${ctx.reasonsToBelieve}.`,
         ctx.tagline,
-        `VISUAL DESIGN: ${ctx.marketingLanguage}. ${ctx.visualStyle}.`,
-        `Color: ${ctx.primaryColor} dominant background. ${ctx.secondaryColor} and ${ctx.accentColor} for contrast.`,
-        `COMPOSITION: Strong horizontal left-to-right flow.`,
-        `Left 40%: clear flat zone (profile photo/logo area on LinkedIn).`,
-        `Right 60%: bold brand graphic — ${ctx.elements}. Strong geometric or abstract design.`,
-        `${ctx.composition}. MOOD: ${ctx.moodWords}. Confident, credible, premium.`,
-        `No placeholder text, no lorem ipsum — pure brand graphic language.`,
-        q, neg(ctx, provider, "cluttered layout, multiple focal points, text overlays, generic corporate imagery"),
+        `${ctx.competitiveAngle}`,
+        `VISUAL DESIGN: ${ctx.marketingArch}. ${ctx.visualStyle}.`,
+        `COLOR: ${ctx.primaryColor} dominant background. ${ctx.secondaryColor} structural accent. ${ctx.accentColor} highlight.`,
+        `COMPOSITION (strict horizontal zones):
+        - Left 35%: clear flat zone — profile photo safe area (LinkedIn standard)
+        - Center-right 65%: bold brand graphic — ${ctx.visualMetaphor} — strong geometric or abstract forms
+        - Right edge: ${ctx.accentColor} vertical accent stripe (optional depth element)`,
+        `VISUAL ELEMENTS: ${ctx.elements}. Bold, architectural, professional. Not decorative — structural.`,
+        `MOOD: ${ctx.moodWords}. Confident, credible, premium, memorable.`,
+        `No text, no lorem ipsum — pure brand graphic authority.`,
+        q, neg(ctx, provider, "cluttered, multiple focal points, text overlays, generic corporate clip art, low contrast"),
       );
     }
 
     case "social_post_square": {
       return parts(
-        `PLATFORM: Instagram feed post / Facebook post — perfect square 1:1 format.`,
-        `MARKETING INTENT: Brand presence in timeline. Strong visual recognition, saves, and shares.`,
-        `BRAND: ${B} — ${ctx.personality}. Industry: ${data.industry}.`,
+        `PLATFORM: Instagram/Facebook feed post — perfect square 1:1 format. Competes in a dense feed of content.`,
+        `MARKETING INTENT: Brand presence + saves + shares. Must be recognizable as ${B} in a feed thumbnail.`,
+        `BRAND: ${B} — ${ctx.personality}. Core message: ${ctx.messagingPillar}.`,
         ctx.tagline,
-        `VISUAL CONCEPT: ${ctx.marketingLanguage}. Bold on-brand graphic or editorial photo.`,
-        `COLOR PALETTE: ${ctx.allColors}. Dominant: ${ctx.primaryColor}.`,
-        `COMPOSITION: ${ctx.composition}. Thumb-stopping hierarchy — one clear focal point.`,
-        `Central element: ${ctx.elements} — graphic interpretation, emotionally resonant.`,
-        `MOOD: ${ctx.moodWords}. ${ctx.visualStyle}. Voice: ${ctx.toneOfVoice}.`,
-        `Photography direction if lifestyle: ${ctx.photoStyle}.`,
-        `No actual text in image — pure brand visual language. Reserve bottom strip for caption context.`,
-        q, neg(ctx, provider, "generic stock imagery, overcrowded layout, multiple competing elements"),
+        `VISUAL CONCEPT: ${ctx.marketingArch}. Bold, single-minded composition.`,
+        `VISUAL SUBJECT: ${ctx.visualMetaphor} — rendered with maximum graphic intention.`,
+        `COLOR PALETTE (brand-strict): ${ctx.allColors}. Dominant: ${ctx.primaryColor}.`,
+        `COMPOSITION: ${ctx.composition}. ONE dominant focal element — all other elements serve it. Perfect square balance.`,
+        `MOOD/ENERGY: ${ctx.moodWords}. Voice energy: ${ctx.toneOfVoice}. Visual vocabulary: ${ctx.preferredVocab || ctx.personality}.`,
+        `${ctx.visualStyle}.`,
+        `PHOTOGRAPHY (if lifestyle): ${ctx.photoStyle}. Camera: 35mm, f/2.0, square crop.`,
+        `${ctx.competitiveAngle}`,
+        `No text in image — pure brand visual language.`,
+        q, neg(ctx, provider, "generic stock imagery, overcrowded, multiple competing focal points, symmetry without intention"),
       );
     }
 
     case "youtube_thumbnail": {
       return parts(
-        `PLATFORM: YouTube video thumbnail — 1280×720px 16:9 format.`,
-        `MARKETING INTENT: Achieve above-average CTR. Compete against dozens of thumbnails in feed.`,
-        `Make viewer think "I NEED to watch this" in under 0.5 seconds.`,
+        `PLATFORM: YouTube video thumbnail — 1280×720px 16:9 format. Will be shown at 168×94px in feed — must work at tiny scale.`,
+        `MARKETING INTENT: Maximize CTR against competing thumbnails. Viewer must feel compelled in 0.5 seconds.`,
+        `PSYCHOLOGICAL HOOK: ${ctx.messagingPillar} — create curiosity + authority simultaneously.`,
+        `${ctx.competitiveAngle}`,
         `BRAND: ${B} (${data.industry}). ${ctx.tagline}`,
-        `VISUAL DESIGN: Maximum foreground-to-background contrast.`,
-        `Background: bold flat ${ctx.primaryColor} or dramatic gradient ${ctx.primaryColor} → ${ctx.secondaryColor}.`,
-        `Foreground: dramatic close-up of product/service concept, abstract visual, or key brand element: ${ctx.elements}.`,
-        `COLOR: High contrast. ${ctx.primaryColor} bg, ${ctx.accentColor} accent highlights. Brand palette: ${ctx.allPrimaryColors}.`,
-        `COMPOSITION: Rule of thirds. Strong left-to-right flow. Reserve right 40% as clear zone for text overlay.`,
-        `MOOD: Curiosity + confidence. ${ctx.moodWords}. Energy: bold, premium, clickable.`,
-        `Reference: top-performing YouTube thumbnails from premium ${data.industry} channels.`,
-        `No actual text in image. High contrast only — no muddy mid-tones.`,
-        q, neg(ctx, provider, "low contrast, muddy colors, complex cluttered composition, text"),
+        `VISUAL SUBJECT: High-drama close-up — ${ctx.visualMetaphor}. Foreground element takes 50% of frame, hyper-sharp.`,
+        `BACKGROUND: Solid bold ${ctx.primaryColor} or strong gradient ${ctx.primaryColor} → ${ctx.secondaryColor}. No photographic background.`,
+        `COLOR: Maximum contrast. ${ctx.primaryColor} field, ${ctx.accentColor} focal highlight. Brand palette: ${ctx.allPrimaryColors}.`,
+        `COMPOSITION: Subject occupies left 55%, right 45% reserved (clear flat zone for text overlay not rendered here).`,
+        `Rule of thirds — subject eyes/peak at upper-right third intersection if human subject.`,
+        `MOOD: ${ctx.moodWords}. Energy: bold, premium, unmistakably clickable.`,
+        `LIGHTING: Dramatic rim light in ${ctx.accentColor}, dark background shadow — creates depth and intrigue.`,
+        `Reference: MrBeast, Kurzgesagt, top ${data.industry} premium channels. No actual text. Works at 1/10th scale.`,
+        q, neg(ctx, provider, "low contrast, muddy mid-tones, text, cluttered background, flat even lighting"),
       );
     }
 
     case "presentation_bg": {
       return parts(
         `PLATFORM: Presentation slide background — 16:9 widescreen for PowerPoint/Keynote/Google Slides.`,
-        `DESIGN INTENT: Subtle brand presence — does NOT compete with slide content (text, charts, data).`,
-        `Background must be visually rich yet low-contrast — slide content layers on top legibly.`,
-        `BRAND: ${B} (${data.industry}). ${ctx.visualStyle}.`,
-        `DESIGN: Semi-abstract geometric composition using brand elements: ${ctx.elements}.`,
-        `Base color: ${ctx.primaryColor} — or very light/very dark interpretation of brand palette.`,
-        `Motifs: subtle patterns or geometry derived from ${ctx.logoSymbol} at 10–20% opacity.`,
-        `COLOR: Monochromatic brand palette, varying opacity, maximum 30% saturation — must NOT distract.`,
-        `${ctx.colorMood} — subdued, desaturated version.`,
-        `COMPOSITION: Visual weight in edges/corners — center and left areas clear for slide content.`,
-        `MOOD: Professional, premium, confident — background role only. Personality: ${ctx.personality}.`,
-        q, neg(ctx, provider, "busy complex pattern, high contrast, distracting elements, text, logos"),
+        `DESIGN INTENT: Silent brand presence. Must NOT compete with slide text or charts. Audience reads the slide content, not the background.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
+        `VISUAL SUBJECT: Extremely subtle ${ctx.visualMetaphor} — abstracted to near-invisibility.`,
+        `DESIGN: Semi-abstract micro-geometry from ${ctx.logoSymbol}. Elements: ${ctx.elements} — suggested, not shown.`,
+        `BASE TONE: ${ctx.primaryColor} very dark or very light interpretation — maximum 15% saturation.`,
+        `Geometric motifs in ${ctx.accentColor} at 8–15% opacity. Gradient vignette toward edges.`,
+        `COLOR RULE: Monochromatic brand palette only. Varying opacity 5–20%. Never full-saturation. Never photographic.`,
+        `COMPOSITION: Visual texture in far corners and edges. Center 60% of frame must be plain and flat — this is the content zone.`,
+        `Bottom-left or top-right: subtle brand motif at 10% opacity.`,
+        `MOOD: ${ctx.moodWords} — but whispered, not shouted. Background is the frame, not the art.`,
+        q, neg(ctx, provider, "busy pattern, high saturation, distracting, photographic, text, logos, centered elements"),
       );
     }
 
     case "email_header": {
       return parts(
-        `PLATFORM: E-mail marketing header banner — ultra-wide 21:9 (600px standard email width).`,
-        `MARKETING INTENT: Increase click-through rate. First visual after subject line — must load fast and look premium.`,
-        `Viewer: ${ctx.audienceDesc} who just opened a ${B} email.`,
+        `PLATFORM: E-mail marketing header banner — ultra-wide 21:9 (600px email standard, will render as thin horizontal strip).`,
+        `MARKETING INTENT: Increase open-to-click rate. First visual after subject line. 70% of opens are mobile — must work at 320px wide.`,
+        `Viewer context: ${ctx.audienceDesc} who just opened a ${B} email. They have 2 seconds before deciding to scroll or close.`,
+        `CORE MESSAGE TO SUPPORT: ${ctx.messagingPillar}.`,
         ctx.tagline,
-        `VISUAL DESIGN: ${ctx.marketingLanguage}. Clean, minimal, horizontally impactful.`,
-        `COLOR: ${ctx.primaryColor} dominant, ${ctx.secondaryColor} accent. Gradient or flat — not photographic background.`,
-        `COMPOSITION: Strong left-to-right horizontal reading flow.`,
-        `Left zone: brand graphic element (${ctx.elements}) or abstract brand motif.`,
-        `Center/right zone: flat or gradient area reserved for headline text overlay.`,
-        `${ctx.visualStyle}. MOOD: ${ctx.moodWords}. Tone: ${ctx.toneOfVoice}.`,
-        `No actual text in image — graphic layer only. Ultra-wide horizontal strip format.`,
-        q, neg(ctx, provider, "text, lorem ipsum, photographic busy background, cluttered, multiple focal points"),
+        `VISUAL DESIGN: ${ctx.marketingArch}. Clean, horizontal, immediately branded.`,
+        `COLOR: ${ctx.primaryColor} dominant field. ${ctx.secondaryColor} accent. Flat or subtle gradient — never photographic background.`,
+        `VISUAL ELEMENT: ${ctx.elements} — abstracted, single motif, left-anchored. Thin horizontal strip composition.`,
+        `COMPOSITION: Left 30%: brand visual/motif in ${ctx.accentColor} or ${ctx.secondaryColor}. Right 70%: clean flat ${ctx.primaryColor} field for headline text overlay.`,
+        `MOOD: ${ctx.moodWords}. Tone: ${ctx.toneOfVoice}. Minimal, premium, brand-consistent.`,
+        `${ctx.visualStyle}. No actual text — graphic background layer only.`,
+        q, neg(ctx, provider, "text, lorem ipsum, photographic busy background, centered composition, multiple elements"),
       );
     }
 
     case "app_mockup": {
       const uxLayout = data.uxPatterns?.dashboardLayout ?? `clean ${data.industry} dashboard with data visualizations`;
       return parts(
-        `PLATFORM: Product UI mockup displayed in modern iPhone 15 Pro and/or MacBook Pro device frame.`,
-        `MARKETING INTENT: Show the actual product experience — viewers are ${ctx.targetMarket} evaluating the product.`,
-        `This is NOT a generic template — it shows ${B}'s specific branded interface.`,
-        `UI DESIGN: ${uxLayout}. Color system: primary ${ctx.primaryColor}, secondary ${ctx.secondaryColor}, neutral backgrounds.`,
-        `Typography on screen: ${ctx.displayFont} headings, ${ctx.bodyFont} body. Consistent with brand system.`,
-        `UI components: clean cards, rounded corners, generous spacing, ${ctx.primaryColor} accent buttons.`,
-        `SCREEN CONTENT: Realistic ${data.industry} data — charts, metrics, workflow panels, branded components.`,
-        `Brand-specific UI elements: ${ctx.elements}. ${ctx.visualStyle}.`,
-        `MOCKUP SCENE: Device on clean studio surface, subtle workspace context, professional bokeh background.`,
-        `Perspective: natural 3/4 angle, realistic screen glow, authentic device materials and reflections.`,
-        q, neg(ctx, provider, "generic app template, lorem ipsum placeholder text, fake stock UI data"),
+        `PLATFORM: Product UI mockup in modern iPhone 15 Pro (portrait) or MacBook Pro 14\" (landscape) device frame.`,
+        `MARKETING INTENT: Show the actual product value, not a template. Viewer is ${ctx.targetMarket} in evaluation mode.`,
+        `This must look like ${B}'s REAL interface — specific to ${data.industry}, not a generic UI kit.`,
+        `UI LAYOUT: ${uxLayout}. Core feature shown: ${ctx.messagingPillar}.`,
+        `COLOR SYSTEM: Primary ${ctx.primaryColor} for key actions/accents, ${ctx.secondaryColor} for surfaces, neutral for text/backgrounds.`,
+        `TYPOGRAPHY on screen: ${ctx.displayFont} Bold for headers, ${ctx.bodyFont} Regular for body, ${ctx.primaryColor} for interactive labels.`,
+        `SCREEN CONTENT: Realistic ${data.industry} data — meaningful charts, metrics, workflow progress, branded status indicators.`,
+        `PROOF POINTS visible in UI: ${ctx.reasonsToBelieve} — make these feel real through specific UI elements.`,
+        `Brand visual signature in UI: ${ctx.elements}. ${ctx.visualStyle}.`,
+        `MOCKUP SCENE: Device on minimal studio desk surface. Soft ambient bokeh background in ${ctx.primaryColor} dark tint.`,
+        `LIGHTING: Subtle edge screen glow, realistic device reflections, soft top-down studio light on device body.`,
+        `Perspective: natural 3/4 tilt, 15–20° rotation, professional product photography angle.`,
+        q, neg(ctx, provider, "generic UI template, lorem ipsum, fake stock data, flat perspective, plastic device"),
       );
     }
 
@@ -438,18 +464,21 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "outdoor_billboard": {
       return parts(
-        `PLATFORM: Outdoor advertising billboard (OOH) mockup in urban street — 16:9 landscape.`,
-        `MARKETING INTENT: Maximum brand awareness in 3 seconds at 60 km/h. Must communicate in one glance.`,
-        `Viewer: ${ctx.targetMarket} in an urban environment.`,
-        `BILLBOARD DESIGN: Single powerful brand visual. Dominant color ${ctx.primaryColor}.`,
-        `Concept communicates: ${ctx.uniqueValue} — without long copy.`,
-        `Brand element: ${ctx.elements}. ${ctx.marketingLanguage}.`,
+        `PLATFORM: Large-format OOH billboard mockup in busy urban street — 16:9 landscape.`,
+        `MARKETING INTENT: Single-message brand awareness at 60 km/h. No one reads paragraphs — one image, one feeling.`,
+        `Viewer: ${ctx.userPsychographics} commuting through a city — 3-second attention maximum.`,
+        `BILLBOARD MESSAGE: ${ctx.messagingPillar} — expressed in ONE dominant visual, no copy needed.`,
         ctx.tagline,
-        `COLOR: ${ctx.primaryColor} dominant, high-contrast accents ${ctx.accentColor}.`,
-        `MOCKUP SCENE: Realistic urban billboard — city street, buildings, blurred pedestrians in foreground.`,
-        `Golden hour or blue hour dramatic sky lighting. Authentic metal-frame billboard structure.`,
-        `MOOD: ${ctx.moodWords}. Impressive, culturally present, confident. ${ctx.composition}.`,
-        q, neg(ctx, provider, "fake CGI plastic billboard, overexposed flat daytime, empty street, cartoon quality"),
+        `${ctx.competitiveAngle}`,
+        `BILLBOARD DESIGN: ${ctx.visualMetaphor} — maximum visual impact. Dominant color: ${ctx.primaryColor}.`,
+        `Brand element: ${ctx.elements}. Visual style: ${ctx.marketingArch}.`,
+        `COLOR: ${ctx.primaryColor} field, ${ctx.accentColor} focal highlight, ${ctx.secondaryColor} structural contrast.`,
+        `MOCKUP SCENE: Realistic metal-frame billboard on urban commercial street.`,
+        `City context: tall buildings, street level perspective, blurred pedestrians and traffic in foreground.`,
+        `TIME OF DAY: Blue hour (just after sunset) — dramatic sky gradient, artificial street lighting creating depth.`,
+        `LIGHTING on billboard: Bright billboard illumination against dim urban atmosphere — creates maximum contrast.`,
+        `MOOD: ${ctx.moodWords}. Culturally present, confident, unmistakable at speed.`,
+        q, neg(ctx, provider, "CGI plastic billboard, flat daytime lighting, empty street, cartoon quality, dark unlit billboard"),
       );
     }
 
