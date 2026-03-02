@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrandbookData, ImageProvider, GeneratedAsset } from "@/lib/types";
 import { ASSET_CATALOG, buildImagePrompt, AssetKey } from "@/lib/imagePrompts";
 import { ApiKeys } from "@/components/ApiKeyConfig";
@@ -59,8 +59,27 @@ function aspectClass(ratio: string): string {
   return "aspect-square";
 }
 
+const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
+  dalle3: "openai",
+  stability: "stability",
+  ideogram: "ideogram",
+  imagen: "google",
+};
+
+function pickDefaultProvider(keys: ApiKeys): ImageProvider {
+  const order: ImageProvider[] = ["dalle3", "imagen", "stability", "ideogram"];
+  return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "dalle3";
+}
+
 export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys }: Props) {
-  const [provider, setProvider] = useState<ImageProvider>("dalle3");
+  const [provider, setProvider] = useState<ImageProvider>(() => pickDefaultProvider(apiKeys));
+
+  useEffect(() => {
+    if (!apiKeys[PROVIDER_KEY_MAP[provider]]) {
+      const better = pickDefaultProvider(apiKeys);
+      if (better !== provider) setProvider(better);
+    }
+  }, [apiKeys]);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
@@ -113,6 +132,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
   }
 
   const currentProvider = PROVIDERS.find((p) => p.id === provider)!;
+  const currentProviderHasKey = !!apiKeys[PROVIDER_KEY_MAP[provider]];
   const categories = ["logo", "digital", "social", "mockup", "print"] as const;
 
   return (
@@ -149,10 +169,18 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
             </button>
           ))}
         </div>
-        <div className={`mt-3 px-4 py-3 rounded-lg border text-xs ${currentProvider.color}`}>
-          <strong>Configuração:</strong> Clique em <strong>⚙ APIs</strong> no cabeçalho e insira sua{" "}
-          <code className="font-mono">{currentProvider.envKey}</code> para usar este provider.
-        </div>
+        {!currentProviderHasKey ? (
+          <div className="mt-3 px-4 py-3 rounded-lg border text-xs bg-red-50 border-red-200 text-red-700">
+            ⚠ <strong>{currentProvider.name}</strong> requer a chave{" "}
+            <code className="font-mono">{currentProvider.envKey}</code> — configure em{" "}
+            <strong>⚙ APIs</strong> no cabeçalho.
+          </div>
+        ) : (
+          <div className={`mt-3 px-4 py-3 rounded-lg border text-xs ${currentProvider.color}`}>
+            ✓ <strong>{currentProvider.name}</strong> configurado com{" "}
+            <code className="font-mono">{currentProvider.envKey}</code>.
+          </div>
+        )}
       </div>
 
       {/* Error banner */}
@@ -215,14 +243,16 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
                           <div className="absolute top-2 right-2">
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                generated.provider === "dalle3"
-                                  ? "bg-green-100 text-green-800"
-                                  : generated.provider === "stability"
-                                  ? "bg-purple-100 text-purple-800"
-                                  : "bg-orange-100 text-orange-800"
+                                generated.provider === "dalle3" ? "bg-green-100 text-green-800"
+                                : generated.provider === "stability" ? "bg-purple-100 text-purple-800"
+                                : generated.provider === "imagen" ? "bg-blue-100 text-blue-800"
+                                : "bg-orange-100 text-orange-800"
                               }`}
                             >
-                              {generated.provider === "dalle3" ? "DALL-E 3" : generated.provider === "stability" ? "SD XL" : "Ideogram"}
+                              {generated.provider === "dalle3" ? "DALL-E 3"
+                                : generated.provider === "stability" ? "SD XL"
+                                : generated.provider === "imagen" ? "Imagen"
+                                : "Ideogram"}
                             </span>
                           </div>
                         )}
@@ -290,14 +320,16 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
                 </span>
                 <span
                   className={`font-mono text-[10px] px-1 rounded ${
-                    asset.provider === "dalle3"
-                      ? "bg-green-100 text-green-700"
-                      : asset.provider === "stability"
-                      ? "bg-purple-100 text-purple-700"
+                    asset.provider === "dalle3" ? "bg-green-100 text-green-700"
+                      : asset.provider === "stability" ? "bg-purple-100 text-purple-700"
+                      : asset.provider === "imagen" ? "bg-blue-100 text-blue-700"
                       : "bg-orange-100 text-orange-700"
                   }`}
                 >
-                  {asset.provider === "dalle3" ? "D3" : asset.provider === "stability" ? "SD" : "IG"}
+                  {asset.provider === "dalle3" ? "D3"
+                    : asset.provider === "stability" ? "SD"
+                    : asset.provider === "imagen" ? "IMG"
+                    : "IG"}
                 </span>
                 <button
                   onClick={() => downloadImage(asset.url, asset.key)}
