@@ -7,15 +7,22 @@ import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys 
 import { BrandbookEditor } from "@/components/BrandbookEditor";
 import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
 import { GenerateBriefingForm, type GenerateBriefingData } from "@/components/GenerateBriefingForm";
+import { GenerationProgress } from "@/components/GenerationProgress";
+import { RefinePanel } from "@/components/RefinePanel";
+import { ConsistencyPanel } from "@/components/ConsistencyPanel";
+import { ExportPanel } from "@/components/ExportPanel";
+import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
+import { LogoConceptPanel } from "@/components/LogoConceptPanel";
 import { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { saasExample, barExample, sushiExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
+import { decompressBrandbook } from "@/lib/shareUtils";
 import type { AssetKey } from "@/lib/imagePrompts";
 
 type Tab = "generate" | "examples" | "viewer";
-type ViewerTab = "preview" | "images" | "json" | "sections" | "edit" | "assets";
+type ViewerTab = "preview" | "images" | "json" | "sections" | "edit" | "assets" | "refine" | "consistency" | "export";
 
 const GENERATED_ASSETS_LS_PREFIX = "bb_generated_assets::";
 const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
@@ -82,6 +89,8 @@ function saveCachedBrandAssets(slug: string, assets: UploadedAsset[]) {
 export default function Home() {
   const [tab, setTab] = useState<Tab>("examples");
   const [loading, setLoading] = useState(false);
+  const [generationPhase, setGenerationPhase] = useState("");
+  const [generationPct, setGenerationPct] = useState(0);
   const [error, setError] = useState("");
   const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
   const [jsonText, setJsonText] = useState("");
@@ -90,21 +99,46 @@ export default function Home() {
   const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
+  const [showApiConfig, setShowApiConfig] = useState(false);
+  const [exportingPack, setExportingPack] = useState(false);
 
   useEffect(() => {
     const keys = loadApiKeys();
     setApiKeys(keys);
     if (!keys.openai && keys.google) setTextProvider("gemini");
     else if (keys.openai) setTextProvider("openai");
+
+    // Load shared brandbook from URL
+    const params = new URLSearchParams(window.location.search);
+    const bbParam = params.get("bb");
+    if (bbParam) {
+      decompressBrandbook(bbParam).then((raw) => {
+        if (!raw) return;
+        try {
+          const migrated = migrateBrandbook(raw);
+          const validated = BrandbookSchemaLoose.safeParse(migrated);
+          if (validated.success) {
+            setBrandbookData(migrated as BrandbookData);
+            const slug = slugifyForStorage((migrated as BrandbookData).brandName);
+            setGeneratedAssets(loadCachedGeneratedAssets(slug));
+            setUploadedBrandAssets(loadCachedBrandAssets(slug));
+            setTab("viewer");
+            window.history.replaceState({}, "", window.location.pathname);
+          }
+        } catch {
+          // invalid share URL, ignore
+        }
+      });
+    }
   }, []);
-  const [showApiConfig, setShowApiConfig] = useState(false);
-  const [exportingPack, setExportingPack] = useState(false);
 
 
   async function handleGenerate(formData: GenerateBriefingData) {
     setLoading(true);
     setError("");
     setBrandbookData(null);
+    setGenerationPhase("Preparando geração...");
+    setGenerationPct(0);
 
     try {
       const res = await fetch("/api/generate", {
@@ -128,32 +162,60 @@ export default function Home() {
         }),
       });
 
-      const data = await res.json();
+      if (!res.body) throw new Error("Streaming não suportado pelo servidor.");
 
-      if (!res.ok) {
-        throw new Error(data.error || "Erro ao gerar brandbook");
-      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      const migrated = migrateBrandbook(data);
-      const base = BrandbookSchemaLoose.safeParse(migrated);
-      if (!base.success) {
-        throw new Error("Brandbook inválido:\n" + formatZodIssues(base.error.issues));
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(trimmed.slice(6)) as {
+              type: string;
+              phase?: string;
+              pct?: number;
+              data?: BrandbookData;
+              error?: string;
+            };
+
+            if (event.type === "progress") {
+              setGenerationPhase(event.phase ?? "");
+              setGenerationPct(event.pct ?? 0);
+            } else if (event.type === "complete" && event.data) {
+              const migrated = migrateBrandbook(event.data);
+              const strict = BrandbookSchemaV2.safeParse(migrated);
+              const nextBrandbook = (strict.success ? strict.data : migrated) as unknown as BrandbookData;
+              const slug = slugifyForStorage(nextBrandbook.brandName);
+              setBrandbookData(nextBrandbook);
+              setGeneratedAssets(loadCachedGeneratedAssets(slug));
+              setUploadedBrandAssets(loadCachedBrandAssets(slug));
+              setTab("viewer");
+            } else if (event.type === "error") {
+              throw new Error(event.error ?? "Erro desconhecido");
+            }
+          } catch (parseErr) {
+            if (parseErr instanceof SyntaxError) continue;
+            throw parseErr;
+          }
+        }
       }
-      const strict = BrandbookSchemaV2.safeParse(migrated);
-      if (!strict.success) {
-        throw new Error("Brandbook incompleto:\n" + formatZodIssues(strict.error.issues));
-      }
-      const nextBrandbook = strict.data as unknown as BrandbookData;
-      const slug = slugifyForStorage(nextBrandbook.brandName);
-      setBrandbookData(nextBrandbook);
-      setGeneratedAssets(loadCachedGeneratedAssets(slug));
-      setUploadedBrandAssets(loadCachedBrandAssets(slug));
-      setTab("viewer");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
       setError(message);
     } finally {
       setLoading(false);
+      setGenerationPhase("");
+      setGenerationPct(0);
     }
   }
 
@@ -389,11 +451,15 @@ export default function Home() {
                 )}
               </div>
 
-              <GenerateBriefingForm
-                onSubmit={handleGenerate}
-                loading={loading}
-                error={error}
-              />
+              {loading && generationPhase ? (
+                <GenerationProgress phase={generationPhase} pct={generationPct} />
+              ) : (
+                <GenerateBriefingForm
+                  onSubmit={handleGenerate}
+                  loading={loading}
+                  error={error}
+                />
+              )}
 
               <div className="mt-8 pt-8 border-t">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Ou importe um JSON existente</h3>
@@ -560,6 +626,30 @@ export default function Home() {
               >
                 JSON por Seção
               </button>
+              <button
+                onClick={() => setViewerTab("refine")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  viewerTab === "refine" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                ✨ Refinar
+              </button>
+              <button
+                onClick={() => setViewerTab("consistency")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  viewerTab === "consistency" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                🔍 Consistência
+              </button>
+              <button
+                onClick={() => setViewerTab("export")}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                  viewerTab === "export" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                📤 Exportar
+              </button>
             </div>
             </div>
 
@@ -614,15 +704,23 @@ export default function Home() {
 
             {/* Sub-tab: Image Generation */}
             {viewerTab === "images" && (
-              <div className="bg-white border rounded-xl p-6 shadow-sm">
-                <ImageGenPanel
-                  data={brandbookData}
-                  generatedAssets={generatedAssets}
-                  apiKeys={apiKeys}
-                  onAssetGenerated={(key, asset) =>
-                    setGeneratedAssets((prev) => ({ ...prev, [key]: asset }))
-                  }
-                />
+              <div className="space-y-6">
+                <div className="bg-white border rounded-xl p-6 shadow-sm">
+                  <ImageGenPanel
+                    data={brandbookData}
+                    generatedAssets={generatedAssets}
+                    apiKeys={apiKeys}
+                    onAssetGenerated={(key, asset) =>
+                      setGeneratedAssets((prev) => ({ ...prev, [key]: asset }))
+                    }
+                  />
+                </div>
+                <div className="bg-white border rounded-xl p-6 shadow-sm">
+                  <LogoConceptPanel
+                    brandbook={brandbookData}
+                    apiKeys={apiKeys}
+                  />
+                </div>
               </div>
             )}
 
@@ -712,6 +810,52 @@ export default function Home() {
             {/* Sub-tab: JSON por Seção */}
             {viewerTab === "sections" && (
               <JsonBySectionPanel data={brandbookData} onDownload={downloadJson} />
+            )}
+
+            {/* Sub-tab: Refinar */}
+            {viewerTab === "refine" && (
+              <div className="max-w-2xl mx-auto space-y-6">
+                <div className="bg-white border rounded-xl p-8 shadow-sm">
+                  <RefinePanel
+                    brandbook={brandbookData}
+                    apiKeys={apiKeys}
+                    textProvider={textProvider}
+                    onRefined={(updated) => {
+                      setBrandbookData(updated);
+                      setViewerTab("preview");
+                    }}
+                  />
+                </div>
+                <div className="bg-white border rounded-xl p-8 shadow-sm">
+                  <RegenerateSectionsPanel
+                    brandbook={brandbookData}
+                    apiKeys={apiKeys}
+                    textProvider={textProvider}
+                    onUpdated={(updated) => setBrandbookData(updated)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Sub-tab: Consistência */}
+            {viewerTab === "consistency" && (
+              <div className="max-w-2xl mx-auto bg-white border rounded-xl p-8 shadow-sm">
+                <ConsistencyPanel
+                  brandbook={brandbookData}
+                  apiKeys={apiKeys}
+                  textProvider={textProvider}
+                />
+              </div>
+            )}
+
+            {/* Sub-tab: Exportar */}
+            {viewerTab === "export" && (
+              <div className="max-w-2xl mx-auto bg-white border rounded-xl p-8 shadow-sm">
+                <ExportPanel
+                  brandbook={brandbookData}
+                  viewerElementId="brandbook-content"
+                />
+              </div>
             )}
           </div>
         )}
