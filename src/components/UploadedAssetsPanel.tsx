@@ -17,38 +17,102 @@ interface Props {
   onChange: (assets: UploadedAsset[]) => void;
 }
 
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function rasterFileToOptimizedDataUrl(file: File, maxSide: number, mimeType: string, quality: number): Promise<string> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.decoding = "async";
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("Falha ao carregar imagem"));
+      el.src = objectUrl;
+    });
+
+    const maxDim = Math.max(img.naturalWidth || 1, img.naturalHeight || 1);
+    const scale = Math.min(1, maxSide / maxDim);
+    const width = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+    const height = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return await blobToDataUrl(file);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const outBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Falha ao converter imagem"))), mimeType, quality);
+    });
+    return await blobToDataUrl(outBlob);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export function UploadedAssetsPanel({ assets, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploadType, setUploadType] = useState<UploadedAsset["type"]>("logo");
   const [filterType, setFilterType] = useState<UploadedAsset["type"] | "all">("all");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState("");
+
+  async function processFiles(files: FileList) {
+    setUploadError("");
+
+    const MAX_FILES = 20;
+    const MAX_IMAGE_DATAURL_CHARS = 3_500_000;
+    const MAX_FILE_SIZE_BYTES = 12 * 1024 * 1024;
+
+    const allowed = Array.from(files)
+      .filter((f) => f.type.startsWith("image/"))
+      .slice(0, MAX_FILES);
+
+    if (allowed.length === 0) return;
+
+    const newAssets: UploadedAsset[] = [];
+
+    for (const file of allowed) {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setUploadError("Um ou mais arquivos foram ignorados por serem muito grandes (máx. 12MB cada)."
+        );
+        continue;
+      }
+
+      const isSvg = file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
+      const dataUrl = isSvg
+        ? await rasterFileToOptimizedDataUrl(file, 1600, "image/png", 0.92)
+        : await rasterFileToOptimizedDataUrl(file, 1600, "image/webp", 0.88);
+
+      if (dataUrl.length > MAX_IMAGE_DATAURL_CHARS) {
+        setUploadError("Um ou mais arquivos ficaram muito pesados. Tente versões menores."
+        );
+        continue;
+      }
+
+      newAssets.push({
+        id: `asset_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        name: file.name.replace(/\.[^/.]+$/, ""),
+        type: uploadType,
+        dataUrl,
+        description: "",
+      });
+    }
+
+    if (newAssets.length > 0) onChange([...assets, ...newAssets]);
+  }
 
   function handleFiles(files: FileList | null) {
     if (!files) return;
-    const newAssets: UploadedAsset[] = [];
-    let processed = 0;
-    const total = Array.from(files).filter((f) => f.type.startsWith("image/")).length;
-    if (total === 0) return;
-
-    Array.from(files).forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        newAssets.push({
-          id: `asset_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-          name: file.name.replace(/\.[^/.]+$/, ""),
-          type: uploadType,
-          dataUrl,
-          description: "",
-        });
-        processed++;
-        if (processed === total) {
-          onChange([...assets, ...newAssets]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    void processFiles(files);
   }
 
   function handleRemove(id: string) {
@@ -75,6 +139,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
           {ASSET_TYPES.map((t) => (
             <button
               key={t.value}
+              type="button"
               onClick={() => setUploadType(t.value)}
               className={`p-2.5 rounded-lg border-2 text-center transition ${
                 uploadType === t.value
@@ -97,7 +162,10 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
             accept="image/*"
             multiple
             className="hidden"
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e) => {
+              handleFiles(e.target.files);
+              e.target.value = "";
+            }}
           />
           <p className="text-sm font-semibold text-gray-700">
             {ASSET_TYPES.find((t) => t.value === uploadType)?.icon} Clique para fazer upload como{" "}
@@ -105,6 +173,12 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
           </p>
           <p className="text-xs text-gray-400 mt-1">PNG, JPG, SVG, WEBP — múltiplos arquivos</p>
         </div>
+
+        {uploadError && (
+          <div className="mt-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <p className="text-xs text-red-800 font-semibold">{uploadError}</p>
+          </div>
+        )}
       </div>
 
       {assets.length > 0 && (
@@ -112,6 +186,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
           {/* Filter Tabs */}
           <div className="flex flex-wrap gap-2 mb-5">
             <button
+              type="button"
               onClick={() => setFilterType("all")}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                 filterType === "all" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -122,6 +197,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
             {ASSET_TYPES.filter((t) => counts[t.value] > 0).map((t) => (
               <button
                 key={t.value}
+                type="button"
                 onClick={() => setFilterType(t.value)}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                   filterType === t.value ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -153,6 +229,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
                       </span>
                       <div className="flex gap-1 shrink-0">
                         <button
+                          type="button"
                           onClick={() => setEditingId(isEditing ? null : asset.id)}
                           className="text-xs text-gray-400 hover:text-gray-700 transition"
                           title="Editar"
@@ -160,6 +237,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
                           ✏
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleRemove(asset.id)}
                           className="text-xs text-gray-400 hover:text-red-500 transition"
                           title="Remover"
@@ -195,6 +273,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
                           className="w-full text-xs px-2 py-1 border rounded resize-none focus:ring-1 focus:ring-gray-800 outline-none"
                         />
                         <button
+                          type="button"
                           onClick={() => setEditingId(null)}
                           className="w-full text-xs bg-gray-900 text-white py-1 rounded font-medium hover:bg-gray-700 transition"
                         >

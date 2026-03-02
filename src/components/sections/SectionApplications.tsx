@@ -71,8 +71,6 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
           const selectId = `application-image-key-${i}`;
           return (
             <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative">
-
-              {/* Image area */}
               <div className="aspect-video bg-gray-900 overflow-hidden relative">
                 {aiImage ? (
                   <>
@@ -96,13 +94,9 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
                   </div>
                 )}
               </div>
-
-              {/* Content */}
               <div className="p-5">
                 <h3 className="font-bold text-lg mb-2">{app.type}</h3>
                 <p className="text-gray-600 text-sm">{app.description}</p>
-
-                {/* Override dropdown — only shown when there ARE generated images */}
                 {onUpdateApplicationImageKey && totalGenerated > 0 && (
                   <div className="no-print mt-4 border-t pt-4">
                     <label

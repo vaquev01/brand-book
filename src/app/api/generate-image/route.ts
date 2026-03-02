@@ -3,6 +3,8 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { ASSET_CATALOG } from "@/lib/imagePrompts";
 
+export const runtime = "nodejs";
+
 type AspectRatioKey = "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
 
 const DALLE3_SIZES: Record<AspectRatioKey, "1024x1024" | "1792x1024" | "1024x1792"> = {
@@ -48,6 +50,23 @@ function extractNegativePrompt(prompt: string): { positive: string; negative: st
     positive: prompt.slice(0, negIdx).trim(),
     negative: prompt.slice(negIdx + 7).trim(),
   };
+}
+
+function bytesToBase64(bytes: unknown): string {
+  if (typeof bytes === "string") return bytes;
+  if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+  if (bytes instanceof Uint8Array) {
+    if (typeof Buffer !== "undefined") return Buffer.from(bytes).toString("base64");
+    if (typeof btoa !== "undefined") {
+      let binary = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      return btoa(binary);
+    }
+  }
+  throw new Error("Não foi possível converter bytes da imagem para base64");
 }
 
 export async function POST(request: NextRequest) {
@@ -250,7 +269,7 @@ export async function POST(request: NextRequest) {
         });
         const imageBytes = resp.generatedImages?.[0]?.image?.imageBytes;
         if (!imageBytes) throw new Error("Imagen não retornou imagem");
-        const b64 = typeof imageBytes === "string" ? imageBytes : Buffer.from(imageBytes).toString("base64");
+        const b64 = bytesToBase64(imageBytes);
         return NextResponse.json({
           url: `data:image/png;base64,${b64}`,
           provider: "imagen",

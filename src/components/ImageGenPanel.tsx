@@ -274,7 +274,13 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between text-sm">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="font-bold text-lg leading-none ml-4">
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="font-bold text-lg leading-none ml-4"
+            aria-label="Fechar erro"
+            title="Fechar"
+          >
             &times;
           </button>
         </div>
@@ -372,9 +378,11 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
                           </button>
                           {generated && (
                             <button
+                              type="button"
                               onClick={() => downloadImage(generated.url, asset.key)}
                               className="bg-gray-100 text-gray-700 text-xs py-2 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
                               title="Download"
+                              aria-label="Download"
                             >
                               ↓
                             </button>
@@ -419,9 +427,11 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
                     : "IG"}
                 </span>
                 <button
+                  type="button"
                   onClick={() => downloadImage(asset.url, asset.key)}
                   className="text-gray-400 hover:text-gray-700 transition font-bold"
                   title="Download"
+                  aria-label="Download"
                 >
                   ↓
                 </button>

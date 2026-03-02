@@ -91,8 +91,11 @@ function ArrayEditor({ label, items, onChange, addLabel = "Adicionar" }: ArrayEd
               className="flex-1 px-2.5 py-1.5 border rounded-lg text-sm focus:ring-1 focus:ring-gray-900 outline-none transition"
             />
             <button
+              type="button"
               onClick={() => onChange(items.filter((_, j) => j !== i))}
               className="text-gray-400 hover:text-red-500 transition text-lg leading-none w-6 shrink-0"
+              aria-label="Remover item"
+              title="Remover"
             >
               ×
             </button>
@@ -143,7 +146,15 @@ function ColorEditor({ color, onChange, onRemove }: ColorEditorProps) {
           placeholder="Nome da cor"
           className="flex-1 px-2 py-1.5 border rounded text-sm focus:ring-1 focus:ring-gray-900 outline-none"
         />
-        <button onClick={onRemove} className="text-gray-400 hover:text-red-500 transition text-lg leading-none w-6 shrink-0">×</button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-gray-400 hover:text-red-500 transition text-lg leading-none w-6 shrink-0"
+          aria-label="Remover cor"
+          title="Remover"
+        >
+          ×
+        </button>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <input

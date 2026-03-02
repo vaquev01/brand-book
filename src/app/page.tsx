@@ -53,7 +53,10 @@ function loadCachedGeneratedAssets(slug: string): Record<string, GeneratedAsset>
 function saveCachedGeneratedAssets(slug: string, assets: Record<string, GeneratedAsset>) {
   if (typeof window === "undefined") return;
   if (!slug) return;
-  localStorage.setItem(GENERATED_ASSETS_LS_PREFIX + slug, JSON.stringify(assets));
+  try {
+    localStorage.setItem(GENERATED_ASSETS_LS_PREFIX + slug, JSON.stringify(assets));
+  } catch {
+  }
 }
 
 function clearCachedGeneratedAssets(slug: string) {

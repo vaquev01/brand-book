@@ -4,6 +4,47 @@ import { useState } from "react";
 import { BriefingImageUpload } from "./BriefingImageUpload";
 import type { GenerateScope, CreativityLevel, UploadedAsset } from "@/lib/types";
 
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function rasterFileToOptimizedDataUrl(file: File, maxSide: number, mimeType: string, quality: number): Promise<string> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.decoding = "async";
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("Falha ao carregar imagem"));
+      el.src = objectUrl;
+    });
+
+    const maxDim = Math.max(img.naturalWidth || 1, img.naturalHeight || 1);
+    const scale = Math.min(1, maxSide / maxDim);
+    const width = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+    const height = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return await blobToDataUrl(file);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const outBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Falha ao converter imagem"))), mimeType, quality);
+    });
+    return await blobToDataUrl(outBlob);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 interface GuidedBriefing {
   whatItDoes: string;
   targetAudience: string;
@@ -117,6 +158,8 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   const [showGuided, setShowGuided] = useState(false);
   const [referenceImages, setReferenceImages] = useState<UploadedAsset[]>([]);
   const [logoImage, setLogoImage] = useState<UploadedAsset | null>(null);
+  const [logoUploadError, setLogoUploadError] = useState("");
+  const [logoDragActive, setLogoDragActive] = useState(false);
   const [guided, setGuided] = useState<GuidedBriefing>({
     whatItDoes: "",
     targetAudience: "",
@@ -161,24 +204,68 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
 
   const selectedCreativity = CREATIVITY_OPTIONS.find((o) => o.value === creativity)!;
 
+  async function setLogoFromFile(file: File) {
+    setLogoUploadError("");
+
+    if (!file.type.startsWith("image/")) {
+      setLogoUploadError("Envie um arquivo de imagem (PNG, SVG, JPG, etc).");
+      return;
+    }
+
+    if (file.size > 12 * 1024 * 1024) {
+      setLogoUploadError("Arquivo muito grande. Tente um logo menor (máx. 12MB).");
+      return;
+    }
+
+    try {
+      const isSvg = file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
+      const dataUrl = isSvg
+        ? await rasterFileToOptimizedDataUrl(file, 1024, "image/png", 0.92)
+        : await rasterFileToOptimizedDataUrl(file, 1024, "image/webp", 0.9);
+
+      if (dataUrl.length > 3_500_000) {
+        setLogoUploadError("Logo muito pesado para enviar. Tente uma versão menor ou em PNG/SVG simplificado.");
+        return;
+      }
+
+      setLogoImage({ id: `logo-${Date.now()}`, name: file.name, dataUrl, type: "logo" });
+    } catch {
+      setLogoUploadError("Falha ao processar o logo. Tente PNG/JPG.");
+    }
+  }
+
   function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      setLogoImage({ id: `logo-${Date.now()}`, name: file.name, dataUrl, type: "logo" });
-    };
-    reader.readAsDataURL(file);
+    void setLogoFromFile(file);
+    e.target.value = "";
+  }
+
+  function handleLogoDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setLogoDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    void setLogoFromFile(file);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
 
       {/* HERO: Logo Upload */}
-      <div className={`rounded-2xl border-2 transition-all ${
-        logoImage ? "border-gray-900 bg-gray-50" : "border-dashed border-gray-300 hover:border-gray-400 bg-gray-50"
-      }`}>
+      <div
+        onDrop={handleLogoDrop}
+        onDragOver={(e) => e.preventDefault()}
+        onDragEnter={() => setLogoDragActive(true)}
+        onDragLeave={() => setLogoDragActive(false)}
+        className={`rounded-2xl border-2 transition-all ${
+          logoImage
+            ? "border-gray-900 bg-gray-50"
+            : logoDragActive
+              ? "border-gray-900 bg-gray-100"
+              : "border-dashed border-gray-300 hover:border-gray-400 bg-gray-50"
+        }`}
+      >
         <label className="flex flex-col items-center justify-center cursor-pointer p-8 text-center" htmlFor="logo-upload-input">
           {logoImage ? (
             <>
@@ -220,6 +307,12 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
           onChange={handleLogoUpload}
         />
       </div>
+
+      {logoUploadError && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <p className="text-sm text-red-800 font-semibold">{logoUploadError}</p>
+        </div>
+      )}
 
       {logoImage && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
@@ -332,6 +425,7 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
           type="button"
           role="switch"
           aria-checked={intentionality}
+          aria-label="Alternar intenção e simbolismo"
           onClick={() => setIntentionality(!intentionality)}
           className={`mt-0.5 flex-shrink-0 w-12 h-6 rounded-full transition-colors relative ${
             intentionality ? "bg-amber-500" : "bg-gray-300"
@@ -423,6 +517,7 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
                 type="button"
                 role="switch"
                 aria-checked={guided.hasMascot}
+                aria-label="Alternar mascote"
                 onClick={() => updateGuided("hasMascot", !guided.hasMascot)}
                 className={`flex-shrink-0 w-10 h-5 rounded-full transition-colors relative ${
                   guided.hasMascot ? "bg-gray-900" : "bg-gray-300"

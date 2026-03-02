@@ -6,6 +6,8 @@ import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import type { GenerateScope, CreativityLevel } from "@/lib/types";
 
+export const runtime = "nodejs";
+
 const CREATIVITY_TEMPERATURE: Record<CreativityLevel, number> = {
   conservative: 0.45,
   balanced: 0.72,
@@ -67,6 +69,35 @@ export async function POST(request: NextRequest) {
     intentionality = false,
   } = body;
 
+  const MAX_IMAGE_DATAURL_CHARS = 3_500_000;
+  const MAX_REFERENCE_IMAGES = 6;
+
+  const safeLogoImage = (typeof logoImage === "string" && logoImage.length > 0)
+    ? logoImage
+    : undefined;
+
+  if (safeLogoImage && safeLogoImage.length > MAX_IMAGE_DATAURL_CHARS) {
+    return new Response(
+      "data: " + JSON.stringify({ type: "error", error: "Logo muito pesado para enviar. Use uma versão menor." }) + "\n\n",
+      { headers: { "Content-Type": "text/event-stream" } }
+    );
+  }
+
+  const safeReferenceImages = Array.isArray(referenceImages)
+    ? referenceImages.filter((x) => typeof x === "string" && x.length > 0).slice(0, MAX_REFERENCE_IMAGES)
+    : undefined;
+
+  if (safeReferenceImages) {
+    for (const img of safeReferenceImages) {
+      if (img.length > MAX_IMAGE_DATAURL_CHARS) {
+        return new Response(
+          "data: " + JSON.stringify({ type: "error", error: "Uma das imagens de referência está muito pesada. Tente enviar versões menores." }) + "\n\n",
+          { headers: { "Content-Type": "text/event-stream" } }
+        );
+      }
+    }
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
       function send(data: object) {
@@ -81,8 +112,8 @@ export async function POST(request: NextRequest) {
         }
 
         const temperature = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
-        const hasLogoImage = !!logoImage;
-        const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+        const hasLogoImage = !!safeLogoImage;
+        const hasImages = Array.isArray(safeReferenceImages) && safeReferenceImages.length > 0;
         const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
         const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages, undefined, hasLogoImage);
         const useGemini = provider === "gemini";
@@ -102,11 +133,11 @@ export async function POST(request: NextRequest) {
           const ai = new GoogleGenAI({ apiKey });
           const contentParts: unknown[] = [{ text: userPromptText }];
           if (hasLogoImage) {
-            const m = logoImage!.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+            const m = safeLogoImage!.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
             if (m) contentParts.push({ inlineData: { mimeType: m[1], data: m[2] } });
           }
           if (hasImages) {
-            for (const imgDataUrl of referenceImages!) {
+            for (const imgDataUrl of safeReferenceImages!) {
               const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
               if (match) contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
             }
@@ -165,10 +196,10 @@ export async function POST(request: NextRequest) {
             | { type: "image_url"; image_url: { url: string; detail: "high" } };
           const userMsgContent: ContentPart[] = [{ type: "text", text: userPromptText }];
           if (hasLogoImage) {
-            userMsgContent.push({ type: "image_url", image_url: { url: logoImage!, detail: "high" } });
+            userMsgContent.push({ type: "image_url", image_url: { url: safeLogoImage!, detail: "high" } });
           }
           if (hasImages) {
-            for (const imgDataUrl of referenceImages!) {
+            for (const imgDataUrl of safeReferenceImages!) {
               userMsgContent.push({ type: "image_url", image_url: { url: imgDataUrl, detail: "high" } });
             }
           }
