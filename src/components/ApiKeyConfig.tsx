@@ -41,12 +41,19 @@ export function loadApiKeys(): ApiKeys {
     (Object.keys(LS) as (keyof ApiKeys)[]).map((k) => [k, localStorage.getItem(LS[k]) ?? ""])
   ) as unknown as ApiKeys;
 
+  if (keys.googleTextModel?.trim() === "gemini-2.0-flash" || keys.googleTextModel?.trim() === "models/gemini-2.0-flash") {
+    keys.googleTextModel = "gemini-1.5-flash";
+  }
+
   return keys;
 }
 
 export function saveApiKeys(keys: ApiKeys) {
   if (typeof window === "undefined") return;
   const next = { ...keys };
+  if (next.googleTextModel?.trim() === "gemini-2.0-flash" || next.googleTextModel?.trim() === "models/gemini-2.0-flash") {
+    next.googleTextModel = "gemini-1.5-flash";
+  }
   (Object.keys(LS) as (keyof ApiKeys)[]).forEach((k) => {
     if (next[k]) localStorage.setItem(LS[k], next[k]);
     else localStorage.removeItem(LS[k]);
