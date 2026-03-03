@@ -39,8 +39,8 @@ const PROVIDERS: { id: ImageProvider; name: string; desc: string; envKey: string
   },
   {
     id: "imagen",
-    name: "Imagen 3",
-    desc: "Google · Alta fidelidade, fotorrealista e artístico",
+    name: "Google Image (Nano Banana 2)",
+    desc: "Google · Nano Banana 2 (gemini-3.1-flash-image-preview) · Alta qualidade e velocidade",
     envKey: "GOOGLE_API_KEY",
     color: "bg-blue-50 border-blue-200 text-blue-800",
   },
@@ -409,7 +409,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
               className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
             />
             <div className="mt-2 text-[10px] text-gray-400">
-              Dica: você pode citar "embalagem", "uniforme", "menu", "sacola", "adesivo", "tote bag", "moodboard de materiais" etc.
+              Dica: você pode citar &quot;embalagem&quot;, &quot;uniforme&quot;, &quot;menu&quot;, &quot;sacola&quot;, &quot;adesivo&quot;, &quot;tote bag&quot;, &quot;moodboard de materiais&quot; etc.
             </div>
           </div>
 

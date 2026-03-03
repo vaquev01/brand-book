@@ -54,6 +54,16 @@ async function fetchGoogleModels(apiKey: string): Promise<ProviderModels> {
       }
     }
   }
+  const ALWAYS_GOOGLE_IMAGE_MODELS = [
+    "gemini-3.1-flash-image-preview",
+    "gemini-2.5-flash-image",
+    "imagen-3.0-generate-002",
+    "imagen-3.0-fast-generate-001",
+  ];
+  for (const m of ALWAYS_GOOGLE_IMAGE_MODELS) {
+    if (!imageModels.includes(m)) imageModels.push(m);
+  }
+
   return { textModels: textModels.sort(), imageModels: imageModels.sort() };
 }
 
