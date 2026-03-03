@@ -41,6 +41,7 @@ function resolveGoogleTextModel(model?: string): string {
   if (!m) return DEFAULT_MODEL;
   const lower = m.toLowerCase();
   if (lower.startsWith("imagen")) return DEFAULT_MODEL;
+  if (lower.includes("image-preview")) return DEFAULT_MODEL;
   if (lower === "gemini-2.0-flash") return DEFAULT_MODEL;
   return m;
 }
@@ -200,6 +201,7 @@ export async function POST(request: NextRequest) {
         const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages, undefined, hasLogoImage);
         const useGemini = provider === "gemini";
         const resolvedGoogleModel = useGemini ? resolveGoogleTextModel(googleModel) : "";
+        const resolvedGoogleJsonModel = useGemini ? resolveGoogleTextModel("gemini-1.5-flash") : "";
         const ESTIMATED_CHARS = 13000;
 
         const firstPhase = hasLogoImage
@@ -331,7 +333,7 @@ export async function POST(request: NextRequest) {
             const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
             const ai = new GoogleGenAI({ apiKey: apiKey! });
             const resp = await ai.models.generateContent({
-              model: resolvedGoogleModel,
+              model: resolvedGoogleJsonModel,
               contents: repairPrompt,
               config: {
                 systemInstruction: systemPrompt,
@@ -389,7 +391,7 @@ export async function POST(request: NextRequest) {
           const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
           const ai = new GoogleGenAI({ apiKey: apiKey! });
           const resp = await ai.models.generateContent({
-            model: resolvedGoogleModel,
+            model: resolvedGoogleJsonModel,
             contents: fixPrompt,
             config: {
               systemInstruction: buildSystemPrompt(scope, creativityLevel, intentionality),

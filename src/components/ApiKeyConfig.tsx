@@ -41,8 +41,17 @@ export function loadApiKeys(): ApiKeys {
     (Object.keys(LS) as (keyof ApiKeys)[]).map((k) => [k, localStorage.getItem(LS[k]) ?? ""])
   ) as unknown as ApiKeys;
 
-  if (keys.googleTextModel?.trim() === "gemini-2.0-flash" || keys.googleTextModel?.trim() === "models/gemini-2.0-flash") {
-    keys.googleTextModel = "gemini-1.5-flash";
+  const rawGoogleTextModel = keys.googleTextModel?.trim();
+  if (rawGoogleTextModel) {
+    const m = rawGoogleTextModel.startsWith("models/")
+      ? rawGoogleTextModel.slice("models/".length)
+      : rawGoogleTextModel;
+    const lower = m.toLowerCase();
+    if (lower === "gemini-2.0-flash" || lower.startsWith("imagen") || lower.includes("image-preview")) {
+      keys.googleTextModel = "gemini-1.5-flash";
+    } else {
+      keys.googleTextModel = m;
+    }
   }
 
   return keys;
@@ -51,8 +60,15 @@ export function loadApiKeys(): ApiKeys {
 export function saveApiKeys(keys: ApiKeys) {
   if (typeof window === "undefined") return;
   const next = { ...keys };
-  if (next.googleTextModel?.trim() === "gemini-2.0-flash" || next.googleTextModel?.trim() === "models/gemini-2.0-flash") {
-    next.googleTextModel = "gemini-1.5-flash";
+  const rawGoogleTextModel = next.googleTextModel?.trim();
+  if (rawGoogleTextModel) {
+    const m = rawGoogleTextModel.startsWith("models/")
+      ? rawGoogleTextModel.slice("models/".length)
+      : rawGoogleTextModel;
+    const lower = m.toLowerCase();
+    next.googleTextModel = (lower === "gemini-2.0-flash" || lower.startsWith("imagen") || lower.includes("image-preview"))
+      ? "gemini-1.5-flash"
+      : m;
   }
   (Object.keys(LS) as (keyof ApiKeys)[]).forEach((k) => {
     if (next[k]) localStorage.setItem(LS[k], next[k]);

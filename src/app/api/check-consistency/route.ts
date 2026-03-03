@@ -9,6 +9,7 @@ function resolveGoogleTextModel(model?: string): string {
   if (!m) return DEFAULT_MODEL;
   const lower = m.toLowerCase();
   if (lower.startsWith("imagen")) return DEFAULT_MODEL;
+  if (lower.includes("image-preview")) return DEFAULT_MODEL;
   if (lower === "gemini-2.0-flash") return DEFAULT_MODEL;
   return m;
 }
