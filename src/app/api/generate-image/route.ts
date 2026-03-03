@@ -23,6 +23,23 @@ const STABILITY_SIZES: Record<AspectRatioKey, { width: number; height: number }>
   "21:9": { width: 1536, height: 640 },
 };
 
+const STABILITY_SIZES_512: Record<AspectRatioKey, { width: number; height: number }> = {
+  "1:1": { width: 512, height: 512 },
+  "16:9": { width: 640, height: 384 },
+  "9:16": { width: 384, height: 640 },
+  "4:3": { width: 640, height: 512 },
+  "21:9": { width: 768, height: 320 },
+};
+
+function isStabilitySdxlEngine(engineId: string): boolean {
+  const e = engineId.toLowerCase();
+  return e.includes("sdxl") || e.includes("xl");
+}
+
+function pickStabilitySize(engineId: string, ratio: AspectRatioKey): { width: number; height: number } {
+  return isStabilitySdxlEngine(engineId) ? STABILITY_SIZES[ratio] : STABILITY_SIZES_512[ratio];
+}
+
 const IMAGEN_RATIOS: Record<AspectRatioKey, string> = {
   "1:1": "1:1",
   "16:9": "16:9",
@@ -121,7 +138,9 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: "STABILITY_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
         }
         const { positive, negative } = extractNegativePrompt(prompt);
-        const { width, height } = STABILITY_SIZES[aspectRatio];
+
+        const resolvedStabilityModel = stabilityModel?.trim() || "stable-diffusion-xl-1024-v1-0";
+        const { width, height } = pickStabilitySize(resolvedStabilityModel, aspectRatio);
 
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
         const isPattern = assetKey === "brand_pattern";
@@ -132,7 +151,6 @@ export async function POST(request: NextRequest) {
           : isMockup ? "photographic"
           : "cinematic";
 
-        const resolvedStabilityModel = stabilityModel?.trim() || "stable-diffusion-xl-1024-v1-0";
         const res = await fetch(
           `https://api.stability.ai/v1/generation/${resolvedStabilityModel}/text-to-image`,
           {
@@ -176,7 +194,8 @@ export async function POST(request: NextRequest) {
         if (!apiKey) {
           return NextResponse.json({ error: "IDEOGRAM_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
         }
-        const { positive } = extractNegativePrompt(prompt);
+        const { positive, negative } = extractNegativePrompt(prompt);
+        const finalPrompt = `${positive.slice(0, 1750)}\n\nAvoid: ${negative.slice(0, 700)}.`;
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
         const isDesign = ["brand_pattern", "social_cover", "social_post_square", "email_header"].includes(assetKey ?? "");
 
@@ -188,7 +207,7 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             image_request: {
-              prompt: positive.slice(0, 2000),
+              prompt: finalPrompt.slice(0, 2000),
               model: ideogramModel?.trim() || "V_2",
               aspect_ratio: IDEOGRAM_RATIOS[aspectRatio],
               magic_prompt_option: isLogo ? "OFF" : "AUTO",
@@ -212,7 +231,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: "GOOGLE_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
         }
         const ai = new GoogleGenAI({ apiKey });
-        const { positive } = extractNegativePrompt(prompt);
+        const { positive, negative } = extractNegativePrompt(prompt);
         const model = googleImageModel?.trim() || "imagen-3.0-generate-002";
 
         if (model.startsWith("gemini")) {
@@ -223,7 +242,7 @@ export async function POST(request: NextRequest) {
             "4:3": "standard 4:3 landscape aspect ratio",
             "21:9": "ultra-wide cinematic 21:9 aspect ratio",
           };
-          const fullPrompt = `${positive.slice(0, 1800)}\n\nGenerate as ${ratioHints[aspectRatio]} image.`;
+          const fullPrompt = `${positive.slice(0, 1600)}\n\nGenerate as ${ratioHints[aspectRatio]} image.\n\nDo not include: ${negative.slice(0, 800)}.`;
 
           const hasRefImages = Array.isArray(referenceImages) && referenceImages.length > 0;
           const contentParts: unknown[] = [{ text: fullPrompt }];
@@ -260,7 +279,7 @@ export async function POST(request: NextRequest) {
         const imagenRatio = IMAGEN_RATIOS[aspectRatio];
         const resp = await ai.models.generateImages({
           model,
-          prompt: positive.slice(0, 2000),
+          prompt: `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000),
           config: {
             numberOfImages: 1,
             aspectRatio: imagenRatio,

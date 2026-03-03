@@ -442,7 +442,7 @@ export default function Home() {
                         : apiKeys.google ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50"
                     }`}
                   >
-                    <div className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 2.0 Flash"}</div>
+                    <div className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 1.5 Flash"}</div>
                     <div className={`text-xs mt-0.5 ${textProvider === "gemini" ? "text-blue-100" : apiKeys.google ? "text-gray-500" : "text-red-500"}`}>
                       {apiKeys.google ? "✓ Google AI configurado" : "⚠ Chave ausente"}
                     </div>

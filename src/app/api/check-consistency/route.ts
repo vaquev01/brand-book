@@ -3,10 +3,13 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
 function resolveGoogleTextModel(model?: string): string {
-  const m = model?.trim();
-  if (!m) return "gemini-2.0-flash";
+  const DEFAULT_MODEL = "gemini-1.5-flash";
+  const raw = model?.trim();
+  const m = raw?.startsWith("models/") ? raw.slice("models/".length) : raw;
+  if (!m) return DEFAULT_MODEL;
   const lower = m.toLowerCase();
-  if (lower.includes("imagen") || lower.includes("image")) return "gemini-2.0-flash";
+  if (lower.startsWith("imagen")) return DEFAULT_MODEL;
+  if (lower === "gemini-2.0-flash") return DEFAULT_MODEL;
   return m;
 }
 
