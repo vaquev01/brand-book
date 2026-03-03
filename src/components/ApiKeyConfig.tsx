@@ -171,7 +171,8 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
         if (!p) return prev;
         const next = { ...prev };
         if (p.textModelKey && !prev[p.textModelKey] && data.textModels?.[0]) {
-          next[p.textModelKey] = data.textModels[0];
+          const preferred = data.textModels.find((m) => !m.toLowerCase().includes("image")) ?? data.textModels[0];
+          next[p.textModelKey] = preferred;
         }
         if (p.imageModelKey && !prev[p.imageModelKey] && data.imageModels?.[0]) {
           next[p.imageModelKey] = data.imageModels[0];

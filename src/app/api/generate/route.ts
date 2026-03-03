@@ -34,6 +34,85 @@ function getPhaseLabel(pct: number): string {
   return "Finalizando...";
 }
 
+function resolveGoogleTextModel(model?: string): string {
+  const m = model?.trim();
+  if (!m) return "gemini-2.0-flash";
+  const lower = m.toLowerCase();
+  if (lower.includes("imagen") || lower.includes("image")) return "gemini-2.0-flash";
+  return m;
+}
+
+function stripCodeFences(text: string): string {
+  const t = text.trim();
+  const m = t.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return (m ? m[1] : t).trim();
+}
+
+function extractFirstJsonObject(text: string): string {
+  const t = stripCodeFences(text);
+  const start = t.indexOf("{");
+  if (start === -1) return t.trim();
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < t.length; i++) {
+    const ch = t[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === "{") {
+      depth++;
+      continue;
+    }
+    if (ch === "}") {
+      depth--;
+      if (depth === 0) return t.slice(start, i + 1).trim();
+    }
+  }
+  return t.slice(start).trim();
+}
+
+function safeParseJson(text: string): unknown | null {
+  const candidates = [
+    extractFirstJsonObject(text),
+    stripCodeFences(text),
+    text.trim(),
+  ];
+  for (const c of candidates) {
+    if (!c) continue;
+    try {
+      const parsed = JSON.parse(c);
+      if (typeof parsed === "string") {
+        try {
+          return JSON.parse(parsed);
+        } catch {
+          return parsed;
+        }
+      }
+      return parsed;
+    } catch {
+    }
+  }
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
 
@@ -117,6 +196,7 @@ export async function POST(request: NextRequest) {
         const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
         const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages, undefined, hasLogoImage);
         const useGemini = provider === "gemini";
+        const resolvedGoogleModel = useGemini ? resolveGoogleTextModel(googleModel) : "";
         const ESTIMATED_CHARS = 13000;
 
         const firstPhase = hasLogoImage
@@ -152,7 +232,7 @@ export async function POST(request: NextRequest) {
           let lastPct = 5;
           try {
             const genStream = await ai.models.generateContentStream({
-              model: googleModel?.trim() || "gemini-2.0-flash",
+              model: resolvedGoogleModel,
               contents: geminiContents,
               config: {
                 systemInstruction: systemPrompt,
@@ -173,7 +253,7 @@ export async function POST(request: NextRequest) {
           } catch {
             send({ type: "progress", phase: "Gerando brandbook com Gemini...", pct: 20 });
             const resp = await ai.models.generateContent({
-              model: googleModel?.trim() || "gemini-2.0-flash",
+              model: resolvedGoogleModel,
               contents: geminiContents,
               config: {
                 systemInstruction: systemPrompt,
@@ -232,11 +312,53 @@ export async function POST(request: NextRequest) {
 
         send({ type: "progress", phase: "Validando estrutura do brandbook...", pct: 92 });
 
-        let parsed: unknown;
-        try {
-          parsed = JSON.parse(fullContent);
-        } catch {
-          throw new Error("A IA retornou JSON inválido. Tente novamente.");
+        let parsed: unknown | null = safeParseJson(fullContent);
+
+        if (parsed == null) {
+          send({ type: "progress", phase: "Corrigindo formato do JSON...", pct: 93 });
+
+          const repairPrompt =
+            "Extraia e reescreva o JSON COMPLETO e válido do brandbook a partir do texto abaixo. " +
+            "Retorne SOMENTE o objeto JSON (sem markdown, sem texto fora do JSON).\n\n" +
+            "TEXTO:\n" +
+            fullContent.slice(0, 120000);
+
+          let repairedContent = "";
+          if (useGemini) {
+            const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
+            const ai = new GoogleGenAI({ apiKey: apiKey! });
+            const resp = await ai.models.generateContent({
+              model: resolvedGoogleModel,
+              contents: repairPrompt,
+              config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+                temperature: 0.2,
+                maxOutputTokens: 8192,
+              },
+            });
+            repairedContent = resp.text ?? "";
+          } else {
+            const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
+            const openai = new OpenAI({ apiKey: apiKey! });
+            const completion = await openai.chat.completions.create({
+              model: openaiModel?.trim() || "gpt-4o",
+              temperature: 0.2,
+              max_tokens: 8192,
+              response_format: { type: "json_object" },
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: repairPrompt },
+              ],
+            });
+            repairedContent = completion.choices[0]?.message?.content ?? "";
+          }
+
+          parsed = safeParseJson(repairedContent);
+          if (parsed == null) {
+            throw new Error("A IA retornou JSON inválido. Tente novamente.");
+          }
+          fullContent = JSON.stringify(parsed);
         }
 
         const migrated1 = migrateBrandbook(parsed);
@@ -264,7 +386,7 @@ export async function POST(request: NextRequest) {
           const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
           const ai = new GoogleGenAI({ apiKey: apiKey! });
           const resp = await ai.models.generateContent({
-            model: googleModel?.trim() || "gemini-2.0-flash",
+            model: resolvedGoogleModel,
             contents: fixPrompt,
             config: {
               systemInstruction: buildSystemPrompt(scope, creativityLevel, intentionality),

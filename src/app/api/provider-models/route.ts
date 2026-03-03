@@ -47,9 +47,10 @@ async function fetchGoogleModels(apiKey: string): Promise<ProviderModels> {
     if (short.includes("imagen")) {
       imageModels.push(short);
     } else if (short.includes("gemini") && methods.includes("generateContent")) {
-      textModels.push(short);
       if (short.includes("image")) {
         imageModels.push(short);
+      } else {
+        textModels.push(short);
       }
     }
   }
