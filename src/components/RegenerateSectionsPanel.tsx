@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { BrandbookData } from "@/lib/types";
 import type { ApiKeys } from "./ApiKeyConfig";
+import { RefreshCw, ChevronDown, ChevronUp, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface Props {
   brandbook: BrandbookData;
@@ -91,11 +92,13 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700 text-sm">{error}</div>
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+        </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-green-700 text-sm flex items-center gap-2">
-          <span>✓</span> {success}
+        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-700 text-sm flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> {success}
         </div>
       )}
 
@@ -122,7 +125,10 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
                   <div className="font-semibold text-sm">{section.label}</div>
                   <div className="text-xs text-gray-500 mt-0.5">{section.description}</div>
                 </div>
-                <span className="text-xs text-gray-400 flex-shrink-0">{isSelected ? "▲" : "▼"}</span>
+                {isSelected
+                  ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                }
               </button>
 
               {isSelected && (
@@ -132,14 +138,14 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
                     value={instruction}
                     onChange={(e) => setInstruction(e.target.value)}
                     placeholder={`Instrução opcional para esta seção... (ex: "Torne mais criativo e diferenciado")`}
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none resize-none bg-white"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
                   />
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => handleRegenerate(section.key)}
                       disabled={isLoading}
-                      className="flex-1 bg-gray-900 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-60 transition flex items-center justify-center gap-2"
+                      className="flex-1 bg-gray-900 text-white py-2.5 px-4 rounded-xl text-sm font-bold hover:bg-gray-800 disabled:opacity-60 transition flex items-center justify-center gap-2"
                     >
                       {isLoading ? (
                         <>
@@ -147,7 +153,10 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
                           Regenerando...
                         </>
                       ) : (
-                        `↺ Regenerar ${section.label}`
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          Regenerar {section.label}
+                        </>
                       )}
                     </button>
                     <button

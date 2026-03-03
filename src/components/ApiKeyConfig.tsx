@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { X, Lock, Eye, EyeOff } from "lucide-react";
 
 export interface ApiKeys {
   openai: string;
@@ -233,7 +234,7 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
               <strong>Buscar modelos</strong> para ver os modelos disponíveis.
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl leading-none ml-4 mt-0.5">&times;</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition ml-4 mt-0.5" aria-label="Fechar"><X className="w-5 h-5" /></button>
         </div>
 
         {/* Body */}
@@ -278,12 +279,12 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <button type="button" onClick={() => setVisible((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
-                      className="text-xs text-gray-500 hover:text-gray-900 px-1.5 py-1 rounded">
-                      {visible[p.key] ? "●" : "○"}
+                      className="text-gray-400 hover:text-gray-700 px-1 py-1 rounded transition" aria-label={visible[p.key] ? "Ocultar chave" : "Mostrar chave"}>
+                      {visible[p.key] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                     {keyVal && (
                       <button type="button" onClick={() => setKeys((prev) => ({ ...prev, [p.key]: "" }))}
-                        className="text-xs text-red-500 hover:text-red-700 px-1.5 py-1 rounded">✕</button>
+                        className="text-red-400 hover:text-red-600 px-1 py-1 rounded transition" aria-label="Remover chave"><X className="w-3.5 h-3.5" /></button>
                     )}
                   </div>
                 </div>
@@ -356,9 +357,10 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
             );
           })}
 
-          <div className="bg-gray-50 border rounded-xl p-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
+            <Lock className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-gray-500 leading-relaxed">
-              🔒 <strong>Segurança:</strong> Chaves armazenadas no <code>localStorage</code> do seu navegador e enviadas
+              <strong>Segurança:</strong> Chaves armazenadas no <code>localStorage</code> do seu navegador e enviadas
               via requisições server-side do Next.js. Nenhum dado armazenado em servidor externo.
             </p>
           </div>

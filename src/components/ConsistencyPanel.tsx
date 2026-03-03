@@ -5,6 +5,7 @@ import type { BrandbookData } from "@/lib/types";
 import type { ApiKeys } from "./ApiKeyConfig";
 import type { ConsistencyReport, ConsistencyIssue } from "@/app/api/check-consistency/route";
 import type { SystemHealthReport, Issue as SystemIssue } from "@/app/api/system-health/route";
+import { ScanSearch, CheckCircle2, AlertTriangle, Info, ShieldCheck, ShieldAlert } from "lucide-react";
 
 interface Props {
   brandbook: BrandbookData;
@@ -13,9 +14,9 @@ interface Props {
 }
 
 const SEVERITY_CONFIG = {
-  critical: { label: "Crítico", color: "bg-red-50 border-red-200 text-red-800", dot: "bg-red-500", icon: "🔴" },
-  warning: { label: "Atenção", color: "bg-amber-50 border-amber-200 text-amber-800", dot: "bg-amber-500", icon: "🟡" },
-  suggestion: { label: "Sugestão", color: "bg-blue-50 border-blue-200 text-blue-800", dot: "bg-blue-400", icon: "🔵" },
+  critical: { label: "Crítico", color: "bg-red-50 border-red-200 text-red-800", dot: "bg-red-500", Icon: AlertTriangle },
+  warning: { label: "Atenção", color: "bg-amber-50 border-amber-200 text-amber-800", dot: "bg-amber-500", Icon: Info },
+  suggestion: { label: "Sugestão", color: "bg-blue-50 border-blue-200 text-blue-800", dot: "bg-blue-400", Icon: Info },
 };
 
 function ScoreRing({ score }: { score: number }) {
@@ -54,7 +55,7 @@ function IssueCard({ issue }: { issue: ConsistencyIssue }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-start gap-3 p-4 text-left"
       >
-        <span className="text-base mt-0.5">{cfg.icon}</span>
+        <cfg.Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-sm">{issue.section}</span>
@@ -105,11 +106,11 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
       : issue.severity === "warning"
         ? "bg-amber-50 border-amber-200 text-amber-800"
         : "bg-blue-50 border-blue-200 text-blue-800";
-    const icon = issue.severity === "critical" ? "🔴" : issue.severity === "warning" ? "🟡" : "🔵";
+    const IssueIcon = issue.severity === "critical" ? AlertTriangle : Info;
     return (
       <div className={`border rounded-xl p-4 ${color}`}>
         <div className="flex items-start gap-3">
-          <div className="mt-0.5">{icon}</div>
+          <IssueIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold uppercase tracking-wider opacity-70">{issue.area}</div>
             <div className="text-sm mt-1">{issue.issue}</div>
@@ -194,13 +195,19 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
 
         {systemReport && (
           <div className="mt-4 space-y-3">
-            <div className={`border rounded-xl p-4 ${systemReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+            <div className={`border rounded-xl p-4 flex items-start gap-3 ${systemReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+              {systemReport.ok
+                ? <ShieldCheck className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                : <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              }
+              <div>
               <div className="font-semibold text-sm">
-                {systemReport.ok ? "✓ Sistema OK" : "⚠ Sistema com inconsistências"}
+                {systemReport.ok ? "Sistema OK" : "Sistema com inconsistências"}
               </div>
               <div className="text-xs mt-1 opacity-80">{systemReport.summary}</div>
               <div className="text-[10px] font-mono mt-2 opacity-70">
                 assets={systemReport.stats.assets} · categories={JSON.stringify(systemReport.stats.categories)} · ratios={JSON.stringify(systemReport.stats.aspectRatios)}
+              </div>
               </div>
             </div>
 
@@ -219,9 +226,10 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
         <button
           type="button"
           onClick={handleCheck}
-          className="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-semibold hover:bg-gray-800 transition"
+          className="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2"
         >
-          🔍 Analisar consistência do brandbook
+          <ScanSearch className="w-4 h-4" />
+          Analisar consistência do brandbook
         </button>
       )}
 
@@ -247,18 +255,18 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
               {counts && (
                 <div className="flex gap-3 mt-3 flex-wrap">
                   {counts.critical > 0 && (
-                    <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-medium">
-                      🔴 {counts.critical} crítico{counts.critical > 1 ? "s" : ""}
+                    <span className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> {counts.critical} crítico{counts.critical > 1 ? "s" : ""}
                     </span>
                   )}
                   {counts.warning > 0 && (
-                    <span className="text-xs bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full font-medium">
-                      🟡 {counts.warning} atenção
+                    <span className="text-xs bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
+                      <Info className="w-3 h-3" /> {counts.warning} atenção
                     </span>
                   )}
                   {counts.suggestion > 0 && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">
-                      🔵 {counts.suggestion} sugestão{counts.suggestion > 1 ? "ões" : ""}
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
+                      <Info className="w-3 h-3" /> {counts.suggestion} sugestão{counts.suggestion > 1 ? "ões" : ""}
                     </span>
                   )}
                 </div>
@@ -268,7 +276,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
 
           {report.strengths.length > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <h4 className="font-semibold text-sm text-green-900 mb-2">✅ Pontos fortes</h4>
+              <h4 className="font-semibold text-sm text-green-900 mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Pontos fortes</h4>
               <ul className="space-y-1">
                 {report.strengths.map((s, i) => (
                   <li key={i} className="text-sm text-green-800 flex items-start gap-2">
