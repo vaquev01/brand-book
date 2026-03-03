@@ -37,15 +37,25 @@ const LS: Record<keyof ApiKeys, string> = {
 
 export function loadApiKeys(): ApiKeys {
   if (typeof window === "undefined") return { ...EMPTY_KEYS };
-  return Object.fromEntries(
+  const keys = Object.fromEntries(
     (Object.keys(LS) as (keyof ApiKeys)[]).map((k) => [k, localStorage.getItem(LS[k]) ?? ""])
   ) as unknown as ApiKeys;
+
+  if (keys.googleTextModel && /(^|\W)(imagen|image)(\W|$)/i.test(keys.googleTextModel)) {
+    keys.googleTextModel = "";
+  }
+
+  return keys;
 }
 
 export function saveApiKeys(keys: ApiKeys) {
   if (typeof window === "undefined") return;
+  const next = { ...keys };
+  if (next.googleTextModel && /(^|\W)(imagen|image)(\W|$)/i.test(next.googleTextModel)) {
+    next.googleTextModel = "";
+  }
   (Object.keys(LS) as (keyof ApiKeys)[]).forEach((k) => {
-    if (keys[k]) localStorage.setItem(LS[k], keys[k]);
+    if (next[k]) localStorage.setItem(LS[k], next[k]);
     else localStorage.removeItem(LS[k]);
   });
 }

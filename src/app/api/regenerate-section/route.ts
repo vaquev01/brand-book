@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
+function resolveGoogleTextModel(model?: string): string {
+  const m = model?.trim();
+  if (!m) return "gemini-2.0-flash";
+  const lower = m.toLowerCase();
+  if (lower.includes("imagen") || lower.includes("image")) return "gemini-2.0-flash";
+  return m;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const {
@@ -57,7 +65,7 @@ Retorne SOMENTE o JSON da seção "${sectionKey}" — sem chaves wrapper, sem te
       if (!apiKey) return NextResponse.json({ error: "GOOGLE_API_KEY não configurada." }, { status: 500 });
       const ai = new GoogleGenAI({ apiKey });
       const resp = await ai.models.generateContent({
-        model: googleModel?.trim() || "gemini-2.0-flash",
+        model: resolveGoogleTextModel(googleModel),
         contents: userPrompt,
         config: {
           systemInstruction: systemPrompt,

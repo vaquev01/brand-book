@@ -358,6 +358,14 @@ Execute análise visual forense e completa:
 
 5. ARQUÉTIPO E POSICIONAMENTO IMPLÍCITO → O que o logo comunica implicitamente sobre o posicionamento da marca? Use isso para construir a estratégia.
 
+6. TRADUÇÃO VISUAL → ESTRATÉGIA (OBRIGATÓRIO)
+   Converta evidências do logo em decisões estratégicas explícitas no JSON:
+   - Cores → impactam "positioning" (categoria/target) e "verbalIdentity" (tom e vocabulário). Explique isso dentro dos textos.
+   - Geometria/forma → impacta "brandConcept.values" e "brandConcept.personality" (ex: rigor geométrico = precisão; curvas orgânicas = acolhimento).
+   - Tipografia → impacta "positioningStatement" e "brandConcept.toneOfVoice" (ex: serif = tradição/autoridade; sans geométrica = eficiência/tech).
+   - Complexidade do símbolo → define o nível de ousadia/sobriedade nas aplicações e no design system.
+   Regra: Não cite o logo como "inspirado". Ele é a fonte primária. As decisões devem soar inevitáveis a partir do que foi observado.
+
 REGRA FUNDAMENTAL: O logo fornecido é a ÂNCORA IMUTÁVEL da identidade. TODAS as decisões devem ser coerentes com ele — cores, tipografia, estilo visual, tom de voz, personalidade. O brandbook é a EXTENSÃO do logo, não o contrário.`;
   }
 
@@ -365,7 +373,7 @@ REGRA FUNDAMENTAL: O logo fornecido é a ÂNCORA IMUTÁVEL da identidade. TODAS 
     const imgLabel = hasLogoImage ? "IMAGENS DE REFERÊNCIA ADICIONAIS" : "IMAGENS DE REFERÊNCIA FORNECIDAS";
     const count = (referenceImageDescriptions?.length ?? 1) + (hasLogoImage ? 0 : 0);
     const startIndex = hasLogoImage ? 2 : 1;
-    prompt += `\n\n--- ${imgLabel} (a partir da imagem ${startIndex}, ${count} imagem${count > 1 ? "ns" : ""}) ---\nAnalise as imagens de referência. Extraia e incorpore no brandbook:\n• Paleta de cores e temperatura cromática\n• Estilo visual e movimento artístico\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico\nIncorpore esses atributos nas seções: colors, keyVisual, imageGenerationBriefing.`;
+    prompt += `\n\n--- ${imgLabel} (a partir da imagem ${startIndex}, ${count} imagem${count > 1 ? "ns" : ""}) ---\nAnalise as imagens de referência. Extraia e incorpore no brandbook:\n• Paleta de cores e temperatura cromática\n• Estilo visual e movimento artístico\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico\nTraduza o que você viu também em estratégia e linguagem: ajuste positioning, brandConcept e verbalIdentity para ficar coerente com o estilo visual observado.\nIncorpore esses atributos nas seções: colors, keyVisual, imageGenerationBriefing.`;
     if (referenceImageDescriptions && referenceImageDescriptions.length > 0) {
       referenceImageDescriptions.forEach((desc, i) => {
         if (desc) prompt += `\nReferência ${i + 1}: ${desc}`;
