@@ -326,6 +326,8 @@ Nicho/Indústria: ${industry}`;
     prompt += `\nBriefing: ${briefing.trim()}`;
   }
 
+  prompt += `\n\nIMPORTANTE: Se o briefing incluir links (ex: Instagram, sites, LinkedIn), NÃO afirme que acessou ou navegou nesses links. Você não tem acesso à internet. Use esses links apenas como contexto de referência (tipo de público, plataforma, estética) e baseie todas as decisões exclusivamente no texto fornecido e nas imagens anexadas.`;
+
   if (hasLogoImage) {
     prompt += `
 

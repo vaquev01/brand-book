@@ -12,7 +12,6 @@ import { RefinePanel } from "@/components/RefinePanel";
 import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
-import { LogoConceptPanel } from "@/components/LogoConceptPanel";
 import { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { saasExample, barExample, sushiExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
@@ -689,12 +688,9 @@ export default function Home() {
                     onAssetGenerated={(key, asset) =>
                       setGeneratedAssets((prev) => ({ ...prev, [key]: asset }))
                     }
-                  />
-                </div>
-                <div className="bg-white border rounded-xl p-6 shadow-sm">
-                  <LogoConceptPanel
-                    brandbook={brandbookData}
-                    apiKeys={apiKeys}
+                    onSaveToAssets={(asset) =>
+                      setUploadedBrandAssets((prev) => [...prev, asset])
+                    }
                   />
                 </div>
               </div>

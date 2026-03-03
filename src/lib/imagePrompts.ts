@@ -247,8 +247,9 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `TYPOGRAPHY: ${ctx.displayFont} wordmark. PERSONALITY: ${ctx.personality}. VALUES: ${ctx.values}.`,
         `VISUAL STYLE: ${ctx.visualStyle}. ${ctx.competitiveAngle}`,
         `TECHNICAL: Isolated logomark + wordmark lockup, crisp vector graphic, sharp edges, scalable symbol,`,
-        `no drop shadows, no textures, pure white background, centered composition.`,
-        sTags, q, neg(ctx, provider),
+        `flat 2D vector mark (SVG-like), consistent line weights, no gradients, no 3D, no mockups, no perspective, no lighting effects,`,
+        `no drop shadows, no textures, no bevel/emboss, pure white background, centered composition.`,
+        sTags, q, neg(ctx, provider, "3D, photorealistic, mockup, perspective, gradients, bevel, emboss, realistic lighting, shadows"),
       );
     }
 
@@ -264,8 +265,9 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COLOR: White or very light (#FFFFFF or near-white) logo on solid deep dark background ${ctx.primaryColor}.`,
         `PERSONALITY: ${ctx.personality}. Tone: ${ctx.toneOfVoice}.`,
         `PURPOSE: Dark websites, video intros, event backdrops, dark mode UI, investor decks.`,
-        `TECHNICAL: Maximum contrast inverted lockup, pure flat solid dark background, no textures, no halos, centered.`,
-        sTags, q, neg(ctx, provider),
+        `TECHNICAL: Maximum contrast inverted lockup, flat 2D vector mark (SVG-like), pure flat solid dark background,`,
+        `no gradients, no textures, no halos, no glow, no 3D, no mockups, centered.`,
+        sTags, q, neg(ctx, provider, "3D, photorealistic, mockup, perspective, gradients, glow, bevel, emboss, realistic lighting, shadows"),
       );
     }
 

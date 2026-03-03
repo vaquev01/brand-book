@@ -50,6 +50,8 @@ interface GuidedBriefing {
   targetAudience: string;
   positioning: string;
   references: string;
+  instagramLinks: string;
+  essenceReferences: string;
   avoidances: string;
   colorPreferences: string;
   hasMascot: boolean;
@@ -138,6 +140,8 @@ function composeBriefing(g: GuidedBriefing, rawBriefing: string): string {
   if (g.targetAudience) parts.push(`Público-alvo: ${g.targetAudience}`);
   if (g.positioning) parts.push(`Posicionamento desejado: ${g.positioning}`);
   if (g.references) parts.push(`Referências de marcas admiradas: ${g.references}`);
+  if (g.instagramLinks) parts.push(`Instagram / links oficiais (para capturar essência): ${g.instagramLinks}`);
+  if (g.essenceReferences) parts.push(`Referências de essência (tom, cultura, estética, arquétipos): ${g.essenceReferences}`);
   if (g.avoidances) parts.push(`O que evitar / não transmitir: ${g.avoidances}`);
   if (g.colorPreferences) parts.push(`Preferências de cores: ${g.colorPreferences}`);
   if (g.hasMascot) {
@@ -165,6 +169,8 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
     targetAudience: "",
     positioning: "",
     references: "",
+    instagramLinks: "",
+    essenceReferences: "",
     avoidances: "",
     colorPreferences: "",
     hasMascot: false,
@@ -181,6 +187,8 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
     guided.targetAudience,
     guided.positioning,
     guided.references,
+    guided.instagramLinks,
+    guided.essenceReferences,
     guided.avoidances,
     guided.colorPreferences,
     guided.hasMascot ? "yes" : "",
@@ -496,6 +504,22 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
               placeholder="Ex: Visualmente: Notion, Linear, Arc Browser. Estrategicamente: Apple, Supreme. Tom de voz: Oatly."
               value={guided.references}
               onChange={(v) => updateGuided("references", v)}
+            />
+            <GuidedField
+              label="Instagram / links oficiais"
+              hint="Cole perfis e links que representem a essência (ex: instagram.com/suaMarca)"
+              placeholder="Ex: https://instagram.com/suaMarca\nhttps://site.com\nhttps://linkedin.com/company/suaMarca"
+              value={guided.instagramLinks}
+              onChange={(v) => updateGuided("instagramLinks", v)}
+              rows={3}
+            />
+            <GuidedField
+              label="Essência da marca (referências)"
+              hint="Cultura, estética, vibe, arquétipos, filmes, artistas, lugares, décadas, movimentos"
+              placeholder="Ex: Arquétipo: Rebelde elegante. Estética: brutalismo + luxo discreto. Referências: Blade Runner, Dieter Rams, Tadao Ando."
+              value={guided.essenceReferences}
+              onChange={(v) => updateGuided("essenceReferences", v)}
+              rows={3}
             />
             <GuidedField
               label="O que a marca NÃO deve transmitir"

@@ -9,6 +9,7 @@ interface Props {
   data: BrandbookData;
   generatedAssets: Record<string, GeneratedAsset>;
   onAssetGenerated: (key: string, asset: GeneratedAsset) => void;
+  onSaveToAssets?: (asset: UploadedAsset) => void;
   apiKeys: ApiKeys;
   uploadedAssets?: UploadedAsset[];
   textProvider: "openai" | "gemini";
@@ -73,7 +74,7 @@ function pickDefaultProvider(keys: ApiKeys): ImageProvider {
   return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "dalle3";
 }
 
-export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys, uploadedAssets = [], textProvider }: Props) {
+export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveToAssets, apiKeys, uploadedAssets = [], textProvider }: Props) {
   const [provider, setProvider] = useState<ImageProvider>(() => pickDefaultProvider(apiKeys));
 
   useEffect(() => {
@@ -174,6 +175,32 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
     a.download = `${data.brandName.replace(/\s+/g, "-").toLowerCase()}-${name}.png`;
     a.target = "_blank";
     a.click();
+  }
+
+  async function saveGeneratedToAssets(asset: GeneratedAsset, label: string) {
+    if (!onSaveToAssets) return;
+    try {
+      let dataUrl = asset.url;
+      if (!dataUrl.startsWith("data:")) {
+        const res = await fetch("/api/image-to-dataurl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: asset.url }),
+        });
+        const json = await res.json() as { dataUrl?: string; error?: string };
+        if (!res.ok || !json.dataUrl) throw new Error(json.error ?? "Erro ao baixar imagem");
+        dataUrl = json.dataUrl;
+      }
+      onSaveToAssets({
+        id: `asset_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        name: label,
+        type: "logo",
+        dataUrl,
+        description: asset.prompt,
+      });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar em Assets");
+    }
   }
 
   const currentProvider = PROVIDERS.find((p) => p.id === provider)!;
@@ -308,6 +335,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
                   const generated = generatedAssets[asset.key];
                   const isLoading = loadingKey === asset.key;
                   const prompt = buildImagePrompt(asset.key, data, provider);
+                  const canSaveToAssets = !!onSaveToAssets && !!generated && asset.category === "logo";
                   return (
                     <div key={asset.key} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                       <div className={`relative bg-gray-100 ${aspectClass(asset.aspectRatio)}`}>
@@ -385,6 +413,17 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, apiKeys
                               aria-label="Download"
                             >
                               ↓
+                            </button>
+                          )}
+                          {canSaveToAssets && (
+                            <button
+                              type="button"
+                              onClick={() => saveGeneratedToAssets(generated!, asset.label)}
+                              className="bg-gray-100 text-gray-700 text-xs py-2 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
+                              title="Salvar em Assets"
+                              aria-label="Salvar em Assets"
+                            >
+                              ＋
                             </button>
                           )}
                         </div>
