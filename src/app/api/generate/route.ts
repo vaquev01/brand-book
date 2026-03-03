@@ -4,6 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
 import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
+import { resolveGoogleTextModel } from "@/lib/googleModels";
 import type { GenerateScope, CreativityLevel } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -32,18 +33,6 @@ function getPhaseLabel(pct: number): string {
     if (pct >= start && pct < end) return label;
   }
   return "Finalizando...";
-}
-
-function resolveGoogleTextModel(model?: string): string {
-  const DEFAULT_MODEL = "gemini-1.5-flash";
-  const raw = model?.trim();
-  const m = raw?.startsWith("models/") ? raw.slice("models/".length) : raw;
-  if (!m) return DEFAULT_MODEL;
-  const lower = m.toLowerCase();
-  if (lower.startsWith("imagen")) return DEFAULT_MODEL;
-  if (lower.includes("image-preview")) return DEFAULT_MODEL;
-  if (lower === "gemini-2.0-flash") return DEFAULT_MODEL;
-  return m;
 }
 
 function stripCodeFences(text: string): string {

@@ -629,7 +629,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       {Object.keys(generatedAssets).length > 0 && (
         <div className="bg-gray-50 border rounded-xl p-5">
           <h4 className="font-bold mb-3 text-sm">
-            {Object.keys(generatedAssets).length} de {ASSET_CATALOG.length} peças geradas
+            {Object.keys(generatedAssets).length} imagens geradas
           </h4>
           <div className="flex flex-wrap gap-2">
             {Object.values(generatedAssets).map((asset) => (
@@ -638,7 +638,9 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                 className="flex items-center gap-2 bg-white border rounded-lg px-3 py-1.5 text-xs"
               >
                 <span className="font-medium">
-                  {ASSET_CATALOG.find((a) => a.key === asset.key)?.label ?? asset.key}
+                  {asset.key.startsWith("custom_")
+                    ? "Custom"
+                    : (ASSET_CATALOG.find((a) => a.key === asset.key)?.label ?? asset.key)}
                 </span>
                 <span
                   className={`font-mono text-[10px] px-1 rounded ${
