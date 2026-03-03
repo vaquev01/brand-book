@@ -5,6 +5,7 @@ import type { BrandbookData } from "@/lib/types";
 import { exportCSSTokens, exportW3CTokens, exportTailwindConfig, downloadTextFile } from "@/lib/exportUtils";
 import { copyShareUrl } from "@/lib/shareUtils";
 import { exportBrandbookPDFMultiPage } from "@/lib/pdfExport";
+import { Code2, Coins, Wind, FileText, Link2, Download, Check, AlertCircle, Loader2 } from "lucide-react";
 
 interface Props {
   brandbook: BrandbookData;
@@ -94,18 +95,25 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
     }
   }
 
-  function btnClass(s: ExportStatus, base = "") {
-    if (s === "done") return `${base} bg-green-600 text-white border-green-600`;
-    if (s === "loading") return `${base} opacity-60 cursor-not-allowed`;
-    if (s === "error") return `${base} bg-red-50 border-red-300 text-red-700`;
-    return `${base} bg-white border-gray-200 text-gray-800 hover:border-gray-400 hover:shadow-sm`;
+  function btnClass(s: ExportStatus) {
+    if (s === "done") return "bg-green-50 border-green-400 text-green-800 ring-2 ring-green-100";
+    if (s === "loading") return "opacity-70 cursor-not-allowed bg-white border-gray-200";
+    if (s === "error") return "bg-red-50 border-red-300 text-red-700";
+    return "bg-white border-gray-200 text-gray-800 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm group";
   }
 
-  function btnLabel(s: ExportStatus, idle: string, loading: string) {
-    if (s === "loading") return <span className="flex items-center gap-2"><span className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />{loading}</span>;
-    if (s === "done") return "✓ Pronto!";
-    if (s === "error") return "✗ Erro";
-    return idle;
+  function btnTrailing(s: ExportStatus) {
+    if (s === "loading") return <Loader2 className="w-4 h-4 animate-spin text-gray-500" />;
+    if (s === "done") return <Check className="w-4 h-4 text-green-600" />;
+    if (s === "error") return <AlertCircle className="w-4 h-4 text-red-500" />;
+    return <Download className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />;
+  }
+
+  function btnStatusText(s: ExportStatus, loadingLabel: string) {
+    if (s === "loading") return <span className="text-xs text-gray-500">{loadingLabel}</span>;
+    if (s === "done") return <span className="text-xs font-bold text-green-700">Pronto!</span>;
+    if (s === "error") return <span className="text-xs font-bold text-red-600">Erro</span>;
+    return null;
   }
 
   const sections = [
@@ -115,23 +123,26 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
       items: [
         {
           key: "css" as const,
-          icon: "🎨",
+          Icon: Code2,
           label: "CSS Custom Properties",
           sub: "Variáveis CSS prontas para colar no seu projeto",
+          loadingLabel: "Gerando CSS...",
           onClick: handleCSS,
         },
         {
           key: "tokens" as const,
-          icon: "🪙",
+          Icon: Coins,
           label: "Design Tokens (JSON)",
-          sub: "Tokens de cores, tipografia e espaçamento em JSON — compatível com Style Dictionary e Figma Tokens",
+          sub: "Tokens de cores, tipografia e espaçamento — compatível com Style Dictionary e Figma Tokens",
+          loadingLabel: "Gerando tokens...",
           onClick: handleW3C,
         },
         {
           key: "tailwind" as const,
-          icon: "💨",
+          Icon: Wind,
           label: "Tailwind Config",
           sub: "Extenda seu tailwind.config.js com as cores e fontes da marca",
+          loadingLabel: "Gerando config...",
           onClick: handleTailwind,
         },
       ],
@@ -142,9 +153,10 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
       items: [
         {
           key: "pdf" as const,
-          icon: "📄",
+          Icon: FileText,
           label: "PDF — Brandbook Completo",
           sub: "Captura o viewer como PDF multi-página de alta resolução",
+          loadingLabel: "Gerando PDF...",
           onClick: handlePDF,
         },
       ],
@@ -155,9 +167,10 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
       items: [
         {
           key: "share" as const,
-          icon: "🔗",
+          Icon: Link2,
           label: "Copiar link de compartilhamento",
           sub: shareMsg || "Gera uma URL com o brandbook comprimido para compartilhar",
+          loadingLabel: "Comprimindo...",
           onClick: handleShare,
         },
       ],
@@ -168,29 +181,35 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
     <div className="space-y-8">
       {sections.map((section) => (
         <div key={section.title}>
-          <div className="mb-3">
-            <h3 className="font-bold text-sm">{section.title}</h3>
-            <p className="text-xs text-gray-500">{section.desc}</p>
+          <div className="mb-4 pb-3 border-b border-gray-100">
+            <h3 className="font-bold text-gray-900">{section.title}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{section.desc}</p>
           </div>
-          <div className="space-y-2">
-            {section.items.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={item.onClick}
-                disabled={status[item.key] === "loading"}
-                className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition text-left ${btnClass(status[item.key])}`}
-              >
-                <span className="text-2xl flex-shrink-0">{item.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm">{item.label}</div>
-                  <div className="text-xs text-gray-500 mt-0.5 leading-snug truncate">{item.sub}</div>
-                </div>
-                <div className="flex-shrink-0 text-sm font-medium">
-                  {btnLabel(status[item.key], "↓ Exportar", "Gerando...")}
-                </div>
-              </button>
-            ))}
+          <div className="space-y-2.5">
+            {section.items.map((item) => {
+              const s = status[item.key];
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={item.onClick}
+                  disabled={s === "loading"}
+                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${btnClass(s)}`}
+                >
+                  <div className="w-11 h-11 bg-gray-50 group-hover:bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors border border-gray-100 group-hover:border-indigo-100">
+                    <item.Icon className="w-5 h-5 text-gray-500 group-hover:text-indigo-600 transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">{item.label}</div>
+                    <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.sub}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    {btnTrailing(s)}
+                    {btnStatusText(s, item.loadingLabel)}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       ))}
