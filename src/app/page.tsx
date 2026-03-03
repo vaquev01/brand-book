@@ -19,6 +19,11 @@ import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { decompressBrandbook } from "@/lib/shareUtils";
 import type { AssetKey } from "@/lib/imagePrompts";
+import {
+  Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
+  Image as ImageIcon, ImagePlus, Wand2, ShieldCheck, Download,
+  Trash2, UploadCloud, FileJson, Hexagon,
+} from "lucide-react";
 
 type Tab = "generate" | "examples" | "viewer";
 type ViewerTab = "preview" | "images" | "edit" | "assets" | "refine" | "consistency" | "export";
@@ -335,15 +340,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">B</span>
+            <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center shadow-inner">
+              <Hexagon className="text-white w-6 h-6" fill="currentColor" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">Brandbook Builder</h1>
-              <p className="text-xs text-gray-500">Gerador de Manual de Marca com IA</p>
+              <h1 className="text-xl font-extrabold tracking-tight text-gray-900 leading-tight">Brandbook Builder</h1>
+              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Gerador de Manual com IA</p>
             </div>
           </div>
 
@@ -351,31 +356,34 @@ export default function Home() {
             <ApiKeyStatusBadge keys={apiKeys} />
             <button
               onClick={() => setShowApiConfig(true)}
-              className="flex items-center gap-1.5 bg-gray-900 text-white text-sm font-medium px-3 py-2 rounded-lg hover:bg-gray-700 transition"
+              className="flex items-center gap-2 bg-gray-100 text-gray-700 text-sm font-semibold px-3 py-2 rounded-xl hover:bg-gray-200 transition"
               title="Configurar chaves de API"
             >
-              <span>⚙</span>
+              <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">APIs</span>
             </button>
-            <nav className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            <nav className="flex gap-1 bg-gray-100 rounded-xl p-1">
             <button
               onClick={() => setTab("generate")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${tab === "generate" ? "bg-white shadow text-gray-900" : "text-gray-600 hover:text-gray-900"}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "generate" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}
             >
-              Gerar com IA
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Gerar com IA</span>
             </button>
             <button
               onClick={() => setTab("examples")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${tab === "examples" ? "bg-white shadow text-gray-900" : "text-gray-600 hover:text-gray-900"}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "examples" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}
             >
-              Exemplos
+              <Library className="w-4 h-4" />
+              <span className="hidden sm:inline">Exemplos</span>
             </button>
             {brandbookData && (
               <button
                 onClick={() => setTab("viewer")}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${tab === "viewer" ? "bg-white shadow text-gray-900" : "text-gray-600 hover:text-gray-900"}`}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "viewer" ? "bg-white shadow-sm text-indigo-700" : "text-gray-500 hover:text-gray-900"}`}
               >
-                Visualizar
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">Visualizar</span>
               </button>
             )}
           </nav>
@@ -407,52 +415,47 @@ export default function Home() {
             <div className="bg-white border rounded-xl p-8 shadow-sm">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h2 className="text-2xl font-bold">Gerar Brandbook com IA</h2>
-                  <p className="text-gray-500 text-sm mt-1">Configure o briefing, escopo e criatividade — a IA cria sua identidade completa.</p>
+                  <h2 className="text-2xl font-extrabold tracking-tight">Gerar Brandbook com IA</h2>
+                  <p className="text-gray-500 text-sm mt-1">Defina o briefing, escopo e nível de criatividade. A IA faz o resto.</p>
                 </div>
               </div>
 
               {/* API Provider selector */}
-              <div className="mt-5 mb-7 p-3 bg-gray-50 border rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Modelo de IA</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTextProvider("openai")}
-                    className={`p-2.5 rounded-lg border-2 text-left transition-all ${
-                      textProvider === "openai"
-                        ? "border-gray-900 bg-gray-900 text-white"
-                        : apiKeys.openai ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50"
-                    }`}
-                  >
-                    <div className="font-bold text-sm">{apiKeys.openaiTextModel || "GPT-4o"}</div>
-                    <div className={`text-xs mt-0.5 ${textProvider === "openai" ? "text-gray-300" : apiKeys.openai ? "text-gray-500" : "text-red-500"}`}>
-                      {apiKeys.openai ? "✓ OpenAI configurado" : "⚠ Chave ausente"}
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTextProvider("gemini")}
-                    className={`p-2.5 rounded-lg border-2 text-left transition-all ${
-                      textProvider === "gemini"
-                        ? "border-blue-600 bg-blue-600 text-white"
-                        : apiKeys.google ? "border-gray-200 bg-white hover:border-gray-400" : "border-red-200 bg-red-50"
-                    }`}
-                  >
-                    <div className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 1.5 Flash"}</div>
-                    <div className={`text-xs mt-0.5 ${textProvider === "gemini" ? "text-blue-100" : apiKeys.google ? "text-gray-500" : "text-red-500"}`}>
-                      {apiKeys.google ? "✓ Google AI configurado" : "⚠ Chave ausente"}
-                    </div>
-                  </button>
-                </div>
-                {((textProvider === "openai" && !apiKeys.openai) || (textProvider === "gemini" && !apiKeys.google)) && (
-                  <p className="mt-2 text-xs text-red-600">
-                    ⚠ Configure a chave em <strong>⚙ APIs</strong> antes de gerar.
-                  </p>
-                )}
+              <div className="mt-6 mb-8 p-1.5 bg-gray-100 rounded-xl inline-flex w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setTextProvider("openai")}
+                  className={`flex-1 sm:flex-none flex flex-col items-center justify-center px-6 py-2 rounded-lg transition-all ${
+                    textProvider === "openai"
+                      ? "bg-white shadow-sm text-gray-900 ring-1 ring-gray-200"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                  }`}
+                >
+                  <span className="font-bold text-sm">{apiKeys.openaiTextModel || "GPT-4o"}</span>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.openai ? "text-green-600" : "text-red-500"}`}>
+                    {apiKeys.openai ? "OpenAI" : "Sem Chave"}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTextProvider("gemini")}
+                  className={`flex-1 sm:flex-none flex flex-col items-center justify-center px-6 py-2 rounded-lg transition-all ${
+                    textProvider === "gemini"
+                      ? "bg-white shadow-sm text-blue-700 ring-1 ring-blue-200"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                  }`}
+                >
+                  <span className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 1.5"}</span>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.google ? "text-blue-600" : "text-red-500"}`}>
+                    {apiKeys.google ? "Google" : "Sem Chave"}
+                  </span>
+                </button>
               </div>
+              {((textProvider === "openai" && !apiKeys.openai) || (textProvider === "gemini" && !apiKeys.google)) && (
+                <p className="mb-6 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 flex items-center gap-2">
+                  <Settings className="w-4 h-4" /> Configure a chave de API nas configurações antes de gerar.
+                </p>
+              )}
 
               {loading && generationPhase ? (
                 <GenerationProgress phase={generationPhase} pct={generationPct} />
@@ -465,20 +468,24 @@ export default function Home() {
               )}
 
               <div className="mt-8 pt-8 border-t">
-                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Ou importe um JSON existente</h3>
+                <div className="flex items-center gap-2 mb-4 text-gray-500">
+                  <FileJson className="w-4 h-4" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider">Ou importe um JSON existente</h3>
+                </div>
                 <textarea
                   rows={4}
                   value={jsonText}
                   onChange={(e) => setJsonText(e.target.value)}
-                  placeholder="Cole aqui o JSON do brandbook..."
-                  className="w-full px-4 py-3 border rounded-lg font-mono text-xs focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
+                  placeholder="Cole aqui o conteúdo do brandbook.json..."
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none shadow-inner"
                   aria-label="JSON do brandbook para importar"
                 />
                 <button
                   onClick={handleImportJson}
                   disabled={!jsonText.trim()}
-                  className="mt-3 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="mt-3 flex items-center gap-2 bg-gray-900 text-white py-2.5 px-5 rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
+                  <UploadCloud className="w-4 h-4" />
                   Importar JSON
                 </button>
               </div>
@@ -489,8 +496,8 @@ export default function Home() {
         {/* Tab: Examples */}
         {tab === "examples" && (
           <div>
-            <h2 className="text-2xl font-bold mb-2">Exemplos de Brandbooks</h2>
-            <p className="text-gray-500 mb-8">Clique em um exemplo para visualizar o manual de marca completo.</p>
+            <h2 className="text-3xl font-extrabold tracking-tight mb-2">Exemplos de Brandbooks</h2>
+            <p className="text-gray-500 mb-8 text-lg">Explore manuais gerados pela IA para entender o potencial estrutural.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <ExampleCard
@@ -525,103 +532,95 @@ export default function Home() {
             {/* Viewer Header */}
             <div className="no-print flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <h2 className="text-2xl font-bold">{brandbookData.brandName}</h2>
-                <p className="text-gray-500 text-sm">{brandbookData.industry}</p>
+                <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">{brandbookData.brandName}</h2>
+                <p className="text-gray-500 font-medium">{brandbookData.industry}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleClearImageCache}
                   disabled={Object.keys(generatedAssets).length === 0}
-                  className="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="flex items-center gap-2 bg-gray-100 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   title="Remove as imagens de IA geradas para este brandbook"
                 >
-                  🗑 Limpar imagens
-                </button>
-                <button
-                  onClick={handleExportPack}
-                  disabled={exportingPack}
-                  className="bg-gray-900 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  title="Baixa um .zip com JSONs, tokens e imagens geradas"
-                >
-                  {exportingPack ? "Preparando ZIP..." : "↓ Pack (.zip)"}
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Limpar imagens</span>
                 </button>
                 <button
                   onClick={() => setViewerTab("export")}
-                  className="bg-indigo-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
+                  className="flex items-center gap-2 bg-indigo-600 text-white py-2.5 px-6 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-sm hover:shadow transition-all"
                 >
-                  📤 Exportar
+                  <Download className="w-4 h-4" />
+                  Exportar e Baixar
                 </button>
               </div>
             </div>
 
             {/* Viewer Sub-tabs */}
-            <div className="no-print sticky top-16 z-40 bg-gray-50 pt-2 pb-3 -mx-6 px-6">
-            <div className="flex flex-wrap gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+            <div className="no-print sticky top-20 z-40 bg-gray-50 pt-2 pb-4 -mx-6 px-6 shadow-sm mb-6 border-b border-gray-200/50">
+            <div className="flex flex-wrap gap-1 bg-gray-200/60 p-1.5 rounded-xl w-fit border border-gray-200/50">
               <button
                 onClick={() => setViewerTab("preview")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  viewerTab === "preview" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                  viewerTab === "preview" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
                 }`}
               >
+                <LayoutDashboard className="w-4 h-4" />
                 Brandbook
               </button>
               <button
                 onClick={() => setViewerTab("edit")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  viewerTab === "edit" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                  viewerTab === "edit" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
                 }`}
               >
-                ✏ Editar
+                <Pencil className="w-4 h-4" />
+                Editar
               </button>
               <button
                 onClick={() => setViewerTab("assets")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  viewerTab === "assets" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                  viewerTab === "assets" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
                 }`}
               >
-                🖼️ Assets
+                <ImageIcon className="w-4 h-4" />
+                Assets
                 {uploadedBrandAssets.length > 0 && (
-                  <span className="ml-1.5 bg-indigo-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="ml-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                     {uploadedBrandAssets.length}
                   </span>
                 )}
               </button>
               <button
                 onClick={() => setViewerTab("images")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  viewerTab === "images" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                  viewerTab === "images" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
                 }`}
               >
+                <ImagePlus className="w-4 h-4" />
                 Gerar Imagens
                 {Object.keys(generatedAssets).length > 0 && (
-                  <span className="ml-1.5 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="ml-0.5 bg-green-100 text-green-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                     {Object.keys(generatedAssets).length}
                   </span>
                 )}
               </button>
               <button
                 onClick={() => setViewerTab("refine")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  viewerTab === "refine" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                  viewerTab === "refine" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
                 }`}
               >
-                ✨ Refinar
+                <Wand2 className="w-4 h-4" />
+                Refinar
               </button>
               <button
                 onClick={() => setViewerTab("consistency")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  viewerTab === "consistency" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                  viewerTab === "consistency" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
                 }`}
               >
-                🔍 Consistência
-              </button>
-              <button
-                onClick={() => setViewerTab("export")}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                  viewerTab === "export" ? "bg-white shadow text-gray-900" : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                📤 Exportar
+                <ShieldCheck className="w-4 h-4" />
+                Consistência
               </button>
             </div>
             </div>
@@ -661,9 +660,12 @@ export default function Home() {
             {/* Sub-tab: Brand Assets */}
             {viewerTab === "assets" && (
               <div>
-                <div className="mb-4 bg-blue-50 border border-blue-100 rounded-xl px-5 py-4">
-                  <h3 className="font-bold text-blue-900 mb-1">Ativos de Marca</h3>
-                  <p className="text-sm text-blue-700">
+                <div className="mb-6 bg-blue-50 border border-blue-100 rounded-xl px-6 py-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ImageIcon className="w-5 h-5 text-blue-700" />
+                    <h3 className="font-bold text-blue-900 text-lg">Ativos de Marca</h3>
+                  </div>
+                  <p className="text-sm text-blue-800">
                     Faça upload de logos, mascotes, elementos gráficos e padrões. Eles aparecem automaticamente
                     nas seções correspondentes do brandbook e são salvos localmente.
                   </p>
@@ -699,9 +701,12 @@ export default function Home() {
             {/* Sub-tab: Refinar */}
             {viewerTab === "refine" && (
               <div className="max-w-2xl mx-auto space-y-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-                  <h3 className="font-bold text-amber-900 mb-1">Refinar com IA</h3>
-                  <p className="text-sm text-amber-800">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-6 py-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wand2 className="w-5 h-5 text-amber-700" />
+                    <h3 className="font-bold text-amber-900 text-lg">Refinar com IA</h3>
+                  </div>
+                  <p className="text-sm text-amber-800 leading-relaxed">
                     <strong>Refinar brandbook</strong> — aplica um ajuste em todo o brandbook de uma vez (ex: &quot;torne mais luxuoso&quot;, &quot;mude o tom para mais jovem&quot;).
                     <br />
                     <strong>Regenerar seção</strong> — reescreve apenas uma seção específica, com instrução opcional.
@@ -749,43 +754,56 @@ export default function Home() {
                     viewerElementId="brandbook-content"
                   />
                 </div>
-                <div className="bg-white border rounded-xl p-8 shadow-sm">
-                  <h3 className="font-bold text-sm mb-1">Arquivos JSON</h3>
-                  <p className="text-xs text-gray-500 mb-4">Downloads do brandbook em formato JSON para integração ou backup</p>
-                  <div className="space-y-2">
+                <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileJson className="w-5 h-5 text-gray-700" />
+                    <h3 className="font-bold text-lg text-gray-900">Arquivos JSON</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-6">Downloads do brandbook em formato JSON para integração ou backup</p>
+                  <div className="space-y-3">
                     <button
                       onClick={handleExportBrandbook}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm transition"
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm transition-all group"
                     >
-                      <span className="text-2xl flex-shrink-0">📋</span>
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">Brandbook JSON</div>
-                        <div className="text-xs text-gray-500 mt-0.5">Exporta todos os dados do brandbook — útil para backup ou reimportar depois</div>
+                      <div className="w-12 h-12 bg-gray-50 group-hover:bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                        <BookOpen className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
                       </div>
-                      <span className="flex-shrink-0 text-sm font-medium text-gray-600">↓ Baixar</span>
+                      <div className="flex-1">
+                        <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">Brandbook JSON</div>
+                        <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">Exporta todos os dados do brandbook — útil para backup ou reimportar depois</div>
+                      </div>
+                      <Download className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 mr-2 transition-colors" />
                     </button>
                     <button
                       onClick={handleExportProduction}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm transition"
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm transition-all group"
                     >
-                      <span className="text-2xl flex-shrink-0">🏭</span>
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">Manifesto de Produção JSON</div>
-                        <div className="text-xs text-gray-500 mt-0.5">JSON técnico com especificações de impressão, digital, social, CSS vars e tokens — para times de desenvolvimento</div>
+                      <div className="w-12 h-12 bg-gray-50 group-hover:bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                        <Settings className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
                       </div>
-                      <span className="flex-shrink-0 text-sm font-medium text-gray-600">↓ Baixar</span>
+                      <div className="flex-1">
+                        <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">Manifesto de Produção JSON</div>
+                        <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">JSON técnico com especificações de impressão, digital, social, CSS vars e tokens</div>
+                      </div>
+                      <Download className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 mr-2 transition-colors" />
                     </button>
                     <button
                       onClick={handleExportPack}
                       disabled={exportingPack}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-gray-400 hover:shadow-sm transition disabled:opacity-50"
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm transition-all disabled:opacity-50 disabled:hover:border-gray-200 disabled:hover:ring-0 group"
                     >
-                      <span className="text-2xl flex-shrink-0">📦</span>
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">Pack Completo (.zip)</div>
-                        <div className="text-xs text-gray-500 mt-0.5">Tudo em um ZIP: brandbook JSON, manifesto de produção e imagens geradas</div>
+                      <div className="w-12 h-12 bg-gray-50 group-hover:bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                        <UploadCloud className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
                       </div>
-                      <span className="flex-shrink-0 text-sm font-medium text-gray-600">{exportingPack ? "Preparando..." : "↓ Baixar"}</span>
+                      <div className="flex-1">
+                        <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">Pack Completo (.zip)</div>
+                        <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">Tudo em um ZIP: brandbook JSON, manifesto de produção e imagens geradas</div>
+                      </div>
+                      {exportingPack ? (
+                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md animate-pulse">Preparando...</span>
+                      ) : (
+                        <Download className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 mr-2 transition-colors" />
+                      )}
                     </button>
                   </div>
                 </div>
