@@ -20,6 +20,12 @@ export const ASSET_CATALOG = [
   { key: "app_mockup",         label: "App / Dashboard Mockup",       description: "Interface real do produto em dispositivo — não um template genérico",       aspectRatio: "9:16", category: "mockup"  },
   { key: "business_card",      label: "Cartão de Visitas 3D",         description: "Mockup fotorrealista frente+verso — materialidade e qualidade premium",     aspectRatio: "16:9", category: "mockup"  },
   { key: "brand_collateral",   label: "Kit Papelaria Corporativa",    description: "Flat-lay completo: cartão, letterhead, bloco, caneta, envelope, wax seal",  aspectRatio: "4:3",  category: "mockup"  },
+  { key: "delivery_packaging", label: "Embalagens Delivery (Kit)",    description: "Kit de embalagem: sacola, caixa, copo, adesivos e guardanapo — on-brand",    aspectRatio: "4:3",  category: "mockup"  },
+  { key: "takeaway_bag",       label: "Sacola / Bag Delivery",        description: "Sacola kraft ou bag reutilizável com logo + padrões — cenário real",         aspectRatio: "4:3",  category: "mockup"  },
+  { key: "food_container",     label: "Caixa / Pote Delivery",        description: "Embalagem principal (caixa/pote) com aplicação do logo — close premium",    aspectRatio: "4:3",  category: "mockup"  },
+  { key: "uniform_tshirt",     label: "Uniforme (Camiseta)",          description: "Uniforme da equipe com logo e aplicação de padrão — fotografia realista",   aspectRatio: "4:3",  category: "mockup"  },
+  { key: "uniform_apron",      label: "Uniforme (Avental)",           description: "Avental bordado/serigrafado com marca — look premium e coerente",           aspectRatio: "4:3",  category: "mockup"  },
+  { key: "materials_board",    label: "Materiais & Texturas (Board)", description: "Moodboard de materiais (papel, tecido, metal, textura) com paleta da marca", aspectRatio: "1:1",  category: "mockup"  },
   // ─── PRINT ─────────────────────────────────────────────────────────────────
   { key: "outdoor_billboard",  label: "Outdoor Urbano / OOH",         description: "Billboard em contexto urbano real — impacto máximo em 3 segundos",          aspectRatio: "16:9", category: "print"   },
  ] as const satisfies ReadonlyArray<{
@@ -174,7 +180,18 @@ function extractBrandContext(data: BrandbookData) {
 }
 
 function providerQuality(provider: ImageProvider, key: AssetKey): string {
-  const isMockup = ["business_card", "brand_collateral", "app_mockup", "outdoor_billboard"].includes(key);
+  const isMockup = [
+    "business_card",
+    "brand_collateral",
+    "app_mockup",
+    "outdoor_billboard",
+    "delivery_packaging",
+    "takeaway_bag",
+    "food_container",
+    "uniform_tshirt",
+    "uniform_apron",
+    "materials_board",
+  ].includes(key);
   const isLogo = key === "logo_primary" || key === "logo_dark_bg";
   const isPattern = key === "brand_pattern" || key === "presentation_bg";
   const isSocial = ["social_post_square", "instagram_carousel", "instagram_story", "social_cover", "youtube_thumbnail"].includes(key);
@@ -217,7 +234,20 @@ function providerPrefix(provider: ImageProvider): string {
 }
 
 function stabilityTags(ctx: ReturnType<typeof extractBrandContext>, key: AssetKey): string {
-  const isPhoto = ["hero_visual","hero_lifestyle","app_mockup","business_card","brand_collateral","outdoor_billboard"].includes(key);
+  const isPhoto = [
+    "hero_visual",
+    "hero_lifestyle",
+    "app_mockup",
+    "business_card",
+    "brand_collateral",
+    "outdoor_billboard",
+    "delivery_packaging",
+    "takeaway_bag",
+    "food_container",
+    "uniform_tshirt",
+    "uniform_apron",
+    "materials_board",
+  ].includes(key);
   if (isPhoto) return `(masterpiece:1.4), (best quality:1.3), (photorealistic:1.3), (8k uhd:1.2), (sharp focus:1.2), ${ctx.primaryColor} color grade, ${ctx.moodWords}`;
   return `(masterpiece:1.4), (best quality:1.3), (crisp vector:1.3), (sharp edges:1.2), professional graphic design, ${ctx.primaryColor} dominant`;
 }
@@ -543,6 +573,94 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COMPOSITION: ${ctx.composition}. Artfully arranged with intentional negative space, slight overlapping.`,
         `MOOD: ${ctx.moodWords}. Tasteful, editorial, premium.`,
         sTags, q, neg(ctx, provider, "plastic surfaces, harsh shadows, poor lighting, off-brand colors, generic office supplies"),
+      );
+    }
+
+    case "delivery_packaging": {
+      return parts(
+        prefix,
+        `PLATFORM: Restaurant delivery packaging system mockup — 4:3 format, premium product photography.`,
+        `MARKETING INTENT: Show a cohesive real-world packaging system that feels designed by a top identity studio.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
+        `ITEMS: paper bag, main food box/container, drink cup, napkins, cutlery sleeve, receipt card, small stickers/seals.`,
+        `BRANDING APPLICATIONS: logo lockups (${ctx.logoPrimary}), brand pattern (${ctx.patternStyle}), brand symbols (${ctx.logoSymbol}).`,
+        `COLOR SYSTEM: strict palette only (${ctx.allColors}). Dominant ${ctx.primaryColor}, secondary ${ctx.secondaryColor}, accent ${ctx.accentColor}.`,
+        `TYPOGRAPHY: ${ctx.displayFont} for bold labels, ${ctx.bodyFont} for small copy. No readable text required.`,
+        `MATERIALS: premium matte paper, kraft paper, soft-touch coating, embossed stamp look, clean die-cuts.`,
+        `SCENE: Overhead or 3/4 flat-lay on stylish surface consistent with brand: ${ctx.photoStyle}.`,
+        `LIGHTING: soft natural window light, crisp soft shadows, editorial realism.`,
+        sTags, q, neg(ctx, provider, "generic fast-food branding, messy food spills, low-res print, random colors, illegible noisy text"),
+      );
+    }
+
+    case "takeaway_bag": {
+      return parts(
+        prefix,
+        `PLATFORM: Takeaway bag / delivery bag mockup — 4:3 product photography.`,
+        `BRAND: ${B} (${data.industry}).`,
+        `OBJECT: premium kraft paper bag or reusable delivery tote with high-quality print, logo and pattern applications.`,
+        `BRANDING: ${ctx.logoPrimary} centered, brand symbol accents (${ctx.logoSymbol}), subtle pattern (${ctx.patternStyle}).`,
+        `COLOR: strict palette ${ctx.allColors}. Dominant ${ctx.primaryColor}.`,
+        `SCENE: realistic in-hand or on counter scene, no faces, clean background, editorial lifestyle realism.`,
+        `LIGHTING: soft natural light, realistic shadows, premium material texture visible.`,
+        sTags, q, neg(ctx, provider, "cheap plastic bag, low-quality print, clutter, messy background, cartoon, generic branding"),
+      );
+    }
+
+    case "food_container": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded primary delivery container (box/bowl) — 4:3 close-up premium product photography.`,
+        `BRAND: ${B} (${data.industry}).`,
+        `OBJECT: main container with lid + seal sticker; show one closed and one slightly open (optional).`,
+        `BRANDING: clean logo lockup (${ctx.logoPrimary}), simple icon mark (${ctx.logoSymbol}), brand pattern as subtle detail (${ctx.patternStyle}).`,
+        `COLOR: strict palette only ${ctx.allColors}.`,
+        `MATERIAL: matte coated cardboard or premium paper, crisp edges, realistic print alignment.`,
+        `SCENE: minimal studio surface matching ${ctx.visualStyle}.`,
+        `LIGHTING: soft studio light, shallow depth of field, premium editorial shot.`,
+        sTags, q, neg(ctx, provider, "messy food, grease stains, low-end packaging, random colors, noisy text, watermark"),
+      );
+    }
+
+    case "uniform_tshirt": {
+      return parts(
+        prefix,
+        `PLATFORM: Staff uniform t-shirt mockup — 4:3 editorial lifestyle product shot.`,
+        `BRAND: ${B} (${data.industry}).`,
+        `WARDROBE: premium cotton t-shirt with embroidered or screen-printed logo; subtle pattern accent optional.`,
+        `BRANDING: chest logo (${ctx.logoPrimary}) + sleeve symbol (${ctx.logoSymbol}).`,
+        `COLOR: strict palette only ${ctx.allColors}.`,
+        `SCENE: on a person with face out of frame OR clean flat-lay; realistic folds and fabric texture.`,
+        `LIGHTING: soft natural light, editorial realism, premium feel.`,
+        sTags, q, neg(ctx, provider, "visible faces, cheap fabric, distorted logo, low-res print, messy background"),
+      );
+    }
+
+    case "uniform_apron": {
+      return parts(
+        prefix,
+        `PLATFORM: Staff uniform apron mockup — 4:3 premium product/lifestyle photo.`,
+        `BRAND: ${B} (${data.industry}).`,
+        `OBJECT: high-quality apron with embroidered logo patch or clean screen print; adjustable straps.`,
+        `BRANDING: centered logo (${ctx.logoPrimary}), optional subtle pattern detail (${ctx.patternStyle}).`,
+        `COLOR: strict palette only ${ctx.allColors}.`,
+        `SCENE: kitchen/work counter context, face out of frame, clean and premium, not stock photo.`,
+        `LIGHTING: warm natural light, shallow depth of field, editorial texture.`,
+        sTags, q, neg(ctx, provider, "visible faces, greasy messy kitchen, cheap apron, distorted print, watermark"),
+      );
+    }
+
+    case "materials_board": {
+      return parts(
+        prefix,
+        `PLATFORM: Brand materials & textures board — 1:1 square moodboard composition.`,
+        `BRAND: ${B} (${data.industry}).`,
+        `CONTENT: curated set of 6-10 material swatches (paper stock, fabric, metal/foil, matte plastic, textured label) plus color chips.`,
+        `BRAND SYSTEM: derived from ${ctx.logoSymbol} and pattern ${ctx.patternStyle}.`,
+        `COLOR: strict palette only ${ctx.allColors}.`,
+        `STYLE: ${ctx.visualStyle}. Mood: ${ctx.moodWords}.`,
+        `COMPOSITION: clean top-down flat-lay, premium editorial, precise grid, soft shadows.`,
+        sTags, q, neg(ctx, provider, "random unrelated materials, off-brand colors, messy collage, low-res textures, text"),
       );
     }
 

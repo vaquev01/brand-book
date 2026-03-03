@@ -76,18 +76,22 @@ function pickDefaultProvider(keys: ApiKeys): ImageProvider {
 
 export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveToAssets, apiKeys, uploadedAssets = [], textProvider }: Props) {
   const [provider, setProvider] = useState<ImageProvider>(() => pickDefaultProvider(apiKeys));
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
+  const [refineBeforeGenerate, setRefineBeforeGenerate] = useState(true);
+  const [useReferenceImages, setUseReferenceImages] = useState(true);
+  const [customBrief, setCustomBrief] = useState("");
+  const [customAspectRatio, setCustomAspectRatio] = useState<"1:1" | "16:9" | "9:16" | "4:3" | "21:9">("1:1");
+  const [customResult, setCustomResult] = useState<GeneratedAsset | null>(null);
+  const [customPrompt, setCustomPrompt] = useState<string>("");
 
   useEffect(() => {
     if (!apiKeys[PROVIDER_KEY_MAP[provider]]) {
       const better = pickDefaultProvider(apiKeys);
       if (better !== provider) setProvider(better);
     }
-  }, [apiKeys]);
-  const [loadingKey, setLoadingKey] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
-  const [refineBeforeGenerate, setRefineBeforeGenerate] = useState(true);
-  const [useReferenceImages, setUseReferenceImages] = useState(true);
+  }, [apiKeys, provider]);
 
   async function generate(assetKey: AssetKey) {
     setLoadingKey(assetKey);
@@ -207,6 +211,92 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   const currentProviderHasKey = !!apiKeys[PROVIDER_KEY_MAP[provider]];
   const categories = ["logo", "digital", "social", "mockup", "print"] as const;
 
+  async function generateCustom() {
+    const brief = customBrief.trim();
+    if (!brief) {
+      setError("Escreva uma intenção breve para gerar a imagem.");
+      return;
+    }
+    setLoadingKey("__custom__");
+    setError(null);
+    setCustomPrompt("");
+
+    try {
+      const composeRes = await fetch("/api/compose-image-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandbook: data,
+          brief,
+          imageProvider: provider,
+          aspectRatio: customAspectRatio,
+          textProvider,
+          openaiKey: apiKeys.openai || undefined,
+          googleKey: apiKeys.google || undefined,
+          openaiModel: apiKeys.openaiTextModel || undefined,
+          googleModel: apiKeys.googleTextModel || undefined,
+        }),
+      });
+      const composeJson = await composeRes.json() as { prompt?: string; error?: string };
+      if (!composeRes.ok || !composeJson.prompt) {
+        throw new Error(composeJson.error ?? "Erro ao compor prompt");
+      }
+
+      const prompt = composeJson.prompt;
+      setCustomPrompt(prompt);
+
+      const canUseRefImages =
+        provider === "imagen" &&
+        !!apiKeys.google &&
+        (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini") &&
+        useReferenceImages;
+
+      const referenceImages = canUseRefImages
+        ? uploadedAssets
+          .filter((a: UploadedAsset) => a.type === "reference" || a.type === "pattern" || a.type === "element")
+          .slice(0, 2)
+          .map((a: UploadedAsset) => a.dataUrl)
+        : undefined;
+
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          provider,
+          aspectRatio: customAspectRatio,
+          referenceImages,
+          openaiKey: apiKeys.openai || undefined,
+          stabilityKey: apiKeys.stability || undefined,
+          ideogramKey: apiKeys.ideogram || undefined,
+          googleKey: apiKeys.google || undefined,
+          openaiImageModel: apiKeys.openaiImageModel || undefined,
+          stabilityModel: apiKeys.stabilityModel || undefined,
+          ideogramModel: apiKeys.ideogramModel || undefined,
+          googleImageModel: apiKeys.googleImageModel || undefined,
+        }),
+      });
+      const result = await res.json() as { url?: string; error?: string };
+      if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
+      if (!result.url) throw new Error("API não retornou URL de imagem");
+
+      const key = `custom_${Date.now()}`;
+      const asset: GeneratedAsset = {
+        key,
+        url: result.url,
+        provider,
+        prompt,
+        generatedAt: new Date().toISOString(),
+      };
+      setCustomResult(asset);
+      onAssetGenerated(key, asset);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro desconhecido");
+    } finally {
+      setLoadingKey(null);
+    }
+  }
+
   return (
     <div className="space-y-8">
 
@@ -293,6 +383,104 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           <div className={`mt-3 px-4 py-3 rounded-lg border text-xs ${currentProvider.color}`}>
             ✓ <strong>{currentProvider.name}</strong> configurado com{" "}
             <code className="font-mono">{currentProvider.envKey}</code>.
+          </div>
+        )}
+
+      </div>
+
+      {/* Custom generator */}
+      <div className="bg-white border rounded-xl p-5 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold">Custom (com alma)</h3>
+            <p className="text-xs text-gray-500 mt-1">
+              Escreva uma intenção breve. A IA monta o prompt final usando o brandbook e gera a imagem.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="md:col-span-2">
+            <textarea
+              rows={3}
+              value={customBrief}
+              onChange={(e) => setCustomBrief(e.target.value)}
+              placeholder='Ex: "Kit de embalagens premium para delivery, com padrão sutil e selo adesivo"'
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
+            />
+            <div className="mt-2 text-[10px] text-gray-400">
+              Dica: você pode citar "embalagem", "uniforme", "menu", "sacola", "adesivo", "tote bag", "moodboard de materiais" etc.
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="customAspectRatio" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aspect ratio</label>
+            <select
+              id="customAspectRatio"
+              value={customAspectRatio}
+              onChange={(e) => setCustomAspectRatio(e.target.value as typeof customAspectRatio)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition"
+            >
+              <option value="1:1">1:1 (Quadrado)</option>
+              <option value="4:3">4:3 (Produto/Mockup)</option>
+              <option value="16:9">16:9 (Paisagem)</option>
+              <option value="9:16">9:16 (Vertical)</option>
+              <option value="21:9">21:9 (Banner)</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={generateCustom}
+              disabled={loadingKey !== null}
+              className="w-full bg-gray-900 text-white text-sm py-2.5 px-3 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              {loadingKey === "__custom__" ? "Gerando..." : "✦ Gerar custom"}
+            </button>
+          </div>
+        </div>
+
+        {customPrompt && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setExpandedPrompt(expandedPrompt === "__custom__" ? null : "__custom__")}
+              className="text-[10px] text-blue-500 hover:text-blue-700 mb-2 flex items-center gap-1"
+            >
+              {expandedPrompt === "__custom__" ? "▲" : "▼"} Ver prompt gerado
+            </button>
+            {expandedPrompt === "__custom__" && (
+              <div className="bg-gray-900 text-gray-200 rounded-lg p-3 text-[10px] mb-3 leading-relaxed font-mono max-h-40 overflow-y-auto">
+                {customPrompt}
+              </div>
+            )}
+          </div>
+        )}
+
+        {customResult && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`relative bg-gray-100 ${aspectClass(customAspectRatio)}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={customResult.url}
+                alt="Custom result"
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs font-semibold text-gray-700">Resultado custom</div>
+                <div className="text-[10px] text-gray-400">Salvo no cache local deste brandbook</div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadImage(customResult.url, customResult.key)}
+                  className="bg-gray-100 text-gray-700 text-xs py-2 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
+                >
+                  ↓ Download
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

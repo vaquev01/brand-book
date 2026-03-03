@@ -89,10 +89,11 @@ function bytesToBase64(bytes: unknown): string {
 export async function POST(request: NextRequest) {
   try {
     const { prompt, provider, assetKey, openaiKey, stabilityKey, ideogramKey, googleKey,
-      openaiImageModel, stabilityModel, ideogramModel, googleImageModel, referenceImages } = await request.json() as {
+      openaiImageModel, stabilityModel, ideogramModel, googleImageModel, referenceImages, aspectRatio } = await request.json() as {
       prompt: string;
       provider: string;
       assetKey?: string;
+      aspectRatio?: AspectRatioKey;
       openaiKey?: string;
       stabilityKey?: string;
       ideogramKey?: string;
@@ -108,7 +109,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "prompt e provider são obrigatórios" }, { status: 400 });
     }
 
-    const aspectRatio: AspectRatioKey = (assetKey && ASSET_ASPECT_RATIOS[assetKey]) ? ASSET_ASPECT_RATIOS[assetKey] : "1:1";
+    const pickedAspectRatio: AspectRatioKey = (aspectRatio && IMAGEN_RATIOS[aspectRatio])
+      ? aspectRatio
+      : (assetKey && ASSET_ASPECT_RATIOS[assetKey])
+        ? ASSET_ASPECT_RATIOS[assetKey]
+        : "1:1";
 
     switch (provider) {
       case "dalle3": {
@@ -117,7 +122,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: "OPENAI_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
         }
         const openai = new OpenAI({ apiKey });
-        const size = DALLE3_SIZES[aspectRatio];
+        const size = DALLE3_SIZES[pickedAspectRatio];
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
         const response = await openai.images.generate({
           model: openaiImageModel?.trim() || "dall-e-3",
@@ -129,7 +134,7 @@ export async function POST(request: NextRequest) {
         });
         const url = response.data?.[0]?.url;
         if (!url) throw new Error("DALL-E 3 não retornou URL de imagem");
-        return NextResponse.json({ url, provider: "dalle3", size, aspectRatio });
+        return NextResponse.json({ url, provider: "dalle3", size, aspectRatio: pickedAspectRatio });
       }
 
       case "stability": {
@@ -140,11 +145,22 @@ export async function POST(request: NextRequest) {
         const { positive, negative } = extractNegativePrompt(prompt);
 
         const resolvedStabilityModel = stabilityModel?.trim() || "stable-diffusion-xl-1024-v1-0";
-        const { width, height } = pickStabilitySize(resolvedStabilityModel, aspectRatio);
+        const { width, height } = pickStabilitySize(resolvedStabilityModel, pickedAspectRatio);
 
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
         const isPattern = assetKey === "brand_pattern";
-        const isMockup = ["business_card", "brand_collateral", "app_mockup", "outdoor_billboard"].includes(assetKey ?? "");
+        const isMockup = [
+          "business_card",
+          "brand_collateral",
+          "app_mockup",
+          "outdoor_billboard",
+          "delivery_packaging",
+          "takeaway_bag",
+          "food_container",
+          "uniform_tshirt",
+          "uniform_apron",
+          "materials_board",
+        ].includes(assetKey ?? "");
 
         const stylePreset = isLogo ? "digital-art"
           : isPattern ? "tile-texture"
@@ -185,7 +201,7 @@ export async function POST(request: NextRequest) {
           url: `data:image/png;base64,${base64}`,
           provider: "stability",
           size: `${width}x${height}`,
-          aspectRatio,
+          aspectRatio: pickedAspectRatio,
         });
       }
 
@@ -209,7 +225,7 @@ export async function POST(request: NextRequest) {
             image_request: {
               prompt: finalPrompt.slice(0, 2000),
               model: ideogramModel?.trim() || "V_2",
-              aspect_ratio: IDEOGRAM_RATIOS[aspectRatio],
+              aspect_ratio: IDEOGRAM_RATIOS[pickedAspectRatio],
               magic_prompt_option: isLogo ? "OFF" : "AUTO",
               style_type: isLogo ? "DESIGN" : isDesign ? "DESIGN" : "REALISTIC",
             },
@@ -222,7 +238,7 @@ export async function POST(request: NextRequest) {
         const ideogramData = await res.json() as { data?: { url: string }[] };
         const url = ideogramData.data?.[0]?.url;
         if (!url) throw new Error("Ideogram não retornou URL de imagem");
-        return NextResponse.json({ url, provider: "ideogram", aspectRatio });
+        return NextResponse.json({ url, provider: "ideogram", aspectRatio: pickedAspectRatio });
       }
 
       case "imagen": {
@@ -242,7 +258,7 @@ export async function POST(request: NextRequest) {
             "4:3": "standard 4:3 landscape aspect ratio",
             "21:9": "ultra-wide cinematic 21:9 aspect ratio",
           };
-          const fullPrompt = `${positive.slice(0, 1600)}\n\nGenerate as ${ratioHints[aspectRatio]} image.\n\nDo not include: ${negative.slice(0, 800)}.`;
+          const fullPrompt = `${positive.slice(0, 1600)}\n\nGenerate as ${ratioHints[pickedAspectRatio]} image.\n\nDo not include: ${negative.slice(0, 800)}.`;
 
           const hasRefImages = Array.isArray(referenceImages) && referenceImages.length > 0;
           const contentParts: unknown[] = [{ text: fullPrompt }];
@@ -269,14 +285,14 @@ export async function POST(request: NextRequest) {
               return NextResponse.json({
                 url: `data:${mimeType};base64,${part.inlineData.data}`,
                 provider: "imagen",
-                aspectRatio,
+                aspectRatio: pickedAspectRatio,
               });
             }
           }
           throw new Error("Gemini não retornou imagem. Verifique se o modelo selecionado suporta geração de imagens.");
         }
 
-        const imagenRatio = IMAGEN_RATIOS[aspectRatio];
+        const imagenRatio = IMAGEN_RATIOS[pickedAspectRatio];
         const resp = await ai.models.generateImages({
           model,
           prompt: `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000),
@@ -292,7 +308,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           url: `data:image/png;base64,${b64}`,
           provider: "imagen",
-          aspectRatio,
+          aspectRatio: pickedAspectRatio,
         });
       }
 
