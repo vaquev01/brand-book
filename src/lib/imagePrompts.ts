@@ -6,8 +6,8 @@ export const ASSET_CATALOG = [
   { key: "logo_dark_bg",       label: "Logo — Versão Invertida",      description: "Logo em negativo sobre fundo escuro — dark mode, vídeos, eventos",       aspectRatio: "1:1",  category: "logo"    },
   // ─── DIGITAL ───────────────────────────────────────────────────────────────
   { key: "brand_pattern",      label: "Padrão Gráfico Seamless",      description: "Textura tileable infinita — fundos, embalagens, papelaria, slides",       aspectRatio: "1:1",  category: "digital" },
-  { key: "hero_visual",        label: "Hero Landing Page",            description: "Above the fold — converte visitante em lead. Valor único sem texto.",      aspectRatio: "16:9", category: "digital" },
-  { key: "hero_lifestyle",     label: "Lifestyle Editorial",          description: "Público-alvo usando produto/serviço em contexto real — aspiração autêntica", aspectRatio: "16:9", category: "digital" },
+  { key: "hero_visual",        label: "Hero do Site (Key Visual)",     description: "Imagem principal do site — traduz posicionamento e estilo visual (sem texto)", aspectRatio: "16:9", category: "digital" },
+  { key: "hero_lifestyle",     label: "Foto Lifestyle (Editorial)",   description: "Público-alvo em contexto real — estética editorial, aspiracional e autêntica", aspectRatio: "16:9", category: "digital" },
   { key: "youtube_thumbnail",  label: "Thumbnail YouTube",            description: "Para o scroll — alto contraste, bold, CTR elevado em 0,5 segundos",        aspectRatio: "16:9", category: "digital" },
   { key: "presentation_bg",    label: "Fundo de Apresentação",        description: "Background para slides — on-brand, sutil, não compete com conteúdo",       aspectRatio: "16:9", category: "digital" },
   { key: "email_header",       label: "Header E-mail Marketing",      description: "Banner topo 600px — visual que aumenta abertura e CTR da newsletter",       aspectRatio: "21:9", category: "digital" },
@@ -292,8 +292,8 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         : `Must visually communicate: ${ctx.uniqueValue}.`;
       return parts(
         prefix,
-        `PLATFORM: Above-the-fold landing page hero for ${B} (${data.industry}) — 16:9 widescreen.`,
-        `MARKETING INTENT: Convert first-time visitors into leads in under 3 seconds. Viewer should feel the brand promise immediately.`,
+        `PLATFORM: Website hero / key visual banner for ${B} (${data.industry}) — 16:9 widescreen.`,
+        `INTENT: Establish immediate brand impression (positioning + credibility + mood). This is a brandbook application image, not a generic "landing page" template.`,
         `TARGET VIEWER: ${ctx.userPsychographics}.`,
         `CORE MESSAGE TO VISUALIZE: ${ctx.messagingPillar}.`,
         intentCopy,
@@ -309,7 +309,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COMPOSITION: ${ctx.composition}. Strong depth of field, foreground-to-background layers. Rule of thirds.`,
         `MOOD: ${ctx.moodWords}. Mission: ${ctx.mission}.`,
         sTags,
-        `No text, no logos — pure visual storytelling that creates emotional desire and trust.`,
+        `No text, no logos — keep a clean copy-safe negative space area for website headline.`,
         q, neg(ctx, provider, "text overlays, logos, generic stock, flat even lighting, overcrowded scene"),
       );
     }
@@ -317,8 +317,8 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
     case "hero_lifestyle": {
       return parts(
         prefix,
-        `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — website hero, paid media, social ads.`,
-        `MARKETING INTENT: Aspiration + emotional relatability. Viewer sees themselves after the transformation ${B} provides.`,
+        `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — brandbook application for web and campaigns.`,
+        `INTENT: Human, believable brand storytelling. Show the audience living the brand values and desired outcome — without looking like stock photo.`,
         `SUBJECT: ${ctx.userPsychographics}. Authentic unstaged moment in their real environment.`,
         `PAIN CONTEXT (the problem being solved): ${ctx.painPoints} — the image shows the AFTER state, not the pain itself.`,
         `SCENE: ${ctx.audienceDesc} in a realistic ${data.industry} context — relaxed, confident, successful outcome.`,
