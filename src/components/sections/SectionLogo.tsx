@@ -28,12 +28,12 @@ function LogoCard({
         <h3 className="font-bold">{title}</h3>
       </div>
       {image ? (
-        <div className={`${bgClass} p-8 flex items-center justify-center h-64`}>
+        <div className={`${bgClass} p-5 flex items-center justify-center h-44`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image} alt={title} className="max-h-full object-contain rounded" />
         </div>
       ) : (
-        <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 gap-3">
+        <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 gap-2">
           <span className="text-4xl">✦</span>
           <span className="text-xs font-medium text-center px-4">{placeholderText}</span>
           {onGoToImages && (
@@ -79,13 +79,13 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
   if (variants?.wordmarkOnly && !isUrl(variants.wordmarkOnly)) variantEntries.push({ label: "Wordmark Only", key: "wordmarkOnly", desc: variants.wordmarkOnly });
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">
         {String(num).padStart(2, "0")}. Logo &amp; Identidade Visual
       </h2>
 
       {/* Main logo images */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         <LogoCard
           title="Logo Principal — Fundo Claro"
           image={logoPrimary}
@@ -104,7 +104,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
 
       {/* Logo description cards */}
       {(secondaryText || symbolText) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {secondaryText && (
             <div className="bg-white border rounded-xl p-5 shadow-sm">
               <div className="flex items-start gap-3 mb-2">
@@ -128,9 +128,9 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
 
       {/* Logo variants */}
       {variantEntries.length > 0 && (
-        <div className="mb-12">
-          <h3 className="text-lg font-bold mb-4">Variações de Logo</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="mb-6">
+          <h3 className="text-base font-bold mb-3">Variações de Logo</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {variantEntries.map((v) => (
               <div key={v.key} className="bg-white border rounded-xl p-4 shadow-sm">
                 <h4 className="font-bold text-sm text-gray-900 mb-2">{v.label}</h4>
@@ -142,25 +142,25 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
       )}
 
       {/* Technical specs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <div className="bg-gray-50 p-6 rounded border">
-          <h3 className="font-bold mb-2">Clear Space</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div className="bg-gray-50 p-4 rounded border">
+          <h3 className="font-bold mb-1">Clear Space</h3>
           <p className="text-gray-600 text-sm">{data.logo.clearSpace}</p>
         </div>
-        <div className="bg-gray-50 p-6 rounded border">
-          <h3 className="font-bold mb-2">Tamanho Mínimo</h3>
+        <div className="bg-gray-50 p-4 rounded border">
+          <h3 className="font-bold mb-1">Tamanho Mínimo</h3>
           <p className="text-gray-600 text-sm">{data.logo.minimumSize}</p>
         </div>
         {data.logo.favicon && (
-          <div className="bg-gray-50 p-6 rounded border">
-            <h3 className="font-bold mb-2">Favicon / App Icon</h3>
+          <div className="bg-gray-50 p-4 rounded border">
+            <h3 className="font-bold mb-1">Favicon / App Icon</h3>
             <p className="text-gray-600 text-sm">{data.logo.favicon}</p>
           </div>
         )}
       </div>
 
       {/* Incorrect usages */}
-      <div className="bg-red-50 border border-red-100 p-6 rounded-lg">
+      <div className="bg-red-50 border border-red-100 p-4 rounded-lg">
         <h3 className="font-bold text-red-800 mb-4">Usos Incorretos</h3>
         <ul className="list-disc pl-5 text-red-700 space-y-1">
           {data.logo.incorrectUsages.map((u, i) => <li key={i}>{u}</li>)}

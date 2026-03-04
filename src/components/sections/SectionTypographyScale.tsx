@@ -13,8 +13,8 @@ export function SectionTypographyScale({ data, num }: { data: BrandbookData; num
   };
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Escala Tipográfica</h2>
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Escala Tipográfica</h2>
 
       <div className="bg-white border rounded-xl overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b">
@@ -24,7 +24,7 @@ export function SectionTypographyScale({ data, num }: { data: BrandbookData; num
 
         <div className="divide-y">
           {data.typographyScale.map((t, i) => (
-            <div key={i} className="px-6 py-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div key={i} className="px-5 py-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-1">
                 <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t.name}</div>
                 <div className="text-sm text-gray-600 mt-1">Role: <span className="font-mono">{t.fontRole}</span></div>

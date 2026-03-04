@@ -3,20 +3,20 @@ import { BrandbookData, Typography } from "@/lib/types";
 
 function TypoCard({ title, typo }: { title: string; typo: Typography }) {
   return (
-    <div className="bg-gray-50 p-8 rounded-lg border">
+    <div className="bg-gray-50 p-5 rounded-lg border">
       <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">{title}</h3>
-      <div className="text-4xl font-bold mb-1" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
+      <div className="text-2xl font-bold mb-1" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
         {typo.name}
       </div>
       {typo.category && (
         <span className="inline-block text-[10px] font-semibold bg-gray-200 text-gray-600 px-2 py-0.5 rounded mb-3">{typo.category}</span>
       )}
-      <div className="text-gray-400 text-sm mb-4">Aa Bb Cc 0123456789 !@#</div>
-      <div className="mb-3">
+      <div className="text-gray-400 text-sm mb-3">Aa Bb Cc 0123456789 !@#</div>
+      <div className="mb-2">
         <span className="text-xs font-bold text-gray-500 uppercase">Uso: </span>
         <span className="text-sm">{typo.usage}</span>
       </div>
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap gap-2 mb-2">
         {typo.weights.map((w, i) => (
           <span key={i} className="bg-gray-200 text-xs px-2 py-1 rounded">{w}</span>
         ))}
@@ -49,9 +49,9 @@ export function SectionTypography({ data, num }: { data: BrandbookData; num: num
   const advancedCols = advancedTypos.length >= 3 ? "md:grid-cols-3" : advancedTypos.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1";
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Tipografia</h2>
-      <div className={`grid grid-cols-1 ${isAdvanced ? advancedCols : "md:grid-cols-2"} gap-8`}>
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Tipografia</h2>
+      <div className={`grid grid-cols-1 ${isAdvanced ? advancedCols : "md:grid-cols-2"} gap-5`}>
         {isAdvanced ? (
           <>
             {advancedTypos.map(({ title, typo }) => (

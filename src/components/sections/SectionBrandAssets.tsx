@@ -34,15 +34,15 @@ export function SectionBrandAssets({ num, uploadedAssets }: Props) {
   if (groups.length === 0) return null;
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-2 border-b pb-4">
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-2 border-b pb-3">
         {String(num).padStart(2, "0")}. Ativos de Marca
       </h2>
-      <p className="text-sm text-gray-500 mb-10">
+      <p className="text-sm text-gray-500 mb-6">
         Arquivos de identidade enviados — logos, mascotes, elementos, padrões e referências.
       </p>
 
-      <div className="space-y-12">
+      <div className="space-y-8">
         {groups.map(({ type, meta, assets }) => (
           <div key={type}>
             <div className="flex items-center gap-3 mb-5 border-b pb-3">

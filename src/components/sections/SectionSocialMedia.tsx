@@ -34,19 +34,19 @@ export function SectionSocialMedia({ data, num }: { data: BrandbookData; num: nu
   const sg = data.socialMediaGuidelines;
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Guia de Redes Sociais</h2>
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Guia de Redes Sociais</h2>
 
       {(sg.brandVoiceAdaptation || sg.globalHashtagStrategy) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {sg.brandVoiceAdaptation && (
-            <div className="bg-gray-50 border rounded-xl p-6">
+            <div className="bg-gray-50 border rounded-xl p-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Adaptação de Voz por Canal</h3>
               <p className="text-gray-700 text-sm leading-relaxed">{sg.brandVoiceAdaptation}</p>
             </div>
           )}
           {sg.globalHashtagStrategy && (
-            <div className="bg-gray-50 border rounded-xl p-6">
+            <div className="bg-gray-50 border rounded-xl p-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Estratégia Global de Hashtags</h3>
               <p className="text-gray-700 text-sm leading-relaxed">{sg.globalHashtagStrategy}</p>
             </div>
@@ -54,10 +54,10 @@ export function SectionSocialMedia({ data, num }: { data: BrandbookData; num: nu
         </div>
       )}
 
-      <div className="space-y-8">
+      <div className="space-y-5">
         {sg.platforms.map((platform, i) => (
           <div key={i} className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-            <div className="px-6 py-5 bg-gray-900 text-white flex items-center justify-between">
+            <div className="px-5 py-4 bg-gray-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{platformIcon(platform.platform)}</span>
                 <div>
@@ -72,7 +72,7 @@ export function SectionSocialMedia({ data, num }: { data: BrandbookData; num: nu
               )}
             </div>
 
-            <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-5">
               <div className="lg:col-span-2 space-y-5">
                 <div>
                   <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tom neste canal</div>

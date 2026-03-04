@@ -50,12 +50,12 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
   const hasMascotImage = !!(generatedImages["brand_mascot"] || uploadedMascots.length > 0);
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">
         {String(num).padStart(2, "0")}. Entrega — Asset Pack (Arquivos Prontos)
       </h2>
 
-      <div className="bg-white border rounded-xl p-5 shadow-sm mb-8">
+      <div className="bg-white border rounded-xl p-5 shadow-sm mb-5">
         <div className="flex items-start justify-between gap-4 flex-col md:flex-row">
           <div>
             <h3 className="font-bold text-gray-900">O que você recebe</h3>
@@ -75,7 +75,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-50 border rounded-xl p-5">
           <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Logo</div>
           <div className="mt-1 text-sm font-semibold text-gray-900">{hasLogo ? "OK" : "Pendente"}</div>
@@ -93,7 +93,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white border rounded-xl p-5 shadow-sm">
           <h3 className="font-bold text-gray-900">Vetor — Ícones</h3>
           <p className="text-xs text-gray-500 mt-1">{byBucket.icons.length} arquivos</p>
@@ -201,7 +201,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
         </div>
       </div>
 
-      <div className="mt-10 bg-gray-50 border rounded-xl p-5">
+      <div className="mt-6 bg-gray-50 border rounded-xl p-5">
         <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Notas</div>
         <div className="mt-2 text-sm text-gray-700 leading-relaxed">
           Este pack é gerado a partir do estilo descrito no brandbook ({data.brandName}). Para handoff, exporte o ZIP na aba Exportar — ele inclui estes arquivos.

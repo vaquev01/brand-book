@@ -7,23 +7,23 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
   const v = data.verbalIdentity;
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Identidade Verbal &amp; Mensagens</h2>
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Identidade Verbal &amp; Mensagens</h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-gray-900 text-white rounded-xl p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-gray-900 text-white rounded-xl p-5">
             <div className="text-xs uppercase tracking-widest text-gray-300 font-bold mb-2">Tagline</div>
             <div className="text-3xl font-extrabold leading-tight">{v.tagline}</div>
-            <div className="mt-6 text-xs uppercase tracking-widest text-gray-300 font-bold mb-2">One-liner</div>
+            <div className="mt-4 text-xs uppercase tracking-widest text-gray-300 font-bold mb-1">One-liner</div>
             <div className="text-lg text-gray-100">{v.oneLiner}</div>
           </div>
 
-          <div className="bg-white border rounded-xl p-6">
+          <div className="bg-white border rounded-xl p-4">
             <h3 className="font-bold mb-3">Pilares de Mensagem</h3>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {v.messagingPillars.map((p, i) => (
-                <div key={i} className="bg-gray-50 border rounded-lg p-5">
+                <div key={i} className="bg-gray-50 border rounded-lg p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">Pilar {i + 1}</div>
@@ -59,8 +59,8 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white border rounded-xl p-6">
+        <div className="space-y-4">
+          <div className="bg-white border rounded-xl p-4">
             <h3 className="font-bold mb-3">Traços de Voz</h3>
             <div className="flex flex-wrap gap-2">
               {v.brandVoiceTraits.map((t, i) => (
@@ -69,7 +69,7 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
             </div>
           </div>
 
-          <div className="bg-white border rounded-xl p-6">
+          <div className="bg-white border rounded-xl p-4">
             <h3 className="font-bold mb-3">Vocabulário</h3>
             <div className="mb-4">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Preferir</div>
@@ -89,7 +89,7 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
             </div>
           </div>
 
-          <div className="bg-white border rounded-xl p-6">
+          <div className="bg-white border rounded-xl p-4">
             <h3 className="font-bold mb-3">Do / Don&apos;t</h3>
             <div className="grid grid-cols-1 gap-4">
               <div>
@@ -111,7 +111,7 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
             </div>
           </div>
 
-          <div className="bg-white border rounded-xl p-6">
+          <div className="bg-white border rounded-xl p-4">
             <h3 className="font-bold mb-3">Biblioteca Rápida</h3>
             <div className="mb-4">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Headlines</div>
@@ -134,8 +134,8 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
       </div>
 
       {v.tonePerChannel && v.tonePerChannel.length > 0 && (
-        <div className="mt-10">
-          <h3 className="text-xl font-bold mb-4">Tom de Voz por Canal</h3>
+        <div className="mt-6">
+          <h3 className="text-base font-bold mb-3">Tom de Voz por Canal</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {v.tonePerChannel.map((t, i) => (
               <div key={i} className="bg-white border rounded-xl p-5 space-y-3">

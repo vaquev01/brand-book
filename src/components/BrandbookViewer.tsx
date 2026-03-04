@@ -264,15 +264,15 @@ export function BrandbookViewer({
       <FontLoader data={data} />
       <SectionCover data={data} />
 
-      <section className="page-break mb-16" id="sumario">
-        <div className="mb-8 border-b pb-4">
-          <h2 className="text-3xl font-bold">Sumário</h2>
+      <section className="page-break mb-10" id="sumario">
+        <div className="mb-5 border-b pb-3">
+          <h2 className="text-2xl font-bold">Sumário</h2>
           <p className="text-gray-600 mt-2">
             Navegue por categorias e vá direto à seção desejada.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {byCategory.map((g) => (
             <div key={g.cat} className="bg-white border rounded-xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">
@@ -301,7 +301,7 @@ export function BrandbookViewer({
 
       {byCategory.map((g) => (
         <div key={g.cat}>
-          <div className="page-break mb-8 mt-12">
+          <div className="page-break mb-5 mt-8">
             <div className="flex items-center justify-between border-b pb-3">
               <h2 className="text-xl font-bold text-gray-900">{g.cat}</h2>
               <a href="#sumario" className="no-print text-sm font-semibold text-gray-600 hover:text-gray-900">

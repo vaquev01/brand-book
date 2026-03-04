@@ -5,12 +5,12 @@ export function SectionTokensA11y({ data, num }: { data: BrandbookData; num: num
   if (!data.designTokens || !data.accessibility) return null;
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Design Tokens &amp; Acessibilidade</h2>
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Design Tokens &amp; Acessibilidade</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <h3 className="text-xl font-bold mb-4">Acessibilidade (WCAG 2.2)</h3>
+          <h3 className="text-base font-bold mb-3">Acessibilidade (WCAG 2.2)</h3>
           <div className="space-y-4">
             <div className="bg-white p-4 rounded border-l-4 border-indigo-500 shadow-sm">
               <h4 className="font-bold text-sm text-indigo-900 mb-1">Contraste Rigoroso</h4>
@@ -28,8 +28,8 @@ export function SectionTokensA11y({ data, num }: { data: BrandbookData; num: num
         </div>
 
         <div>
-          <h3 className="text-xl font-bold mb-4">Design Tokens</h3>
-          <div className="bg-gray-900 text-gray-100 p-6 rounded-lg font-mono text-sm space-y-6">
+          <h3 className="text-base font-bold mb-3">Design Tokens</h3>
+          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm space-y-4">
             <div>
               <span className="text-blue-400 block mb-2">{"// Spacing Tokens"}</span>
               <ul className="space-y-1">

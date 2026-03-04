@@ -7,28 +7,28 @@ export function SectionUiGuidelines({ data, num }: { data: BrandbookData; num: n
   const ui = data.uiGuidelines;
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Guidelines de UI</h2>
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Guidelines de UI</h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-gray-50 border rounded-xl p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-1 space-y-4">
+          <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Layout / Grid</div>
             <p className="text-sm text-gray-700">{ui.layoutGrid}</p>
           </div>
-          <div className="bg-gray-50 border rounded-xl p-6">
+          <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Densidade</div>
             <p className="text-sm text-gray-700">{ui.spacingDensity}</p>
           </div>
-          <div className="bg-gray-50 border rounded-xl p-6">
+          <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Iconografia</div>
             <p className="text-sm text-gray-700">{ui.iconographyStyle}</p>
           </div>
-          <div className="bg-gray-50 border rounded-xl p-6">
+          <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Ilustração</div>
             <p className="text-sm text-gray-700">{ui.illustrationStyle}</p>
           </div>
-          <div className="bg-gray-50 border rounded-xl p-6">
+          <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">DataViz</div>
             <p className="text-sm text-gray-700">{ui.dataVizGuidelines}</p>
           </div>
@@ -42,15 +42,15 @@ export function SectionUiGuidelines({ data, num }: { data: BrandbookData; num: n
             </div>
             <div className="divide-y">
               {ui.components.map((c, i) => (
-                <div key={i} className="px-6 py-5">
+                <div key={i} className="px-5 py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="text-lg font-bold">{c.name}</div>
+                      <div className="text-base font-bold">{c.name}</div>
                       <p className="text-sm text-gray-600 mt-1">{c.usage}</p>
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Estados</div>
                       <div className="flex flex-wrap gap-2">

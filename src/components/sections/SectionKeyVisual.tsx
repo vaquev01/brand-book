@@ -9,19 +9,19 @@ export function SectionKeyVisual({ data, num }: { data: BrandbookData; num: numb
   const hasAssetCategories = hasFlora || hasFauna || hasObjects;
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Key Visual &amp; Linguagem Gráfica</h2>
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Key Visual &amp; Linguagem Gráfica</h2>
 
       {data.keyVisual.compositionPhilosophy && (
-        <div className="bg-gradient-to-r from-gray-50 to-white border rounded-xl p-6 mb-10">
+        <div className="bg-gradient-to-r from-gray-50 to-white border rounded-xl p-4 mb-6">
           <h3 className="font-bold mb-2 text-sm uppercase tracking-wider text-gray-500">Filosofia de Composição</h3>
           <p className="text-gray-700">{data.keyVisual.compositionPhilosophy}</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
         <div>
-          <h3 className="text-lg font-bold mb-4">Elementos Gráficos</h3>
+          <h3 className="text-base font-bold mb-3">Elementos Gráficos</h3>
           <ul className="space-y-3">
             {data.keyVisual.elements.map((e, i) => (
               <li key={i} className="flex items-start gap-3">
@@ -32,28 +32,28 @@ export function SectionKeyVisual({ data, num }: { data: BrandbookData; num: numb
           </ul>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-gray-50 p-6 rounded-lg border">
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg border">
             <h3 className="font-bold mb-2">Estilo Fotográfico</h3>
             <p className="text-gray-600 text-sm">{data.keyVisual.photographyStyle}</p>
           </div>
 
           {isAdvanced && data.keyVisual.iconography && (
-            <div className="bg-gray-50 p-6 rounded-lg border">
+            <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="font-bold mb-2">Iconografia</h3>
               <p className="text-gray-600 text-sm">{data.keyVisual.iconography}</p>
             </div>
           )}
 
           {isAdvanced && data.keyVisual.illustrations && (
-            <div className="bg-gray-50 p-6 rounded-lg border">
+            <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="font-bold mb-2">Ilustrações</h3>
               <p className="text-gray-600 text-sm">{data.keyVisual.illustrations}</p>
             </div>
           )}
 
           {isAdvanced && data.keyVisual.marketingArchitecture && (
-            <div className="bg-gray-50 p-6 rounded-lg border">
+            <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="font-bold mb-2">Arquitetura de Marketing</h3>
               <p className="text-gray-600 text-sm">{data.keyVisual.marketingArchitecture}</p>
             </div>

@@ -40,9 +40,9 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
   const totalGenerated = Object.keys(generatedImages).length;
 
   return (
-    <section className="page-break mb-16">
-      <div className="flex items-center justify-between mb-8 border-b pb-4">
-        <h2 className="text-3xl font-bold">{String(num).padStart(2, "0")}. Aplicações</h2>
+    <section className="page-break mb-10">
+      <div className="flex items-center justify-between mb-5 border-b pb-3">
+        <h2 className="text-2xl font-bold">{String(num).padStart(2, "0")}. Aplicações</h2>
         {onGoToImages && (
           <button
             onClick={onGoToImages}
@@ -65,7 +65,7 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {data.applications.map((app, i) => {
           const aiImage = findImage(app, generatedImages);
           const selectId = `application-image-key-${i}`;
@@ -95,11 +95,11 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
                   </div>
                 )}
               </div>
-              <div className="p-5">
-                <h3 className="font-bold text-lg mb-2">{app.type}</h3>
-                <p className="text-gray-600 text-sm mb-3">{app.description}</p>
+              <div className="p-4">
+                <h3 className="font-bold mb-1">{app.type}</h3>
+                <p className="text-gray-600 text-sm mb-2">{app.description}</p>
                 {(app.dimensions || app.materialSpecs || app.layoutGuidelines || app.typographyHierarchy || app.artDirection || app.substrates) && (
-                  <div className="space-y-2 mb-3 border-t pt-3">
+                  <div className="space-y-1 mb-2 border-t pt-2">
                     {app.dimensions && (
                       <div className="text-xs"><span className="font-semibold text-gray-700">Dimensões:</span> <span className="text-gray-600 font-mono">{app.dimensions}</span></div>
                     )}
@@ -125,7 +125,7 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
                   </div>
                 )}
                 {onUpdateApplicationImageKey && totalGenerated > 0 && (
-                  <div className="no-print mt-4 border-t pt-4">
+                  <div className="no-print mt-3 border-t pt-3">
                     <label
                       htmlFor={selectId}
                       className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2"

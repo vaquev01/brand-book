@@ -18,21 +18,21 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
   const uploadedPatterns = uploadedAssets.filter((a) => a.type === "pattern");
 
   return (
-    <section className="page-break mb-16">
-      <h2 className="text-3xl font-bold mb-8 border-b pb-4">
+    <section className="page-break mb-10">
+      <h2 className="text-2xl font-bold mb-5 border-b pb-3">
         {String(num).padStart(2, "0")}. Mascotes, Símbolos &amp; Padrões
       </h2>
 
       {mascots.length > 0 && (
-        <div className="mb-12">
-          <h3 className="text-lg font-bold mb-6">Mascotes &amp; Personagens</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="mb-6">
+          <h3 className="text-base font-bold mb-4">Mascotes &amp; Personagens</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {mascots.map((mascot, i) => {
               const uploadedImg = uploadedMascots[i] ?? null;
               return (
                 <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm">
                   {uploadedImg ? (
-                    <div className="h-52 bg-gray-50 flex items-center justify-center p-4">
+                    <div className="h-40 bg-gray-50 flex items-center justify-center p-4">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={uploadedImg.dataUrl}
@@ -41,18 +41,18 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
                       />
                     </div>
                   ) : (
-                    <div className="h-52 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400">
+                    <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400">
                       <span className="text-5xl mb-2">🐾</span>
                       <span className="text-xs font-medium">Suba uma imagem do mascote na aba Assets</span>
                     </div>
                   )}
-                  <div className="p-5">
-                    <h4 className="text-xl font-bold mb-1">{mascot.name}</h4>
-                    <div className="mb-4">
+                  <div className="p-4">
+                    <h4 className="text-lg font-bold mb-1">{mascot.name}</h4>
+                    <div className="mb-3">
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Descrição Visual</span>
                       <p className="text-gray-700 text-sm mt-1">{mascot.description}</p>
                     </div>
-                    <div className="mb-4 bg-gray-50 p-3 rounded-lg border">
+                    <div className="mb-3 bg-gray-50 p-3 rounded-lg border">
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Personalidade</span>
                       <p className="text-gray-700 text-sm mt-1">{mascot.personality}</p>
                     </div>
@@ -76,8 +76,8 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
       )}
 
       {uploadedMascots.length > mascots.length && (
-        <div className="mb-12">
-          <h3 className="text-lg font-bold mb-4">Mascotes Enviados</h3>
+        <div className="mb-6">
+          <h3 className="text-base font-bold mb-3">Mascotes Enviados</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {uploadedMascots.slice(mascots.length).map((asset) => (
               <div key={asset.id} className="bg-gray-50 border rounded-lg overflow-hidden">
@@ -93,7 +93,7 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {symbols.length > 0 && (
           <div>
             <h3 className="text-lg font-bold mb-4">Símbolos Identitários</h3>
