@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
         const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
         const useGemini = provider === "gemini";
         const resolvedGoogleModel = useGemini ? resolveGoogleTextModel(googleModel) : "";
-        const resolvedGoogleJsonModel = useGemini ? resolveGoogleTextModel("gemini-1.5-flash") : "";
+        const resolvedGoogleJsonModel = useGemini ? resolveGoogleTextModel("gemini-2.0-flash-lite") : "";
         const ESTIMATED_CHARS = 13000;
 
         const firstPhase = hasLogoImage

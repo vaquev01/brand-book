@@ -48,8 +48,8 @@ export function loadApiKeys(): ApiKeys {
       ? rawGoogleTextModel.slice("models/".length)
       : rawGoogleTextModel;
     const lower = m.toLowerCase();
-    if (lower === "gemini-2.0-flash" || lower.startsWith("imagen") || lower.includes("image-preview")) {
-      keys.googleTextModel = "gemini-1.5-flash";
+    if (lower === "gemini-2.0-flash" || lower === "gemini-1.5-flash" || lower.startsWith("imagen") || lower.includes("image-preview")) {
+      keys.googleTextModel = "gemini-2.0-flash-lite";
     } else {
       keys.googleTextModel = m;
     }
@@ -74,8 +74,8 @@ export function saveApiKeys(keys: ApiKeys) {
       ? rawGoogleTextModel.slice("models/".length)
       : rawGoogleTextModel;
     const lower = m.toLowerCase();
-    next.googleTextModel = (lower === "gemini-2.0-flash" || lower.startsWith("imagen") || lower.includes("image-preview"))
-      ? "gemini-1.5-flash"
+    next.googleTextModel = (lower === "gemini-2.0-flash" || lower === "gemini-1.5-flash" || lower.startsWith("imagen") || lower.includes("image-preview"))
+      ? "gemini-2.0-flash-lite"
       : m;
   }
 
