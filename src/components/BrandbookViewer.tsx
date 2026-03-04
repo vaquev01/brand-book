@@ -20,6 +20,7 @@ import { SectionProductionGuidelines } from "./sections/SectionProductionGuideli
 import { SectionBrandStory } from "./sections/SectionBrandStory";
 import { SectionSocialMedia } from "./sections/SectionSocialMedia";
 import { SectionAssetPack } from "./sections/SectionAssetPack";
+import { SectionBrandAssets } from "./sections/SectionBrandAssets";
 import { FontLoader } from "./FontLoader";
 import type { AssetKey } from "@/lib/imagePrompts";
 import type { AssetPackFile } from "@/lib/types";
@@ -180,6 +181,18 @@ export function BrandbookViewer({
           assetPackFiles={assetPackFiles}
           generating={assetPackGenerating}
           onGenerate={onGenerateAssetPack}
+        />
+      ),
+    },
+    {
+      id: "brand-assets",
+      title: "Ativos de Marca",
+      category: "Identidade Visual",
+      when: uploadedAssets.length > 0,
+      render: (num) => (
+        <SectionBrandAssets
+          num={num}
+          uploadedAssets={uploadedAssets}
         />
       ),
     },

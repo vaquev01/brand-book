@@ -50,20 +50,33 @@ function LogoCard({
   );
 }
 
+function isUrl(s: string): boolean {
+  return /^https?:\/\//.test(s) || s.startsWith("data:");
+}
+
+function textOrNull(s: string | undefined): string | null {
+  if (!s) return null;
+  if (isUrl(s)) return null;
+  return s;
+}
+
 export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGoToImages }: Props) {
   const uploadedLogos = uploadedAssets.filter((a) => a.type === "logo");
 
   const logoPrimary = generatedImages["logo_primary"] || uploadedLogos[0]?.dataUrl || null;
   const logoDarkBg = generatedImages["logo_dark_bg"] || uploadedLogos[1]?.dataUrl || null;
 
+  const secondaryText = textOrNull(data.logo.secondary);
+  const symbolText = textOrNull(data.logo.symbol);
+
   const variants = data.logoVariants;
   const variantEntries: { label: string; key: string; desc?: string }[] = [];
-  if (variants?.horizontal) variantEntries.push({ label: "Horizontal", key: "horizontal", desc: variants.horizontal });
-  if (variants?.stacked) variantEntries.push({ label: "Stacked (Vertical)", key: "stacked", desc: variants.stacked });
-  if (variants?.mono) variantEntries.push({ label: "Monocromático", key: "mono", desc: variants.mono });
-  if (variants?.negative) variantEntries.push({ label: "Negativo", key: "negative", desc: variants.negative });
-  if (variants?.markOnly) variantEntries.push({ label: "Símbolo (Mark Only)", key: "markOnly", desc: variants.markOnly });
-  if (variants?.wordmarkOnly) variantEntries.push({ label: "Wordmark Only", key: "wordmarkOnly", desc: variants.wordmarkOnly });
+  if (variants?.horizontal && !isUrl(variants.horizontal)) variantEntries.push({ label: "Horizontal", key: "horizontal", desc: variants.horizontal });
+  if (variants?.stacked && !isUrl(variants.stacked)) variantEntries.push({ label: "Stacked (Vertical)", key: "stacked", desc: variants.stacked });
+  if (variants?.mono && !isUrl(variants.mono)) variantEntries.push({ label: "Monocromático", key: "mono", desc: variants.mono });
+  if (variants?.negative && !isUrl(variants.negative)) variantEntries.push({ label: "Negativo", key: "negative", desc: variants.negative });
+  if (variants?.markOnly && !isUrl(variants.markOnly)) variantEntries.push({ label: "Símbolo (Mark Only)", key: "markOnly", desc: variants.markOnly });
+  if (variants?.wordmarkOnly && !isUrl(variants.wordmarkOnly)) variantEntries.push({ label: "Wordmark Only", key: "wordmarkOnly", desc: variants.wordmarkOnly });
 
   return (
     <section className="page-break mb-16">
@@ -90,26 +103,28 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
       </div>
 
       {/* Logo description cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        {data.logo.secondary && (
-          <div className="bg-white border rounded-xl p-5 shadow-sm">
-            <div className="flex items-start gap-3 mb-2">
-              <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
-              <h4 className="font-bold text-gray-900">Logo Secundário</h4>
+      {(secondaryText || symbolText) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          {secondaryText && (
+            <div className="bg-white border rounded-xl p-5 shadow-sm">
+              <div className="flex items-start gap-3 mb-2">
+                <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                <h4 className="font-bold text-gray-900">Logo Secundário</h4>
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed">{secondaryText}</p>
             </div>
-            <p className="text-gray-600 text-sm leading-relaxed">{data.logo.secondary}</p>
-          </div>
-        )}
-        {data.logo.symbol && (
-          <div className="bg-white border rounded-xl p-5 shadow-sm">
-            <div className="flex items-start gap-3 mb-2">
-              <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">◆</span>
-              <h4 className="font-bold text-gray-900">Símbolo / Ícone</h4>
+          )}
+          {symbolText && (
+            <div className="bg-white border rounded-xl p-5 shadow-sm">
+              <div className="flex items-start gap-3 mb-2">
+                <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">◆</span>
+                <h4 className="font-bold text-gray-900">Símbolo / Ícone</h4>
+              </div>
+              <p className="text-gray-600 text-sm leading-relaxed">{symbolText}</p>
             </div>
-            <p className="text-gray-600 text-sm leading-relaxed">{data.logo.symbol}</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Logo variants */}
       {variantEntries.length > 0 && (
