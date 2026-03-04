@@ -8,6 +8,17 @@ import { slugify } from "@/lib/common";
 
 export const runtime = "nodejs";
 
+export async function GET() {
+  return NextResponse.json(
+    {
+      ok: true,
+      endpoint: "/api/export-pack",
+      method: "POST",
+    },
+    { status: 200 }
+  );
+}
+
 function extFromContentType(ct: string | null): string {
   const c = (ct ?? "").toLowerCase();
   if (c.includes("image/png")) return "png";

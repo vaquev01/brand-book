@@ -11,6 +11,17 @@ export const runtime = "nodejs";
 
 type TextProvider = "openai" | "gemini";
 
+export async function GET() {
+  return NextResponse.json(
+    {
+      ok: true,
+      endpoint: "/api/generate-asset-pack",
+      method: "POST",
+    },
+    { status: 200 }
+  );
+}
+
 function safeRelPath(path: string): string | null {
   const p = path.replace(/\\/g, "/").trim();
   if (!p) return null;
