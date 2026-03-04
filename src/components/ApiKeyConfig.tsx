@@ -44,15 +44,9 @@ export function loadApiKeys(): ApiKeys {
 
   const rawGoogleTextModel = keys.googleTextModel?.trim();
   if (rawGoogleTextModel) {
-    const m = rawGoogleTextModel.startsWith("models/")
+    keys.googleTextModel = rawGoogleTextModel.startsWith("models/")
       ? rawGoogleTextModel.slice("models/".length)
       : rawGoogleTextModel;
-    const lower = m.toLowerCase();
-    if (lower === "gemini-2.0-flash" || lower === "gemini-1.5-flash" || lower.startsWith("imagen") || lower.includes("image-preview")) {
-      keys.googleTextModel = "gemini-2.0-flash-lite";
-    } else {
-      keys.googleTextModel = m;
-    }
   }
 
   const rawGoogleImageModel = keys.googleImageModel?.trim();
@@ -70,13 +64,9 @@ export function saveApiKeys(keys: ApiKeys) {
   const next = { ...keys };
   const rawGoogleTextModel = next.googleTextModel?.trim();
   if (rawGoogleTextModel) {
-    const m = rawGoogleTextModel.startsWith("models/")
+    next.googleTextModel = rawGoogleTextModel.startsWith("models/")
       ? rawGoogleTextModel.slice("models/".length)
       : rawGoogleTextModel;
-    const lower = m.toLowerCase();
-    next.googleTextModel = (lower === "gemini-2.0-flash" || lower === "gemini-1.5-flash" || lower.startsWith("imagen") || lower.includes("image-preview"))
-      ? "gemini-2.0-flash-lite"
-      : m;
   }
 
   const rawGoogleImageModel = next.googleImageModel?.trim();
