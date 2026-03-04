@@ -616,7 +616,12 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
               const activeKey = `app_${i}_${activeVariant}`;
               const activeGenerated = generatedAssets[activeKey];
               const isAnyLoading = variants.some((v) => loadingKey === `app_${i}_${v.aspectRatio}`);
-              const appPrompt = buildApplicationPrompt(app, data, provider, (activeVariant ?? "1:1") as AspectRatioOption);
+              let appPrompt = "";
+              try {
+                appPrompt = buildApplicationPrompt(app, data, provider, (activeVariant ?? "1:1") as AspectRatioOption);
+              } catch {
+                appPrompt = "(erro ao gerar prompt)";
+              }
 
               const aspectClass2 = (r: string) => {
                 if (r === "9:16") return "aspect-[9/16]";
