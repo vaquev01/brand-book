@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
-import type { BrandbookData, GeneratedAsset } from "@/lib/types";
+import type { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { slugify } from "@/lib/common";
 
 export const runtime = "nodejs";
@@ -18,7 +18,7 @@ function extFromContentType(ct: string | null): string {
 }
 
 function decodeDataUrl(dataUrl: string): { bytes: Uint8Array; ext: string } | null {
-  const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
+  const m = /^data:([a-zA-Z0-9.+-]+\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
   if (!m) return null;
   const mime = m[1].toLowerCase();
   const base64 = m[2];
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as {
       brandbookData?: unknown;
       generatedAssets?: GeneratedAsset[];
+      uploadedAssets?: UploadedAsset[];
     };
 
     if (!body.brandbookData) {
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
 
     const brandbookData = base.data as unknown as BrandbookData;
     const assets = Array.isArray(body.generatedAssets) ? body.generatedAssets : [];
+    const uploadedAssets = Array.isArray(body.uploadedAssets) ? body.uploadedAssets : [];
 
     const slug = slugify(brandbookData.brandName);
     const zip = new JSZip();
@@ -110,6 +112,56 @@ export async function POST(request: NextRequest) {
       } else {
         failedFolder.file(`${baseName}.url.txt`, a.url + "\n");
         failedFolder.file(`${baseName}.prompt.txt`, a.prompt + "\n");
+      }
+    }
+
+    if (uploadedAssets.length > 0) {
+      zip.file(
+        "uploaded/manifest.json",
+        JSON.stringify(
+          {
+            exportedAt: new Date().toISOString(),
+            assets: uploadedAssets,
+          },
+          null,
+          2
+        )
+      );
+
+      const uploadedFolder = zip.folder("uploaded")!;
+      const uploadedFailedFolder = zip.folder("uploaded/failed")!;
+
+      for (const u of uploadedAssets) {
+        const safeType = String(u.type || "other").replace(/[^a-zA-Z0-9._-]/g, "_") || "other";
+        const safeId = String(u.id || "").replace(/[^a-zA-Z0-9._-]/g, "_");
+        const safeName = String(u.name || "asset").replace(/[^a-zA-Z0-9._-]/g, "_") || "asset";
+
+        const baseName = [slug, safeType, safeName, safeId].filter(Boolean).join("_").slice(0, 140);
+
+        let bytes: Uint8Array | null = null;
+        let ext = "png";
+
+        if (typeof u.dataUrl === "string" && u.dataUrl.startsWith("data:")) {
+          const decoded = decodeDataUrl(u.dataUrl);
+          if (decoded) {
+            bytes = decoded.bytes;
+            ext = decoded.ext;
+          }
+        } else if (typeof u.dataUrl === "string" && u.dataUrl.startsWith("http")) {
+          const fetched = await fetchBytes(u.dataUrl).catch(() => null);
+          if (fetched) {
+            bytes = fetched.bytes;
+            ext = fetched.ext;
+          }
+        }
+
+        if (bytes) {
+          uploadedFolder.file(`${safeType}/${baseName}.${ext}`, bytes);
+          uploadedFolder.file(`${safeType}/${baseName}.meta.json`, JSON.stringify(u, null, 2) + "\n");
+        } else {
+          uploadedFailedFolder.file(`${baseName}.dataUrl.txt`, String(u.dataUrl || "") + "\n");
+          uploadedFailedFolder.file(`${baseName}.meta.json`, JSON.stringify(u, null, 2) + "\n");
+        }
       }
     }
 

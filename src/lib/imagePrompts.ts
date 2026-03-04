@@ -848,3 +848,131 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
     }
   }
 }
+
+export type AspectRatioOption = "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
+
+export interface SizeVariant {
+  label: string;
+  aspectRatio: AspectRatioOption;
+  dims?: string;
+}
+
+export function detectSizeVariants(appType: string): SizeVariant[] {
+  const t = appType.toLowerCase();
+
+  if (/story|stories|reels/.test(t))
+    return [
+      { label: "Stories 9:16", aspectRatio: "9:16", dims: "1080×1920px" },
+      { label: "Feed 1:1", aspectRatio: "1:1", dims: "1080×1080px" },
+    ];
+
+  if (/instagram|social|post|feed|redes/.test(t))
+    return [
+      { label: "Feed 1:1", aspectRatio: "1:1", dims: "1080×1080px" },
+      { label: "Stories 9:16", aspectRatio: "9:16", dims: "1080×1920px" },
+      { label: "Cover 16:9", aspectRatio: "16:9", dims: "1200×630px" },
+    ];
+
+  if (/outdoor|billboard|ooh|fachada|totem/.test(t))
+    return [
+      { label: "Outdoor 16:9", aspectRatio: "16:9", dims: "9×3m" },
+      { label: "Banner 21:9", aspectRatio: "21:9", dims: "6×2m" },
+      { label: "Totem 9:16", aspectRatio: "9:16", dims: "120×180cm" },
+    ];
+
+  if (/email|newsletter|mailing/.test(t))
+    return [
+      { label: "Header 21:9", aspectRatio: "21:9", dims: "600×200px" },
+      { label: "Banner 16:9", aspectRatio: "16:9", dims: "600×338px" },
+    ];
+
+  if (/card|cartão|visita|business/.test(t))
+    return [
+      { label: "Padrão 16:9", aspectRatio: "16:9", dims: "85×55mm" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "60×60mm" },
+    ];
+
+  if (/\bapp\b|mobile|interface|tela|screen|dashboard/.test(t))
+    return [
+      { label: "Mobile 9:16", aspectRatio: "9:16", dims: "375×812px" },
+      { label: "Desktop 16:9", aspectRatio: "16:9", dims: "1440×900px" },
+    ];
+
+  if (/banner|hero|site|web|landing|header|cover|capa/.test(t))
+    return [
+      { label: "Hero 16:9", aspectRatio: "16:9", dims: "1440×810px" },
+      { label: "Banner 21:9", aspectRatio: "21:9", dims: "1440×614px" },
+      { label: "Vertical 9:16", aspectRatio: "9:16", dims: "810×1440px" },
+    ];
+
+  if (/embalagem|packaging|sacola|caixa|bag|pote|copo|delivery/.test(t))
+    return [
+      { label: "Kit 4:3", aspectRatio: "4:3", dims: "800×600px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/uniforme|camiseta|avental|camisa|uniform|apron/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+    ];
+
+  if (/menu|cardápio|folder|brochure|papelaria|colateral/.test(t))
+    return [
+      { label: "A4 4:3", aspectRatio: "4:3", dims: "210×297mm" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "210×210mm" },
+    ];
+
+  return [
+    { label: "Quadrado 1:1", aspectRatio: "1:1" },
+    { label: "Paisagem 16:9", aspectRatio: "16:9" },
+    { label: "Vertical 9:16", aspectRatio: "9:16" },
+  ];
+}
+
+export function buildApplicationPrompt(
+  app: {
+    type: string;
+    description: string;
+    dimensions?: string;
+    materialSpecs?: string;
+    layoutGuidelines?: string;
+    typographyHierarchy?: string;
+    artDirection?: string;
+    substrates?: string[];
+  },
+  data: BrandbookData,
+  provider: ImageProvider,
+  aspectRatio: AspectRatioOption = "1:1"
+): string {
+  const ctx = extractBrandContext(data);
+  const B = `"${data.brandName}"`;
+  const baseKey = "brand_collateral" as AssetKey;
+  const q = providerQuality(provider, baseKey);
+  const prefix = providerPrefix(provider, baseKey) + consistencyPrefix(ctx, data, baseKey) + " ";
+  const sTags = provider === "stability" ? stabilityTags(ctx, baseKey) : "";
+
+  const parts = (...lines: (string | false | undefined | null)[]): string =>
+    lines.filter(Boolean).join(" ");
+
+  return parts(
+    prefix,
+    `Professional brand application mockup — ${app.type} for ${B} (${data.industry}).`,
+    `APPLICATION DESCRIPTION: ${app.description}.`,
+    app.dimensions ? `DIMENSIONS/FORMAT: ${app.dimensions}. Aspect ratio: ${aspectRatio}.` : `ASPECT RATIO: ${aspectRatio}.`,
+    app.materialSpecs && `MATERIAL/FINISH: ${app.materialSpecs}.`,
+    app.layoutGuidelines && `LAYOUT GUIDELINES: ${app.layoutGuidelines}.`,
+    app.typographyHierarchy && `TYPOGRAPHY HIERARCHY: ${app.typographyHierarchy}.`,
+    app.artDirection && `ART DIRECTION: ${app.artDirection}.`,
+    app.substrates?.length && `SUBSTRATES: ${app.substrates.join(", ")}.`,
+    `BRAND PERSONALITY: ${ctx.personality}. Values: ${ctx.values}. Tone: ${ctx.toneOfVoice}.`,
+    `COLOR PALETTE (strict): ${ctx.allColors}.`,
+    `LOGO: ${ctx.logoPrimary}. Symbol: ${ctx.logoSymbol}.`,
+    `VISUAL STYLE: ${ctx.visualStyle}. Photography direction: ${ctx.photoStyle}.`,
+    `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+    `COMPOSITION: ${ctx.composition}. Mood: ${ctx.moodWords}.`,
+    ctx.tagline,
+    `REFERENCES: ${ctx.artisticRef}.`,
+    ctx.competitiveAngle,
+    sTags, q, neg(ctx, provider),
+  );
+}

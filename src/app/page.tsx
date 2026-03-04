@@ -12,13 +12,13 @@ import { RefinePanel } from "@/components/RefinePanel";
 import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
-import { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider } from "@/lib/types";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { decompressBrandbook } from "@/lib/shareUtils";
-import type { AssetKey } from "@/lib/imagePrompts";
+import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
   Image as ImageIcon, ImagePlus, Wand2, ShieldCheck, Download,
@@ -158,6 +158,90 @@ export default function Home() {
     });
   }
 
+  async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, tp: "openai" | "gemini") {
+    const providerKeyMap: Record<ImageProvider, keyof ApiKeys> = {
+      dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google",
+    };
+    const order: ImageProvider[] = ["imagen", "dalle3", "stability", "ideogram"];
+    const provider = order.find((p) => !!keys[providerKeyMap[p]]);
+    if (!provider) return;
+
+    const logoKeys: AssetKey[] = ["logo_primary", "logo_dark_bg"];
+    const slug = slugifyForStorage(bbData.brandName);
+    const cached = loadCachedGeneratedAssets(slug);
+    const toGenerate = logoKeys.filter((k) => !cached[k]);
+    if (toGenerate.length === 0) return;
+
+    setGenerationPhase("Gerando logos automaticamente...");
+    setGenerationPct(85);
+
+    for (let i = 0; i < toGenerate.length; i++) {
+      const assetKey = toGenerate[i];
+      const label = assetKey === "logo_primary" ? "Logo (Fundo Claro)" : "Logo (Versão Invertida)";
+      setGenerationPhase(`Gerando ${label}...`);
+      setGenerationPct(85 + Math.round(((i) / toGenerate.length) * 12));
+
+      try {
+        const basePrompt = buildImagePrompt(assetKey, bbData, provider);
+        let prompt = basePrompt;
+
+        const hasTextKey = (tp === "openai" && !!keys.openai) || (tp === "gemini" && !!keys.google);
+        if (hasTextKey) {
+          try {
+            const refineRes = await fetch("/api/refine-image-prompt", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                basePrompt,
+                imageProvider: provider,
+                assetKey,
+                textProvider: tp,
+                openaiKey: keys.openai || undefined,
+                googleKey: keys.google || undefined,
+                openaiModel: keys.openaiTextModel || undefined,
+                googleModel: keys.googleTextModel || undefined,
+              }),
+            });
+            const refineJson = await refineRes.json() as { prompt?: string };
+            if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
+          } catch { /* use base prompt */ }
+        }
+
+        const res = await fetch("/api/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt,
+            provider,
+            aspectRatio: "1:1",
+            openaiKey: keys.openai || undefined,
+            stabilityKey: keys.stability || undefined,
+            ideogramKey: keys.ideogram || undefined,
+            googleKey: keys.google || undefined,
+            openaiImageModel: keys.openaiImageModel || undefined,
+            stabilityModel: keys.stabilityModel || undefined,
+            ideogramModel: keys.ideogramModel || undefined,
+            googleImageModel: keys.googleImageModel || undefined,
+          }),
+        });
+        const result = await res.json() as { url?: string; error?: string };
+        if (res.ok && result.url) {
+          const asset: GeneratedAsset = {
+            key: assetKey,
+            url: result.url,
+            provider,
+            prompt,
+            generatedAt: new Date().toISOString(),
+          };
+          setGeneratedAssets((prev) => ({ ...prev, [assetKey]: asset }));
+        }
+      } catch { /* skip silently, user can generate manually */ }
+    }
+
+    setGenerationPct(100);
+    setGenerationPhase("");
+  }
+
   useEffect(() => {
     const keys = loadApiKeys();
     setApiKeys(keys);
@@ -267,6 +351,11 @@ export default function Home() {
               setGeneratedAssets(loadCachedGeneratedAssets(slug));
               setUploadedBrandAssets(loadCachedBrandAssets(slug));
               setTab("viewer");
+
+              // Auto-generate logo images
+              const currentKeys = loadApiKeys();
+              const tp = (!currentKeys.openai && currentKeys.google) ? "gemini" : "openai";
+              autoGenerateLogos(nextBrandbook, currentKeys, tp).catch(() => {});
             } else if (event.type === "error") {
               throw new Error(event.error ?? "Erro desconhecido");
             }
@@ -313,6 +402,7 @@ export default function Home() {
         body: JSON.stringify({
           brandbookData,
           generatedAssets: Object.values(generatedAssets),
+          uploadedAssets: uploadedBrandAssets,
         }),
       });
       if (!res.ok) {

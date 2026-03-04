@@ -14,7 +14,6 @@ import { SectionApplications } from "./sections/SectionApplications";
 import { SectionPositioning } from "./sections/SectionPositioning";
 import { SectionAudiencePersonas } from "./sections/SectionAudiencePersonas";
 import { SectionVerbalIdentity } from "./sections/SectionVerbalIdentity";
-import { SectionLogoVariants } from "./sections/SectionLogoVariants";
 import { SectionTypographyScale } from "./sections/SectionTypographyScale";
 import { SectionUiGuidelines } from "./sections/SectionUiGuidelines";
 import { SectionProductionGuidelines } from "./sections/SectionProductionGuidelines";
@@ -88,17 +87,18 @@ export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [
 
     {
       id: "logo",
-      title: "Logo",
+      title: "Logo & Identidade Visual",
       category: "Identidade Visual",
       when: true,
-      render: (num) => <SectionLogo data={data} num={num} />,
-    },
-    {
-      id: "logo-variants",
-      title: "Variações de Logo",
-      category: "Identidade Visual",
-      when: !!data.logoVariants,
-      render: (num) => <SectionLogoVariants data={data} num={num} />,
+      render: (num) => (
+        <SectionLogo
+          data={data}
+          num={num}
+          generatedImages={generatedImages}
+          uploadedAssets={uploadedAssets}
+          onGoToImages={onGoToImages}
+        />
+      ),
     },
     {
       id: "colors",

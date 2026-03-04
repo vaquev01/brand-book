@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset } from "@/lib/types";
-import { ASSET_CATALOG, buildImagePrompt, AssetKey } from "@/lib/imagePrompts";
+import { ASSET_CATALOG, buildImagePrompt, buildApplicationPrompt, detectSizeVariants, AssetKey, AspectRatioOption } from "@/lib/imagePrompts";
 import { ApiKeys } from "@/components/ApiKeyConfig";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
 
@@ -104,6 +104,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   const [provider, setProvider] = useState<ImageProvider>(() => pickDefaultProvider(apiKeys));
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement | null>(null);
   const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
   const [refineBeforeGenerate, setRefineBeforeGenerate] = useState(true);
   const [useReferenceImages, setUseReferenceImages] = useState(true);
@@ -116,6 +117,8 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   const [customPieceName, setCustomPieceName] = useState<string>("");
   const [customPieceLoading, setCustomPieceLoading] = useState(false);
   const [customPieceMode, setCustomPieceMode] = useState<"strict" | "guided" | "loose" | "remix">("guided");
+  const [activeAppVariant, setActiveAppVariant] = useState<Record<number, string>>({});
+  const [expandedAppPrompt, setExpandedAppPrompt] = useState<number | null>(null);
 
   const PIECE_MODE_ORDER = ["strict", "guided", "loose", "remix"] as const;
   const pieceModeIndex = Math.max(0, PIECE_MODE_ORDER.indexOf(customPieceMode));
@@ -124,6 +127,13 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
     customPieceMode === "guided" ? "Guiado (preserva hierarquia)" :
     customPieceMode === "loose" ? "Solto (inspiração, mais livre)" :
     "Remix (reimaginar, bem ousado)";
+
+  function showError(message: string) {
+    setError(message);
+    setTimeout(() => {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+  }
 
   async function handleCustomPieceFile(file: File | null) {
     if (!file) {
@@ -137,7 +147,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const dataUrl = await rasterFileToOptimizedDataUrl(file, 1400, "image/jpeg", 0.86);
       setCustomPieceDataUrl(dataUrl);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao carregar peça");
+      showError(e instanceof Error ? e.message : "Erro ao carregar peça");
       setCustomPieceDataUrl("");
       setCustomPieceName("");
     } finally {
@@ -192,11 +202,91 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
     return [...generatedPrimary, ...uploadedLogo].filter(Boolean).slice(0, max);
   }
 
+  async function generateApplication(appIndex: number, aspectRatio: AspectRatioOption) {
+    const app = data.applications[appIndex];
+    const appKey = `app_${appIndex}_${aspectRatio}`;
+    setLoadingKey(appKey);
+    setError(null);
+    try {
+      const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
+      if (!providerKey) {
+        const p = PROVIDERS.find((x) => x.id === provider);
+        throw new Error(`Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? provider}.`);
+      }
+      const basePrompt = buildApplicationPrompt(app, data, provider, aspectRatio);
+      let prompt = basePrompt;
+      if (refineBeforeGenerate) {
+        const hasTextKey = (textProvider === "openai" && !!apiKeys.openai) || (textProvider === "gemini" && !!apiKeys.google);
+        if (hasTextKey) {
+          const refineRes = await fetch("/api/refine-image-prompt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              basePrompt,
+              imageProvider: provider,
+              assetKey: "brand_collateral",
+              textProvider,
+              openaiKey: apiKeys.openai || undefined,
+              googleKey: apiKeys.google || undefined,
+              openaiModel: apiKeys.openaiTextModel || undefined,
+              googleModel: apiKeys.googleTextModel || undefined,
+            }),
+          });
+          const refineJson = await refineRes.json() as { prompt?: string; error?: string };
+          if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
+        }
+      }
+      const canUseRefImages = provider === "imagen" && !!apiKeys.google && useReferenceImages;
+      const referenceImagesRaw = canUseRefImages ? pickReferenceImages(6) : undefined;
+      const referenceImages = referenceImagesRaw?.length ? referenceImagesRaw : undefined;
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          provider,
+          aspectRatio,
+          referenceImages,
+          openaiKey: apiKeys.openai || undefined,
+          stabilityKey: apiKeys.stability || undefined,
+          ideogramKey: apiKeys.ideogram || undefined,
+          googleKey: apiKeys.google || undefined,
+          openaiImageModel: apiKeys.openaiImageModel || undefined,
+          stabilityModel: apiKeys.stabilityModel || undefined,
+          ideogramModel: apiKeys.ideogramModel || undefined,
+          googleImageModel: apiKeys.googleImageModel || undefined,
+        }),
+      });
+      const result = await res.json() as { url?: string; error?: string };
+      if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
+      if (!result.url) throw new Error("API não retornou URL de imagem");
+      setActiveAppVariant((prev) => ({ ...prev, [appIndex]: aspectRatio }));
+      onAssetGenerated(appKey, {
+        key: appKey,
+        url: result.url,
+        provider,
+        prompt,
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (err: unknown) {
+      showError(err instanceof Error ? err.message : "Erro desconhecido");
+    } finally {
+      setLoadingKey(null);
+    }
+  }
+
   async function generate(assetKey: AssetKey) {
+    const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
+    if (!providerKey) {
+      const p = PROVIDERS.find((x) => x.id === provider);
+      showError(`Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? provider}.`);
+      return;
+    }
+
     setLoadingKey(assetKey);
     setError(null);
-    const basePrompt = buildImagePrompt(assetKey, data, provider);
     try {
+      const basePrompt = buildImagePrompt(assetKey, data, provider);
       let prompt = basePrompt;
 
       if (refineBeforeGenerate) {
@@ -272,7 +362,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
         generatedAt: new Date().toISOString(),
       });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
+      showError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
       setLoadingKey(null);
     }
@@ -308,7 +398,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
         description: asset.prompt,
       });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar em Assets");
+      showError(err instanceof Error ? err.message : "Erro ao salvar em Assets");
     }
   }
 
@@ -320,9 +410,17 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
     const brief = customBrief.trim();
     const effectiveBrief = brief || (customPieceDataUrl ? "Rebrand da peça enviada para o perfil visual da marca." : "");
     if (!effectiveBrief) {
-      setError("Escreva uma intenção breve ou envie uma peça para rebrand.");
+      showError("Escreva uma intenção breve ou envie uma peça para rebrand.");
       return;
     }
+
+    const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
+    if (!providerKey) {
+      const p = PROVIDERS.find((x) => x.id === provider);
+      showError(`Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? provider}.`);
+      return;
+    }
+
     setLoadingKey("__custom__");
     setError(null);
     setCustomPrompt("");
@@ -401,7 +499,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       setCustomResult(asset);
       onAssetGenerated(key, asset);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
+      showError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
       setLoadingKey(null);
     }
@@ -497,6 +595,199 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
         )}
 
       </div>
+
+      {/* ── Applications Studio ─────────────────────────────────────────────── */}
+      {data.applications.length > 0 && (
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h3 className="text-lg font-bold">Aplicações do Brandbook</h3>
+            <span className="text-xs bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">
+              {data.applications.length} peças
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 mb-5">
+            Gere mockups das aplicações definidas no brandbook — prompt personalizado por peça, tamanhos inteligentes por tipo.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {data.applications.map((app, i) => {
+              const variants = detectSizeVariants(app.type);
+              const activeVariant = activeAppVariant[i] ?? variants[0]?.aspectRatio;
+              const activeKey = `app_${i}_${activeVariant}`;
+              const activeGenerated = generatedAssets[activeKey];
+              const isAnyLoading = variants.some((v) => loadingKey === `app_${i}_${v.aspectRatio}`);
+              const appPrompt = buildApplicationPrompt(app, data, provider, (activeVariant ?? "1:1") as AspectRatioOption);
+
+              const aspectClass2 = (r: string) => {
+                if (r === "9:16") return "aspect-[9/16]";
+                if (r === "16:9") return "aspect-video";
+                if (r === "4:3") return "aspect-[4/3]";
+                if (r === "21:9") return "aspect-[21/9]";
+                return "aspect-square";
+              };
+
+              return (
+                <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  {/* Image preview */}
+                  <div className={`relative bg-gray-100 ${aspectClass2(activeVariant ?? "1:1")}`}>
+                    {activeGenerated ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={activeGenerated.url} alt={app.type} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-gray-300">
+                        <span className="text-4xl font-black select-none opacity-20">{app.type.slice(0, 2).toUpperCase()}</span>
+                        <span className="text-[10px] font-mono bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded">{activeVariant ?? "1:1"}</span>
+                      </div>
+                    )}
+                    {isAnyLoading && (
+                      <div className="absolute inset-0 bg-white/85 flex flex-col items-center justify-center gap-2">
+                        <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                        <span className="text-xs text-gray-600 font-medium">Gerando com {currentProvider.name}...</span>
+                      </div>
+                    )}
+                    {activeGenerated && !isAnyLoading && (
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          activeGenerated.provider === "dalle3" ? "bg-green-100 text-green-800"
+                          : activeGenerated.provider === "stability" ? "bg-purple-100 text-purple-800"
+                          : activeGenerated.provider === "imagen" ? "bg-blue-100 text-blue-800"
+                          : "bg-orange-100 text-orange-800"
+                        }`}>
+                          IA · {activeVariant}
+                        </span>
+                      </div>
+                    )}
+                    {/* Variant pills at bottom of image */}
+                    <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
+                      {variants.map((v) => {
+                        const vKey = `app_${i}_${v.aspectRatio}`;
+                        const hasGen = !!generatedAssets[vKey];
+                        return (
+                          <button
+                            key={v.aspectRatio}
+                            type="button"
+                            onClick={() => setActiveAppVariant((prev) => ({ ...prev, [i]: v.aspectRatio }))}
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+                              activeVariant === v.aspectRatio
+                                ? "bg-gray-900 text-white border-gray-900"
+                                : hasGen
+                                ? "bg-green-500 text-white border-green-500"
+                                : "bg-white/90 text-gray-700 border-gray-300 hover:bg-white"
+                            }`}
+                          >
+                            {hasGen && activeVariant !== v.aspectRatio ? "✓ " : ""}{v.aspectRatio}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Card body */}
+                  <div className="p-4">
+                    <h4 className="font-bold text-base mb-1 leading-tight">{app.type}</h4>
+                    <p className="text-sm text-gray-600 mb-3 leading-snug">{app.description}</p>
+
+                    {/* Specs grid */}
+                    {(app.dimensions || app.materialSpecs || app.layoutGuidelines || app.typographyHierarchy || app.artDirection) && (
+                      <div className="grid grid-cols-1 gap-1 mb-3 text-xs bg-gray-50 rounded-lg p-3 border">
+                        {app.dimensions && (
+                          <div className="flex gap-1.5"><span className="font-semibold text-gray-500 shrink-0">📐</span><span className="font-mono text-gray-700">{app.dimensions}</span></div>
+                        )}
+                        {app.materialSpecs && (
+                          <div className="flex gap-1.5"><span className="font-semibold text-gray-500 shrink-0">📄</span><span className="text-gray-700">{app.materialSpecs}</span></div>
+                        )}
+                        {app.layoutGuidelines && (
+                          <div className="flex gap-1.5"><span className="font-semibold text-gray-500 shrink-0">🎨</span><span className="text-gray-700">{app.layoutGuidelines}</span></div>
+                        )}
+                        {app.typographyHierarchy && (
+                          <div className="flex gap-1.5"><span className="font-semibold text-gray-500 shrink-0">Aa</span><span className="text-gray-700">{app.typographyHierarchy}</span></div>
+                        )}
+                        {app.artDirection && (
+                          <div className="flex gap-1.5"><span className="font-semibold text-gray-500 shrink-0">✦</span><span className="text-gray-700">{app.artDirection}</span></div>
+                        )}
+                        {app.substrates && app.substrates.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            {app.substrates.map((s, j) => (
+                              <span key={j} className="bg-gray-200 text-gray-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Prompt toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedAppPrompt(expandedAppPrompt === i ? null : i)}
+                      className="text-[10px] text-blue-500 hover:text-blue-700 mb-3 flex items-center gap-1"
+                    >
+                      {expandedAppPrompt === i ? "▲" : "▼"} Ver prompt de geração
+                    </button>
+                    {expandedAppPrompt === i && (
+                      <div className="bg-gray-900 text-gray-200 rounded-lg p-3 text-[10px] mb-3 leading-relaxed font-mono max-h-32 overflow-y-auto">
+                        {appPrompt}
+                      </div>
+                    )}
+
+                    {/* Size variant generate buttons */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {variants.map((v) => {
+                        const vKey = `app_${i}_${v.aspectRatio}`;
+                        const hasGen = !!generatedAssets[vKey];
+                        const isLoadingThis = loadingKey === vKey;
+                        return (
+                          <button
+                            key={v.aspectRatio}
+                            type="button"
+                            onClick={() => generateApplication(i, v.aspectRatio)}
+                            disabled={loadingKey !== null}
+                            className={`flex flex-col items-start px-3 py-2 rounded-lg border-2 text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                              hasGen
+                                ? "border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+                                : "border-gray-900 bg-gray-900 text-white hover:bg-gray-800"
+                            }`}
+                          >
+                            <span>{isLoadingThis ? "Gerando..." : hasGen ? "↺ " + v.label : "✦ " + v.label}</span>
+                            {v.dims && <span className={`text-[10px] font-mono mt-0.5 ${hasGen ? "text-green-600" : "text-gray-300"}`}>{v.dims}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Actions for generated image */}
+                    {activeGenerated && (
+                      <div className="flex gap-2 pt-2 border-t">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const a = document.createElement("a");
+                            a.href = activeGenerated.url;
+                            a.download = `${data.brandName.replace(/\s+/g, "-").toLowerCase()}-${app.type.replace(/\s+/g, "-").toLowerCase()}-${activeVariant}.png`;
+                            a.target = "_blank";
+                            a.click();
+                          }}
+                          className="bg-gray-100 text-gray-700 text-xs py-1.5 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
+                        >
+                          ↓ Download
+                        </button>
+                        {!!onSaveToAssets && (
+                          <button
+                            type="button"
+                            onClick={() => saveGeneratedToAssets(activeGenerated, `${app.type} ${activeVariant}`, undefined)}
+                            className="bg-gray-100 text-gray-700 text-xs py-1.5 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
+                          >
+                            Salvar em Assets
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Custom generator */}
       <div className="bg-white border rounded-xl p-5 shadow-sm">
@@ -689,7 +980,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between text-sm">
+        <div ref={errorRef} className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between text-sm">
           <span>{error}</span>
           <button
             type="button"
