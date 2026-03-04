@@ -117,6 +117,14 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   const [customPieceLoading, setCustomPieceLoading] = useState(false);
   const [customPieceMode, setCustomPieceMode] = useState<"strict" | "guided" | "loose" | "remix">("guided");
 
+  const PIECE_MODE_ORDER = ["strict", "guided", "loose", "remix"] as const;
+  const pieceModeIndex = Math.max(0, PIECE_MODE_ORDER.indexOf(customPieceMode));
+  const pieceModeLabel =
+    customPieceMode === "strict" ? "Estrito (layout quase idêntico)" :
+    customPieceMode === "guided" ? "Guiado (preserva hierarquia)" :
+    customPieceMode === "loose" ? "Solto (inspiração, mais livre)" :
+    "Remix (reimaginar, bem ousado)";
+
   async function handleCustomPieceFile(file: File | null) {
     if (!file) {
       setCustomPieceDataUrl("");
@@ -351,11 +359,12 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
         !!apiKeys.google &&
         useReferenceImages;
 
+      const includeCustomPieceAsRef = !!customPieceDataUrl && (customPieceMode === "strict" || customPieceMode === "guided");
       const picked = canUseRefImages
-        ? pickReferenceImages(customPieceDataUrl ? 5 : 6)
+        ? pickReferenceImages(includeCustomPieceAsRef ? 5 : 6)
         : undefined;
       const referenceImagesRaw = canUseRefImages
-        ? [customPieceDataUrl || "", ...(picked ?? [])].filter(Boolean).slice(0, 6)
+        ? [includeCustomPieceAsRef ? customPieceDataUrl : "", ...(picked ?? [])].filter(Boolean).slice(0, 6)
         : undefined;
       const referenceImages = referenceImagesRaw && referenceImagesRaw.length > 0 ? referenceImagesRaw : undefined;
 
@@ -436,7 +445,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
             <span>
               <span className="font-semibold">Usar imagens de referência (Gemini imagem)</span>
               <span className="block text-[10px] text-gray-500 mt-0.5">
-                Envia até 6 assets (logo/pattern/element/reference) como guia de estilo quando o modelo selecionado for Gemini.
+                Envia até 6 assets (logo/padrão/elemento) como âncora de estilo. Quando há referências, o gerador Google usa automaticamente Gemini (que aceita imagens).
               </span>
             </span>
           </label>
@@ -528,6 +537,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                     accept="image/*"
                     className="hidden"
                     disabled={customPieceLoading || loadingKey !== null}
+                    onClick={(e) => { (e.target as HTMLInputElement).value = ""; }}
                     onChange={(e) => handleCustomPieceFile(e.target.files?.[0] ?? null)}
                   />
                 </label>
@@ -545,17 +555,27 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
 
                     <div>
                       <label htmlFor="customPieceMode" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fidelidade à peça</label>
-                      <select
-                        id="customPieceMode"
-                        value={customPieceMode}
-                        onChange={(e) => setCustomPieceMode(e.target.value as typeof customPieceMode)}
-                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition"
-                      >
-                        <option value="strict">Estrito (layout quase idêntico)</option>
-                        <option value="guided">Guiado (preserva hierarquia)</option>
-                        <option value="loose">Solto (inspiração, mais livre)</option>
-                        <option value="remix">Remix (reimaginar, bem ousado)</option>
-                      </select>
+                      <div className="mt-1 bg-white border rounded-lg px-3 py-2">
+                        <input
+                          id="customPieceMode"
+                          type="range"
+                          min={0}
+                          max={3}
+                          step={1}
+                          value={pieceModeIndex}
+                          onChange={(e) => {
+                            const idx = Number(e.target.value);
+                            setCustomPieceMode(PIECE_MODE_ORDER[Math.min(3, Math.max(0, idx))]);
+                          }}
+                          className="w-full"
+                          aria-label="Fidelidade à peça"
+                        />
+                        <div className="mt-2 flex items-center justify-between text-[10px] text-gray-500">
+                          <span className="font-semibold">Preservar layout</span>
+                          <span className="font-semibold">Reimaginar</span>
+                        </div>
+                        <div className="mt-2 text-xs font-semibold text-gray-700">{pieceModeLabel}</div>
+                      </div>
                     </div>
 
                     <button
