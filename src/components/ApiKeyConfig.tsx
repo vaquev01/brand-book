@@ -359,48 +359,49 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
                 )}
 
                 {/* Model selectors */}
-                {models && (
+                {keyVal.trim() && (p.textModelKey || p.imageModelKey) && (
                   <div className="space-y-2">
-                    {p.textModelKey && models.textModels.length > 0 && (
+                    {p.textModelKey && (
                       <div>
                         <label className="text-[11px] font-semibold opacity-70 block mb-1">Modelo de Texto (Brandbook)</label>
-                        <select
+                        <input
                           aria-label="Modelo de Texto"
                           value={keys[p.textModelKey]}
                           onChange={(e) => setKeys((prev) => ({ ...prev, [p.textModelKey!]: e.target.value }))}
+                          list={`${p.key}-text-models`}
                           className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
-                        >
-                          {models.textModels.map((m) => (
-                            <option key={m} value={m}>{m}</option>
+                          spellCheck={false}
+                        />
+                        <datalist id={`${p.key}-text-models`}>
+                          {(models?.textModels ?? []).map((m) => (
+                            <option key={m} value={m} />
                           ))}
-                        </select>
+                        </datalist>
                       </div>
                     )}
-                    {p.imageModelKey && models.imageModels.length > 0 && (
+
+                    {p.imageModelKey && (
                       <div>
                         <label className="text-[11px] font-semibold opacity-70 block mb-1">Modelo de Imagem</label>
-                        <select
+                        <input
                           aria-label="Modelo de Imagem"
                           value={keys[p.imageModelKey]}
                           onChange={(e) => setKeys((prev) => ({ ...prev, [p.imageModelKey!]: e.target.value }))}
+                          list={`${p.key}-image-models`}
                           className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
-                        >
-                          {models.imageModels.map((m) => (
-                            <option key={m} value={m}>{m}</option>
+                          spellCheck={false}
+                        />
+                        <datalist id={`${p.key}-image-models`}>
+                          {(models?.imageModels ?? []).map((m) => (
+                            <option key={m} value={m} />
                           ))}
-                        </select>
+                        </datalist>
                       </div>
                     )}
                   </div>
                 )}
 
                 {/* Show selected models if already saved */}
-                {!models && (keys[p.textModelKey as keyof ApiKeys] || keys[p.imageModelKey as keyof ApiKeys]) && (
-                  <div className="text-[11px] opacity-60 space-y-0.5">
-                    {p.textModelKey && keys[p.textModelKey] && <p>Texto: <code>{keys[p.textModelKey]}</code></p>}
-                    {p.imageModelKey && keys[p.imageModelKey] && <p>Imagem: <code>{keys[p.imageModelKey]}</code></p>}
-                  </div>
-                )}
               </div>
             );
           })}

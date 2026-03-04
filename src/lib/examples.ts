@@ -1,4 +1,5 @@
 import { BrandbookData } from "./types";
+import caracaBarJson from "./caraca-bar-brandbook.json";
 
 export const saasExample: BrandbookData = {
   schemaVersion: "2.0",
@@ -678,3 +679,5 @@ export const sushiExample: BrandbookData = {
     negativePrompt: "bright white studio, cold lighting, modern minimalist, plastic, fast food, cartoon sushi, fake Japanese, chopsticks in rice (offensive), blue tones, neon, cyberpunk, watermark, oversaturated"
   }
 };
+
+export const caracaBarExample = caracaBarJson as unknown as BrandbookData;

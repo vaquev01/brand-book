@@ -4,12 +4,16 @@ import { GoogleGenAI } from "@google/genai";
 import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { fetchExternalReferences, formatExternalReferencesForPrompt } from "@/lib/externalReferences";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
     const {
       brandbook,
       instruction,
+      externalUrls,
       openaiKey,
       googleKey,
       provider = "openai",
@@ -18,6 +22,7 @@ export async function POST(request: NextRequest) {
     } = await request.json() as {
       brandbook: Record<string, unknown>;
       instruction: string;
+      externalUrls?: string[];
       openaiKey?: string;
       googleKey?: string;
       provider?: string;
@@ -31,10 +36,24 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `Você é um Diretor de Arte Sênior e Estrategista de Marca. Você receberá um brandbook completo e uma instrução de refinamento. Aplique a instrução de forma cirúrgica e coerente em TODAS as seções afetadas. Mantenha o que está bom, melhore o que foi pedido. Sua saída DEVE SER EXCLUSIVAMENTE o JSON completo do brandbook atualizado — sem texto adicional, sem markdown.`;
 
+    const MAX_EXTERNAL_URLS = 4;
+    const safeExternalUrls = Array.isArray(externalUrls)
+      ? externalUrls
+          .filter((x) => typeof x === "string" && x.trim().length > 0)
+          .map((x) => x.trim())
+          .slice(0, MAX_EXTERNAL_URLS)
+      : undefined;
+    const externalRefs = safeExternalUrls && safeExternalUrls.length > 0
+      ? await fetchExternalReferences(safeExternalUrls)
+      : [];
+    const externalRefsText = formatExternalReferencesForPrompt(externalRefs);
+
     const userPrompt = `Brandbook atual (JSON completo):
 ${JSON.stringify(brandbook, null, 2)}
 
 Instrução de refinamento: "${instruction}"
+
+${externalRefsText || ""}
 
 Aplique esta instrução de forma precisa e coerente. Atualize todas as seções afetadas mantendo consistência sistêmica. Retorne o brandbook JSON COMPLETO e válido com as melhorias aplicadas.`;
 

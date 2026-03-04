@@ -5,6 +5,7 @@ import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
 import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { fetchExternalReferences, formatExternalReferencesForPrompt } from "@/lib/externalReferences";
 import type { GenerateScope, CreativityLevel } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -113,6 +114,7 @@ export async function POST(request: NextRequest) {
     brandName: string;
     industry: string;
     briefing?: string;
+    externalUrls?: string[];
     openaiKey?: string;
     googleKey?: string;
     provider?: string;
@@ -129,6 +131,7 @@ export async function POST(request: NextRequest) {
     brandName,
     industry,
     briefing,
+    externalUrls,
     openaiKey,
     googleKey,
     provider = "openai",
@@ -143,6 +146,7 @@ export async function POST(request: NextRequest) {
 
   const MAX_IMAGE_DATAURL_CHARS = 3_500_000;
   const MAX_REFERENCE_IMAGES = 6;
+  const MAX_EXTERNAL_URLS = 4;
 
   const safeLogoImage = (typeof logoImage === "string" && logoImage.length > 0)
     ? logoImage
@@ -157,6 +161,13 @@ export async function POST(request: NextRequest) {
 
   const safeReferenceImages = Array.isArray(referenceImages)
     ? referenceImages.filter((x) => typeof x === "string" && x.length > 0).slice(0, MAX_REFERENCE_IMAGES)
+    : undefined;
+
+  const safeExternalUrls = Array.isArray(externalUrls)
+    ? externalUrls
+        .filter((x) => typeof x === "string" && x.trim().length > 0)
+        .map((x) => x.trim())
+        .slice(0, MAX_EXTERNAL_URLS)
     : undefined;
 
   if (safeReferenceImages) {
@@ -187,7 +198,6 @@ export async function POST(request: NextRequest) {
         const hasLogoImage = !!safeLogoImage;
         const hasImages = Array.isArray(safeReferenceImages) && safeReferenceImages.length > 0;
         const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
-        const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages, undefined, hasLogoImage);
         const useGemini = provider === "gemini";
         const resolvedGoogleModel = useGemini ? resolveGoogleTextModel(googleModel) : "";
         const resolvedGoogleJsonModel = useGemini ? resolveGoogleTextModel("gemini-1.5-flash") : "";
@@ -197,6 +207,17 @@ export async function POST(request: NextRequest) {
           ? "Analisando logo da marca..."
           : "Preparando geração...";
         send({ type: "progress", phase: firstPhase, pct: 2 });
+
+        if (safeExternalUrls && safeExternalUrls.length > 0) {
+          send({ type: "progress", phase: "Lendo referências externas...", pct: 4 });
+        }
+
+        const externalRefs = safeExternalUrls && safeExternalUrls.length > 0
+          ? await fetchExternalReferences(safeExternalUrls)
+          : [];
+        const externalRefsText = formatExternalReferencesForPrompt(externalRefs);
+
+        const userPromptText = buildUserPrompt(brandName, industry, briefing || "", scope, hasImages, undefined, hasLogoImage) + externalRefsText;
 
         let fullContent = "";
 

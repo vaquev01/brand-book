@@ -23,6 +23,7 @@ export interface GenerateBriefingData {
   brandName: string;
   industry: string;
   briefing: string;
+  externalUrls?: string[];
   scope: GenerateScope;
   creativityLevel: CreativityLevel;
   intentionality: boolean;
@@ -116,6 +117,7 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   const [brandName, setBrandName] = useState("");
   const [industry, setIndustry] = useState("");
   const [rawBriefing, setRawBriefing] = useState("");
+  const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
   const [scope, setScope] = useState<GenerateScope>("full");
   const [creativity, setCreativity] = useState<CreativityLevel>("balanced");
   const [intentionality, setIntentionality] = useState(false);
@@ -158,10 +160,20 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const finalBriefing = composeBriefing(guided, rawBriefing);
+
+    const externalUrls = externalUrlsRaw
+      .split(/[\n,\s]+/g)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => (s.startsWith("@") ? `https://www.instagram.com/${s.slice(1)}/` : s))
+      .map((s) => (s.startsWith("www.") ? `https://${s}` : s))
+      .filter((s) => /^https?:\/\//i.test(s));
+
     onSubmit({
       brandName,
       industry,
       briefing: finalBriefing,
+      externalUrls: externalUrls.length > 0 ? externalUrls : undefined,
       scope,
       creativityLevel: creativity,
       intentionality,
@@ -571,6 +583,27 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
           placeholder="Qualquer detalhe extra, contexto histórico, inspirações, restrições, objetivos de negócio..."
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none placeholder:text-gray-400"
         />
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-link-2 text-gray-400"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/></svg>
+          <div>
+            <h3 className="font-bold text-gray-900">Referências Externas (URLs)</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Opcional — o sistema tenta extrair título/descrição/trechos para usar como contexto</p>
+          </div>
+        </div>
+        <textarea
+          id="externalUrls"
+          rows={3}
+          value={externalUrlsRaw}
+          onChange={(e) => setExternalUrlsRaw(e.target.value)}
+          placeholder="Cole links (1 por linha). Ex: https://www.instagram.com/caracabaroficial/\nhttps://site.com"
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none placeholder:text-gray-400"
+        />
+        <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+          Alguns sites (ex: Instagram) podem bloquear leitura automática. Se isso acontecer, envie screenshots ou imagens de referência.
+        </p>
       </div>
 
       {/* Reference Images */}

@@ -409,6 +409,7 @@ export interface GenerateRequest {
   industry: string;
   briefing: string;
   referenceImages?: string[];
+  externalUrls?: string[];
   scope?: GenerateScope;
   creativityLevel?: CreativityLevel;
   intentionality?: boolean;

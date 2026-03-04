@@ -5,6 +5,19 @@ export interface ProviderModels {
   imageModels: string[];
 }
 
+function sortByPriority(models: string[], patterns: RegExp[]): string[] {
+  function rank(id: string): number {
+    const idx = patterns.findIndex((re) => re.test(id));
+    return idx === -1 ? patterns.length : idx;
+  }
+  return [...models].sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  });
+}
+
 async function fetchOpenAIModels(apiKey: string): Promise<ProviderModels> {
   const res = await fetch("https://api.openai.com/v1/models", {
     headers: { Authorization: `Bearer ${apiKey}` },
@@ -13,10 +26,10 @@ async function fetchOpenAIModels(apiKey: string): Promise<ProviderModels> {
   const data = await res.json() as { data: { id: string }[] };
   const ids = data.data.map((m) => m.id).sort();
 
-  const TEXT_PREFIXES = ["gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5", "o1", "o3", "o4"];
+  const TEXT_PREFIXES = ["gpt-4.5", "gpt-4.1", "gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5", "o1", "o3", "o4"];
   const IMAGE_IDS = ["dall-e-3", "dall-e-2"];
 
-  const textModels = ids.filter((id) =>
+  const rawTextModels = ids.filter((id) =>
     TEXT_PREFIXES.some((p) => id.startsWith(p)) &&
     !id.includes("realtime") &&
     !id.includes("audio") &&
@@ -26,36 +39,78 @@ async function fetchOpenAIModels(apiKey: string): Promise<ProviderModels> {
     !id.includes("tts") &&
     !id.includes("dall-e")
   );
+  const OPENAI_TEXT_PRIORITY: RegExp[] = [
+    /^gpt-4\.5/i,
+    /^gpt-4\.1/i,
+    /^gpt-4o/i,
+    /^o4/i,
+    /^o3/i,
+    /^o1/i,
+    /^gpt-4-turbo/i,
+    /^gpt-4/i,
+    /^gpt-3\.5/i,
+  ];
+  const textModels = sortByPriority(rawTextModels, OPENAI_TEXT_PRIORITY);
   const imageModels = ids.filter((id) => IMAGE_IDS.includes(id));
   return { textModels, imageModels };
 }
 
 async function fetchGoogleModels(apiKey: string): Promise<ProviderModels> {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}&pageSize=100`
-  );
-  if (!res.ok) throw new Error(`Google: ${res.status}`);
-  const data = await res.json() as { models: { name: string; supportedGenerationMethods?: string[] }[] };
-
   const textModels: string[] = [];
   const imageModels: string[] = [];
 
-  for (const m of data.models ?? []) {
-    const short = m.name.replace("models/", "");
-    const methods = m.supportedGenerationMethods ?? [];
-    if (short.includes("embedding") || short.includes("aqa")) continue;
-    if (short.includes("imagen")) {
-      imageModels.push(short);
-    } else if (short.includes("gemini") && methods.includes("generateContent")) {
-      if (short.includes("image")) {
+  let pageToken: string | undefined;
+  do {
+    const url = new URL("https://generativelanguage.googleapis.com/v1beta/models");
+    url.searchParams.set("key", apiKey);
+    url.searchParams.set("pageSize", "200");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(`Google: ${res.status}`);
+    const data = await res.json() as {
+      models?: { name: string; supportedGenerationMethods?: string[] }[];
+      nextPageToken?: string;
+    };
+
+    for (const m of data.models ?? []) {
+      const short = m.name.replace("models/", "");
+      const methods = m.supportedGenerationMethods ?? [];
+      const lower = short.toLowerCase();
+      if (lower.includes("embedding") || lower.includes("aqa")) continue;
+
+      const supportsContent = methods.includes("generateContent");
+      const supportsImages = methods.includes("generateImages");
+
+      if (lower.includes("imagen") || supportsImages || lower.includes("image")) {
+        if (lower.includes("gemini") && !supportsContent && !supportsImages) continue;
         imageModels.push(short);
-      } else {
+        continue;
+      }
+
+      if (lower.includes("gemini") && supportsContent) {
         textModels.push(short);
       }
     }
-  }
 
-  return { textModels: textModels.sort(), imageModels: imageModels.sort() };
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  const GOOGLE_TEXT_PRIORITY: RegExp[] = [
+    /^gemini-2\.5-pro/i,
+    /^gemini-2\.5-flash/i,
+    /^gemini-2\.0-pro/i,
+    /^gemini-1\.5-pro/i,
+    /^gemini-1\.5-flash/i,
+  ];
+
+  const uniqueText = Array.from(new Set(textModels));
+  const uniqueImage = Array.from(new Set(imageModels));
+
+  return {
+    textModels: sortByPriority(uniqueText, GOOGLE_TEXT_PRIORITY),
+    imageModels: uniqueImage.sort(),
+  };
 }
 
 async function fetchStabilityModels(apiKey: string): Promise<ProviderModels> {

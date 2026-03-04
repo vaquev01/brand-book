@@ -13,7 +13,7 @@ import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
 import { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
-import { saasExample, barExample, sushiExample } from "@/lib/examples";
+import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
@@ -212,6 +212,7 @@ export default function Home() {
           brandName: formData.brandName,
           industry: formData.industry,
           briefing: formData.briefing,
+          externalUrls: formData.externalUrls,
           provider: textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
@@ -606,6 +607,14 @@ export default function Home() {
                 color="red"
                 onClick={() => handleLoadExample(sushiExample)}
               />
+              <ExampleCard
+                title="Caraca! Bar"
+                subtitle="Bar & Gastronomia — Boteco Tropical Premium"
+                description="Identidade botânica tropical com 4 sistemas de pattern, paleta Kraft + Verde Noturno e gravura brasileira."
+                badge="Projeto Real"
+                color="amber"
+                onClick={() => handleLoadExample(caracaBarExample)}
+              />
             </div>
           </div>
         )}
@@ -945,13 +954,14 @@ function ExampleCard({
   subtitle: string;
   description: string;
   badge?: string;
-  color: "blue" | "pink" | "red";
+  color: "blue" | "pink" | "red" | "amber";
   onClick: () => void;
 }) {
   const colorMap = {
     blue: "from-blue-600 to-blue-900",
     pink: "from-pink-500 to-purple-900",
     red: "from-red-800 to-red-950",
+    amber: "from-amber-700 to-green-900",
   };
 
   return (
