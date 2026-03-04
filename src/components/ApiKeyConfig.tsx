@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { X, Lock, Eye, EyeOff } from "lucide-react";
 
 export interface ApiKeys {
@@ -168,6 +168,8 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
   const [fetchedModels, setFetchedModels] = useState<Record<string, FetchedModels>>({});
   const [fetchStatus, setFetchStatus] = useState<Record<string, FetchStatus>>({});
   const [fetchError, setFetchError] = useState<Record<string, string>>({});
+  const lastAutoFetchedKeyRef = useRef<Record<string, string>>({});
+  const autoFetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -222,6 +224,27 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
       setFetchError((prev) => ({ ...prev, [providerKey]: e instanceof Error ? e.message : "Erro" }));
     }
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const apiKey = keys.google?.trim();
+    if (!apiKey) return;
+    const status = fetchStatus["google"] ?? "idle";
+    if (status === "loading") return;
+
+    const alreadyFetched = !!fetchedModels["google"] && lastAutoFetchedKeyRef.current["google"] === apiKey;
+    if (alreadyFetched) return;
+
+    if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
+    autoFetchTimerRef.current = setTimeout(() => {
+      lastAutoFetchedKeyRef.current["google"] = apiKey;
+      fetchModels("google", apiKey);
+    }, 700);
+
+    return () => {
+      if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
+    };
+  }, [isOpen, keys.google, fetchModels, fetchStatus, fetchedModels]);
 
   function handleSave() {
     saveApiKeys(keys);
