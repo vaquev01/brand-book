@@ -11,7 +11,15 @@ function ColorSwatch({ color }: { color: Color }) {
           <p><span className="font-semibold text-gray-700">HEX:</span> {color.hex}</p>
           <p><span className="font-semibold text-gray-700">RGB:</span> {color.rgb}</p>
           <p><span className="font-semibold text-gray-700">CMYK:</span> {color.cmyk}</p>
+          {color.pantone && (
+            <p><span className="font-semibold text-gray-700">Pantone:</span> {color.pantone}</p>
+          )}
         </div>
+        {color.usage && (
+          <div className="mt-2 pt-2 border-t">
+            <p className="text-[10px] text-gray-600 leading-relaxed"><span className="font-semibold text-gray-700">Uso:</span> {color.usage}</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
   const mascots = data.keyVisual.mascots ?? [];
   const symbols = data.keyVisual.symbols ?? [];
   const patterns = data.keyVisual.patterns ?? [];
+  const structuredPatterns = data.keyVisual.structuredPatterns ?? [];
 
   const uploadedMascots = uploadedAssets.filter((a) => a.type === "mascot");
   const uploadedElements = uploadedAssets.filter((a) => a.type === "element");
@@ -117,19 +118,41 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
           </div>
         )}
 
-        {patterns.length > 0 && (
+        {(patterns.length > 0 || (structuredPatterns && structuredPatterns.length > 0)) && (
           <div>
             <h3 className="text-lg font-bold mb-4">Padrões Gráficos</h3>
-            <ul className="space-y-3">
-              {patterns.map((pat, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    ▦
-                  </span>
-                  <span className="text-gray-700 text-sm">{pat}</span>
-                </li>
-              ))}
-            </ul>
+            {structuredPatterns && structuredPatterns.length > 0 ? (
+              <div className="space-y-4">
+                {structuredPatterns.map((pat, i) => (
+                  <div key={i} className="bg-white border rounded-xl p-5 shadow-sm">
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                        ▦
+                      </span>
+                      <h4 className="font-bold text-gray-900">{pat.name}</h4>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-3">{pat.description}</p>
+                    <div className="space-y-2 text-xs">
+                      <div><span className="font-semibold text-gray-700">Composição:</span> <span className="text-gray-600">{pat.composition}</span></div>
+                      <div><span className="font-semibold text-gray-700">Uso:</span> <span className="text-gray-600">{pat.usage}</span></div>
+                      {pat.density && <div><span className="font-semibold text-gray-700">Densidade:</span> <span className="text-gray-600">{pat.density}</span></div>}
+                      {pat.background && <div><span className="font-semibold text-gray-700">Fundo:</span> <span className="text-gray-600">{pat.background}</span></div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {patterns.map((pat, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                      ▦
+                    </span>
+                    <span className="text-gray-700 text-sm">{pat}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             {uploadedPatterns.length > 0 && (
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {uploadedPatterns.map((asset) => (

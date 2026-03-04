@@ -21,17 +21,19 @@ interface SectionConfig {
 
 const SECTIONS: SectionConfig[] = [
   { key: "brandConcept", label: "DNA & Conceito", icon: "🧬", description: "Propósito, visão, missão, valores e personalidade" },
+  { key: "brandStory", label: "Brand Story & Manifesto", icon: "📖", description: "Manifesto de marca, história de origem e promessa" },
   { key: "positioning", label: "Posicionamento", icon: "🧭", description: "Claim, diferenciação, proposta de valor e arquétipos" },
   { key: "audiencePersonas", label: "Personas", icon: "👥", description: "Perfis de público, dores, desejos e motivações" },
-  { key: "verbalIdentity", label: "Identidade Verbal", icon: "✍️", description: "Tom de voz, tagline, headlines e vocabulário" },
+  { key: "verbalIdentity", label: "Identidade Verbal", icon: "✍️", description: "Tom de voz, tagline, headlines, vocabulário e tom por canal" },
   { key: "logo", label: "Logo", icon: "⬡", description: "Conceito, geometria, aplicações e usos proibidos" },
-  { key: "colors", label: "Cores", icon: "🎨", description: "Paleta primária, secundária, semântica e uso" },
+  { key: "colors", label: "Cores", icon: "🎨", description: "Paleta primária, secundária, semântica, Pantone e uso" },
   { key: "typography", label: "Tipografia", icon: "Aa", description: "Famílias tipográficas e diretrizes de uso" },
   { key: "typographyScale", label: "Escala Tipográfica", icon: "T↑", description: "Hierarchy de tamanhos, pesos e line-heights" },
   { key: "keyVisual", label: "Identidade Visual", icon: "✦", description: "Elementos visuais, mascotes, símbolos e padrões" },
   { key: "designTokens", label: "Design Tokens", icon: "🪙", description: "Espaçamento, raios, sombras e grid" },
   { key: "uiGuidelines", label: "UI Guidelines", icon: "🖥️", description: "Componentes, estados, dark mode e ícones" },
-  { key: "applications", label: "Aplicações", icon: "📐", description: "Peças de impressão, digital e social media" },
+  { key: "applications", label: "Aplicações", icon: "📐", description: "Peças de impressão, digital e social media com dimensões" },
+  { key: "socialMediaGuidelines", label: "Guia de Redes Sociais", icon: "📱", description: "Formatos, tom por plataforma, pilares e exemplos de post" },
   { key: "imageGenerationBriefing", label: "Briefing de Imagens", icon: "🖼️", description: "Diretrizes para geração de imagens IA" },
 ];
 

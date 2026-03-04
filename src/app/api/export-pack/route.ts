@@ -4,17 +4,9 @@ import { generateProductionManifest } from "@/lib/productionExport";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
 import type { BrandbookData, GeneratedAsset } from "@/lib/types";
+import { slugify } from "@/lib/common";
 
 export const runtime = "nodejs";
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-");
-}
 
 function extFromContentType(ct: string | null): string {
   const c = (ct ?? "").toLowerCase();

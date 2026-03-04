@@ -31,6 +31,16 @@ export function RefinePanel({ brandbook, apiKeys, textProvider, onRefined }: Pro
 
   async function handleRefine() {
     if (!instruction.trim()) return;
+
+    const preview = instruction.trim().slice(0, 240);
+    const ok = window.confirm(
+      "Aplicar este refinamento em TODO o brandbook?\n\n" +
+        "Instrução:\n" +
+        preview +
+        (instruction.trim().length > preview.length ? "..." : "")
+    );
+    if (!ok) return;
+
     setLoading(true);
     setError("");
     setSuccess("");

@@ -5,19 +5,36 @@ function TypoCard({ title, typo }: { title: string; typo: Typography }) {
   return (
     <div className="bg-gray-50 p-8 rounded-lg border">
       <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">{title}</h3>
-      <div className="text-4xl font-bold mb-4" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
+      <div className="text-4xl font-bold mb-1" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
         {typo.name}
       </div>
+      {typo.category && (
+        <span className="inline-block text-[10px] font-semibold bg-gray-200 text-gray-600 px-2 py-0.5 rounded mb-3">{typo.category}</span>
+      )}
       <div className="text-gray-400 text-sm mb-4">Aa Bb Cc 0123456789 !@#</div>
       <div className="mb-3">
         <span className="text-xs font-bold text-gray-500 uppercase">Uso: </span>
         <span className="text-sm">{typo.usage}</span>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mb-3">
         {typo.weights.map((w, i) => (
           <span key={i} className="bg-gray-200 text-xs px-2 py-1 rounded">{w}</span>
         ))}
       </div>
+      {(typo.fallbackFont || typo.textTransform) && (
+        <div className="border-t pt-3 space-y-1">
+          {typo.fallbackFont && (
+            <div className="text-xs text-gray-600">
+              <span className="font-semibold text-gray-700">Alternativa Google Fonts:</span> {typo.fallbackFont}
+            </div>
+          )}
+          {typo.textTransform && (
+            <div className="text-xs text-gray-600">
+              <span className="font-semibold text-gray-700">Transformação:</span> {typo.textTransform}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

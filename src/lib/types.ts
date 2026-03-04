@@ -3,12 +3,41 @@ export interface Color {
   hex: string;
   rgb: string;
   cmyk: string;
+  pantone?: string;
+  usage?: string;
 }
 
 export interface Typography {
   name: string;
   usage: string;
   weights: string[];
+  fallbackFont?: string;
+  textTransform?: string;
+  category?: string;
+}
+
+export interface BrandStory {
+  manifesto: string;
+  originStory: string;
+  brandPromise: string;
+  brandBeliefs?: string[];
+}
+
+export interface SocialMediaPlatform {
+  platform: string;
+  primaryFormats: string;
+  tone: string;
+  contentPillars: string[];
+  frequency?: string;
+  doList: string[];
+  dontList: string[];
+  examplePost?: string;
+}
+
+export interface SocialMediaGuidelines {
+  platforms: SocialMediaPlatform[];
+  globalHashtagStrategy?: string;
+  brandVoiceAdaptation?: string;
 }
 
 export interface BrandConcept {
@@ -56,6 +85,9 @@ export interface TypographySet {
 export interface DesignTokens {
   spacing: string[];
   borderRadii: string[];
+  shadows?: string[];
+  breakpoints?: string[];
+  grid?: string;
 }
 
 export interface UxPatterns {
@@ -90,15 +122,29 @@ export interface Mascot {
   usageGuidelines: string[];
 }
 
+export interface BrandPattern {
+  name: string;
+  description: string;
+  composition: string;
+  usage: string;
+  density?: string;
+  background?: string;
+}
+
 export interface KeyVisual {
   elements: string[];
   photographyStyle: string;
   iconography?: string;
   illustrations?: string;
   marketingArchitecture?: string;
+  compositionPhilosophy?: string;
   mascots?: Mascot[];
   symbols?: string[];
   patterns?: string[];
+  structuredPatterns?: BrandPattern[];
+  flora?: string[];
+  fauna?: string[];
+  objects?: string[];
 }
 
 export interface Application {
@@ -106,6 +152,12 @@ export interface Application {
   description: string;
   imagePlaceholder: string;
   imageKey?: string;
+  dimensions?: string;
+  materialSpecs?: string;
+  layoutGuidelines?: string;
+  typographyHierarchy?: string;
+  artDirection?: string;
+  substrates?: string[];
 }
 
 export interface VerbalMessagingPillar {
@@ -113,6 +165,12 @@ export interface VerbalMessagingPillar {
   description: string;
   proofPoints?: string[];
   exampleCopy?: string[];
+}
+
+export interface TonePerChannel {
+  channel: string;
+  tone: string;
+  example: string;
 }
 
 export interface VerbalIdentity {
@@ -130,6 +188,7 @@ export interface VerbalIdentity {
   };
   sampleHeadlines: string[];
   sampleCTAs: string[];
+  tonePerChannel?: TonePerChannel[];
 }
 
 export interface Positioning {
@@ -194,6 +253,13 @@ export interface ProductionDeliverable {
   specs: string;
 }
 
+export interface ProductionMethod {
+  method: string;
+  substrate: string;
+  guidelines: string[];
+  restrictions: string[];
+}
+
 export interface ProductionGuidelines {
   fileNamingConvention: string;
   handoffChecklist: string[];
@@ -212,6 +278,7 @@ export interface ProductionGuidelines {
     notes: string;
   };
   deliverables: ProductionDeliverable[];
+  productionMethods?: ProductionMethod[];
 }
 
 export interface ImageGenerationBriefing {
@@ -247,6 +314,8 @@ export interface BrandbookData {
   microcopy?: Microcopy;
   accessibility?: Accessibility;
   motion?: Motion;
+  brandStory?: BrandStory;
+  socialMediaGuidelines?: SocialMediaGuidelines;
   keyVisual: KeyVisual;
   applications: Application[];
   productionGuidelines?: ProductionGuidelines;

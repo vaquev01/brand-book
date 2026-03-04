@@ -42,6 +42,28 @@ export function SectionTokensA11y({ data, num }: { data: BrandbookData; num: num
                 {data.designTokens.borderRadii.map((t, i) => <li key={i}>{t}</li>)}
               </ul>
             </div>
+            {data.designTokens.shadows && data.designTokens.shadows.length > 0 && (
+              <div>
+                <span className="text-purple-400 block mb-2">{"// Shadow Tokens"}</span>
+                <ul className="space-y-1">
+                  {data.designTokens.shadows.map((t, i) => <li key={i}>{t}</li>)}
+                </ul>
+              </div>
+            )}
+            {data.designTokens.breakpoints && data.designTokens.breakpoints.length > 0 && (
+              <div>
+                <span className="text-green-400 block mb-2">{"// Breakpoints"}</span>
+                <ul className="space-y-1">
+                  {data.designTokens.breakpoints.map((t, i) => <li key={i}>{t}</li>)}
+                </ul>
+              </div>
+            )}
+            {data.designTokens.grid && (
+              <div>
+                <span className="text-yellow-400 block mb-2">{"// Grid System"}</span>
+                <p className="text-gray-300">{data.designTokens.grid}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

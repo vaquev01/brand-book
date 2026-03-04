@@ -88,19 +88,23 @@ INSTRUÇÕES POR SEÇÃO:
 5. "verbalIdentity": tagline memorável e intraduzível (que se perde algo na tradução), one-liner com ganchos, traços de voz com exemplos, messaging pillars com copy real, vocabulário com pelo menos 8 palavras em cada lista, do/don'ts acionáveis, 5+ headlines e CTAs variados.
 6. "logo": URLs placehold.co realistas (use cores da paleta no URL). Conceito do símbolo claro no clearSpace. Regras de uso incorreto específicas e ilustrativas (mínimo 5).
 7. "logoVariants": todas as 6 variações com URLs placehold.co.
-8. "colors": paleta primária (2-3 cores), secundária (2-4 cores), semântica completa, dataViz (5-8 cores). Nomes criativos e específicos. HEX preciso, RGB e CMYK corretos.
-9. "typography": 3 famílias distintas com personalidades complementares — marketing/display, UI/interface, monospace/código.
+8. "colors": paleta primária (2-3 cores), secundária (2-4 cores), semântica completa, dataViz (5-8 cores). Nomes criativos e específicos. HEX preciso, RGB e CMYK corretos. Cada cor DEVE ter "usage" explicando onde e como usar (ex: "Fundo principal de materiais impressos", "Texto primário e blocos sólidos", "Destaques e call-to-action"). Inclua "pantone" quando aplicável (ex: "Pantone 286 C" para cores sólidas) — essencial para produção física (uniformes, sinalização, embalagens).
+9. "typography": 3 famílias distintas com personalidades complementares — marketing/display, UI/interface, monospace/código. Cada fonte DEVE ter: "fallbackFont" (alternativa Google Fonts gratuita), "textTransform" se aplicável (lowercase, uppercase, capitalize, none), "category" (Script, Sans-Serif, Serif, Display, Monospace).
 10. "typographyScale": mínimo 8 níveis (Display, H1, H2, H3, H4, Body Large, Body, Body Small, Caption, Overline) com medidas em px, line-heights calculados, letter-spacing em em.
-11. "designTokens": mínimo 10 valores de spacing (4px grid), 6+ border-radii com casos de uso.
+11. "designTokens": mínimo 10 valores de spacing (4px grid), 6+ border-radii com casos de uso, shadows (3-5 níveis: sm, md, lg, xl), breakpoints (mobile, tablet, desktop, wide), grid (sistema de grid responsivo).
 12. "uiGuidelines": grid responsivo detalhado, densidade/espaçamento com exemplos, estilo de iconografia com peso e estilo, estilo de ilustração coerente com a marca, guidelines de dataviz, mínimo 6 componentes com estados completos (default, hover, focus, active, disabled, error).
 13. "uxPatterns": descrições detalhadas com fluxos, exemplos de copy real para cada pattern.
 14. "microcopy": regras com exemplos reais de copy em cada contexto.
 15. "accessibility": regras WCAG 2.2 AA/AAA específicas, exemplos de ratios de contraste, CSS de focus states, estratégias de independência de cor.
 16. "motion": durações em ms, funções de easing específicas (cubic-bezier), triggers e estados de carregamento com exemplos.
-17. "keyVisual": mínimo 6 elementos gráficos detalhados, estilo fotográfico com referências reais, iconografia com peso e estilo, ilustrações com técnica, arquitetura de marketing com hierarquia. MASCOTES: Avalie e crie se aplicável (1-3 mascotes ricos). SÍMBOLOS: mínimo 3 símbolos identitários. PADRÕES: mínimo 2 padrões gráficos.
-18. "applications": mínimo 4 aplicações variadas (digital + print) com imagePlaceholder via placehold.co e imageKey válido.
-19. "productionGuidelines": naming convention com exemplos reais, checklist de handoff completo (mínimo 10 itens), specs de impressão e digital precisas, lista de entregáveis organizada.
+17. "keyVisual": mínimo 6 elementos gráficos detalhados, estilo fotográfico com referências reais, iconografia com peso e estilo, ilustrações com técnica, arquitetura de marketing com hierarquia, compositionPhilosophy (filosofia de composição — como organizar os elementos visuais: abundância vs minimalismo, bordas vs centro, hierarquia espacial). MASCOTES: Avalie e crie se aplicável (1-3 mascotes ricos). SÍMBOLOS: mínimo 3 símbolos identitários. PADRÕES: "patterns" (string[] legado) E "structuredPatterns" (array de objetos detalhados com name, description, composition, usage, density, background — mínimo 2 padrões). CATEGORIZAÇÃO DE ATIVOS VISUAIS: preencher "flora" (elementos botânicos/naturais), "fauna" (animais/mascotes informais), "objects" (objetos identitários — instrumentos, utensílios, elementos culturais).
+18. "applications": mínimo 4 aplicações variadas (digital + print) com imagePlaceholder via placehold.co e imageKey válido. Cada aplicação DEVE ter: "dimensions" (dimensões exatas da peça — ex: "90×50mm cartão de visita", "1080×1080px feed Instagram", "A3 297×420mm cardápio", "outdoor 9×3m"), "materialSpecs" (substrato, gramatura, acabamento, material físico), "layoutGuidelines" (regras de layout — margens, hierarquia, densidade visual), "typographyHierarchy" (qual fonte para cada nível — títulos, subtítulos, corpo, preços), "artDirection" (direção de arte — iluminação, estilo fotográfico, composição gráfica), "substrates" (lista de materiais recomendados).
+19. "productionGuidelines": naming convention com exemplos reais, checklist de handoff completo (mínimo 10 itens), specs de impressão e digital precisas, lista de entregáveis organizada. MÉTODOS DE PRODUÇÃO: "productionMethods" — array detalhando cada método (flexografia, serigrafia/silk-screen, bordado, offset, digital) com: substrate, guidelines específicas, restrictions (o que NÃO fazer naquele método).
 20. "imageGenerationBriefing": briefing de direção de arte profissional com referências artísticas reais, instruções de composição técnica (FOV, profundidade de campo, iluminação), paleta de mood, negative prompt completo.
+
+21. "brandStory": narrativa profunda da marca em 3 campos — "manifesto" (texto de marca de 2-3 parágrafos, estilo manifesto, na voz da marca, emocional e aspiracional), "originStory" (história de origem — por que a marca foi criada, o problema que resolve, o momento da virada), "brandPromise" (promessa central e inquebrável da marca para seus clientes — 1-2 frases precisas), "brandBeliefs" (lista de 4-6 crenças que a marca defende, no formato "Acreditamos que...").
+22. "verbalIdentity.tonePerChannel": para cada canal relevante (Instagram, LinkedIn, WhatsApp, Email, TikTok, Site, Atendimento), especifique: "channel", "tone" (como a marca fala nesse canal especificamente), "example" (exemplo real de post/mensagem/resposta naquele canal).
+23. "socialMediaGuidelines": guia completo de redes sociais. Para cada plataforma relevante: "platform", "primaryFormats" (formatos com dimensões exatas: ex: "Feed 1080×1080px, Reels 1080×1920px, Stories 1080×1920px"), "tone" (tom específico para esta plataforma), "contentPillars" (4-5 pilares de conteúdo — o que postar), "frequency" (frequência recomendada), "doList" (3+ práticas recomendadas), "dontList" (3+ proibições), "examplePost" (exemplo de post pronto para publicar). Inclua também: "globalHashtagStrategy" e "brandVoiceAdaptation" (como adaptar a voz global por canal).
 
 ESTRUTURA JSON EXIGIDA:
 {
@@ -152,7 +156,14 @@ ESTRUTURA JSON EXIGIDA:
     "vocabulary": { "preferred": ["string"], "avoid": ["string"] },
     "doDont": { "do": ["string"], "dont": ["string"] },
     "sampleHeadlines": ["string"],
-    "sampleCTAs": ["string"]
+    "sampleCTAs": ["string"],
+    "tonePerChannel": [
+      {
+        "channel": "string (ex: Instagram, LinkedIn, WhatsApp, Email, TikTok, Site, Atendimento)",
+        "tone": "string (como a marca fala especificamente neste canal)",
+        "example": "string (exemplo real de post/mensagem/resposta pronto para usar)"
+      }
+    ]
   },
   "logo": {
     "primary": "string (URL placehold.co com cores da paleta, ex: https://placehold.co/800x300/1a1a2e/e8d5b7?text=LOGO)",
@@ -171,9 +182,15 @@ ESTRUTURA JSON EXIGIDA:
     "markOnly": "string (URL placehold.co só o símbolo)",
     "wordmarkOnly": "string (URL placehold.co só o texto)"
   },
+  "brandStory": {
+    "manifesto": "string (2-3 parágrafos na voz da marca, emocional e aspiracional — manifesto de marca)",
+    "originStory": "string (história de origem: o problema, a virada, o porquê da marca existir)",
+    "brandPromise": "string (promessa central para os clientes — precisa, inquebrável, memorável)",
+    "brandBeliefs": ["string (ex: 'Acreditamos que...' — 4-6 crenças da marca)"]
+  },
   "colors": {
-    "primary": [{ "name": "string (nome criativo com simbolismo)", "hex": "string", "rgb": "string", "cmyk": "string" }],
-    "secondary": [{ "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" }],
+    "primary": [{ "name": "string (nome criativo com simbolismo)", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (ex: Pantone 286 C — para produção física)", "usage": "string (onde e como usar esta cor — ex: fundo principal, texto, destaques, CTA)" }],
+    "secondary": [{ "name": "string", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (opcional)", "usage": "string" }],
     "semantic": {
       "success": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" },
       "error": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" },
@@ -183,9 +200,9 @@ ESTRUTURA JSON EXIGIDA:
     "dataViz": [{ "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" }]
   },
   "typography": {
-    "marketing": { "name": "string (fonte Display/Marketing)", "usage": "string (por que esta fonte para esta marca)", "weights": ["string"] },
-    "ui": { "name": "string (fonte UI/Interface)", "usage": "string (por que esta fonte para interface)", "weights": ["string"] },
-    "monospace": { "name": "string (fonte Mono/Code)", "usage": "string", "weights": ["string"] }
+    "marketing": { "name": "string (fonte Display/Marketing)", "usage": "string (por que esta fonte para esta marca)", "weights": ["string"], "fallbackFont": "string (alternativa Google Fonts gratuita)", "textTransform": "string (lowercase | uppercase | capitalize | none)", "category": "string (Script | Sans-Serif | Serif | Display | Monospace)" },
+    "ui": { "name": "string (fonte UI/Interface)", "usage": "string (por que esta fonte para interface)", "weights": ["string"], "fallbackFont": "string", "textTransform": "string", "category": "string" },
+    "monospace": { "name": "string (fonte Mono/Code)", "usage": "string", "weights": ["string"], "fallbackFont": "string", "category": "Monospace" }
   },
   "typographyScale": [
     {
@@ -200,7 +217,10 @@ ESTRUTURA JSON EXIGIDA:
   ],
   "designTokens": {
     "spacing": ["string (ex: 4px — base unit, 8px — micro, 12px — small...)"],
-    "borderRadii": ["string (ex: 0px — sharp/default, 4px — subtle, 8px — cards...)"]
+    "borderRadii": ["string (ex: 0px — sharp/default, 4px — subtle, 8px — cards...)"],
+    "shadows": ["string (ex: 0 1px 2px rgba(0,0,0,0.05) — subtle, 0 4px 6px rgba(0,0,0,0.1) — card...)"],
+    "breakpoints": ["string (ex: 640px — mobile, 768px — tablet, 1024px — desktop, 1280px — wide)"],
+    "grid": "string (sistema de grid — colunas, gutters, margens por breakpoint)"
   },
   "uiGuidelines": {
     "layoutGrid": "string (colunas, gutters, margens para mobile/tablet/desktop)",
@@ -246,6 +266,7 @@ ESTRUTURA JSON EXIGIDA:
     "iconography": "string (estilo, peso, pixel grid, biblioteca recomendada)",
     "illustrations": "string (técnica, paleta, nível de detalhe, referências de ilustradores)",
     "marketingArchitecture": "string (hierarquia de peças, templates, adaptações por canal)",
+    "compositionPhilosophy": "string (filosofia de composição visual — densidade, abundância vs minimalismo, organização espacial, relação bordas/centro, hierarquia de elementos)",
     "mascots": [
       {
         "name": "string",
@@ -255,14 +276,33 @@ ESTRUTURA JSON EXIGIDA:
       }
     ],
     "symbols": ["string (mínimo 3 — símbolo + seu significado para a marca)"],
-    "patterns": ["string (mínimo 2 — descrição técnica do padrão + como e onde usar)"]
+    "patterns": ["string (mínimo 2 — descrição legado para compatibilidade)"],
+    "structuredPatterns": [
+      {
+        "name": "string (ex: Padrão Selva, Padrão Geométrico)",
+        "description": "string (conceito e referência visual)",
+        "composition": "string (elementos que compõem o padrão, organização, densidade)",
+        "usage": "string (onde e como aplicar — embalagens premium, fundos, redes sociais)",
+        "density": "string (denso/moderado/espaçado)",
+        "background": "string (cor ou textura de fundo recomendada)"
+      }
+    ],
+    "flora": ["string (elementos botânicos/naturais da marca — folhagens, flores, frutos)"],
+    "fauna": ["string (animais/personagens informais — pássaros, felinos, insetos)"],
+    "objects": ["string (objetos identitários culturais — instrumentos, utensílios, ferramentas)"]
   },
   "applications": [
     {
       "type": "string",
       "description": "string",
       "imagePlaceholder": "string (URL placehold.co com cores da paleta)",
-      "imageKey": "string (um de: ${IMAGE_KEY_OPTIONS})"
+      "imageKey": "string (um de: ${IMAGE_KEY_OPTIONS})",
+      "dimensions": "string (dimensões exatas — ex: '90×50mm frente e verso', '1080×1080px feed', 'A3 297×420mm', 'outdoor 9×3m')",
+      "materialSpecs": "string (substrato, gramatura, acabamento — ex: Papel Kraft 250g, Acrílico 3mm, Tecido sarja)",
+      "layoutGuidelines": "string (regras de layout — margens, respiro, hierarquia, densidade visual, espaço negativo)",
+      "typographyHierarchy": "string (qual fonte para cada nível: categorias em Display/uppercase, itens em UI/bold, descrições em Body/regular, preços em destaque)",
+      "artDirection": "string (direção de arte — iluminação, temperatura de cor, composição, estilo fotográfico, elementos gráficos)",
+      "substrates": ["string (materiais recomendados — Papel Kraft reciclado, Madeira de demolição, Cerâmica, Tecido)"]
     }
   ],
   "productionGuidelines": {
@@ -284,7 +324,31 @@ ESTRUTURA JSON EXIGIDA:
     },
     "deliverables": [
       { "asset": "string", "formats": ["string"], "specs": "string" }
+    ],
+    "productionMethods": [
+      {
+        "method": "string (ex: Flexografia, Serigrafia/Silk-screen, Bordado, Offset, Impressão Digital)",
+        "substrate": "string (ex: Embalagens plásticas, Tecidos, Bonés, Papel couché)",
+        "guidelines": ["string (diretrizes positivas — o que fazer neste método)"],
+        "restrictions": ["string (restrições — o que NÃO fazer, limitações técnicas do método)"]
+      }
     ]
+  },
+  "socialMediaGuidelines": {
+    "platforms": [
+      {
+        "platform": "string (ex: Instagram, LinkedIn, TikTok, WhatsApp, Facebook)",
+        "primaryFormats": "string (dimensões: ex: 'Feed 1080×1080px, Reels 1080×1920px, Stories 1080×1920px')",
+        "tone": "string (tom específico para esta plataforma — mais formal/casual/visual/textual)",
+        "contentPillars": ["string (4-5 pilares — o que postar: ex: 'Bastidores', 'Produtos', 'Depoimentos', 'Educacional')"],
+        "frequency": "string (ex: '5x por semana no feed, 10 stories/dia')",
+        "doList": ["string (práticas recomendadas para esta plataforma)"],
+        "dontList": ["string (proibições específicas desta plataforma)"],
+        "examplePost": "string (exemplo de post completo pronto para publicar, incluindo legenda e hashtags)"
+      }
+    ],
+    "globalHashtagStrategy": "string (estratégia de hashtags — branded hashtags, nicho, alcance, volume)",
+    "brandVoiceAdaptation": "string (como adaptar a voz da marca para cada tipo de canal sem perder identidade)"
   },
   "imageGenerationBriefing": {
     "visualStyle": "string (estilo visual técnico com referências de movimento artístico real)",

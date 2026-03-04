@@ -146,7 +146,6 @@ const PROVIDERS: ProviderConfig[] = [
     dot: "bg-purple-500",
     required: false,
     imageModelKey: "stabilityModel",
-    comingSoon: true,
   },
   {
     key: "ideogram",
@@ -158,7 +157,6 @@ const PROVIDERS: ProviderConfig[] = [
     dot: "bg-orange-500",
     required: false,
     imageModelKey: "ideogramModel",
-    comingSoon: true,
   },
 ];
 

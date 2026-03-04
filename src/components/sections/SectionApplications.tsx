@@ -96,7 +96,33 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
               </div>
               <div className="p-5">
                 <h3 className="font-bold text-lg mb-2">{app.type}</h3>
-                <p className="text-gray-600 text-sm">{app.description}</p>
+                <p className="text-gray-600 text-sm mb-3">{app.description}</p>
+                {(app.dimensions || app.materialSpecs || app.layoutGuidelines || app.typographyHierarchy || app.artDirection || app.substrates) && (
+                  <div className="space-y-2 mb-3 border-t pt-3">
+                    {app.dimensions && (
+                      <div className="text-xs"><span className="font-semibold text-gray-700">Dimensões:</span> <span className="text-gray-600 font-mono">{app.dimensions}</span></div>
+                    )}
+                    {app.materialSpecs && (
+                      <div className="text-xs"><span className="font-semibold text-gray-700">Material:</span> <span className="text-gray-600">{app.materialSpecs}</span></div>
+                    )}
+                    {app.layoutGuidelines && (
+                      <div className="text-xs"><span className="font-semibold text-gray-700">Layout:</span> <span className="text-gray-600">{app.layoutGuidelines}</span></div>
+                    )}
+                    {app.typographyHierarchy && (
+                      <div className="text-xs"><span className="font-semibold text-gray-700">Tipografia:</span> <span className="text-gray-600">{app.typographyHierarchy}</span></div>
+                    )}
+                    {app.artDirection && (
+                      <div className="text-xs"><span className="font-semibold text-gray-700">Direção de Arte:</span> <span className="text-gray-600">{app.artDirection}</span></div>
+                    )}
+                    {app.substrates && app.substrates.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {app.substrates.map((s, j) => (
+                          <span key={j} className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded">{s}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {onUpdateApplicationImageKey && totalGenerated > 0 && (
                   <div className="no-print mt-4 border-t pt-4">
                     <label

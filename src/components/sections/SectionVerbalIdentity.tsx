@@ -132,6 +132,26 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
           </div>
         </div>
       </div>
+
+      {v.tonePerChannel && v.tonePerChannel.length > 0 && (
+        <div className="mt-10">
+          <h3 className="text-xl font-bold mb-4">Tom de Voz por Canal</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {v.tonePerChannel.map((t, i) => (
+              <div key={i} className="bg-white border rounded-xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-gray-900 text-white text-xs font-bold px-3 py-1 rounded-full">{t.channel}</span>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">{t.tone}</p>
+                <div className="bg-gray-50 border rounded-lg p-3">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Exemplo</div>
+                  <p className="text-xs text-gray-600 italic leading-relaxed">&ldquo;{t.example}&rdquo;</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

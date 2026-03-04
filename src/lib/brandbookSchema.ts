@@ -8,6 +8,8 @@ const ColorSchema = z.object({
   hex: NonEmptyString,
   rgb: NonEmptyString,
   cmyk: NonEmptyString,
+  pantone: z.string().optional(),
+  usage: z.string().optional(),
 });
 
 const BrandConceptSchema = z.object({
@@ -59,6 +61,9 @@ const TypographySchema = z.object({
   name: NonEmptyString,
   usage: NonEmptyString,
   weights: z.array(NonEmptyString).min(1),
+  fallbackFont: z.string().optional(),
+  textTransform: z.string().optional(),
+  category: z.string().optional(),
 });
 
 const TypographySetSchema = z.object({
@@ -82,6 +87,9 @@ const TypographyScaleItemSchema = z.object({
 const DesignTokensSchema = z.object({
   spacing: z.array(NonEmptyString).min(3),
   borderRadii: z.array(NonEmptyString).min(2),
+  shadows: z.array(NonEmptyString).optional(),
+  breakpoints: z.array(NonEmptyString).optional(),
+  grid: z.string().optional(),
 });
 
 const UiComponentGuidelineSchema = z.object({
@@ -134,15 +142,29 @@ const MascotSchema = z.object({
   usageGuidelines: z.array(NonEmptyString).min(1),
 });
 
+const BrandPatternSchema = z.object({
+  name: NonEmptyString,
+  description: NonEmptyString,
+  composition: NonEmptyString,
+  usage: NonEmptyString,
+  density: z.string().optional(),
+  background: z.string().optional(),
+});
+
 const KeyVisualSchema = z.object({
   elements: z.array(NonEmptyString).min(3),
   photographyStyle: NonEmptyString,
   iconography: z.string().optional(),
   illustrations: z.string().optional(),
   marketingArchitecture: z.string().optional(),
+  compositionPhilosophy: z.string().optional(),
   mascots: z.array(MascotSchema).optional(),
   symbols: z.array(NonEmptyString).optional(),
   patterns: z.array(NonEmptyString).optional(),
+  structuredPatterns: z.array(BrandPatternSchema).optional(),
+  flora: z.array(NonEmptyString).optional(),
+  fauna: z.array(NonEmptyString).optional(),
+  objects: z.array(NonEmptyString).optional(),
 });
 
 const ASSET_KEYS = ASSET_CATALOG.map((a) => a.key);
@@ -155,6 +177,12 @@ const ApplicationSchema = z.object({
   description: NonEmptyString,
   imagePlaceholder: NonEmptyString,
   imageKey: AssetKeySchema.optional(),
+  dimensions: z.string().optional(),
+  materialSpecs: z.string().optional(),
+  layoutGuidelines: z.string().optional(),
+  typographyHierarchy: z.string().optional(),
+  artDirection: z.string().optional(),
+  substrates: z.array(NonEmptyString).optional(),
 });
 
 const ApplicationSchemaV2 = ApplicationSchema.extend({
@@ -166,6 +194,12 @@ const VerbalMessagingPillarSchema = z.object({
   description: NonEmptyString,
   proofPoints: z.array(NonEmptyString).optional(),
   exampleCopy: z.array(NonEmptyString).optional(),
+});
+
+const TonePerChannelSchema = z.object({
+  channel: NonEmptyString,
+  tone: NonEmptyString,
+  example: NonEmptyString,
 });
 
 const VerbalIdentitySchema = z.object({
@@ -183,6 +217,31 @@ const VerbalIdentitySchema = z.object({
   }),
   sampleHeadlines: z.array(NonEmptyString).min(3),
   sampleCTAs: z.array(NonEmptyString).min(4),
+  tonePerChannel: z.array(TonePerChannelSchema).optional(),
+});
+
+const BrandStorySchema = z.object({
+  manifesto: NonEmptyString,
+  originStory: NonEmptyString,
+  brandPromise: NonEmptyString,
+  brandBeliefs: z.array(NonEmptyString).optional(),
+});
+
+const SocialMediaPlatformSchema = z.object({
+  platform: NonEmptyString,
+  primaryFormats: NonEmptyString,
+  tone: NonEmptyString,
+  contentPillars: z.array(NonEmptyString).min(2),
+  frequency: z.string().optional(),
+  doList: z.array(NonEmptyString).min(2),
+  dontList: z.array(NonEmptyString).min(2),
+  examplePost: z.string().optional(),
+});
+
+const SocialMediaGuidelinesSchema = z.object({
+  platforms: z.array(SocialMediaPlatformSchema).min(1),
+  globalHashtagStrategy: z.string().optional(),
+  brandVoiceAdaptation: z.string().optional(),
 });
 
 const PositioningSchema = z.object({
@@ -210,6 +269,13 @@ const ProductionDeliverableSchema = z.object({
   specs: NonEmptyString,
 });
 
+const ProductionMethodSchema = z.object({
+  method: NonEmptyString,
+  substrate: NonEmptyString,
+  guidelines: z.array(NonEmptyString).min(1),
+  restrictions: z.array(NonEmptyString).min(1),
+});
+
 const ProductionGuidelinesSchema = z.object({
   fileNamingConvention: NonEmptyString,
   handoffChecklist: z.array(NonEmptyString).min(4),
@@ -228,6 +294,7 @@ const ProductionGuidelinesSchema = z.object({
     notes: NonEmptyString,
   }),
   deliverables: z.array(ProductionDeliverableSchema).min(2),
+  productionMethods: z.array(ProductionMethodSchema).optional(),
 });
 
 const ImageGenerationBriefingSchema = z.object({
@@ -249,6 +316,7 @@ export const BrandbookSchemaLoose = z.object({
   brandName: NonEmptyString,
   industry: NonEmptyString,
   brandConcept: BrandConceptSchema,
+  brandStory: BrandStorySchema.optional(),
   positioning: PositioningSchema.optional(),
   audiencePersonas: z.array(AudiencePersonaSchema).optional(),
   verbalIdentity: VerbalIdentitySchema.optional(),
@@ -263,6 +331,7 @@ export const BrandbookSchemaLoose = z.object({
   microcopy: MicrocopySchema.optional(),
   accessibility: AccessibilitySchema.optional(),
   motion: MotionSchema.optional(),
+  socialMediaGuidelines: SocialMediaGuidelinesSchema.optional(),
   keyVisual: KeyVisualSchema,
   applications: z.array(ApplicationSchema).min(1),
   productionGuidelines: ProductionGuidelinesSchema.optional(),
@@ -271,6 +340,7 @@ export const BrandbookSchemaLoose = z.object({
 
 export const BrandbookSchemaV2 = BrandbookSchemaLoose.extend({
   schemaVersion: z.string().default("2.0"),
+  brandStory: BrandStorySchema,
   positioning: PositioningSchema,
   audiencePersonas: z.array(AudiencePersonaSchema).min(2),
   verbalIdentity: VerbalIdentitySchema,
@@ -281,6 +351,7 @@ export const BrandbookSchemaV2 = BrandbookSchemaLoose.extend({
   microcopy: MicrocopySchema,
   accessibility: AccessibilitySchema,
   motion: MotionSchema,
+  socialMediaGuidelines: SocialMediaGuidelinesSchema,
   productionGuidelines: ProductionGuidelinesSchema,
   imageGenerationBriefing: ImageGenerationBriefingSchema,
   applications: z.array(ApplicationSchemaV2).min(3),

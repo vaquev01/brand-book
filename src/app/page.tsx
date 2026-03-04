@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
 import { ImageGenPanel } from "@/components/ImageGenPanel";
 import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
@@ -22,7 +22,7 @@ import type { AssetKey } from "@/lib/imagePrompts";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
   Image as ImageIcon, ImagePlus, Wand2, ShieldCheck, Download,
-  Trash2, UploadCloud, FileJson, Hexagon,
+  Trash2, UploadCloud, FileJson, Hexagon, Undo2, Redo2,
 } from "lucide-react";
 
 type Tab = "generate" | "examples" | "viewer";
@@ -54,12 +54,14 @@ function loadCachedGeneratedAssets(slug: string): Record<string, GeneratedAsset>
   }
 }
 
-function saveCachedGeneratedAssets(slug: string, assets: Record<string, GeneratedAsset>) {
-  if (typeof window === "undefined") return;
-  if (!slug) return;
+function saveCachedGeneratedAssets(slug: string, assets: Record<string, GeneratedAsset>): string | null {
+  if (typeof window === "undefined") return null;
+  if (!slug) return null;
   try {
     localStorage.setItem(GENERATED_ASSETS_LS_PREFIX + slug, JSON.stringify(assets));
+    return null;
   } catch {
+    return "Armazenamento local cheio. Não foi possível salvar o cache de imagens. Tente limpar o cache de imagens ou remover alguns Assets.";
   }
 }
 
@@ -83,23 +85,27 @@ function loadCachedBrandAssets(slug: string): UploadedAsset[] {
   }
 }
 
-function saveCachedBrandAssets(slug: string, assets: UploadedAsset[]) {
-  if (typeof window === "undefined") return;
-  if (!slug) return;
+function saveCachedBrandAssets(slug: string, assets: UploadedAsset[]): string | null {
+  if (typeof window === "undefined") return null;
+  if (!slug) return null;
   try {
     localStorage.setItem(BRAND_ASSETS_LS_PREFIX + slug, JSON.stringify(assets));
+    return null;
   } catch {
-    // ignore quota errors for large asset collections
+    return "Armazenamento local cheio. Não foi possível salvar seus Assets. Remova alguns itens (ou reduza o tamanho das imagens) e tente novamente.";
   }
 }
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>("examples");
   const [loading, setLoading] = useState(false);
+  const [loadingShared, setLoadingShared] = useState(false);
   const [generationPhase, setGenerationPhase] = useState("");
   const [generationPct, setGenerationPct] = useState(0);
   const [error, setError] = useState("");
+  const [storageWarning, setStorageWarning] = useState("");
   const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
+  const brandbookRef = useRef<BrandbookData | null>(null);
   const [jsonText, setJsonText] = useState("");
   const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
@@ -108,6 +114,49 @@ export default function Home() {
   const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [exportingPack, setExportingPack] = useState(false);
+  const [undoStack, setUndoStack] = useState<BrandbookData[]>([]);
+  const [redoStack, setRedoStack] = useState<BrandbookData[]>([]);
+
+  useEffect(() => {
+    brandbookRef.current = brandbookData;
+  }, [brandbookData]);
+
+  function resetHistory() {
+    setUndoStack([]);
+    setRedoStack([]);
+  }
+
+  function updateBrandbook(updater: (prev: BrandbookData) => BrandbookData) {
+    setBrandbookData((prev) => {
+      if (!prev) return prev;
+      const next = updater(prev);
+      setUndoStack((s) => [...s.slice(-19), prev]);
+      setRedoStack([]);
+      return next;
+    });
+  }
+
+  function handleUndo() {
+    setUndoStack((s) => {
+      if (s.length === 0) return s;
+      const current = brandbookRef.current;
+      const prev = s[s.length - 1];
+      if (current) setRedoStack((r) => [...r.slice(-19), current]);
+      setBrandbookData(prev);
+      return s.slice(0, -1);
+    });
+  }
+
+  function handleRedo() {
+    setRedoStack((s) => {
+      if (s.length === 0) return s;
+      const current = brandbookRef.current;
+      const next = s[s.length - 1];
+      if (current) setUndoStack((u) => [...u.slice(-19), current]);
+      setBrandbookData(next);
+      return s.slice(0, -1);
+    });
+  }
 
   useEffect(() => {
     const keys = loadApiKeys();
@@ -119,23 +168,29 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     const bbParam = params.get("bb");
     if (bbParam) {
-      decompressBrandbook(bbParam).then((raw) => {
-        if (!raw) return;
-        try {
+      setLoadingShared(true);
+      setTab("viewer");
+      setViewerTab("preview");
+      decompressBrandbook(bbParam)
+        .then((raw) => {
+          if (!raw) throw new Error("Link inválido");
           const migrated = migrateBrandbook(raw);
           const validated = BrandbookSchemaLoose.safeParse(migrated);
-          if (validated.success) {
-            setBrandbookData(migrated as BrandbookData);
-            const slug = slugifyForStorage((migrated as BrandbookData).brandName);
-            setGeneratedAssets(loadCachedGeneratedAssets(slug));
-            setUploadedBrandAssets(loadCachedBrandAssets(slug));
-            setTab("viewer");
-            window.history.replaceState({}, "", window.location.pathname);
-          }
-        } catch {
-          // invalid share URL, ignore
-        }
-      });
+          if (!validated.success) throw new Error("Link inválido");
+          resetHistory();
+          setBrandbookData(migrated as BrandbookData);
+          const slug = slugifyForStorage((migrated as BrandbookData).brandName);
+          setGeneratedAssets(loadCachedGeneratedAssets(slug));
+          setUploadedBrandAssets(loadCachedBrandAssets(slug));
+          window.history.replaceState({}, "", window.location.pathname);
+        })
+        .catch(() => {
+          setError("Link compartilhado inválido ou expirado.");
+          setTab("examples");
+        })
+        .finally(() => {
+          setLoadingShared(false);
+        });
     }
   }, []);
 
@@ -143,7 +198,9 @@ export default function Home() {
   async function handleGenerate(formData: GenerateBriefingData) {
     setLoading(true);
     setError("");
+    setStorageWarning("");
     setBrandbookData(null);
+    resetHistory();
     setGenerationPhase("Preparando geração...");
     setGenerationPct(0);
 
@@ -204,6 +261,7 @@ export default function Home() {
               const strict = BrandbookSchemaV2.safeParse(migrated);
               const nextBrandbook = (strict.success ? strict.data : migrated) as unknown as BrandbookData;
               const slug = slugifyForStorage(nextBrandbook.brandName);
+              resetHistory();
               setBrandbookData(nextBrandbook);
               setGeneratedAssets(loadCachedGeneratedAssets(slug));
               setUploadedBrandAssets(loadCachedBrandAssets(slug));
@@ -230,6 +288,7 @@ export default function Home() {
   function handleLoadExample(example: BrandbookData) {
     try {
       const migrated = migrateBrandbook(example);
+      resetHistory();
       setBrandbookData(migrated);
       const slug = slugifyForStorage(migrated.brandName);
       setGeneratedAssets(loadCachedGeneratedAssets(slug));
@@ -306,6 +365,7 @@ export default function Home() {
         setError("JSON inválido:\n" + formatZodIssues(base.error.issues));
         return;
       }
+      resetHistory();
       setBrandbookData(migrated);
       const slug = slugifyForStorage(migrated.brandName);
       setGeneratedAssets(loadCachedGeneratedAssets(slug));
@@ -319,13 +379,21 @@ export default function Home() {
   useEffect(() => {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
-    saveCachedGeneratedAssets(slug, generatedAssets);
+    const msg = saveCachedGeneratedAssets(slug, generatedAssets);
+    if (msg) {
+      setStorageWarning(msg);
+      setTimeout(() => setStorageWarning(""), 8000);
+    }
   }, [generatedAssets, brandbookData]);
 
   useEffect(() => {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
-    saveCachedBrandAssets(slug, uploadedBrandAssets);
+    const msg = saveCachedBrandAssets(slug, uploadedBrandAssets);
+    if (msg) {
+      setStorageWarning(msg);
+      setTimeout(() => setStorageWarning(""), 8000);
+    }
   }, [uploadedBrandAssets, brandbookData]);
 
   function handleClearImageCache() {
@@ -406,6 +474,22 @@ export default function Home() {
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
             <span className="text-sm">{error}</span>
             <button onClick={() => setError("")} className="text-red-600 hover:text-red-800 font-bold text-lg leading-none">&times;</button>
+          </div>
+        )}
+
+        {storageWarning && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="text-sm">{storageWarning}</span>
+            <button onClick={() => setStorageWarning("")} className="text-amber-700 hover:text-amber-900 font-bold text-lg leading-none">&times;</button>
+          </div>
+        )}
+
+        {tab === "viewer" && !brandbookData && loadingShared && (
+          <div className="max-w-xl mx-auto bg-white border rounded-xl p-8 shadow-sm">
+            <div className="flex items-center justify-center gap-3">
+              <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
+              <span className="text-sm font-semibold text-gray-700">Carregando brandbook compartilhado...</span>
+            </div>
           </div>
         )}
 
@@ -537,6 +621,24 @@ export default function Home() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
+                  onClick={handleUndo}
+                  disabled={undoStack.length === 0}
+                  className="flex items-center gap-2 bg-gray-100 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  title="Desfazer última alteração"
+                >
+                  <Undo2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Desfazer</span>
+                </button>
+                <button
+                  onClick={handleRedo}
+                  disabled={redoStack.length === 0}
+                  className="flex items-center gap-2 bg-gray-100 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  title="Refazer"
+                >
+                  <Redo2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Refazer</span>
+                </button>
+                <button
                   onClick={handleClearImageCache}
                   disabled={Object.keys(generatedAssets).length === 0}
                   className="flex items-center gap-2 bg-gray-100 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -622,6 +724,15 @@ export default function Home() {
                 <ShieldCheck className="w-4 h-4" />
                 Consistência
               </button>
+              <button
+                onClick={() => setViewerTab("export")}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                  viewerTab === "export" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                }`}
+              >
+                <Download className="w-4 h-4" />
+                Exportar
+              </button>
             </div>
             </div>
 
@@ -635,8 +746,7 @@ export default function Home() {
                 uploadedAssets={uploadedBrandAssets}
                 onGoToImages={() => setViewerTab("images")}
                 onUpdateApplicationImageKey={(index: number, imageKey: AssetKey | undefined) => {
-                  setBrandbookData((prev) => {
-                    if (!prev) return prev;
+                  updateBrandbook((prev) => {
                     const nextApplications = prev.applications.map((a, i) =>
                       i === index ? { ...a, imageKey } : a
                     );
@@ -651,7 +761,7 @@ export default function Home() {
               <BrandbookEditor
                 data={brandbookData}
                 onUpdate={(updated) => {
-                  setBrandbookData(updated);
+                  updateBrandbook(() => updated);
                 }}
                 onCancel={() => setViewerTab("preview")}
               />
@@ -718,7 +828,7 @@ export default function Home() {
                     apiKeys={apiKeys}
                     textProvider={textProvider}
                     onRefined={(updated) => {
-                      setBrandbookData(updated);
+                      updateBrandbook(() => updated);
                       setViewerTab("preview");
                     }}
                   />
@@ -728,7 +838,7 @@ export default function Home() {
                     brandbook={brandbookData}
                     apiKeys={apiKeys}
                     textProvider={textProvider}
-                    onUpdated={(updated) => setBrandbookData(updated)}
+                    onUpdated={(updated) => updateBrandbook(() => updated)}
                   />
                 </div>
               </div>
@@ -806,6 +916,13 @@ export default function Home() {
                       )}
                     </button>
                   </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+                  <JsonBySectionPanel
+                    data={brandbookData}
+                    onDownload={downloadJson}
+                  />
                 </div>
               </div>
             )}

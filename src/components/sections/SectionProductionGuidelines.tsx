@@ -69,6 +69,46 @@ export function SectionProductionGuidelines({ data, num }: { data: BrandbookData
           </div>
         </div>
       </div>
+
+      {p.productionMethods && p.productionMethods.length > 0 && (
+        <div className="mt-10">
+          <h3 className="text-xl font-bold mb-6 border-b pb-3">Métodos de Produção</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {p.productionMethods.map((pm, i) => (
+              <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                <div className="px-5 py-4 bg-gray-50 border-b">
+                  <h4 className="font-bold text-gray-900">{pm.method}</h4>
+                  <p className="text-xs text-gray-500 mt-0.5">Substrato: {pm.substrate}</p>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div>
+                    <span className="text-xs font-bold text-green-700 uppercase tracking-wider">Diretrizes</span>
+                    <ul className="mt-2 space-y-1">
+                      {pm.guidelines.map((g, j) => (
+                        <li key={j} className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-green-500 shrink-0 mt-0.5">✓</span>
+                          <span>{g}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-red-700 uppercase tracking-wider">Restrições</span>
+                    <ul className="mt-2 space-y-1">
+                      {pm.restrictions.map((r, j) => (
+                        <li key={j} className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-red-500 shrink-0 mt-0.5">✕</span>
+                          <span>{r}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

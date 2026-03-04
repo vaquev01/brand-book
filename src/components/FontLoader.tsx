@@ -17,6 +17,8 @@ export function FontLoader({ data }: Props) {
     if (data.typography?.marketing?.name) names.add(data.typography.marketing.name);
     if (data.typography?.ui?.name) names.add(data.typography.ui.name);
     if (data.typography?.monospace?.name) names.add(data.typography.monospace.name);
+    if (data.typography?.primary?.name) names.add(data.typography.primary.name);
+    if (data.typography?.secondary?.name) names.add(data.typography.secondary.name);
 
     if (names.size === 0) return;
 
@@ -25,18 +27,15 @@ export function FontLoader({ data }: Props) {
       .join("&");
 
     const id = "bb-google-fonts";
-    if (document.getElementById(id)) return;
-
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
-    document.head.appendChild(link);
-
-    return () => {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-    };
+    const href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+    let link = document.getElementById(id) as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+    link.href = href;
   }, [data]);
 
   return null;

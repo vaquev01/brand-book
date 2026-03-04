@@ -18,7 +18,9 @@ import { SectionLogoVariants } from "./sections/SectionLogoVariants";
 import { SectionTypographyScale } from "./sections/SectionTypographyScale";
 import { SectionUiGuidelines } from "./sections/SectionUiGuidelines";
 import { SectionProductionGuidelines } from "./sections/SectionProductionGuidelines";
-import { useEffect } from "react";
+import { SectionBrandStory } from "./sections/SectionBrandStory";
+import { SectionSocialMedia } from "./sections/SectionSocialMedia";
+import { FontLoader } from "./FontLoader";
 import type { AssetKey } from "@/lib/imagePrompts";
 
 type Category =
@@ -47,24 +49,6 @@ interface Props {
 export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [], onGoToImages, onUpdateApplicationImageKey }: Props) {
   const isAdvanced = !!data.uxPatterns;
 
-  useEffect(() => {
-    const fonts: string[] = [];
-    if (data.typography.marketing) fonts.push(data.typography.marketing.name);
-    if (data.typography.ui) fonts.push(data.typography.ui.name);
-    if (data.typography.monospace) fonts.push(data.typography.monospace.name);
-    if (data.typography.primary) fonts.push(data.typography.primary.name);
-    if (data.typography.secondary) fonts.push(data.typography.secondary.name);
-
-    const unique = [...new Set(fonts.filter(Boolean))];
-    if (unique.length > 0) {
-      const query = unique.map((f) => `family=${f.replace(/ /g, "+")}:wght@300;400;500;600;700`).join("&");
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = `https://fonts.googleapis.com/css2?${query}&display=swap`;
-      document.head.appendChild(link);
-    }
-  }, [data]);
-
   const sectionDefs: SectionDef[] = [
     {
       id: "dna",
@@ -72,6 +56,13 @@ export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [
       category: "Estratégia",
       when: true,
       render: (num) => <SectionDNA data={data} num={num} />,
+    },
+    {
+      id: "brand-story",
+      title: "Brand Story & Manifesto",
+      category: "Estratégia",
+      when: !!data.brandStory,
+      render: (num) => <SectionBrandStory data={data} num={num} />,
     },
     {
       id: "positioning",
@@ -169,6 +160,7 @@ export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [
         (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
         (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
         (data.keyVisual.patterns && data.keyVisual.patterns.length > 0) ||
+        (data.keyVisual.structuredPatterns && data.keyVisual.structuredPatterns.length > 0) ||
         uploadedAssets.some((a) => a.type === "mascot" || a.type === "element" || a.type === "pattern")
       ),
       render: (num) => <SectionMascots data={data} num={num} uploadedAssets={uploadedAssets} />,
@@ -195,6 +187,13 @@ export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [
       when: !!data.productionGuidelines,
       render: (num) => <SectionProductionGuidelines data={data} num={num} />,
     },
+    {
+      id: "social-media",
+      title: "Guia de Redes Sociais",
+      category: "Ativos & Entrega",
+      when: !!data.socialMediaGuidelines && data.socialMediaGuidelines.platforms.length > 0,
+      render: (num) => <SectionSocialMedia data={data} num={num} />,
+    },
   ];
 
   const sections = sectionDefs
@@ -218,6 +217,7 @@ export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [
 
   return (
     <div className="max-w-5xl mx-auto" id="brandbook-content">
+      <FontLoader data={data} />
       <SectionCover data={data} />
 
       <section className="page-break mb-16" id="sumario">

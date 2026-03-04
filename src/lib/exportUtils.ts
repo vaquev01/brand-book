@@ -14,12 +14,16 @@ export function exportCSSTokens(data: BrandbookData): string {
 
   data.colors.primary.forEach((c, i) => {
     const varName = `--${slug}-color-primary-${i + 1}`;
-    lines.push(`  ${varName}: ${c.hex}; /* ${c.name} */`);
+    const pantoneStr = c.pantone ? ` | ${c.pantone}` : "";
+    const comment = c.usage ? `${c.name}${pantoneStr} — ${c.usage}` : `${c.name}${pantoneStr}`;
+    lines.push(`  ${varName}: ${c.hex}; /* ${comment} */`);
   });
 
   lines.push("", `  /* ─── Colors: Secondary ─── */`);
   data.colors.secondary.forEach((c, i) => {
-    lines.push(`  --${slug}-color-secondary-${i + 1}: ${c.hex}; /* ${c.name} */`);
+    const pantoneStr = c.pantone ? ` | ${c.pantone}` : "";
+    const comment = c.usage ? `${c.name}${pantoneStr} — ${c.usage}` : `${c.name}${pantoneStr}`;
+    lines.push(`  --${slug}-color-secondary-${i + 1}: ${c.hex}; /* ${comment} */`);
   });
 
   if (data.colors.semantic) {
@@ -31,9 +35,26 @@ export function exportCSSTokens(data: BrandbookData): string {
   }
 
   lines.push("", `  /* ─── Typography Families ─── */`);
-  if (data.typography?.marketing) lines.push(`  --${slug}-font-marketing: '${data.typography.marketing.name}', sans-serif;`);
-  if (data.typography?.ui) lines.push(`  --${slug}-font-ui: '${data.typography.ui.name}', sans-serif;`);
-  if (data.typography?.monospace) lines.push(`  --${slug}-font-mono: '${data.typography.monospace.name}', monospace;`);
+  if (data.typography?.marketing) {
+    const fb = data.typography.marketing.fallbackFont ? `, '${data.typography.marketing.fallbackFont}'` : "";
+    lines.push(`  --${slug}-font-marketing: '${data.typography.marketing.name}'${fb}, sans-serif;`);
+  }
+  if (data.typography?.ui) {
+    const fb = data.typography.ui.fallbackFont ? `, '${data.typography.ui.fallbackFont}'` : "";
+    lines.push(`  --${slug}-font-ui: '${data.typography.ui.name}'${fb}, sans-serif;`);
+  }
+  if (data.typography?.monospace) {
+    const fb = data.typography.monospace.fallbackFont ? `, '${data.typography.monospace.fallbackFont}'` : "";
+    lines.push(`  --${slug}-font-mono: '${data.typography.monospace.name}'${fb}, monospace;`);
+  }
+  if (data.typography?.primary) {
+    const fb = data.typography.primary.fallbackFont ? `, '${data.typography.primary.fallbackFont}'` : "";
+    lines.push(`  --${slug}-font-primary: '${data.typography.primary.name}'${fb}, sans-serif;`);
+  }
+  if (data.typography?.secondary) {
+    const fb = data.typography.secondary.fallbackFont ? `, '${data.typography.secondary.fallbackFont}'` : "";
+    lines.push(`  --${slug}-font-secondary: '${data.typography.secondary.name}'${fb}, sans-serif;`);
+  }
 
   lines.push("", `  /* ─── Typography Scale ─── */`);
   (data.typographyScale ?? []).forEach((t) => {
@@ -55,6 +76,22 @@ export function exportCSSTokens(data: BrandbookData): string {
     const value = r.match(/^(\d+(?:\.\d+)?(?:px|rem|em))/)?.[1] || r.split(" ")[0];
     lines.push(`  --${slug}-radius-${i + 1}: ${value}; /* ${r} */`);
   });
+
+  if (data.designTokens?.shadows && data.designTokens.shadows.length > 0) {
+    lines.push("", `  /* ─── Shadows ─── */`);
+    data.designTokens.shadows.forEach((s, i) => {
+      const value = s.match(/^([^—–]+)/)?.[1]?.trim() || s.split(" — ")[0];
+      lines.push(`  --${slug}-shadow-${i + 1}: ${value}; /* ${s} */`);
+    });
+  }
+
+  if (data.designTokens?.breakpoints && data.designTokens.breakpoints.length > 0) {
+    lines.push("", `  /* ─── Breakpoints ─── */`);
+    data.designTokens.breakpoints.forEach((b, i) => {
+      const value = b.match(/^(\d+(?:\.\d+)?(?:px|rem|em))/)?.[1] || b.split(" ")[0];
+      lines.push(`  --${slug}-breakpoint-${i + 1}: ${value}; /* ${b} */`);
+    });
+  }
 
   lines.push("}");
   return lines.join("\n");
@@ -84,9 +121,11 @@ export function exportW3CTokens(data: BrandbookData): string {
     },
     typography: {
       family: {
-        ...(data.typography?.marketing ? { marketing: { $value: `'${data.typography.marketing.name}', sans-serif`, $type: "fontFamily" } } : {}),
-        ...(data.typography?.ui ? { ui: { $value: `'${data.typography.ui.name}', sans-serif`, $type: "fontFamily" } } : {}),
-        ...(data.typography?.monospace ? { mono: { $value: `'${data.typography.monospace.name}', monospace`, $type: "fontFamily" } } : {}),
+        ...(data.typography?.marketing ? { marketing: { $value: `'${data.typography.marketing.name}'${data.typography.marketing.fallbackFont ? `, '${data.typography.marketing.fallbackFont}'` : ""}, sans-serif`, $type: "fontFamily" } } : {}),
+        ...(data.typography?.ui ? { ui: { $value: `'${data.typography.ui.name}'${data.typography.ui.fallbackFont ? `, '${data.typography.ui.fallbackFont}'` : ""}, sans-serif`, $type: "fontFamily" } } : {}),
+        ...(data.typography?.monospace ? { mono: { $value: `'${data.typography.monospace.name}'${data.typography.monospace.fallbackFont ? `, '${data.typography.monospace.fallbackFont}'` : ""}, monospace`, $type: "fontFamily" } } : {}),
+        ...(data.typography?.primary ? { primary: { $value: `'${data.typography.primary.name}'${data.typography.primary.fallbackFont ? `, '${data.typography.primary.fallbackFont}'` : ""}, sans-serif`, $type: "fontFamily" } } : {}),
+        ...(data.typography?.secondary ? { secondary: { $value: `'${data.typography.secondary.name}'${data.typography.secondary.fallbackFont ? `, '${data.typography.secondary.fallbackFont}'` : ""}, sans-serif`, $type: "fontFamily" } } : {}),
       },
       scale: Object.fromEntries(
         (data.typographyScale ?? []).map((t) => [
@@ -130,9 +169,26 @@ export function exportTailwindConfig(data: BrandbookData): string {
   }
 
   const fontLines: string[] = [];
-  if (data.typography?.marketing) fontLines.push(`        marketing: ["'${data.typography.marketing.name}'", "sans-serif"],`);
-  if (data.typography?.ui) fontLines.push(`        ui: ["'${data.typography.ui.name}'", "sans-serif"],`);
-  if (data.typography?.monospace) fontLines.push(`        mono: ["'${data.typography.monospace.name}'", "monospace"],`);
+  if (data.typography?.marketing) {
+    const fb = data.typography.marketing.fallbackFont ? `"'${data.typography.marketing.fallbackFont}'", ` : "";
+    fontLines.push(`        marketing: ["'${data.typography.marketing.name}'", ${fb}"sans-serif"],`);
+  }
+  if (data.typography?.ui) {
+    const fb = data.typography.ui.fallbackFont ? `"'${data.typography.ui.fallbackFont}'", ` : "";
+    fontLines.push(`        ui: ["'${data.typography.ui.name}'", ${fb}"sans-serif"],`);
+  }
+  if (data.typography?.monospace) {
+    const fb = data.typography.monospace.fallbackFont ? `"'${data.typography.monospace.fallbackFont}'", ` : "";
+    fontLines.push(`        mono: ["'${data.typography.monospace.name}'", ${fb}"monospace"],`);
+  }
+  if (data.typography?.primary) {
+    const fb = data.typography.primary.fallbackFont ? `"'${data.typography.primary.fallbackFont}'", ` : "";
+    fontLines.push(`        primary: ["'${data.typography.primary.name}'", ${fb}"sans-serif"],`);
+  }
+  if (data.typography?.secondary) {
+    const fb = data.typography.secondary.fallbackFont ? `"'${data.typography.secondary.fallbackFont}'", ` : "";
+    fontLines.push(`        secondary: ["'${data.typography.secondary.name}'", ${fb}"sans-serif"],`);
+  }
 
   const spacingObj = Object.fromEntries(
     (data.designTokens?.spacing ?? []).map((s, i) => {
