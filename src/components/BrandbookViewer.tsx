@@ -26,14 +26,14 @@ import type { AssetKey } from "@/lib/imagePrompts";
 import type { AssetPackFile } from "@/lib/types";
 
 type Category =
-  | "Essência da Marca"
+  | "Missão"
+  | "Persona"
+  | "Tom de Marca"
   | "Identidade Visual"
-  | "Cores"
-  | "Tipografia"
-  | "Linguagem Visual"
-  | "Design System"
-  | "Tom de Voz"
-  | "Aplicações";
+  | "Paleta de Cores"
+  | "Padrões Visuais"
+  | "Aplicações"
+  | "Diretrizes de Uso";
 
 type SectionDef = {
   id: string;
@@ -70,30 +70,37 @@ export function BrandbookViewer({
     {
       id: "dna",
       title: "DNA & Estratégia",
-      category: "Essência da Marca",
+      category: "Missão",
       when: true,
       render: (num) => <SectionDNA data={data} num={num} />,
     },
     {
       id: "brand-story",
       title: "Brand Story & Manifesto",
-      category: "Essência da Marca",
+      category: "Missão",
       when: !!data.brandStory,
       render: (num) => <SectionBrandStory data={data} num={num} />,
     },
     {
       id: "positioning",
       title: "Posicionamento",
-      category: "Essência da Marca",
+      category: "Missão",
       when: !!data.positioning,
       render: (num) => <SectionPositioning data={data} num={num} />,
     },
     {
       id: "personas",
       title: "Personas",
-      category: "Essência da Marca",
+      category: "Persona",
       when: !!data.audiencePersonas && data.audiencePersonas.length > 0,
       render: (num) => <SectionAudiencePersonas data={data} num={num} />,
+    },
+    {
+      id: "verbal-identity",
+      title: "Identidade Verbal",
+      category: "Tom de Marca",
+      when: !!data.verbalIdentity,
+      render: (num) => <SectionVerbalIdentity data={data} num={num} />,
     },
     {
       id: "logo",
@@ -111,49 +118,37 @@ export function BrandbookViewer({
       ),
     },
     {
-      id: "brand-assets",
-      title: "Ativos de Marca",
-      category: "Identidade Visual",
-      when: uploadedAssets.length > 0,
-      render: (num) => (
-        <SectionBrandAssets
-          num={num}
-          uploadedAssets={uploadedAssets}
-        />
-      ),
-    },
-    {
       id: "colors",
       title: "Cores",
-      category: "Cores",
+      category: "Paleta de Cores",
       when: true,
       render: (num) => <SectionColors data={data} num={num} />,
     },
     {
       id: "typography",
       title: "Tipografia",
-      category: "Tipografia",
+      category: "Identidade Visual",
       when: true,
       render: (num) => <SectionTypography data={data} num={num} />,
     },
     {
       id: "typography-scale",
       title: "Escala Tipográfica",
-      category: "Tipografia",
+      category: "Identidade Visual",
       when: !!data.typographyScale && data.typographyScale.length > 0,
       render: (num) => <SectionTypographyScale data={data} num={num} />,
     },
     {
       id: "key-visual",
       title: "Key Visual",
-      category: "Linguagem Visual",
+      category: "Padrões Visuais",
       when: true,
       render: (num) => <SectionKeyVisual data={data} num={num} />,
     },
     {
       id: "mascots",
       title: "Mascotes & Símbolos",
-      category: "Linguagem Visual",
+      category: "Padrões Visuais",
       when: !!(
         (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
         (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
@@ -166,30 +161,23 @@ export function BrandbookViewer({
     {
       id: "ui-guidelines",
       title: "Guidelines de UI",
-      category: "Design System",
+      category: "Diretrizes de Uso",
       when: !!data.uiGuidelines,
       render: (num) => <SectionUiGuidelines data={data} num={num} />,
     },
     {
       id: "tokens-a11y",
       title: "Design Tokens & Acessibilidade",
-      category: "Design System",
+      category: "Diretrizes de Uso",
       when: isAdvanced && !!data.designTokens && !!data.accessibility,
       render: (num) => <SectionTokensA11y data={data} num={num} />,
     },
     {
       id: "ux-microcopy-motion",
       title: "UX Patterns, Microcopy & Motion",
-      category: "Design System",
+      category: "Diretrizes de Uso",
       when: isAdvanced && !!data.uxPatterns && !!data.microcopy && !!data.motion,
       render: (num) => <SectionUxMicrocopyMotion data={data} num={num} />,
-    },
-    {
-      id: "verbal-identity",
-      title: "Identidade Verbal",
-      category: "Tom de Voz",
-      when: !!data.verbalIdentity,
-      render: (num) => <SectionVerbalIdentity data={data} num={num} />,
     },
     {
       id: "applications",
@@ -209,7 +197,7 @@ export function BrandbookViewer({
     {
       id: "production-guidelines",
       title: "Produção & Handoff",
-      category: "Aplicações",
+      category: "Diretrizes de Uso",
       when: !!data.productionGuidelines,
       render: (num) => <SectionProductionGuidelines data={data} num={num} />,
     },
@@ -223,7 +211,7 @@ export function BrandbookViewer({
     {
       id: "asset-pack",
       title: "Entrega — Asset Pack",
-      category: "Aplicações",
+      category: "Diretrizes de Uso",
       when: true,
       render: (num) => (
         <SectionAssetPack
@@ -237,6 +225,18 @@ export function BrandbookViewer({
         />
       ),
     },
+    {
+      id: "brand-assets",
+      title: "Ativos de Marca",
+      category: "Diretrizes de Uso",
+      when: uploadedAssets.length > 0,
+      render: (num) => (
+        <SectionBrandAssets
+          num={num}
+          uploadedAssets={uploadedAssets}
+        />
+      ),
+    },
   ];
 
   const sections = sectionDefs
@@ -244,14 +244,14 @@ export function BrandbookViewer({
     .map((s, idx) => ({ ...s, num: idx + 1 }));
 
   const categories: Category[] = [
-    "Essência da Marca",
+    "Missão",
+    "Persona",
+    "Tom de Marca",
     "Identidade Visual",
-    "Cores",
-    "Tipografia",
-    "Linguagem Visual",
-    "Design System",
-    "Tom de Voz",
+    "Paleta de Cores",
+    "Padrões Visuais",
     "Aplicações",
+    "Diretrizes de Uso",
   ];
 
   const byCategory = categories
