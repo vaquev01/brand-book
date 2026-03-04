@@ -115,6 +115,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   const [customPieceDataUrl, setCustomPieceDataUrl] = useState<string>("");
   const [customPieceName, setCustomPieceName] = useState<string>("");
   const [customPieceLoading, setCustomPieceLoading] = useState(false);
+  const [customPieceMode, setCustomPieceMode] = useState<"strict" | "guided" | "loose" | "remix">("guided");
 
   async function handleCustomPieceFile(file: File | null) {
     if (!file) {
@@ -309,8 +310,9 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
 
   async function generateCustom() {
     const brief = customBrief.trim();
-    if (!brief) {
-      setError("Escreva uma intenção breve para gerar a imagem.");
+    const effectiveBrief = brief || (customPieceDataUrl ? "Rebrand da peça enviada para o perfil visual da marca." : "");
+    if (!effectiveBrief) {
+      setError("Escreva uma intenção breve ou envie uma peça para rebrand.");
       return;
     }
     setLoadingKey("__custom__");
@@ -323,11 +325,12 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandbook: data,
-          brief,
+          brief: effectiveBrief,
           imageProvider: provider,
           aspectRatio: customAspectRatio,
           creativity: customCreativity,
           referenceImageDataUrl: customPieceDataUrl || undefined,
+          referenceImageMode: customPieceDataUrl ? customPieceMode : undefined,
           textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
@@ -348,9 +351,13 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
         !!apiKeys.google &&
         useReferenceImages;
 
-      const referenceImages = canUseRefImages
-        ? pickReferenceImages(6)
+      const picked = canUseRefImages
+        ? pickReferenceImages(customPieceDataUrl ? 5 : 6)
         : undefined;
+      const referenceImagesRaw = canUseRefImages
+        ? [customPieceDataUrl || "", ...(picked ?? [])].filter(Boolean).slice(0, 6)
+        : undefined;
+      const referenceImages = referenceImagesRaw && referenceImagesRaw.length > 0 ? referenceImagesRaw : undefined;
 
       const res = await fetch("/api/generate-image", {
         method: "POST",
@@ -535,6 +542,22 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                   <div className="space-y-2">
                     <div className="text-xs font-semibold text-gray-700">Peça enviada</div>
                     <div className="text-[10px] text-gray-500 break-all">{customPieceName || "(sem nome)"}</div>
+
+                    <div>
+                      <label htmlFor="customPieceMode" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fidelidade à peça</label>
+                      <select
+                        id="customPieceMode"
+                        value={customPieceMode}
+                        onChange={(e) => setCustomPieceMode(e.target.value as typeof customPieceMode)}
+                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition"
+                      >
+                        <option value="strict">Estrito (layout quase idêntico)</option>
+                        <option value="guided">Guiado (preserva hierarquia)</option>
+                        <option value="loose">Solto (inspiração, mais livre)</option>
+                        <option value="remix">Remix (reimaginar, bem ousado)</option>
+                      </select>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => { setCustomPieceDataUrl(""); setCustomPieceName(""); }}

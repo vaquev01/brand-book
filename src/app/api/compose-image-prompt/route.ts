@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
       aspectRatio?: string;
       creativity?: "consistent" | "balanced" | "creative";
       referenceImageDataUrl?: string;
+      referenceImageMode?: "strict" | "guided" | "loose" | "remix";
       textProvider?: "openai" | "gemini";
       openaiKey?: string;
       googleKey?: string;
@@ -151,8 +152,21 @@ export async function POST(request: NextRequest) {
     const ratio = (body.aspectRatio?.trim() || "1:1") as string;
     const creativity = body.creativity ?? "balanced";
     const referenceImageDataUrl = body.referenceImageDataUrl?.trim() || "";
+    const referenceImageMode = body.referenceImageMode ?? "guided";
 
     const temperature = creativity === "consistent" ? 0.35 : creativity === "creative" ? 0.75 : 0.55;
+
+    const rebrandModeRules = referenceImageDataUrl
+      ? (
+        referenceImageMode === "strict" ?
+          "- REFERENCE_IMAGE_MODE=strict: preserve layout/grid/placement almost 1:1 (hierarchy, spacing, crop, framing, number of elements). Only change brand styling (palette, typography style, motifs, materials, lighting) to match the brandbook.\n" :
+        referenceImageMode === "guided" ?
+          "- REFERENCE_IMAGE_MODE=guided: preserve key hierarchy and core composition (main subject placement and reading order), but you can refine proportions, margins, and styling for a cleaner on-brand result.\n" :
+        referenceImageMode === "loose" ?
+          "- REFERENCE_IMAGE_MODE=loose: use the piece as inspiration. Keep the same intent and a few recognizable composition cues, but you may redesign the layout to better fit the brandbook.\n" :
+          "- REFERENCE_IMAGE_MODE=remix: reimagine boldly. Keep only the intent/idea of the piece, not the exact layout. Still remain strictly within the brandbook visual system and style tree.\n"
+      )
+      : "";
 
     const systemPrompt = `Você é um Diretor de Arte Sênior e especialista em prompt engineering para geração de imagens.
 
@@ -168,9 +182,8 @@ Regras:
 - Não invente fatos sobre a marca. Se faltar detalhe, complete com escolhas genéricas mas compatíveis com o brandbook (não com o setor).
 - Não escreva textos legíveis na imagem, a menos que o usuário peça explicitamente.
 - Obedeça o aspect ratio solicitado.
- - Se houver uma imagem de referência (peça enviada), interprete a peça com precisão (layout, hierarquia, estilo, materiais, fotografia/ilustração, composição) e gere um prompt que:
-   - preserve a intenção e estrutura visual principais,
-   - mas rebrand em 100% para o sistema visual do brandbook (paleta, estilo, mood, elementos e árvore de estilo).
+ - Se houver uma imagem de referência (peça enviada), interprete a peça com precisão (layout, hierarquia, estilo, materiais, fotografia/ilustração, composição) e gere um prompt que rebrand em 100% para o sistema visual do brandbook (paleta, estilo, mood, elementos e árvore de estilo).
+${rebrandModeRules}
 
 Formato do prompt (obrigatório):
 - Use quebras de linha e blocos claros: SUBJECT / STYLE / COMPOSITION / LIGHTING / CAMERA / MATERIALS / BACKGROUND / OUTPUT.
@@ -189,6 +202,7 @@ Saída: retorne EXCLUSIVAMENTE um JSON válido no formato { "prompt": "..." }.`;
     const userPrompt = `IMAGE PROVIDER: ${imageProvider}
 ASPECT RATIO: ${ratio}
 CREATIVITY_MODE: ${creativity}
+REFERENCE_IMAGE_MODE: ${referenceImageDataUrl ? referenceImageMode : "none"}
 
 BRANDBOOK CONTEXT:
 ${compactBrandContext(body.brandbook)}
