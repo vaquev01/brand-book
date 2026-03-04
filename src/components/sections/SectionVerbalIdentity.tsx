@@ -90,7 +90,7 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
           </div>
 
           <div className="bg-white border rounded-xl p-6">
-            <h3 className="font-bold mb-3">Do / Don't</h3>
+            <h3 className="font-bold mb-3">Do / Don&apos;t</h3>
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Do</div>
@@ -101,7 +101,7 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
                 </ul>
               </div>
               <div>
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Don't</div>
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Don&apos;t</div>
                 <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
                   {v.doDont.dont.map((d, i) => (
                     <li key={i}>{d}</li>

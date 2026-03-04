@@ -56,6 +56,7 @@ async function fetchGoogleModels(apiKey: string): Promise<ProviderModels> {
   }
   const ALWAYS_GOOGLE_IMAGE_MODELS = [
     "gemini-3.1-flash-image-preview",
+    "gemini-3-pro-image-preview",
     "gemini-2.5-flash-image",
     "imagen-3.0-generate-002",
     "imagen-3.0-fast-generate-001",

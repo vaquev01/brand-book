@@ -38,7 +38,7 @@ export function SectionUiGuidelines({ data, num }: { data: BrandbookData; num: n
           <div className="bg-white border rounded-xl overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b">
               <h3 className="font-bold">Componentes</h3>
-              <p className="text-xs text-gray-500 mt-1">Uso, estados, do/don't e notas de acessibilidade</p>
+              <p className="text-xs text-gray-500 mt-1">Uso, estados, do/don&apos;t e notas de acessibilidade</p>
             </div>
             <div className="divide-y">
               {ui.components.map((c, i) => (
@@ -76,7 +76,7 @@ export function SectionUiGuidelines({ data, num }: { data: BrandbookData; num: n
                       </ul>
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Don't</div>
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Don&apos;t</div>
                       <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
                         {c.dont.map((d, j) => (
                           <li key={j}>{d}</li>

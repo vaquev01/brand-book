@@ -6,6 +6,41 @@ import { resolveGoogleTextModel } from "@/lib/googleModels";
 
 export const runtime = "nodejs";
 
+function fnv1a32(input: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+function visualSystemId(brandbook: BrandbookData): string {
+  const allColors = [...(brandbook.colors?.primary ?? []), ...(brandbook.colors?.secondary ?? [])]
+    .map((c) => `${c.name} ${c.hex}`)
+    .join(" · ");
+  const displayFont = brandbook.typography?.marketing?.name ?? brandbook.typography?.primary?.name ?? "";
+  const bodyFont = brandbook.typography?.ui?.name ?? brandbook.typography?.secondary?.name ?? "";
+  const logoSymbol = brandbook.logo?.symbol ?? "";
+  const patternStyle = brandbook.imageGenerationBriefing?.patternStyle ?? "";
+  const visualStyle = brandbook.imageGenerationBriefing?.visualStyle ?? "";
+  const photoStyle = brandbook.imageGenerationBriefing?.photographyMood ?? brandbook.keyVisual?.photographyStyle ?? "";
+
+  const base = [
+    brandbook.brandName,
+    brandbook.industry,
+    allColors,
+    displayFont,
+    bodyFont,
+    logoSymbol,
+    patternStyle,
+    visualStyle,
+    photoStyle,
+  ].join("|");
+  const hex = fnv1a32(base).toString(16).padStart(8, "0");
+  return `BBVS-${hex}`;
+}
+
 function compactBrandContext(brandbook: BrandbookData): string {
   const brandName = brandbook.brandName ?? "";
   const industry = brandbook.industry ?? "";
@@ -39,9 +74,22 @@ function compactBrandContext(brandbook: BrandbookData): string {
   const logoStyleGuide = brandbook.imageGenerationBriefing?.logoStyleGuide ?? "";
   const patternStyle = brandbook.imageGenerationBriefing?.patternStyle ?? "";
 
+  const logoSymbol = brandbook.logo?.symbol ?? "";
+  const symbols = (brandbook.keyVisual?.symbols ?? []).slice(0, 6).join(" | ");
+  const patterns = (brandbook.keyVisual?.patterns ?? []).slice(0, 6).join(" | ");
+
   const elements = (brandbook.keyVisual?.elements ?? []).slice(0, 6).join(" | ");
 
+  const tree = [
+    logoSymbol ? `STYLE_TREE: ROOT=${logoSymbol}.` : "",
+    patterns ? `PATTERNS=${patterns}.` : (patternStyle ? `PATTERNS=${patternStyle}.` : ""),
+    symbols ? `SYMBOLS=${symbols}.` : "",
+    elements ? `ELEMENTS=${elements}.` : "",
+    "RULE: Everything must be derived from ROOT. Do not introduce unrelated motifs or a different art direction between assets.",
+  ].filter(Boolean).join(" ");
+
   return [
+    `VISUAL_SYSTEM_ID: ${visualSystemId(brandbook)}.`,
     `Brand: ${brandName} (${industry})`,
     purpose ? `Purpose: ${purpose}` : "",
     personality ? `Personality: ${personality}` : "",
@@ -49,6 +97,7 @@ function compactBrandContext(brandbook: BrandbookData): string {
     displayFont || bodyFont ? `Typography: display=${displayFont || "-"}; body=${bodyFont || "-"}` : "",
     primaryColors ? `Primary colors: ${primaryColors}` : "",
     secondaryColors ? `Secondary colors: ${secondaryColors}` : "",
+    tree ? tree : "",
     elements ? `Key visual elements: ${elements}` : "",
     visualStyle ? `Visual style: ${visualStyle}` : "",
     colorMood ? `Color mood: ${colorMood}` : "",
@@ -71,6 +120,7 @@ export async function POST(request: NextRequest) {
       brief?: string;
       imageProvider?: string;
       aspectRatio?: string;
+      creativity?: "consistent" | "balanced" | "creative";
       textProvider?: "openai" | "gemini";
       openaiKey?: string;
       googleKey?: string;
@@ -92,16 +142,30 @@ export async function POST(request: NextRequest) {
 
     const textProvider = body.textProvider ?? "openai";
     const ratio = (body.aspectRatio?.trim() || "1:1") as string;
+    const creativity = body.creativity ?? "balanced";
+
+    const temperature = creativity === "consistent" ? 0.35 : creativity === "creative" ? 0.75 : 0.55;
 
     const systemPrompt = `Você é um Diretor de Arte Sênior e especialista em prompt engineering para geração de imagens.
 
 Tarefa: Dado o contexto do brandbook e uma intenção curta do usuário, gere um prompt FINAL e completo para gerar uma imagem com altíssima qualidade.
+
+Controle de criatividade (CREATIVITY_MODE):
+- consistent: máxima fidelidade ao briefing e ao brandbook. Não invente nada além do estritamente necessário.
+- balanced: equilíbrio entre precisão e refinamento estético.
+- creative: pode propor soluções mais ousadas (metáforas visuais, composição e direção de arte mais cinematográfica), mas SEM quebrar o brandbook e SEM introduzir elementos fora da árvore de estilo.
 
 Regras:
 - Integre SEMPRE o brandbook (paleta, tipografia, estilo visual, mood, composição, elementos) de forma coerente.
 - Não invente fatos sobre a marca. Se faltar detalhe, complete com escolhas genéricas mas compatíveis com o brandbook (não com o setor).
 - Não escreva textos legíveis na imagem, a menos que o usuário peça explicitamente.
 - Obedeça o aspect ratio solicitado.
+
+Formato do prompt (obrigatório):
+- Use quebras de linha e blocos claros: SUBJECT / STYLE / COMPOSITION / LIGHTING / CAMERA / MATERIALS / BACKGROUND / OUTPUT.
+- Sempre inclua um bloco negativo no final.
+  - stability: termine com " --neg ..."
+  - demais providers: termine com "\n\nNEGATIVE: ..."
 
 Regras por provider:
 - stability: use tags/descritores e inclua um bloco negativo ao final no formato " --neg ...".
@@ -113,6 +177,7 @@ Saída: retorne EXCLUSIVAMENTE um JSON válido no formato { "prompt": "..." }.`;
 
     const userPrompt = `IMAGE PROVIDER: ${imageProvider}
 ASPECT RATIO: ${ratio}
+CREATIVITY_MODE: ${creativity}
 
 BRANDBOOK CONTEXT:
 ${compactBrandContext(body.brandbook)}
@@ -132,7 +197,7 @@ ${brief}`;
         config: {
           systemInstruction: systemPrompt,
           responseMimeType: "application/json",
-          temperature: 0.55,
+          temperature,
           maxOutputTokens: 2048,
         },
       });
@@ -143,7 +208,7 @@ ${brief}`;
       const openai = new OpenAI({ apiKey });
       const completion = await openai.chat.completions.create({
         model: body.openaiModel?.trim() || "gpt-4o",
-        temperature: 0.55,
+        temperature,
         max_tokens: 2048,
         response_format: { type: "json_object" },
         messages: [

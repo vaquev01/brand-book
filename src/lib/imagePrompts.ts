@@ -233,6 +233,114 @@ function providerPrefix(provider: ImageProvider): string {
   return "";
 }
 
+function fnv1a32(input: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+function visualSystemId(ctx: ReturnType<typeof extractBrandContext>, data: BrandbookData): string {
+  const base = [
+    data.brandName,
+    data.industry,
+    ctx.allColors,
+    ctx.displayFont,
+    ctx.bodyFont,
+    ctx.logoSymbol,
+    ctx.patternStyle,
+    ctx.visualStyle,
+    ctx.photoStyle,
+  ].join("|");
+  const hex = fnv1a32(base).toString(16).padStart(8, "0");
+  return `BBVS-${hex}`;
+}
+
+function assetHierarchy(key: AssetKey): string {
+  const isMockup = [
+    "app_mockup",
+    "business_card",
+    "brand_collateral",
+    "delivery_packaging",
+    "takeaway_bag",
+    "food_container",
+    "uniform_tshirt",
+    "uniform_apron",
+    "materials_board",
+    "outdoor_billboard",
+  ].includes(key);
+  const isSocial = [
+    "social_post_square",
+    "instagram_carousel",
+    "instagram_story",
+    "social_cover",
+    "youtube_thumbnail",
+  ].includes(key);
+
+  if (key === "logo_primary" || key === "logo_dark_bg") {
+    return "Logo lockup only (logomark + wordmark). No extra elements.";
+  }
+  if (key === "brand_pattern" || key === "presentation_bg") {
+    return "Pattern/texture is primary. Keep it subtle, systematic, and repeatable.";
+  }
+  if (isMockup) {
+    return "1) real product/scene, 2) logo must be readable and correct, 3) pattern/accents support the logo.";
+  }
+  if (isSocial) {
+    return "1) one dominant focal element, 2) clear negative space for copy (not rendered), 3) brand accents/pattern support.";
+  }
+  return "1) one focal subject, 2) supporting brand motifs/pattern, 3) balanced negative space.";
+}
+
+function styleAnchorTree(ctx: ReturnType<typeof extractBrandContext>, data: BrandbookData): string {
+  const symbols = (data.keyVisual.symbols ?? []).slice(0, 4).join(", ");
+  const patterns = (data.keyVisual.patterns ?? []).slice(0, 4).join(", ");
+  const elements = (data.keyVisual.elements ?? []).slice(0, 6).join(", ");
+
+  return [
+    `STYLE_TREE: ROOT=${ctx.logoSymbol}.`,
+    patterns ? `PATTERNS=${patterns}.` : `PATTERNS=${ctx.patternStyle}.`,
+    symbols ? `SYMBOLS=${symbols}.` : "",
+    elements ? `ELEMENTS=${elements}.` : "",
+    "RULE: Everything must be derived from ROOT. Do not introduce unrelated motifs or a different art direction between assets.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function consistencyPrefix(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData,
+  key: AssetKey
+): string {
+  const logoRequired = [
+    "business_card",
+    "brand_collateral",
+    "delivery_packaging",
+    "takeaway_bag",
+    "food_container",
+    "uniform_tshirt",
+    "uniform_apron",
+    "outdoor_billboard",
+  ].includes(key);
+
+  const logoRule = (logoRequired || key === "logo_dark_bg")
+    ? "LOGO REQUIRED: The logo must be present, readable, and match the exact reference logo (no redesign, no new symbol variants, no different typography, no distortion)."
+    : "Do not invent new logos/symbols; only use motifs derived from the logo symbol.";
+
+  return [
+    `VISUAL_SYSTEM_ID: ${visualSystemId(ctx, data)}.`,
+    `CONSISTENCY: All assets must look like one coherent brand system for "${data.brandName}".`,
+    `PALETTE (strict): ${ctx.allColors}.`,
+    `MOTIFS: derived from logo symbol: ${ctx.logoSymbol}.`,
+    `STYLE: ${ctx.visualStyle}. Photography/art direction: ${ctx.photoStyle}.`,
+    logoRule,
+    `HIERARCHY: ${assetHierarchy(key)}`,
+  ].join(" ");
+}
+
 function stabilityTags(ctx: ReturnType<typeof extractBrandContext>, key: AssetKey): string {
   const isPhoto = [
     "hero_visual",
@@ -256,7 +364,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
   const ctx = extractBrandContext(data);
   const q = providerQuality(provider, key);
   const B = `"${data.brandName}"`;
-  const prefix = providerPrefix(provider);
+  const prefix = providerPrefix(provider) + consistencyPrefix(ctx, data, key) + " ";
   const sTags = provider === "stability" ? stabilityTags(ctx, key) : "";
 
   const parts = (...lines: (string | false | undefined | null)[]): string =>

@@ -69,6 +69,13 @@ const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
   imagen: "google",
 };
 
+function defaultUploadedTypeFromAssetKey(assetKey?: AssetKey): UploadedAsset["type"] {
+  if (!assetKey) return "reference";
+  if (assetKey === "logo_primary" || assetKey === "logo_dark_bg") return "logo";
+  if (assetKey === "brand_pattern" || assetKey === "presentation_bg") return "pattern";
+  return "reference";
+}
+
 function pickDefaultProvider(keys: ApiKeys): ImageProvider {
   const order: ImageProvider[] = ["dalle3", "imagen", "stability", "ideogram"];
   return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "dalle3";
@@ -83,6 +90,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   const [useReferenceImages, setUseReferenceImages] = useState(true);
   const [customBrief, setCustomBrief] = useState("");
   const [customAspectRatio, setCustomAspectRatio] = useState<"1:1" | "16:9" | "9:16" | "4:3" | "21:9">("1:1");
+  const [customCreativity, setCustomCreativity] = useState<"consistent" | "balanced" | "creative">("balanced");
   const [customResult, setCustomResult] = useState<GeneratedAsset | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>("");
 
@@ -92,6 +100,30 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       if (better !== provider) setProvider(better);
     }
   }, [apiKeys, provider]);
+
+  function pickReferenceImages(max = 6, current?: AssetKey): string[] {
+    const logoCandidates = uploadedAssets.filter((a) => a.type === "logo");
+    const patternCandidates = uploadedAssets.filter((a) => a.type === "pattern");
+    const elementCandidates = uploadedAssets.filter((a) => a.type === "element" || a.type === "reference");
+
+    const generatedLogo = [generatedAssets.logo_primary, generatedAssets.logo_dark_bg]
+      .filter((a) => !!a && (!current || a.key !== current))
+      .map((a) => a!.url)
+      .filter((u) => typeof u === "string" && u.length > 0);
+
+    const generatedPattern = [generatedAssets.brand_pattern]
+      .filter((a) => !!a && (!current || a.key !== current))
+      .map((a) => a!.url)
+      .filter((u) => typeof u === "string" && u.length > 0);
+
+    const uploadedLogo = logoCandidates.map((a) => a.dataUrl);
+    const uploadedPatterns = patternCandidates.map((a) => a.dataUrl);
+    const uploadedElements = elementCandidates.map((a) => a.dataUrl);
+
+    return [...generatedLogo, ...uploadedLogo, ...generatedPattern, ...uploadedPatterns, ...uploadedElements]
+      .filter(Boolean)
+      .slice(0, max);
+  }
 
   async function generate(assetKey: AssetKey) {
     setLoadingKey(assetKey);
@@ -128,14 +160,11 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const canUseRefImages =
         provider === "imagen" &&
         !!apiKeys.google &&
-        (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini") &&
+        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini")) &&
         useReferenceImages;
 
       const referenceImages = canUseRefImages
-        ? uploadedAssets
-          .filter((a: UploadedAsset) => a.type === "reference" || a.type === "pattern" || a.type === "element")
-          .slice(0, 2)
-          .map((a: UploadedAsset) => a.dataUrl)
+        ? pickReferenceImages(6, assetKey)
         : undefined;
 
       const res = await fetch("/api/generate-image", {
@@ -181,7 +210,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
     a.click();
   }
 
-  async function saveGeneratedToAssets(asset: GeneratedAsset, label: string) {
+  async function saveGeneratedToAssets(asset: GeneratedAsset, label: string, assetKey?: AssetKey) {
     if (!onSaveToAssets) return;
     try {
       let dataUrl = asset.url;
@@ -198,7 +227,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       onSaveToAssets({
         id: `asset_${Date.now()}_${Math.random().toString(36).slice(2)}`,
         name: label,
-        type: "logo",
+        type: defaultUploadedTypeFromAssetKey(assetKey),
         dataUrl,
         description: asset.prompt,
       });
@@ -230,6 +259,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           brief,
           imageProvider: provider,
           aspectRatio: customAspectRatio,
+          creativity: customCreativity,
           textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
@@ -248,14 +278,11 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const canUseRefImages =
         provider === "imagen" &&
         !!apiKeys.google &&
-        (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini") &&
+        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini")) &&
         useReferenceImages;
 
       const referenceImages = canUseRefImages
-        ? uploadedAssets
-          .filter((a: UploadedAsset) => a.type === "reference" || a.type === "pattern" || a.type === "element")
-          .slice(0, 2)
-          .map((a: UploadedAsset) => a.dataUrl)
+        ? pickReferenceImages(6)
         : undefined;
 
       const res = await fetch("/api/generate-image", {
@@ -335,7 +362,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
             <span>
               <span className="font-semibold">Usar imagens de referência (Gemini imagem)</span>
               <span className="block text-[10px] text-gray-500 mt-0.5">
-                Envia até 2 assets (reference/pattern/element) como guia de estilo quando o modelo selecionado for Gemini.
+                Envia até 6 assets (logo/pattern/element/reference) como guia de estilo quando o modelo selecionado for Gemini.
               </span>
             </span>
           </label>
@@ -428,6 +455,18 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
               <option value="21:9">21:9 (Banner)</option>
             </select>
 
+            <label htmlFor="customCreativity" className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Criatividade do prompt</label>
+            <select
+              id="customCreativity"
+              value={customCreativity}
+              onChange={(e) => setCustomCreativity(e.target.value as typeof customCreativity)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition"
+            >
+              <option value="consistent">Consistente (mais fiel)</option>
+              <option value="balanced">Equilibrado</option>
+              <option value="creative">Criativo (mais ousado)</option>
+            </select>
+
             <button
               type="button"
               onClick={generateCustom}
@@ -479,6 +518,17 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                 >
                   ↓ Download
                 </button>
+                {!!onSaveToAssets && (
+                  <button
+                    type="button"
+                    onClick={() => saveGeneratedToAssets(customResult, "Custom", undefined)}
+                    className="bg-gray-100 text-gray-700 text-xs py-2 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
+                    title="Salvar em Assets"
+                    aria-label="Salvar em Assets"
+                  >
+                    Salvar em Assets
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -523,7 +573,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                   const generated = generatedAssets[asset.key];
                   const isLoading = loadingKey === asset.key;
                   const prompt = buildImagePrompt(asset.key, data, provider);
-                  const canSaveToAssets = !!onSaveToAssets && !!generated && asset.category === "logo";
+                  const canSaveToAssets = !!onSaveToAssets && !!generated;
                   return (
                     <div key={asset.key} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                       <div className={`relative bg-gray-100 ${aspectClass(asset.aspectRatio)}`}>
@@ -606,12 +656,12 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                           {canSaveToAssets && (
                             <button
                               type="button"
-                              onClick={() => saveGeneratedToAssets(generated!, asset.label)}
+                              onClick={() => saveGeneratedToAssets(generated!, asset.label, asset.key)}
                               className="bg-gray-100 text-gray-700 text-xs py-2 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
                               title="Salvar em Assets"
                               aria-label="Salvar em Assets"
                             >
-                              ＋
+                              Salvar em Assets
                             </button>
                           )}
                         </div>

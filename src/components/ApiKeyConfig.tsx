@@ -202,7 +202,18 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
           next[p.textModelKey] = preferred;
         }
         if (p.imageModelKey && !prev[p.imageModelKey] && data.imageModels?.[0]) {
-          next[p.imageModelKey] = data.imageModels[0];
+          if (providerKey === "google") {
+            const order = [
+              "gemini-3.1-flash-image-preview",
+              "gemini-3-pro-image-preview",
+              "gemini-2.5-flash-image",
+              "imagen-3.0-generate-002",
+              "imagen-3.0-fast-generate-001",
+            ];
+            next[p.imageModelKey] = order.find((m) => data.imageModels.includes(m)) ?? data.imageModels[0];
+          } else {
+            next[p.imageModelKey] = data.imageModels[0];
+          }
         }
         return next;
       });

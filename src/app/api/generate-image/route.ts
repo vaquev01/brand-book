@@ -61,12 +61,60 @@ const ASSET_ASPECT_RATIOS: Record<string, AspectRatioKey> = Object.fromEntries(
 ) as Record<string, AspectRatioKey>;
 
 function extractNegativePrompt(prompt: string): { positive: string; negative: string } {
-  const negIdx = prompt.indexOf(" --neg ");
-  if (negIdx === -1) return { positive: prompt, negative: "blurry, low quality, watermark, deformed, ugly" };
-  return {
-    positive: prompt.slice(0, negIdx).trim(),
-    negative: prompt.slice(negIdx + 7).trim(),
-  };
+  const trimmed = prompt.trim();
+  const fallback = "blurry, low quality, watermark, deformed, ugly";
+
+  const negIdx = trimmed.indexOf(" --neg ");
+  if (negIdx !== -1) {
+    return {
+      positive: trimmed.slice(0, negIdx).trim(),
+      negative: trimmed.slice(negIdx + 7).trim() || fallback,
+    };
+  }
+
+  const patterns: Array<{ re: RegExp; normalizePrefix: string }> = [
+    { re: /\n\nNEGATIVE:\s*([\s\S]+)$/i, normalizePrefix: "NEGATIVE:" },
+    { re: /\n\nDo not include, do not generate:\s*([\s\S]+)$/i, normalizePrefix: "Do not include, do not generate:" },
+    { re: /\n\nDo not include:\s*([\s\S]+)$/i, normalizePrefix: "Do not include:" },
+    { re: /\n\nAvoid including:\s*([\s\S]+)$/i, normalizePrefix: "Avoid including:" },
+    { re: /\n\nAvoid:\s*([\s\S]+)$/i, normalizePrefix: "Avoid:" },
+  ];
+
+  for (const { re, normalizePrefix } of patterns) {
+    const m = trimmed.match(re);
+    if (!m) continue;
+    const idx = trimmed.toLowerCase().lastIndexOf(`\n\n${normalizePrefix.toLowerCase()}`);
+    if (idx === -1) continue;
+    const negative = (m[1] ?? "").trim().replace(/\.*\s*$/, "");
+    return {
+      positive: trimmed.slice(0, idx).trim(),
+      negative: negative || fallback,
+    };
+  }
+
+  const lower = trimmed.toLowerCase();
+  const markers = [
+    "negative:",
+    "do not include, do not generate:",
+    "do not include:",
+    "avoid including:",
+    "avoid:",
+  ];
+
+  for (const marker of markers) {
+    const idx = lower.lastIndexOf(marker);
+    if (idx === -1) continue;
+    const negativeRaw = trimmed.slice(idx + marker.length).trim();
+    const positiveRaw = trimmed.slice(0, idx).trim();
+    if (!positiveRaw) continue;
+    const negative = negativeRaw.replace(/\.*\s*$/, "").trim();
+    return {
+      positive: positiveRaw,
+      negative: negative || fallback,
+    };
+  }
+
+  return { positive: trimmed, negative: fallback };
 }
 
 function bytesToBase64(bytes: unknown): string {
@@ -84,6 +132,79 @@ function bytesToBase64(bytes: unknown): string {
     }
   }
   throw new Error("Não foi possível converter bytes da imagem para base64");
+}
+
+function fnv1a32(input: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+function extractVisualSystemSeed(prompt: string, assetKey?: string): number | null {
+  const m = prompt.match(/VISUAL_SYSTEM_ID:\s*BBVS-([0-9a-f]{8})/i);
+  if (!m) return null;
+  const base = Number.parseInt(m[1], 16);
+  const tweak = assetKey ? fnv1a32(assetKey) : 0;
+  const combined = (base ^ tweak) >>> 0;
+  const seed = combined % 2147483647;
+  return seed > 0 ? seed : 1;
+}
+
+async function refToInlineData(ref: string): Promise<{ inlineData: { mimeType: string; data: string } } | null> {
+  const trimmed = ref.trim();
+  if (!trimmed) return null;
+
+  const dataUrlMatch = trimmed.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+  if (dataUrlMatch) {
+    return { inlineData: { mimeType: dataUrlMatch[1], data: dataUrlMatch[2] } };
+  }
+
+  if (!/^https?:\/\//i.test(trimmed)) return null;
+
+  let url: URL;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    return null;
+  }
+
+  const host = (url.hostname || "").toLowerCase();
+  const isPrivate =
+    host === "localhost" ||
+    host === "0.0.0.0" ||
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host.startsWith("127.") ||
+    host.startsWith("10.") ||
+    host.startsWith("192.168.") ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
+    host.startsWith("169.254.");
+  if (isPrivate) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6000);
+
+  try {
+    const res = await fetch(trimmed, { signal: controller.signal, redirect: "manual" });
+    if (res.status >= 300 && res.status < 400) return null;
+    if (!res.ok) return null;
+
+    const len = Number(res.headers.get("content-length") || "0");
+    if (Number.isFinite(len) && len > 6_000_000) return null;
+
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > 6_000_000) return null;
+    const mimeType = res.headers.get("content-type")?.split(";")[0]?.trim() || "image/png";
+    if (!mimeType.startsWith("image/")) return null;
+    return { inlineData: { mimeType, data: bytesToBase64(new Uint8Array(buf)) } };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -124,13 +245,29 @@ export async function POST(request: NextRequest) {
         const openai = new OpenAI({ apiKey });
         const size = DALLE3_SIZES[pickedAspectRatio];
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
+        const isPhoto = [
+          "hero_lifestyle",
+          "app_mockup",
+          "business_card",
+          "brand_collateral",
+          "delivery_packaging",
+          "takeaway_bag",
+          "food_container",
+          "uniform_tshirt",
+          "uniform_apron",
+          "materials_board",
+          "outdoor_billboard",
+        ].includes(assetKey ?? "");
+        const style: "natural" | "vivid" = isLogo || isPhoto ? "natural" : "vivid";
+        const { positive, negative } = extractNegativePrompt(prompt);
+        const finalPrompt = `${positive.slice(0, 3300)}\n\nDo not include: ${negative.slice(0, 700)}.`.slice(0, 4000);
         const response = await openai.images.generate({
           model: openaiImageModel?.trim() || "dall-e-3",
-          prompt: prompt.replace(" --neg ", ". Avoid: ").slice(0, 4000),
+          prompt: finalPrompt,
           n: 1,
           size,
           quality: "hd",
-          style: isLogo ? "natural" : "vivid",
+          style,
         });
         const url = response.data?.[0]?.url;
         if (!url) throw new Error("DALL-E 3 não retornou URL de imagem");
@@ -143,6 +280,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: "STABILITY_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
         }
         const { positive, negative } = extractNegativePrompt(prompt);
+        const seed = extractVisualSystemSeed(prompt, assetKey);
 
         const resolvedStabilityModel = stabilityModel?.trim() || "stable-diffusion-xl-1024-v1-0";
         const { width, height } = pickStabilitySize(resolvedStabilityModel, pickedAspectRatio);
@@ -187,6 +325,8 @@ export async function POST(request: NextRequest) {
               steps: 50,
               samples: 1,
               style_preset: stylePreset,
+              seed: seed ?? 0,
+              sampler: "K_DPMPP_2M",
             }),
           }
         );
@@ -226,7 +366,7 @@ export async function POST(request: NextRequest) {
               prompt: finalPrompt.slice(0, 2000),
               model: ideogramModel?.trim() || "V_2",
               aspect_ratio: IDEOGRAM_RATIOS[pickedAspectRatio],
-              magic_prompt_option: isLogo ? "OFF" : "AUTO",
+              magic_prompt_option: "OFF",
               style_type: isLogo ? "DESIGN" : isDesign ? "DESIGN" : "REALISTIC",
             },
           }),
@@ -248,7 +388,7 @@ export async function POST(request: NextRequest) {
         }
         const ai = new GoogleGenAI({ apiKey });
         const { positive, negative } = extractNegativePrompt(prompt);
-        const model = googleImageModel?.trim() || "imagen-3.0-generate-002";
+        const model = googleImageModel?.trim() || "gemini-3.1-flash-image-preview";
 
         if (model.startsWith("gemini")) {
           const ratioHints: Record<AspectRatioKey, string> = {
@@ -258,14 +398,23 @@ export async function POST(request: NextRequest) {
             "4:3": "standard 4:3 landscape aspect ratio",
             "21:9": "ultra-wide cinematic 21:9 aspect ratio",
           };
-          const fullPrompt = `${positive.slice(0, 1600)}\n\nGenerate as ${ratioHints[pickedAspectRatio]} image.\n\nDo not include: ${negative.slice(0, 800)}.`;
-
           const hasRefImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+          const refAnchor = hasRefImages
+            ? [
+              "REFERENCE IMAGES PROVIDED (STRICT):",
+              "- Treat all attached images as hard style anchors (brand system, motifs, line weights, textures, lighting).",
+              "- If any attached image contains a logo/wordmark/symbol, do NOT redesign it. Replicate the same logo exactly.",
+              "- Do not introduce new symbols, mascots, or unrelated motifs beyond what is present/derivable from the references and the STYLE_TREE.",
+              "- Keep one coherent visual system across outputs (same art direction).",
+            ].join("\n")
+            : "";
+
+          const fullPrompt = `${positive.slice(0, 2400)}\n\n${refAnchor}\n\nGenerate as ${ratioHints[pickedAspectRatio]} image.\n\nDo not include: ${negative.slice(0, 1000)}.`;
           const contentParts: unknown[] = [{ text: fullPrompt }];
           if (hasRefImages) {
-            for (const imgDataUrl of referenceImages!) {
-              const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
-              if (match) contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+            for (const ref of referenceImages!) {
+              const inline = await refToInlineData(ref);
+              if (inline) contentParts.push(inline);
             }
           }
 
@@ -273,23 +422,44 @@ export async function POST(request: NextRequest) {
             ? (contentParts as Parameters<typeof ai.models.generateContent>[0]["contents"])
             : fullPrompt;
 
-          const resp = await ai.models.generateContent({
-            model,
-            contents,
-            config: { responseModalities: ["IMAGE", "TEXT"] },
-          });
-          const parts = resp.candidates?.[0]?.content?.parts ?? [];
-          for (const part of parts) {
-            if (part.inlineData?.data) {
-              const mimeType = part.inlineData.mimeType ?? "image/png";
-              return NextResponse.json({
-                url: `data:${mimeType};base64,${part.inlineData.data}`,
-                provider: "imagen",
-                aspectRatio: pickedAspectRatio,
-              });
+          try {
+            const resp = await ai.models.generateContent({
+              model,
+              contents,
+              config: { responseModalities: ["IMAGE", "TEXT"] },
+            });
+            const parts = resp.candidates?.[0]?.content?.parts ?? [];
+            for (const part of parts) {
+              if (part.inlineData?.data) {
+                const mimeType = part.inlineData.mimeType ?? "image/png";
+                return NextResponse.json({
+                  url: `data:${mimeType};base64,${part.inlineData.data}`,
+                  provider: "imagen",
+                  aspectRatio: pickedAspectRatio,
+                });
+              }
             }
+            throw new Error("Gemini não retornou imagem.");
+          } catch {
+            const imagenRatio = IMAGEN_RATIOS[pickedAspectRatio];
+            const resp = await ai.models.generateImages({
+              model: "imagen-3.0-generate-002",
+              prompt: `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000),
+              config: {
+                numberOfImages: 1,
+                aspectRatio: imagenRatio,
+                outputMimeType: "image/png",
+              },
+            });
+            const imageBytes = resp.generatedImages?.[0]?.image?.imageBytes;
+            if (!imageBytes) throw new Error("Imagen não retornou imagem");
+            const b64 = bytesToBase64(imageBytes);
+            return NextResponse.json({
+              url: `data:image/png;base64,${b64}`,
+              provider: "imagen",
+              aspectRatio: pickedAspectRatio,
+            });
           }
-          throw new Error("Gemini não retornou imagem. Verifique se o modelo selecionado suporta geração de imagens.");
         }
 
         const imagenRatio = IMAGEN_RATIOS[pickedAspectRatio];

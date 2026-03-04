@@ -38,6 +38,8 @@ Tarefa: reescreva o prompt base para maximizar a qualidade do provider alvo, man
 
 REGRAS GERAIS:
 - Preserve: marca, contexto, marketing intent, composição, iluminação, paleta, restrições e proibições.
+- Preserve literalmente os trechos de consistência/sistema visual, especialmente linhas/segmentos que começam com: "VISUAL_SYSTEM_ID:", "CONSISTENCY:", "PALETTE", "MOTIFS:", "HIERARCHY:".
+- Preserve literalmente também: "STYLE_TREE:", "MASTER_LOGO:", "LOGO_REPLICATION:", "LOGO_SAFETY:".
 - Remova redundâncias e contradições.
 - O prompt final deve ser direto e executável.
 - Não invente novos fatos sobre a marca.

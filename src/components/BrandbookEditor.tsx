@@ -465,7 +465,7 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
                   <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg text-gray-400">
                     <div className="text-3xl mb-2">🐾</div>
                     <p className="text-sm font-medium">Nenhum mascote definido</p>
-                    <p className="text-xs mt-1">Clique em "+ Novo Mascote" para adicionar um personagem à marca</p>
+                    <p className="text-xs mt-1">Clique em &quot;+ Novo Mascote&quot; para adicionar um personagem à marca</p>
                   </div>
                 )}
                 <div className="space-y-4">
