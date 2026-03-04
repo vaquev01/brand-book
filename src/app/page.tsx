@@ -12,7 +12,7 @@ import { RefinePanel } from "@/components/RefinePanel";
 import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
-import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AssetPackFile } from "@/lib/types";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
@@ -30,6 +30,7 @@ type ViewerTab = "preview" | "images" | "edit" | "assets" | "refine" | "consiste
 
 const GENERATED_ASSETS_LS_PREFIX = "bb_generated_assets::";
 const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
+const ASSET_PACK_LS_PREFIX = "bb_asset_pack::";
 
 function slugifyForStorage(name: string): string {
   return name
@@ -96,6 +97,31 @@ function saveCachedBrandAssets(slug: string, assets: UploadedAsset[]): string | 
   }
 }
 
+function loadCachedAssetPack(slug: string): AssetPackFile[] {
+  if (typeof window === "undefined") return [];
+  if (!slug) return [];
+  try {
+    const raw = localStorage.getItem(ASSET_PACK_LS_PREFIX + slug);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed as AssetPackFile[];
+  } catch {
+    return [];
+  }
+}
+
+function saveCachedAssetPack(slug: string, files: AssetPackFile[]): string | null {
+  if (typeof window === "undefined") return null;
+  if (!slug) return null;
+  try {
+    localStorage.setItem(ASSET_PACK_LS_PREFIX + slug, JSON.stringify(files));
+    return null;
+  } catch {
+    return "Armazenamento local cheio. Não foi possível salvar o Asset Pack.";
+  }
+}
+
 export default function Home() {
   const [tab, setTab] = useState<Tab>("examples");
   const [loading, setLoading] = useState(false);
@@ -110,6 +136,8 @@ export default function Home() {
   const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
   const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
+  const [assetPackFiles, setAssetPackFiles] = useState<AssetPackFile[]>([]);
+  const [assetPackGenerating, setAssetPackGenerating] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
   const [showApiConfig, setShowApiConfig] = useState(false);
@@ -266,6 +294,7 @@ export default function Home() {
           const slug = slugifyForStorage((migrated as BrandbookData).brandName);
           setGeneratedAssets(loadCachedGeneratedAssets(slug));
           setUploadedBrandAssets(loadCachedBrandAssets(slug));
+          setAssetPackFiles(loadCachedAssetPack(slug));
           window.history.replaceState({}, "", window.location.pathname);
         })
         .catch(() => {
@@ -350,6 +379,7 @@ export default function Home() {
               setBrandbookData(nextBrandbook);
               setGeneratedAssets(loadCachedGeneratedAssets(slug));
               setUploadedBrandAssets(loadCachedBrandAssets(slug));
+              setAssetPackFiles(loadCachedAssetPack(slug));
               setTab("viewer");
 
               // Auto-generate logo images
@@ -383,6 +413,7 @@ export default function Home() {
       const slug = slugifyForStorage(migrated.brandName);
       setGeneratedAssets(loadCachedGeneratedAssets(slug));
       setUploadedBrandAssets(loadCachedBrandAssets(slug));
+      setAssetPackFiles(loadCachedAssetPack(slug));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao carregar exemplo");
       return;
@@ -403,6 +434,7 @@ export default function Home() {
           brandbookData,
           generatedAssets: Object.values(generatedAssets),
           uploadedAssets: uploadedBrandAssets,
+          assetPackFiles,
         }),
       });
       if (!res.ok) {
@@ -460,10 +492,47 @@ export default function Home() {
       setBrandbookData(migrated);
       const slug = slugifyForStorage(migrated.brandName);
       setGeneratedAssets(loadCachedGeneratedAssets(slug));
+      setUploadedBrandAssets(loadCachedBrandAssets(slug));
+      setAssetPackFiles(loadCachedAssetPack(slug));
       setTab("viewer");
       setError("");
     } catch {
       setError("JSON inválido. Verifique a formatação.");
+    }
+  }
+
+  async function handleGenerateAssetPack() {
+    if (!brandbookData) return;
+
+    const hasKey = (textProvider === "openai" && !!apiKeys.openai) || (textProvider === "gemini" && !!apiKeys.google);
+    if (!hasKey) {
+      setError("Configure uma chave de IA (OpenAI ou Google) para gerar o Asset Pack.");
+      return;
+    }
+
+    setAssetPackGenerating(true);
+    setError("");
+    try {
+      const res = await fetch("/api/generate-asset-pack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandbookData,
+          textProvider,
+          openaiKey: apiKeys.openai || undefined,
+          googleKey: apiKeys.google || undefined,
+          openaiModel: apiKeys.openaiTextModel || undefined,
+          googleModel: apiKeys.googleTextModel || undefined,
+        }),
+      });
+      const j = await res.json().catch(() => ({})) as { files?: AssetPackFile[]; error?: string };
+      if (!res.ok) throw new Error(j.error ?? "Erro ao gerar Asset Pack");
+      if (!j.files || !Array.isArray(j.files)) throw new Error("Resposta inválida ao gerar Asset Pack");
+      setAssetPackFiles(j.files);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro ao gerar Asset Pack");
+    } finally {
+      setAssetPackGenerating(false);
     }
   }
 
@@ -486,6 +555,16 @@ export default function Home() {
       setTimeout(() => setStorageWarning(""), 8000);
     }
   }, [uploadedBrandAssets, brandbookData]);
+
+  useEffect(() => {
+    if (!brandbookData) return;
+    const slug = slugifyForStorage(brandbookData.brandName);
+    const msg = saveCachedAssetPack(slug, assetPackFiles);
+    if (msg) {
+      setStorageWarning(msg);
+      setTimeout(() => setStorageWarning(""), 8000);
+    }
+  }, [assetPackFiles, brandbookData]);
 
   function handleClearImageCache() {
     if (!brandbookData) return;
@@ -843,6 +922,9 @@ export default function Home() {
                   Object.entries(generatedAssets).map(([k, v]) => [k, v.url])
                 )}
                 uploadedAssets={uploadedBrandAssets}
+                assetPackFiles={assetPackFiles}
+                assetPackGenerating={assetPackGenerating}
+                onGenerateAssetPack={handleGenerateAssetPack}
                 onGoToImages={() => setViewerTab("images")}
                 onUpdateApplicationImageKey={(index: number, imageKey: AssetKey | undefined) => {
                   updateBrandbook((prev) => {
