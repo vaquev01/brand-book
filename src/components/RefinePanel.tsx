@@ -25,12 +25,21 @@ const SUGGESTIONS = [
 
 export function RefinePanel({ brandbook, apiKeys, textProvider, onRefined }: Props) {
   const [instruction, setInstruction] = useState("");
+  const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   async function handleRefine() {
     if (!instruction.trim()) return;
+
+    const externalUrls = externalUrlsRaw
+      .split(/[\n,\s]+/g)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => (s.startsWith("@") ? `https://www.instagram.com/${s.slice(1)}/` : s))
+      .map((s) => (s.startsWith("www.") ? `https://${s}` : s))
+      .filter((s) => /^https?:\/\//i.test(s));
 
     const preview = instruction.trim().slice(0, 240);
     const ok = window.confirm(
@@ -52,6 +61,7 @@ export function RefinePanel({ brandbook, apiKeys, textProvider, onRefined }: Pro
         body: JSON.stringify({
           brandbook,
           instruction,
+          externalUrls: externalUrls.length > 0 ? externalUrls : undefined,
           provider: textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
@@ -66,6 +76,7 @@ export function RefinePanel({ brandbook, apiKeys, textProvider, onRefined }: Pro
       onRefined(data as BrandbookData);
       setSuccess("Brandbook refinado com sucesso!");
       setInstruction("");
+      setExternalUrlsRaw("");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {
@@ -108,6 +119,22 @@ export function RefinePanel({ brandbook, apiKeys, textProvider, onRefined }: Pro
           placeholder='Ex: "Torne a marca mais premium — cores mais escuras, tipografia com mais autoridade, posicionamento mais exclusivo"'
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none shadow-inner"
         />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          Referências externas (URLs)
+        </label>
+        <textarea
+          rows={2}
+          value={externalUrlsRaw}
+          onChange={(e) => setExternalUrlsRaw(e.target.value)}
+          placeholder="Cole links (1 por linha). Ex: https://www.instagram.com/usuario/"
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none"
+        />
+        <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+          O sistema tenta extrair título/descrição/trechos dessas páginas para orientar a IA. Alguns sites (ex: Instagram) podem bloquear.
+        </p>
       </div>
 
       {error && (

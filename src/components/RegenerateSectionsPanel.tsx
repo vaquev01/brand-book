@@ -40,6 +40,7 @@ const SECTIONS: SectionConfig[] = [
 export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUpdated }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [instruction, setInstruction] = useState("");
+  const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -49,6 +50,14 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
     setError("");
     setSuccess("");
 
+    const externalUrls = externalUrlsRaw
+      .split(/[\n,\s]+/g)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => (s.startsWith("@") ? `https://www.instagram.com/${s.slice(1)}/` : s))
+      .map((s) => (s.startsWith("www.") ? `https://${s}` : s))
+      .filter((s) => /^https?:\/\//i.test(s));
+
     try {
       const res = await fetch("/api/regenerate-section", {
         method: "POST",
@@ -57,6 +66,7 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
           brandbook,
           sectionKey,
           instruction: instruction.trim() || undefined,
+          externalUrls: externalUrls.length > 0 ? externalUrls : undefined,
           provider: textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
@@ -74,6 +84,7 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
       setSuccess(`Seção "${SECTIONS.find((s) => s.key === sectionKey)?.label}" regenerada!`);
       setSelected(null);
       setInstruction("");
+      setExternalUrlsRaw("");
       setTimeout(() => setSuccess(""), 4000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro desconhecido");
@@ -142,6 +153,13 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
                     placeholder={`Instrução opcional para esta seção... (ex: "Torne mais criativo e diferenciado")`}
                     className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
                   />
+                  <textarea
+                    rows={2}
+                    value={externalUrlsRaw}
+                    onChange={(e) => setExternalUrlsRaw(e.target.value)}
+                    placeholder="Referências externas (URLs) — 1 por linha (opcional)"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                  />
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -163,7 +181,7 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setSelected(null); setInstruction(""); }}
+                      onClick={() => { setSelected(null); setInstruction(""); setExternalUrlsRaw(""); }}
                       className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border rounded-lg hover:border-gray-400 transition"
                     >
                       Cancelar

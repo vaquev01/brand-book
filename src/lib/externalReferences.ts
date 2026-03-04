@@ -30,8 +30,8 @@ function isPrivateIp(ip: string): boolean {
   if (v === 6) {
     const n = ip.toLowerCase();
     if (n === "::" || n === "::1") return true;
-    if (n.startsWith("fc") || n.startsWith("fd")) return true; // unique local
-    if (n.startsWith("fe80:")) return true; // link-local
+    if (n.startsWith("fc") || n.startsWith("fd")) return true;
+    if (n.startsWith("fe80:")) return true;
     return false;
   }
   return true;

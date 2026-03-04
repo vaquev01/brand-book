@@ -3,6 +3,9 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
 import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { fetchExternalReferences, formatExternalReferencesForPrompt } from "@/lib/externalReferences";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +13,7 @@ export async function POST(request: NextRequest) {
       brandbook,
       sectionKey,
       instruction,
+      externalUrls,
       openaiKey,
       googleKey,
       provider = "openai",
@@ -19,6 +23,7 @@ export async function POST(request: NextRequest) {
       brandbook: Record<string, unknown>;
       sectionKey: string;
       instruction?: string;
+      externalUrls?: string[];
       openaiKey?: string;
       googleKey?: string;
       provider?: string;
@@ -36,6 +41,18 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `Você é um Diretor de Arte Sênior e Estrategista de Marca. Você receberá um brandbook existente e deve regenerar APENAS a seção solicitada. Sua saída deve ser EXCLUSIVAMENTE o JSON da seção solicitada, sem texto adicional, sem chaves externas. Mantenha total coerência com o restante do brandbook.`;
 
+    const MAX_EXTERNAL_URLS = 4;
+    const safeExternalUrls = Array.isArray(externalUrls)
+      ? externalUrls
+          .filter((x) => typeof x === "string" && x.trim().length > 0)
+          .map((x) => x.trim())
+          .slice(0, MAX_EXTERNAL_URLS)
+      : undefined;
+    const externalRefs = safeExternalUrls && safeExternalUrls.length > 0
+      ? await fetchExternalReferences(safeExternalUrls)
+      : [];
+    const externalRefsText = formatExternalReferencesForPrompt(externalRefs);
+
     const userPrompt = `Brandbook da marca "${brandName}" (${industry}).
 
 Contexto do brandbook completo para manter coerência:
@@ -43,6 +60,8 @@ Contexto do brandbook completo para manter coerência:
 - Cores: ${JSON.stringify((brandbook as Record<string, unknown>).colors)}
 - Tipografia: ${JSON.stringify((brandbook as Record<string, unknown>).typography)}
 - Posicionamento: ${JSON.stringify((brandbook as Record<string, unknown>).positioning)}
+
+${externalRefsText || ""}
 
 Seção a regenerar: "${sectionKey}"
 Conteúdo atual:
