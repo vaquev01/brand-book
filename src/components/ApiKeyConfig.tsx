@@ -157,6 +157,62 @@ interface FetchedModels {
 
 type FetchStatus = "idle" | "loading" | "done" | "error";
 
+function ModelSelector({
+  label, value, options, onChange, loading,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+  loading: boolean;
+}) {
+  const hasOptions = options.length > 0;
+  const valueInList = options.includes(value);
+  const allOptions = value && !valueInList ? [value, ...options] : options;
+
+  return (
+    <div>
+      <label className="text-[11px] font-semibold opacity-70 block mb-1">{label}</label>
+      {loading ? (
+        <div className="w-full bg-white/60 border border-black/10 rounded-lg px-3 py-2 text-sm text-gray-400 flex items-center gap-2">
+          <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          Carregando modelos...
+        </div>
+      ) : hasOptions ? (
+        <>
+          <select
+            aria-label={label}
+            value={allOptions.includes(value) ? value : ""}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 cursor-pointer mb-1.5"
+          >
+            <option value="">— selecionar modelo —</option>
+            {options.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          <input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="ou digite um modelo personalizado"
+            className="w-full bg-white/60 border border-black/10 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-black/20"
+            spellCheck={false}
+          />
+          <p className="text-[10px] text-gray-400 mt-1">{options.length} modelos disponíveis</p>
+        </>
+      ) : (
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="ex: gemini-2.0-flash-lite"
+          className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
+          spellCheck={false}
+        />
+      )}
+    </div>
+  );
+}
+
 function maskKey(val: string): string {
   if (!val) return "";
   if (val.length <= 8) return "•".repeat(val.length);
@@ -172,18 +228,6 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
   const [fetchError, setFetchError] = useState<Record<string, string>>({});
   const lastAutoFetchedKeyRef = useRef<Record<string, string>>({});
   const autoFetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      lastAutoFetchedKeyRef.current = {};
-      if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
-      setKeys(loadApiKeys());
-      setSaved(false);
-      setFetchedModels({});
-      setFetchStatus({});
-      setFetchError({});
-    }
-  }, [isOpen]);
 
   const fetchModels = useCallback(async (providerKey: string, apiKey: string) => {
     if (!apiKey.trim()) return;
@@ -231,24 +275,25 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
 
   useEffect(() => {
     if (!isOpen) return;
-    const apiKey = keys.google?.trim();
-    if (!apiKey) return;
-    const status = fetchStatus["google"] ?? "idle";
-    if (status === "loading") return;
-
-    const alreadyAttempted = lastAutoFetchedKeyRef.current["google"] === apiKey;
-    if (alreadyAttempted) return;
-
+    lastAutoFetchedKeyRef.current = {};
     if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
-    autoFetchTimerRef.current = setTimeout(() => {
-      lastAutoFetchedKeyRef.current["google"] = apiKey;
-      fetchModels("google", apiKey);
-    }, 700);
-
-    return () => {
-      if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
-    };
-  }, [isOpen, keys.google, fetchModels, fetchStatus]);
+    const loaded = loadApiKeys();
+    setKeys(loaded);
+    setSaved(false);
+    setFetchedModels({});
+    setFetchStatus({});
+    setFetchError({});
+    PROVIDERS.forEach((p) => {
+      const key = loaded[p.key]?.trim();
+      if (key) {
+        setTimeout(() => {
+          lastAutoFetchedKeyRef.current[p.key] = key;
+          fetchModels(p.key, key);
+        }, 300);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   function handleSave() {
     saveApiKeys(keys);
@@ -350,43 +395,24 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
 
                 {/* Model selectors */}
                 {keyVal.trim() && (p.textModelKey || p.imageModelKey) && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {p.textModelKey && (
-                      <div>
-                        <label className="text-[11px] font-semibold opacity-70 block mb-1">Modelo de Texto (Brandbook)</label>
-                        <input
-                          aria-label="Modelo de Texto"
-                          value={keys[p.textModelKey]}
-                          onChange={(e) => setKeys((prev) => ({ ...prev, [p.textModelKey!]: e.target.value }))}
-                          list={`${p.key}-text-models`}
-                          className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
-                          spellCheck={false}
-                        />
-                        <datalist id={`${p.key}-text-models`}>
-                          {(models?.textModels ?? []).map((m) => (
-                            <option key={m} value={m} />
-                          ))}
-                        </datalist>
-                      </div>
+                      <ModelSelector
+                        label="Modelo de Texto (Brandbook)"
+                        value={keys[p.textModelKey]}
+                        options={models?.textModels ?? []}
+                        onChange={(v) => setKeys((prev) => ({ ...prev, [p.textModelKey!]: v }))}
+                        loading={status === "loading"}
+                      />
                     )}
-
                     {p.imageModelKey && (
-                      <div>
-                        <label className="text-[11px] font-semibold opacity-70 block mb-1">Modelo de Imagem</label>
-                        <input
-                          aria-label="Modelo de Imagem"
-                          value={keys[p.imageModelKey]}
-                          onChange={(e) => setKeys((prev) => ({ ...prev, [p.imageModelKey!]: e.target.value }))}
-                          list={`${p.key}-image-models`}
-                          className="w-full bg-white/80 border border-black/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
-                          spellCheck={false}
-                        />
-                        <datalist id={`${p.key}-image-models`}>
-                          {(models?.imageModels ?? []).map((m) => (
-                            <option key={m} value={m} />
-                          ))}
-                        </datalist>
-                      </div>
+                      <ModelSelector
+                        label="Modelo de Imagem"
+                        value={keys[p.imageModelKey]}
+                        options={models?.imageModels ?? []}
+                        onChange={(v) => setKeys((prev) => ({ ...prev, [p.imageModelKey!]: v }))}
+                        loading={status === "loading"}
+                      />
                     )}
                   </div>
                 )}
