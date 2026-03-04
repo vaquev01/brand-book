@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { ASSET_CATALOG, buildImagePrompt, AssetKey } from "@/lib/imagePrompts";
 import { ApiKeys } from "@/components/ApiKeyConfig";
+import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
 
 interface Props {
   data: BrandbookData;
@@ -72,8 +73,26 @@ const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
 function defaultUploadedTypeFromAssetKey(assetKey?: AssetKey): UploadedAsset["type"] {
   if (!assetKey) return "reference";
   if (assetKey === "logo_primary" || assetKey === "logo_dark_bg") return "logo";
+  if (assetKey === "brand_mascot") return "mascot";
   if (assetKey === "brand_pattern" || assetKey === "presentation_bg") return "pattern";
   return "reference";
+}
+
+const STRICT_LOGO_ASSETS: AssetKey[] = [
+  "logo_primary",
+  "logo_dark_bg",
+  "business_card",
+  "brand_collateral",
+  "delivery_packaging",
+  "takeaway_bag",
+  "food_container",
+  "uniform_tshirt",
+  "uniform_apron",
+  "outdoor_billboard",
+];
+
+function isStrictLogoAsset(key: AssetKey): boolean {
+  return STRICT_LOGO_ASSETS.includes(key);
 }
 
 function pickDefaultProvider(keys: ApiKeys): ImageProvider {
@@ -93,6 +112,29 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   const [customCreativity, setCustomCreativity] = useState<"consistent" | "balanced" | "creative">("balanced");
   const [customResult, setCustomResult] = useState<GeneratedAsset | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>("");
+  const [customPieceDataUrl, setCustomPieceDataUrl] = useState<string>("");
+  const [customPieceName, setCustomPieceName] = useState<string>("");
+  const [customPieceLoading, setCustomPieceLoading] = useState(false);
+
+  async function handleCustomPieceFile(file: File | null) {
+    if (!file) {
+      setCustomPieceDataUrl("");
+      setCustomPieceName("");
+      return;
+    }
+    setCustomPieceLoading(true);
+    try {
+      setCustomPieceName(file.name);
+      const dataUrl = await rasterFileToOptimizedDataUrl(file, 1400, "image/jpeg", 0.86);
+      setCustomPieceDataUrl(dataUrl);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro ao carregar peça");
+      setCustomPieceDataUrl("");
+      setCustomPieceName("");
+    } finally {
+      setCustomPieceLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!apiKeys[PROVIDER_KEY_MAP[provider]]) {
@@ -104,7 +146,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   function pickReferenceImages(max = 6, current?: AssetKey): string[] {
     const logoCandidates = uploadedAssets.filter((a) => a.type === "logo");
     const patternCandidates = uploadedAssets.filter((a) => a.type === "pattern");
-    const elementCandidates = uploadedAssets.filter((a) => a.type === "element" || a.type === "reference");
+    const elementCandidates = uploadedAssets.filter((a) => a.type === "element" || a.type === "mascot" || a.type === "reference");
 
     const generatedLogo = [generatedAssets.logo_primary, generatedAssets.logo_dark_bg]
       .filter((a) => !!a && (!current || a.key !== current))
@@ -116,13 +158,29 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       .map((a) => a!.url)
       .filter((u) => typeof u === "string" && u.length > 0);
 
+    const generatedMascot = [generatedAssets.brand_mascot]
+      .filter((a) => !!a && (!current || a.key !== current))
+      .map((a) => a!.url)
+      .filter((u) => typeof u === "string" && u.length > 0);
+
     const uploadedLogo = logoCandidates.map((a) => a.dataUrl);
     const uploadedPatterns = patternCandidates.map((a) => a.dataUrl);
     const uploadedElements = elementCandidates.map((a) => a.dataUrl);
 
-    return [...generatedLogo, ...uploadedLogo, ...generatedPattern, ...uploadedPatterns, ...uploadedElements]
+    return [...generatedLogo, ...uploadedLogo, ...generatedPattern, ...uploadedPatterns, ...generatedMascot, ...uploadedElements]
       .filter(Boolean)
       .slice(0, max);
+  }
+
+  function pickLogoReferenceImages(max = 2, current?: AssetKey): string[] {
+    const logoCandidates = uploadedAssets.filter((a) => a.type === "logo");
+    const uploadedLogo = logoCandidates.map((a) => a.dataUrl);
+
+    const generatedPrimary = generatedAssets.logo_primary && (!current || generatedAssets.logo_primary.key !== current)
+      ? [generatedAssets.logo_primary.url]
+      : [];
+
+    return [...generatedPrimary, ...uploadedLogo].filter(Boolean).slice(0, max);
   }
 
   async function generate(assetKey: AssetKey) {
@@ -133,7 +191,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       let prompt = basePrompt;
 
       if (refineBeforeGenerate) {
-        const canRefine = (provider !== "stability") || prompt.includes(" --neg ");
+        const canRefine = !isStrictLogoAsset(assetKey) && ((provider !== "stability") || prompt.includes(" --neg "));
         const hasTextKey = (textProvider === "openai" && !!apiKeys.openai) || (textProvider === "gemini" && !!apiKeys.google);
         if (canRefine && hasTextKey) {
           const refineRes = await fetch("/api/refine-image-prompt", {
@@ -160,12 +218,21 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const canUseRefImages =
         provider === "imagen" &&
         !!apiKeys.google &&
-        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").replace(/^models\//i, "").toLowerCase().startsWith("gemini")) &&
         useReferenceImages;
 
-      const referenceImages = canUseRefImages
-        ? pickReferenceImages(6, assetKey)
+      const referenceImagesRaw = canUseRefImages
+        ? (isStrictLogoAsset(assetKey) ? pickLogoReferenceImages(2, assetKey) : pickReferenceImages(6, assetKey))
         : undefined;
+      const referenceImages = referenceImagesRaw && referenceImagesRaw.length > 0 ? referenceImagesRaw : undefined;
+
+      if (isStrictLogoAsset(assetKey) && assetKey !== "logo_primary") {
+        if (provider !== "imagen") {
+          throw new Error("Para garantir consistência do logo, use o provider Google Image e gere primeiro o Logo — Fundo Claro (ou faça upload do logo em Assets).");
+        }
+        if (useReferenceImages && !referenceImages) {
+          throw new Error("Para garantir consistência do logo, gere primeiro o Logo — Fundo Claro (ou faça upload do logo em Assets). Depois gere esta variação.");
+        }
+      }
 
       const res = await fetch("/api/generate-image", {
         method: "POST",
@@ -260,6 +327,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           imageProvider: provider,
           aspectRatio: customAspectRatio,
           creativity: customCreativity,
+          referenceImageDataUrl: customPieceDataUrl || undefined,
           textProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
@@ -278,7 +346,6 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const canUseRefImages =
         provider === "imagen" &&
         !!apiKeys.google &&
-        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").replace(/^models\//i, "").toLowerCase().startsWith("gemini")) &&
         useReferenceImages;
 
       const referenceImages = canUseRefImages
@@ -437,6 +504,48 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
             />
             <div className="mt-2 text-[10px] text-gray-400">
               Dica: você pode citar &quot;embalagem&quot;, &quot;uniforme&quot;, &quot;menu&quot;, &quot;sacola&quot;, &quot;adesivo&quot;, &quot;tote bag&quot;, &quot;moodboard de materiais&quot; etc.
+            </div>
+
+            <div className="mt-3 border rounded-lg p-3 bg-gray-50">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Rebrand de peça (opcional)</div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Envie uma imagem e a IA interpreta a peça para gerar um prompt rebrandado no estilo do brandbook.
+                  </div>
+                </div>
+                <label className="text-xs bg-white border px-3 py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition cursor-pointer">
+                  {customPieceLoading ? "Carregando..." : "Enviar peça"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={customPieceLoading || loadingKey !== null}
+                    onChange={(e) => handleCustomPieceFile(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+              </div>
+
+              {customPieceDataUrl && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="relative bg-white border rounded-lg overflow-hidden aspect-video">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={customPieceDataUrl} alt={customPieceName || "Peça"} className="w-full h-full object-contain" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold text-gray-700">Peça enviada</div>
+                    <div className="text-[10px] text-gray-500 break-all">{customPieceName || "(sem nome)"}</div>
+                    <button
+                      type="button"
+                      onClick={() => { setCustomPieceDataUrl(""); setCustomPieceName(""); }}
+                      disabled={customPieceLoading || loadingKey !== null}
+                      className="text-xs bg-white border px-3 py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      Remover peça
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

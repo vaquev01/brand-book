@@ -113,6 +113,12 @@ function compactBrandContext(brandbook: BrandbookData): string {
     .join("\n");
 }
 
+function dataUrlToInlineData(dataUrl: string): { inlineData: { mimeType: string; data: string } } {
+  const m = dataUrl.trim().match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i);
+  if (!m) throw new Error("Imagem de referência inválida.");
+  return { inlineData: { mimeType: m[1], data: m[2] } };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
@@ -121,6 +127,7 @@ export async function POST(request: NextRequest) {
       imageProvider?: string;
       aspectRatio?: string;
       creativity?: "consistent" | "balanced" | "creative";
+      referenceImageDataUrl?: string;
       textProvider?: "openai" | "gemini";
       openaiKey?: string;
       googleKey?: string;
@@ -143,6 +150,7 @@ export async function POST(request: NextRequest) {
     const textProvider = body.textProvider ?? "openai";
     const ratio = (body.aspectRatio?.trim() || "1:1") as string;
     const creativity = body.creativity ?? "balanced";
+    const referenceImageDataUrl = body.referenceImageDataUrl?.trim() || "";
 
     const temperature = creativity === "consistent" ? 0.35 : creativity === "creative" ? 0.75 : 0.55;
 
@@ -160,6 +168,9 @@ Regras:
 - Não invente fatos sobre a marca. Se faltar detalhe, complete com escolhas genéricas mas compatíveis com o brandbook (não com o setor).
 - Não escreva textos legíveis na imagem, a menos que o usuário peça explicitamente.
 - Obedeça o aspect ratio solicitado.
+ - Se houver uma imagem de referência (peça enviada), interprete a peça com precisão (layout, hierarquia, estilo, materiais, fotografia/ilustração, composição) e gere um prompt que:
+   - preserve a intenção e estrutura visual principais,
+   - mas rebrand em 100% para o sistema visual do brandbook (paleta, estilo, mood, elementos e árvore de estilo).
 
 Formato do prompt (obrigatório):
 - Use quebras de linha e blocos claros: SUBJECT / STYLE / COMPOSITION / LIGHTING / CAMERA / MATERIALS / BACKGROUND / OUTPUT.
@@ -191,9 +202,17 @@ ${brief}`;
       const apiKey = body.googleKey?.trim() || process.env.GOOGLE_API_KEY;
       if (!apiKey) return NextResponse.json({ error: "GOOGLE_API_KEY não configurada." }, { status: 500 });
       const ai = new GoogleGenAI({ apiKey });
+
+      const contents = referenceImageDataUrl
+        ? ([
+          { text: userPrompt },
+          dataUrlToInlineData(referenceImageDataUrl),
+        ] as Parameters<typeof ai.models.generateContent>[0]["contents"])
+        : userPrompt;
+
       const resp = await ai.models.generateContent({
         model: resolveGoogleTextModel(body.googleModel),
-        contents: userPrompt,
+        contents,
         config: {
           systemInstruction: systemPrompt,
           responseMimeType: "application/json",
@@ -206,6 +225,17 @@ ${brief}`;
       const apiKey = body.openaiKey?.trim() || process.env.OPENAI_API_KEY;
       if (!apiKey) return NextResponse.json({ error: "OPENAI_API_KEY não configurada." }, { status: 500 });
       const openai = new OpenAI({ apiKey });
+
+      const userMessage: OpenAI.ChatCompletionMessageParam = referenceImageDataUrl
+        ? {
+          role: "user",
+          content: [
+            { type: "text", text: userPrompt },
+            { type: "image_url", image_url: { url: referenceImageDataUrl } },
+          ],
+        }
+        : { role: "user", content: userPrompt };
+
       const completion = await openai.chat.completions.create({
         model: body.openaiModel?.trim() || "gpt-4o",
         temperature,
@@ -213,7 +243,7 @@ ${brief}`;
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          userMessage,
         ],
       });
       raw = completion.choices[0]?.message?.content ?? "";

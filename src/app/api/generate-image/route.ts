@@ -275,6 +275,19 @@ export async function POST(request: NextRequest) {
         ? ASSET_ASPECT_RATIOS[assetKey]
         : "1:1";
 
+    const strictLogoAssets = new Set([
+      "logo_dark_bg",
+      "business_card",
+      "brand_collateral",
+      "delivery_packaging",
+      "takeaway_bag",
+      "food_container",
+      "uniform_tshirt",
+      "uniform_apron",
+      "outdoor_billboard",
+    ]);
+    const isStrictLogoAsset = !!assetKey && strictLogoAssets.has(assetKey);
+
     switch (provider) {
       case "dalle3": {
         const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
@@ -326,6 +339,7 @@ export async function POST(request: NextRequest) {
 
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
         const isPattern = assetKey === "brand_pattern";
+        const isMascot = assetKey === "brand_mascot";
         const isMockup = [
           "business_card",
           "brand_collateral",
@@ -341,6 +355,7 @@ export async function POST(request: NextRequest) {
 
         const stylePreset = isLogo ? "digital-art"
           : isPattern ? "tile-texture"
+          : isMascot ? "digital-art"
           : isMockup ? "photographic"
           : "cinematic";
 
@@ -392,7 +407,7 @@ export async function POST(request: NextRequest) {
         const { positive, negative } = extractNegativePrompt(prompt);
         const finalPrompt = `${positive.slice(0, 1750)}\n\nAvoid: ${negative.slice(0, 700)}.`;
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
-        const isDesign = ["brand_pattern", "social_cover", "social_post_square", "email_header"].includes(assetKey ?? "");
+        const isDesign = ["brand_pattern", "brand_mascot", "social_cover", "social_post_square", "email_header"].includes(assetKey ?? "");
 
         const res = await fetch("https://api.ideogram.ai/generate", {
           method: "POST",
@@ -427,12 +442,23 @@ export async function POST(request: NextRequest) {
         }
         const ai = new GoogleGenAI({ apiKey });
         const { positive, negative } = extractNegativePrompt(prompt);
-        const rawModel = googleImageModel?.trim();
-        const model = (rawModel?.startsWith("models/") ? rawModel.slice("models/".length) : rawModel)
-          || "gemini-3.1-flash-image-preview";
-        const modelLower = model.toLowerCase();
 
-        if (modelLower.startsWith("gemini")) {
+        const rawModel = googleImageModel?.trim();
+        const selectedModel = (rawModel?.startsWith("models/") ? rawModel.slice("models/".length) : rawModel)
+          || "imagen-3.0-generate-002";
+        const selectedLower = selectedModel.toLowerCase();
+
+        const hasRefImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+        if (isStrictLogoAsset && !hasRefImages) {
+          return NextResponse.json(
+            { error: "Para garantir consistência do logo, esta peça exige uma imagem de referência do logo (gere primeiro o Logo — Fundo Claro ou faça upload em Assets)." },
+            { status: 400 }
+          );
+        }
+        const shouldUseGemini = hasRefImages || selectedLower.startsWith("gemini");
+        const geminiModel = selectedLower.startsWith("gemini") ? selectedModel : "gemini-3.1-flash-image-preview";
+
+        if (shouldUseGemini) {
           const ratioHints: Record<AspectRatioKey, string> = {
             "1:1": "square 1:1 aspect ratio",
             "16:9": "wide landscape 16:9 aspect ratio",
@@ -440,13 +466,15 @@ export async function POST(request: NextRequest) {
             "4:3": "standard 4:3 landscape aspect ratio",
             "21:9": "ultra-wide cinematic 21:9 aspect ratio",
           };
-          const hasRefImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+          const isMascotAsset = assetKey === "brand_mascot";
           const refAnchor = hasRefImages
             ? [
               "REFERENCE IMAGES PROVIDED (STRICT):",
               "- Treat all attached images as hard style anchors (brand system, motifs, line weights, textures, lighting).",
               "- If any attached image contains a logo/wordmark/symbol, do NOT redesign it. Replicate the same logo exactly.",
-              "- Do not introduce new symbols, mascots, or unrelated motifs beyond what is present/derivable from the references and the STYLE_TREE.",
+              isMascotAsset
+                ? "- You ARE generating a mascot. Derive the mascot style from the references and the STYLE_TREE. Do not introduce unrelated motifs."
+                : "- Do not introduce new symbols, mascots, or unrelated motifs beyond what is present/derivable from the references and the STYLE_TREE.",
               "- Keep one coherent visual system across outputs (same art direction).",
             ].join("\n")
             : "";
@@ -466,7 +494,7 @@ export async function POST(request: NextRequest) {
 
           try {
             const resp = await ai.models.generateContent({
-              model,
+              model: geminiModel,
               contents,
               config: { responseModalities: ["IMAGE", "TEXT"] },
             });
@@ -483,6 +511,9 @@ export async function POST(request: NextRequest) {
             }
             throw new Error("Gemini não retornou imagem.");
           } catch {
+            if (isStrictLogoAsset && hasRefImages) {
+              throw new Error("Falha ao gerar com referências (Gemini). Para manter consistência do logo, não foi feito fallback.");
+            }
             const imagenRatio = IMAGEN_RATIOS[pickedAspectRatio];
             const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
             const url = await generateImagenWithFallback(
@@ -499,7 +530,7 @@ export async function POST(request: NextRequest) {
         const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
         const url = await generateImagenWithFallback(
           ai,
-          [model, "imagen-3.0-generate-002", "imagen-3.0-fast-generate-001"].filter(Boolean),
+          [selectedModel, "imagen-3.0-generate-002", "imagen-3.0-fast-generate-001"].filter(Boolean),
           finalPrompt,
           imagenRatio
         );

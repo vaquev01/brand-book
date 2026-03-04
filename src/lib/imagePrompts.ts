@@ -6,6 +6,7 @@ export const ASSET_CATALOG = [
   { key: "logo_dark_bg",       label: "Logo — Versão Invertida",      description: "Logo em negativo sobre fundo escuro — dark mode, vídeos, eventos",       aspectRatio: "1:1",  category: "logo"    },
   // ─── DIGITAL ───────────────────────────────────────────────────────────────
   { key: "brand_pattern",      label: "Padrão Gráfico Seamless",      description: "Textura tileable infinita — fundos, embalagens, papelaria, slides",       aspectRatio: "1:1",  category: "digital" },
+  { key: "brand_mascot",       label: "Mascote (Personagem)",         description: "Personagem da marca — ilustração on-brand para campanhas, social e materiais", aspectRatio: "1:1",  category: "digital" },
   { key: "hero_visual",        label: "Hero do Site (Key Visual)",     description: "Imagem principal do site — traduz posicionamento e estilo visual (sem texto)", aspectRatio: "16:9", category: "digital" },
   { key: "hero_lifestyle",     label: "Foto Lifestyle (Editorial)",   description: "Público-alvo em contexto real — estética editorial, aspiracional e autêntica", aspectRatio: "16:9", category: "digital" },
   { key: "youtube_thumbnail",  label: "Thumbnail YouTube",            description: "Para o scroll — alto contraste, bold, CTR elevado em 0,5 segundos",        aspectRatio: "16:9", category: "digital" },
@@ -195,27 +196,32 @@ function providerQuality(provider: ImageProvider, key: AssetKey): string {
   const isLogo = key === "logo_primary" || key === "logo_dark_bg";
   const isPattern = key === "brand_pattern" || key === "presentation_bg";
   const isSocial = ["social_post_square", "instagram_carousel", "instagram_story", "social_cover", "youtube_thumbnail"].includes(key);
+  const isMascot = key === "brand_mascot";
 
   if (provider === "dalle3") {
     if (isLogo)    return "vector-perfect illustration, sharp crisp edges, Pentagram identity studio quality, clean professional logo design, award-winning brand identity";
     if (isMockup)  return "hyperrealistic commercial product photography, ultra-sharp, Hasselblad medium format quality, octane render 8K, studio-grade lighting, advertising campaign quality";
     if (isPattern) return "precise geometric illustration, crisp vector-quality edges, perfect seamless tile, professional brand pattern system, Dribbble-quality design";
     if (isSocial)  return "social media design excellence, Dribbble award-winning, sharp bold graphic, thumb-stopping visual hierarchy, mobile-optimized for 2x retina";
+    if (isMascot)  return "professional mascot character design, clean modern 2D illustration, vector-like crisp edges, consistent line weights, premium brand character, animation-ready silhouette";
     return "ultra-high resolution commercial photography, award-winning brand campaign, shot on Phase One IQ4, published in Wallpaper magazine, masterpiece quality";
   }
   if (provider === "stability") {
     if (isMockup)  return "hyperrealistic product photography, 8K UHD, Hasselblad medium format, professional studio lighting, octane render, photorealistic material texture";
     if (isLogo || isPattern) return "precise clean graphic illustration, sharp geometric edges, professional brand identity quality, crisp details";
+    if (isMascot) return "professional mascot character illustration, clean vector-like linework, brand-consistent color palette, expressive but simple shapes, animation-ready design";
     return "8K UHD, award-winning editorial photography, sharp focus, highly detailed, Kodak Portra 400 film aesthetic, professional color grading";
   }
   if (provider === "imagen") {
     if (isMockup)  return "photorealistic commercial photography, professional studio lighting, sharp details, high fidelity";
     if (isLogo || isPattern) return "clean precise graphic design, sharp edges, professional illustration quality";
+    if (isMascot) return "professional mascot character illustration, clean 2D design, crisp edges, consistent line weights, brand-consistent color palette";
     return "high-fidelity photorealistic image, professional photography quality, rich color, balanced exposure";
   }
   // ideogram
   if (isLogo)   return "vector logo design, precise linework, professional brand identity, clean scalable symbol";
   if (isSocial) return "bold graphic design, high contrast, clear visual hierarchy, professional design quality";
+  if (isMascot) return "professional mascot character design, clean vector illustration, crisp linework, simple shapes, brand-consistent palette";
   return "professional graphic design, crisp edges, bold visual impact, commercial quality";
 }
 
@@ -227,8 +233,14 @@ function neg(ctx: ReturnType<typeof extractBrandContext>, provider: ImageProvide
   /* ideogram */                return ` Do not include: ${all}.`;
 }
 
-function providerPrefix(provider: ImageProvider): string {
-  if (provider === "imagen") return "Create a high-quality photorealistic image. ";
+function providerPrefix(provider: ImageProvider, key: AssetKey): string {
+  if (provider === "imagen") {
+    const isLogo = key === "logo_primary" || key === "logo_dark_bg";
+    const isPattern = key === "brand_pattern" || key === "presentation_bg";
+    return (isLogo || isPattern)
+      ? "Create a high-quality graphic design image. "
+      : "Create a high-quality photorealistic image. ";
+  }
   if (provider === "ideogram") return "Design a professional graphic image. ";
   return "";
 }
@@ -281,6 +293,9 @@ function assetHierarchy(key: AssetKey): string {
 
   if (key === "logo_primary" || key === "logo_dark_bg") {
     return "Logo lockup only (logomark + wordmark). No extra elements.";
+  }
+  if (key === "brand_mascot") {
+    return "Mascot character is the hero. Keep background simple. No wordmarks or readable text. Use only motifs derived from the logo symbol.";
   }
   if (key === "brand_pattern" || key === "presentation_bg") {
     return "Pattern/texture is primary. Keep it subtle, systematic, and repeatable.";
@@ -356,7 +371,9 @@ function stabilityTags(ctx: ReturnType<typeof extractBrandContext>, key: AssetKe
     "uniform_apron",
     "materials_board",
   ].includes(key);
+  const isMascot = key === "brand_mascot";
   if (isPhoto) return `(masterpiece:1.4), (best quality:1.3), (photorealistic:1.3), (8k uhd:1.2), (sharp focus:1.2), ${ctx.primaryColor} color grade, ${ctx.moodWords}`;
+  if (isMascot) return `(masterpiece:1.4), (best quality:1.3), (character illustration:1.3), (clean linework:1.2), (simple shapes:1.2), (flat colors:1.2), ${ctx.primaryColor} dominant, ${ctx.moodWords}`;
   return `(masterpiece:1.4), (best quality:1.3), (crisp vector:1.3), (sharp edges:1.2), professional graphic design, ${ctx.primaryColor} dominant`;
 }
 
@@ -364,7 +381,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
   const ctx = extractBrandContext(data);
   const q = providerQuality(provider, key);
   const B = `"${data.brandName}"`;
-  const prefix = providerPrefix(provider) + consistencyPrefix(ctx, data, key) + " ";
+  const prefix = providerPrefix(provider, key) + consistencyPrefix(ctx, data, key) + " ";
   const sTags = provider === "stability" ? stabilityTags(ctx, key) : "";
 
   const parts = (...lines: (string | false | undefined | null)[]): string =>
@@ -384,10 +401,12 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COLOR: ${ctx.primaryColor} (${ctx.primaryColorName}) on pure white (#FFFFFF). Accent: ${ctx.accentColor}.`,
         `TYPOGRAPHY: ${ctx.displayFont} wordmark. PERSONALITY: ${ctx.personality}. VALUES: ${ctx.values}.`,
         `VISUAL STYLE: ${ctx.visualStyle}. ${ctx.competitiveAngle}`,
-        `TECHNICAL: Isolated logomark + wordmark lockup, crisp vector graphic, sharp edges, scalable symbol,`,
-        `flat 2D vector mark (SVG-like), consistent line weights, no gradients, no 3D, no mockups, no perspective, no lighting effects,`,
-        `no drop shadows, no textures, no bevel/emboss, pure white background, centered composition.`,
-        sTags, q, neg(ctx, provider, "3D, photorealistic, mockup, perspective, gradients, bevel, emboss, realistic lighting, shadows"),
+        `TECHNICAL: Output ONLY the isolated logomark + wordmark lockup (like an exported SVG/PNG).`,
+        `Background must be a FLAT solid #FFFFFF with no noise, no texture, no vignette, no paper/wood, no scene.`,
+        `flat 2D vector mark (SVG-like), consistent line weights, sharp edges, scalable symbol,`,
+        `no gradients, no 3D, no mockups, no perspective, no lighting effects, no reflections,`,
+        `no drop shadows, no textures, no bevel/emboss, centered composition with generous margin.`,
+        sTags, q, neg(ctx, provider, "photography, photorealistic, mockup, scene, table, bowls, plates, wood, paper texture, fabric, perspective, gradients, bevel, emboss, realistic lighting, shadows"),
       );
     }
 
@@ -399,13 +418,15 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `Brand identity logo — dark background version for ${B} (${data.industry}).`,
         ideogramWord,
         `BRAND PURPOSE: ${ctx.purpose}.`,
-        `LOGO: ${ctx.logoPrimary} — inverted/reversed color version. ${ctx.logoSymbol} — evokes ${ctx.moodWords}.`,
-        `COLOR: White or very light (#FFFFFF or near-white) logo on solid deep dark background ${ctx.primaryColor}.`,
+        `LOGO: EXACT SAME logo lockup as the primary logo (same symbol + same wordmark + same layout).`,
+        `Only change: invert/reverse colors for dark background. Do NOT redesign any part of the logo.`,
+        `COLOR: White or very light (#FFFFFF or near-white) logo on FLAT solid deep dark background (use ${ctx.primaryColor} or near-black).`,
         `PERSONALITY: ${ctx.personality}. Tone: ${ctx.toneOfVoice}.`,
         `PURPOSE: Dark websites, video intros, event backdrops, dark mode UI, investor decks.`,
-        `TECHNICAL: Maximum contrast inverted lockup, flat 2D vector mark (SVG-like), pure flat solid dark background,`,
-        `no gradients, no textures, no halos, no glow, no 3D, no mockups, centered.`,
-        sTags, q, neg(ctx, provider, "3D, photorealistic, mockup, perspective, gradients, glow, bevel, emboss, realistic lighting, shadows"),
+        `TECHNICAL: Output ONLY the isolated logo (export-like). Flat 2D vector mark (SVG-like).`,
+        `Background must be a FLAT solid dark color with no noise, no texture, no scene, no materials.`,
+        `no gradients, no textures, no halos, no glow, no 3D, no mockups, centered with generous margin.`,
+        sTags, q, neg(ctx, provider, "photography, photorealistic, mockup, scene, table, paper texture, fabric, perspective, gradients, glow, bevel, emboss, realistic lighting, shadows"),
       );
     }
 
@@ -423,6 +444,30 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `TECHNICAL: Geometric precision, perfect tile zero visible seams, flat design,`,
         `consistent line weights, square composition, abstract shapes — no text, no logos, no photographic content.`,
         sTags, q, neg(ctx, provider, "visible seams, text, logos, photographic content, random noise"),
+      );
+    }
+
+    case "brand_mascot": {
+      const m = data.keyVisual.mascots?.[0];
+      const mascotIdentity = m
+        ? `MASCOT: Name=${m.name}. Description: ${m.description}. Personality: ${m.personality}.`
+        : `MASCOT: Create a brand mascot derived from the logo symbol (${ctx.logoSymbol}) and the STYLE_TREE motifs.`;
+      const usage = m?.usageGuidelines?.length
+        ? `USAGE GUIDELINES: ${m.usageGuidelines.slice(0, 5).join(" ")}`
+        : "USAGE: Must work as a repeatable brand character across campaigns, social posts, and stickers.";
+      return parts(
+        prefix,
+        `Design a professional brand mascot character for ${B} (${data.industry}).`,
+        mascotIdentity,
+        usage,
+        `DESIGN GOALS: instantly recognizable, simple silhouette, scalable from 64px icon to poster, animation-ready, consistent proportions.`,
+        `STYLE: premium modern 2D illustration, vector-like crisp edges, consistent line weights, minimal shading, no 3D, no photorealism.`,
+        `PALETTE (strict): ${ctx.allColors}. Use ${ctx.primaryColor} as dominant and ${ctx.accentColor} for small highlights only.`,
+        `PERSONALITY/TONE: ${ctx.personality}. Voice energy: ${ctx.toneOfVoice}. Mood: ${ctx.moodWords}.`,
+        `COMPOSITION: centered full-body character, clear negative space around, square 1:1 framing.`,
+        `BACKGROUND: clean solid background (white or a very light tint of ${ctx.secondaryColor}).`,
+        `NO TEXT. No wordmark. No readable lettering.`,
+        sTags, q, neg(ctx, provider, "photorealistic, 3D, complex background, clutter, gradients, shadows, watermark, text, wordmark, deformed anatomy"),
       );
     }
 
