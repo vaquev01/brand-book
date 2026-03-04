@@ -41,16 +41,22 @@ function TypoCard({ title, typo }: { title: string; typo: Typography }) {
 
 export function SectionTypography({ data, num }: { data: BrandbookData; num: number }) {
   const isAdvanced = !!data.typography.marketing;
+  const advancedTypos: Array<{ title: string; typo: Typography }> = [];
+  if (data.typography.marketing) advancedTypos.push({ title: "Marketing & Display", typo: data.typography.marketing });
+  if (data.typography.ui) advancedTypos.push({ title: "UI & Alta Legibilidade", typo: data.typography.ui });
+  if (data.typography.monospace) advancedTypos.push({ title: "Dados & Monospace", typo: data.typography.monospace });
+
+  const advancedCols = advancedTypos.length >= 3 ? "md:grid-cols-3" : advancedTypos.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1";
 
   return (
     <section className="page-break mb-16">
       <h2 className="text-3xl font-bold mb-8 border-b pb-4">{String(num).padStart(2, "0")}. Tipografia</h2>
-      <div className={`grid grid-cols-1 ${isAdvanced ? "md:grid-cols-3" : "md:grid-cols-2"} gap-8`}>
+      <div className={`grid grid-cols-1 ${isAdvanced ? advancedCols : "md:grid-cols-2"} gap-8`}>
         {isAdvanced ? (
           <>
-            <TypoCard title="Marketing & Display" typo={data.typography.marketing!} />
-            <TypoCard title="UI & Alta Legibilidade" typo={data.typography.ui!} />
-            <TypoCard title="Dados & Monospace" typo={data.typography.monospace!} />
+            {advancedTypos.map(({ title, typo }) => (
+              <TypoCard key={title} title={title} typo={typo} />
+            ))}
           </>
         ) : (
           <>
