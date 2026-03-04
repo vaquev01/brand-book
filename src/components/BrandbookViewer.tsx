@@ -27,7 +27,7 @@ import type { AssetPackFile } from "@/lib/types";
 
 type Category =
   | "Missão"
-  | "Persona"
+  | "Proposta de Valor"
   | "Tom de Marca"
   | "Identidade Visual"
   | "Paleta de Cores"
@@ -84,14 +84,14 @@ export function BrandbookViewer({
     {
       id: "positioning",
       title: "Posicionamento",
-      category: "Missão",
+      category: "Proposta de Valor",
       when: !!data.positioning,
       render: (num) => <SectionPositioning data={data} num={num} />,
     },
     {
       id: "personas",
       title: "Personas",
-      category: "Persona",
+      category: "Proposta de Valor",
       when: !!data.audiencePersonas && data.audiencePersonas.length > 0,
       render: (num) => <SectionAudiencePersonas data={data} num={num} />,
     },
@@ -245,7 +245,7 @@ export function BrandbookViewer({
 
   const categories: Category[] = [
     "Missão",
-    "Persona",
+    "Proposta de Valor",
     "Tom de Marca",
     "Identidade Visual",
     "Paleta de Cores",
