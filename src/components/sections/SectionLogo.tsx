@@ -10,12 +10,14 @@ export function SectionLogo({ data, num }: { data: BrandbookData; num: number })
         <div>
           <h3 className="text-lg font-semibold mb-4">Logo Secundário</h3>
           <div className="bg-gray-100 p-8 rounded-lg flex justify-center items-center h-64">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={data.logo.secondary} alt="Logo Secundário" className="max-h-full object-contain" />
           </div>
         </div>
         <div>
           <h3 className="text-lg font-semibold mb-4">Símbolo / Ícone</h3>
           <div className="bg-gray-100 p-8 rounded-lg flex justify-center items-center h-64">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={data.logo.symbol} alt="Símbolo" className="max-h-full object-contain" />
           </div>
         </div>

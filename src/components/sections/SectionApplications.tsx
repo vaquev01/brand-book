@@ -74,6 +74,7 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
               <div className="aspect-video bg-gray-900 overflow-hidden relative">
                 {aiImage ? (
                   <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={aiImage} alt={app.type} className="w-full h-full object-cover" />
                     <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
                       IA

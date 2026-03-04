@@ -31,7 +31,15 @@ export function bytesToBase64(bytes: unknown): string {
   if (typeof bytes === "string") return bytes;
   if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
   if (bytes instanceof Uint8Array) {
-    return Buffer.from(bytes).toString("base64");
+    if (typeof Buffer !== "undefined") return Buffer.from(bytes).toString("base64");
+    if (typeof btoa !== "undefined") {
+      let binary = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      return btoa(binary);
+    }
   }
   throw new Error("Não foi possível converter bytes da imagem para base64");
 }

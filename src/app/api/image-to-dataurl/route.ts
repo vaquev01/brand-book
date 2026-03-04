@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bytesToBase64, isPrivateHostname } from "@/lib/common";
 
 export const runtime = "nodejs";
-
-function isPrivateHostname(hostname: string): boolean {
-  const h = hostname.toLowerCase();
-  if (h === "localhost" || h === "0.0.0.0" || h === "::1") return true;
-  if (/^127\./.test(h)) return true;
-  if (/^10\./.test(h)) return true;
-  if (/^192\.168\./.test(h)) return true;
-  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(h)) return true;
-  if (h === "169.254.169.254") return true;
-  return false;
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  return Buffer.from(bytes).toString("base64");
-}
 
 export async function POST(request: NextRequest) {
   try {

@@ -176,6 +176,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
               return (
                 <div key={asset.id} className="border rounded-xl overflow-hidden bg-gray-50 group relative">
                   <div className="h-40 bg-white flex items-center justify-center p-3 border-b">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={asset.dataUrl}
                       alt={asset.name}

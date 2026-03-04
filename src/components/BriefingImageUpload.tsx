@@ -112,6 +112,7 @@ export function BriefingImageUpload({ images, onChange }: Props) {
         <div className="space-y-2">
           {images.map((img) => (
             <div key={img.id} className="flex items-start gap-3 bg-gray-50 border rounded-lg p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={img.dataUrl}
                 alt={img.name}

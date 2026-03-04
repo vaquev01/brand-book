@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { ASSET_CATALOG } from "@/lib/imagePrompts";
+import { bytesToBase64, fnv1a32, isPrivateHostname } from "@/lib/common";
 
 export const runtime = "nodejs";
 
@@ -117,23 +118,6 @@ function extractNegativePrompt(prompt: string): { positive: string; negative: st
   return { positive: trimmed, negative: fallback };
 }
 
-function bytesToBase64(bytes: unknown): string {
-  if (typeof bytes === "string") return bytes;
-  if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
-  if (bytes instanceof Uint8Array) {
-    if (typeof Buffer !== "undefined") return Buffer.from(bytes).toString("base64");
-    if (typeof btoa !== "undefined") {
-      let binary = "";
-      const chunk = 0x8000;
-      for (let i = 0; i < bytes.length; i += chunk) {
-        binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-      }
-      return btoa(binary);
-    }
-  }
-  throw new Error("Não foi possível converter bytes da imagem para base64");
-}
-
 async function generateImagenDataUrl(
   ai: GoogleGenAI,
   model: string,
@@ -173,15 +157,6 @@ async function generateImagenWithFallback(
   throw new Error(msg);
 }
 
-function fnv1a32(input: string): number {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
-
 function extractVisualSystemSeed(prompt: string, assetKey?: string): number | null {
   const m = prompt.match(/VISUAL_SYSTEM_ID:\s*BBVS-([0-9a-f]{8})/i);
   if (!m) return null;
@@ -211,17 +186,7 @@ async function refToInlineData(ref: string): Promise<{ inlineData: { mimeType: s
   }
 
   const host = (url.hostname || "").toLowerCase();
-  const isPrivate =
-    host === "localhost" ||
-    host === "0.0.0.0" ||
-    host === "127.0.0.1" ||
-    host === "::1" ||
-    host.startsWith("127.") ||
-    host.startsWith("10.") ||
-    host.startsWith("192.168.") ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
-    host.startsWith("169.254.");
-  if (isPrivate) return null;
+  if (isPrivateHostname(host)) return null;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);

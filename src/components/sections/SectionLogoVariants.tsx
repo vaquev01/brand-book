@@ -26,6 +26,7 @@ export function SectionLogoVariants({ data, num }: { data: BrandbookData; num: n
               <h3 className="font-bold">{v.label}</h3>
             </div>
             <div className="bg-gray-100 p-8 flex items-center justify-center h-64">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={v.url!} alt={v.label} className="max-h-full object-contain" />
             </div>
           </div>

@@ -3,17 +3,9 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import type { BrandbookData } from "@/lib/types";
 import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { fnv1a32 } from "@/lib/common";
 
 export const runtime = "nodejs";
-
-function fnv1a32(input: string): number {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
 
 function visualSystemId(brandbook: BrandbookData): string {
   const allColors = [...(brandbook.colors?.primary ?? []), ...(brandbook.colors?.secondary ?? [])]

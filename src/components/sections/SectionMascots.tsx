@@ -33,6 +33,7 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
                 <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm">
                   {uploadedImg ? (
                     <div className="h-52 bg-gray-50 flex items-center justify-center p-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={uploadedImg.dataUrl}
                         alt={mascot.name}
@@ -80,6 +81,7 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {uploadedMascots.slice(mascots.length).map((asset) => (
               <div key={asset.id} className="bg-gray-50 border rounded-lg overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={asset.dataUrl} alt={asset.name} className="w-full h-36 object-contain p-3" />
                 <div className="px-3 pb-3">
                   <p className="text-xs font-semibold text-gray-700 truncate">{asset.name}</p>
@@ -109,6 +111,7 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {uploadedElements.map((asset) => (
                   <div key={asset.id} className="bg-gray-50 border rounded-lg overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={asset.dataUrl} alt={asset.name} className="w-full h-20 object-contain p-2" />
                     <p className="text-[10px] font-medium text-gray-500 text-center pb-1 truncate px-1">{asset.name}</p>
                   </div>
@@ -157,6 +160,7 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {uploadedPatterns.map((asset) => (
                   <div key={asset.id} className="bg-gray-50 border rounded-lg overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={asset.dataUrl} alt={asset.name} className="w-full h-20 object-cover rounded" />
                     <p className="text-[10px] font-medium text-gray-500 text-center pb-1 truncate px-1">{asset.name}</p>
                   </div>
