@@ -15,13 +15,13 @@ type Tab =
   | "imagebriefing";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "dna", label: "DNA & Identidade", icon: "🧬" },
-  { id: "logo", label: "Logo", icon: "🖼️" },
+  { id: "dna", label: "Essência (DNA)", icon: "🧬" },
+  { id: "estrategia", label: "Posicionamento", icon: "🧭" },
+  { id: "verbal", label: "Tom de Voz", icon: "🗣️" },
+  { id: "logo", label: "Identidade Visual", icon: "�️" },
   { id: "cores", label: "Cores", icon: "🎨" },
   { id: "tipografia", label: "Tipografia", icon: "🔤" },
-  { id: "keyvisual", label: "Key Visual & Mascotes", icon: "✦" },
-  { id: "estrategia", label: "Posicionamento", icon: "🧭" },
-  { id: "verbal", label: "Identidade Verbal", icon: "🗣️" },
+  { id: "keyvisual", label: "Linguagem Visual", icon: "✦" },
   { id: "aplicacoes", label: "Aplicações", icon: "🖨️" },
   { id: "imagebriefing", label: "Briefing de Imagens", icon: "🤖" },
 ];

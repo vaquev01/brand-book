@@ -30,7 +30,9 @@ export function SectionColors({ data, num }: { data: BrandbookData; num: number 
 
   return (
     <section className="page-break mb-10">
-      <h2 className="text-2xl font-bold mb-5 border-b pb-3">{String(num).padStart(2, "0")}. Paleta de Cores</h2>
+      <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
+        {String(num).padStart(2, "0")}. Paleta de Cores
+      </h2>
 
       <h3 className="text-base font-semibold mb-3 border-l-4 border-gray-800 pl-3">Cores Primárias</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">

@@ -80,7 +80,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
 
   return (
     <section className="page-break mb-10">
-      <h2 className="text-2xl font-bold mb-5 border-b pb-3">
+      <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Logo &amp; Identidade Visual
       </h2>
 

@@ -26,11 +26,14 @@ import type { AssetKey } from "@/lib/imagePrompts";
 import type { AssetPackFile } from "@/lib/types";
 
 type Category =
-  | "Estratégia"
+  | "Essência da Marca"
   | "Identidade Visual"
+  | "Cores"
+  | "Tipografia"
+  | "Linguagem Visual"
   | "Design System"
-  | "Produto & UX"
-  | "Ativos & Entrega";
+  | "Tom de Voz"
+  | "Aplicações";
 
 type SectionDef = {
   id: string;
@@ -67,39 +70,31 @@ export function BrandbookViewer({
     {
       id: "dna",
       title: "DNA & Estratégia",
-      category: "Estratégia",
+      category: "Essência da Marca",
       when: true,
       render: (num) => <SectionDNA data={data} num={num} />,
     },
     {
       id: "brand-story",
       title: "Brand Story & Manifesto",
-      category: "Estratégia",
+      category: "Essência da Marca",
       when: !!data.brandStory,
       render: (num) => <SectionBrandStory data={data} num={num} />,
     },
     {
       id: "positioning",
       title: "Posicionamento",
-      category: "Estratégia",
+      category: "Essência da Marca",
       when: !!data.positioning,
       render: (num) => <SectionPositioning data={data} num={num} />,
     },
     {
       id: "personas",
       title: "Personas",
-      category: "Estratégia",
+      category: "Essência da Marca",
       when: !!data.audiencePersonas && data.audiencePersonas.length > 0,
       render: (num) => <SectionAudiencePersonas data={data} num={num} />,
     },
-    {
-      id: "verbal-identity",
-      title: "Identidade Verbal",
-      category: "Estratégia",
-      when: !!data.verbalIdentity,
-      render: (num) => <SectionVerbalIdentity data={data} num={num} />,
-    },
-
     {
       id: "logo",
       title: "Logo & Identidade Visual",
@@ -116,26 +111,57 @@ export function BrandbookViewer({
       ),
     },
     {
+      id: "brand-assets",
+      title: "Ativos de Marca",
+      category: "Identidade Visual",
+      when: uploadedAssets.length > 0,
+      render: (num) => (
+        <SectionBrandAssets
+          num={num}
+          uploadedAssets={uploadedAssets}
+        />
+      ),
+    },
+    {
       id: "colors",
       title: "Cores",
-      category: "Identidade Visual",
+      category: "Cores",
       when: true,
       render: (num) => <SectionColors data={data} num={num} />,
     },
     {
       id: "typography",
       title: "Tipografia",
-      category: "Identidade Visual",
+      category: "Tipografia",
       when: true,
       render: (num) => <SectionTypography data={data} num={num} />,
     },
-
     {
       id: "typography-scale",
       title: "Escala Tipográfica",
-      category: "Design System",
+      category: "Tipografia",
       when: !!data.typographyScale && data.typographyScale.length > 0,
       render: (num) => <SectionTypographyScale data={data} num={num} />,
+    },
+    {
+      id: "key-visual",
+      title: "Key Visual",
+      category: "Linguagem Visual",
+      when: true,
+      render: (num) => <SectionKeyVisual data={data} num={num} />,
+    },
+    {
+      id: "mascots",
+      title: "Mascotes & Símbolos",
+      category: "Linguagem Visual",
+      when: !!(
+        (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
+        (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
+        (data.keyVisual.patterns && data.keyVisual.patterns.length > 0) ||
+        (data.keyVisual.structuredPatterns && data.keyVisual.structuredPatterns.length > 0) ||
+        uploadedAssets.some((a) => a.type === "mascot" || a.type === "element" || a.type === "pattern")
+      ),
+      render: (num) => <SectionMascots data={data} num={num} uploadedAssets={uploadedAssets} />,
     },
     {
       id: "ui-guidelines",
@@ -151,68 +177,24 @@ export function BrandbookViewer({
       when: isAdvanced && !!data.designTokens && !!data.accessibility,
       render: (num) => <SectionTokensA11y data={data} num={num} />,
     },
-
     {
       id: "ux-microcopy-motion",
       title: "UX Patterns, Microcopy & Motion",
-      category: "Produto & UX",
+      category: "Design System",
       when: isAdvanced && !!data.uxPatterns && !!data.microcopy && !!data.motion,
       render: (num) => <SectionUxMicrocopyMotion data={data} num={num} />,
     },
-
     {
-      id: "key-visual",
-      title: "Key Visual",
-      category: "Ativos & Entrega",
-      when: true,
-      render: (num) => <SectionKeyVisual data={data} num={num} />,
-    },
-    {
-      id: "asset-pack",
-      title: "Entrega — Asset Pack",
-      category: "Ativos & Entrega",
-      when: true,
-      render: (num) => (
-        <SectionAssetPack
-          data={data}
-          num={num}
-          uploadedAssets={uploadedAssets}
-          generatedImages={generatedImages}
-          assetPackFiles={assetPackFiles}
-          generating={assetPackGenerating}
-          onGenerate={onGenerateAssetPack}
-        />
-      ),
-    },
-    {
-      id: "brand-assets",
-      title: "Ativos de Marca",
-      category: "Identidade Visual",
-      when: uploadedAssets.length > 0,
-      render: (num) => (
-        <SectionBrandAssets
-          num={num}
-          uploadedAssets={uploadedAssets}
-        />
-      ),
-    },
-    {
-      id: "mascots",
-      title: "Mascotes & Símbolos",
-      category: "Ativos & Entrega",
-      when: !!(
-        (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
-        (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
-        (data.keyVisual.patterns && data.keyVisual.patterns.length > 0) ||
-        (data.keyVisual.structuredPatterns && data.keyVisual.structuredPatterns.length > 0) ||
-        uploadedAssets.some((a) => a.type === "mascot" || a.type === "element" || a.type === "pattern")
-      ),
-      render: (num) => <SectionMascots data={data} num={num} uploadedAssets={uploadedAssets} />,
+      id: "verbal-identity",
+      title: "Identidade Verbal",
+      category: "Tom de Voz",
+      when: !!data.verbalIdentity,
+      render: (num) => <SectionVerbalIdentity data={data} num={num} />,
     },
     {
       id: "applications",
       title: "Aplicações",
-      category: "Ativos & Entrega",
+      category: "Aplicações",
       when: true,
       render: (num) => (
         <SectionApplications
@@ -227,16 +209,33 @@ export function BrandbookViewer({
     {
       id: "production-guidelines",
       title: "Produção & Handoff",
-      category: "Ativos & Entrega",
+      category: "Aplicações",
       when: !!data.productionGuidelines,
       render: (num) => <SectionProductionGuidelines data={data} num={num} />,
     },
     {
       id: "social-media",
       title: "Guia de Redes Sociais",
-      category: "Ativos & Entrega",
+      category: "Aplicações",
       when: !!data.socialMediaGuidelines && data.socialMediaGuidelines.platforms.length > 0,
       render: (num) => <SectionSocialMedia data={data} num={num} />,
+    },
+    {
+      id: "asset-pack",
+      title: "Entrega — Asset Pack",
+      category: "Aplicações",
+      when: true,
+      render: (num) => (
+        <SectionAssetPack
+          data={data}
+          num={num}
+          uploadedAssets={uploadedAssets}
+          generatedImages={generatedImages}
+          assetPackFiles={assetPackFiles}
+          generating={assetPackGenerating}
+          onGenerate={onGenerateAssetPack}
+        />
+      ),
     },
   ];
 
@@ -245,11 +244,14 @@ export function BrandbookViewer({
     .map((s, idx) => ({ ...s, num: idx + 1 }));
 
   const categories: Category[] = [
-    "Estratégia",
+    "Essência da Marca",
     "Identidade Visual",
+    "Cores",
+    "Tipografia",
+    "Linguagem Visual",
     "Design System",
-    "Produto & UX",
-    "Ativos & Entrega",
+    "Tom de Voz",
+    "Aplicações",
   ];
 
   const byCategory = categories
@@ -260,22 +262,22 @@ export function BrandbookViewer({
     .filter((g) => g.items.length > 0);
 
   return (
-    <div className="max-w-5xl mx-auto" id="brandbook-content">
+    <div className="max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="brandbook-content">
       <FontLoader data={data} />
       <SectionCover data={data} />
 
       <section className="page-break mb-10" id="sumario">
-        <div className="mb-5 border-b pb-3">
-          <h2 className="text-2xl font-bold">Sumário</h2>
-          <p className="text-gray-600 mt-2">
+        <div className="mb-4 border-b border-gray-100 pb-2">
+          <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">Sumário</h2>
+          <p className="text-gray-500 mt-1 text-sm">
             Navegue por categorias e vá direto à seção desejada.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {byCategory.map((g) => (
-            <div key={g.cat} className="bg-white border rounded-xl p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">
+            <div key={g.cat} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+              <h3 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-[0.25em] mb-3">
                 {g.cat}
               </h3>
               <div className="space-y-2">
@@ -283,13 +285,13 @@ export function BrandbookViewer({
                   <a
                     key={s.id}
                     href={`#${s.id}`}
-                    className="block rounded-lg px-3 py-2 hover:bg-gray-50 transition"
+                    className="block rounded-xl px-3 py-2 hover:bg-gray-50 transition"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="text-xs font-bold text-gray-500 mt-0.5">
+                      <span className="text-xs font-bold text-gray-400 mt-0.5 tabular-nums">
                         {String(s.num).padStart(2, "0")}
                       </span>
-                      <span className="font-semibold text-gray-900">{s.title}</span>
+                      <span className="font-semibold text-gray-900 leading-snug">{s.title}</span>
                     </div>
                   </a>
                 ))}
@@ -301,9 +303,9 @@ export function BrandbookViewer({
 
       {byCategory.map((g) => (
         <div key={g.cat}>
-          <div className="page-break mb-5 mt-8">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h2 className="text-xl font-bold text-gray-900">{g.cat}</h2>
+          <div className="page-break mb-4 mt-10">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+              <h2 className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-gray-500">{g.cat}</h2>
               <a href="#sumario" className="no-print text-sm font-semibold text-gray-600 hover:text-gray-900">
                 Voltar ao sumário
               </a>

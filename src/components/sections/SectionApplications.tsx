@@ -41,8 +41,10 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
 
   return (
     <section className="page-break mb-10">
-      <div className="flex items-center justify-between mb-5 border-b pb-3">
-        <h2 className="text-2xl font-bold">{String(num).padStart(2, "0")}. Aplicações</h2>
+      <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+        <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
+          {String(num).padStart(2, "0")}. Aplicações
+        </h2>
         {onGoToImages && (
           <button
             onClick={onGoToImages}
