@@ -963,7 +963,7 @@ export function buildApplicationPrompt(
     app.layoutGuidelines && `LAYOUT GUIDELINES: ${app.layoutGuidelines}.`,
     app.typographyHierarchy && `TYPOGRAPHY HIERARCHY: ${app.typographyHierarchy}.`,
     app.artDirection && `ART DIRECTION: ${app.artDirection}.`,
-    app.substrates?.length && `SUBSTRATES: ${app.substrates.join(", ")}.`,
+    (app.substrates && app.substrates.length > 0) ? `SUBSTRATES: ${app.substrates.join(", ")}.` : null,
     `BRAND PERSONALITY: ${ctx.personality}. Values: ${ctx.values}. Tone: ${ctx.toneOfVoice}.`,
     `COLOR PALETTE (strict): ${ctx.allColors}.`,
     `LOGO: ${ctx.logoPrimary}. Symbol: ${ctx.logoSymbol}.`,
