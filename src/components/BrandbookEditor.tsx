@@ -15,15 +15,15 @@ type Tab =
   | "imagebriefing";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "dna", label: "Missão", icon: "🧬" },
-  { id: "estrategia", label: "Proposta de Valor", icon: "🧭" },
-  { id: "verbal", label: "Tom de Marca", icon: "🗣️" },
+  { id: "dna", label: "Essência da Marca", icon: "🧬" },
+  { id: "estrategia", label: "Público-Alvo", icon: "🎯" },
+  { id: "verbal", label: "Identidade Verbal", icon: "🗣️" },
   { id: "logo", label: "Identidade Visual", icon: "🖼️" },
-  { id: "tipografia", label: "Tipografia", icon: "🔤" },
   { id: "cores", label: "Paleta de Cores", icon: "🎨" },
-  { id: "keyvisual", label: "Padrões Visuais", icon: "✦" },
-  { id: "aplicacoes", label: "Aplicações", icon: "🖨️" },
-  { id: "imagebriefing", label: "Diretrizes (Imagens IA)", icon: "🤖" },
+  { id: "tipografia", label: "Tipografia", icon: "🔤" },
+  { id: "keyvisual", label: "Sistema Visual", icon: "✦" },
+  { id: "aplicacoes", label: "Aplicações da Marca", icon: "🖨️" },
+  { id: "imagebriefing", label: "Diretrizes de Uso", icon: "📋" },
 ];
 
 interface FieldProps {
