@@ -6,5 +6,5 @@ export function resolveGoogleTextModel(model?: string): string {
   const lower = m.toLowerCase();
   if (lower.startsWith("imagen")) return DEFAULT_MODEL;
   if (lower.includes("image-preview")) return DEFAULT_MODEL;
-  return m;
+  return m.replace(/-0\d+$/, "");
 }
