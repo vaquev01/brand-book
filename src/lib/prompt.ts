@@ -80,6 +80,20 @@ PRINCÍPIOS FUNDAMENTAIS DE GERAÇÃO:
 6. MASCOTES & SÍMBOLOS: Avalie ativamente se a marca se beneficia de um personagem/mascote (marcas com forte personalidade, produtos de consumo, entretenimento, apps para jovens, food & beverage). Se sim, crie mascotes ricos com backstory e diretrizes claras.
 7. COMPLETUDE: Preencha TODOS os campos do JSON. Campos incompletos ou vagos comprometem a usabilidade do brandbook.
 
+REGRAS AVANÇADAS DE QUALIDADE (OBRIGATÓRIAS):
+
+8. CROSS-REFERENCING ENTRE SEÇÕES: Cada cor nomeada na paleta DEVE ser referenciada pelo seu nome exato em TODAS as seções onde aparece. Exemplo: se uma cor se chama "Laranja Tucano", ela deve aparecer como "Laranja Tucano" na typographyHierarchy ("preços em Montserrat Bold Laranja Tucano"), no artDirection das aplicações, nas usageGuidelines do mascote, nos substrates ("fio poliéster Amarelo Caju") e nas productionMethods. Nunca dizer "cor de destaque" genericamente — usar SEMPRE o nome da cor. Isso garante que o brandbook funcione como guia operacional onde qualquer área encontra exatamente a cor certa sem ambiguidade.
+
+9. PROFUNDIDADE DE PRODUÇÃO INDUSTRIAL: As productionMethods e o handoffChecklist devem refletir conhecimento REAL de prepress e produção gráfica:
+   • Flexografia: alertar sobre gradientes que não reproduzem, textos vazados (negativos) que entopem de tinta, registro de cores com tolerância em mm.
+   • Serigrafia: necessidade de base branca em tecidos escuros para cores claras, máximo de cores por peça, impossibilidade de gradientes.
+   • Bordado: tamanho mínimo de texto legível (5mm altura), conversão para matriz, número máximo de cores de fio.
+   • Offset: perfis ICC, sobreimpressão (overprint) vs knockout, UCR/GCR.
+   • Impressão sobre substratos coloridos (kraft, tecido escuro): alertar que tintas escurecem e que branco pode exigir 5ª cor (Spot Color / White Ink).
+   • Sempre incluir no handoffChecklist: "Converter fontes em curvas (Create Outlines)" e "Expandir traços (Outline Stroke)".
+
+10. PANTONE — ATRIBUIÇÃO CRITERIOSA: Ao atribuir códigos Pantone, use APENAS códigos que você tenha alta confiança de serem correspondências reais do HEX fornecido. Consulte a referência mais próxima da série Pantone Coated (C) para cores sólidas e Pantone Uncoated (U) apenas quando especificamente para papel sem revestimento. Se não tiver confiança na correspondência exata, use "Pantone (verificar com Pantone Color Bridge)" em vez de inventar um código incorreto. Pantone errado causa produção inteira descartada — é preferível indicar "verificar" do que atribuir código falso.
+
 INSTRUÇÕES POR SEÇÃO:
 1. "brandName" + "industry": nome exato e nicho preciso (não genérico).
 2. "brandConcept": propósito filosófico profundo, missão acionável, visão aspiracional, UVP diferenciada (não clichê), RTBs verificáveis, psicografia do usuário detalhada, valores com conexão visual, personalidade com nuances, tom de voz com exemplos.
