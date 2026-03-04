@@ -4,7 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
 import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
-import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { fetchExternalReferences, formatExternalReferencesForPrompt } from "@/lib/externalReferences";
 import type { GenerateScope, CreativityLevel } from "@/lib/types";
 
@@ -199,8 +199,6 @@ export async function POST(request: NextRequest) {
         const hasImages = Array.isArray(safeReferenceImages) && safeReferenceImages.length > 0;
         const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
         const useGemini = provider === "gemini";
-        const resolvedGoogleModel = useGemini ? resolveGoogleTextModel(googleModel) : "";
-        const resolvedGoogleJsonModel = useGemini ? resolveGoogleTextModel("gemini-2.0-flash-lite") : "";
         const ESTIMATED_CHARS = 13000;
 
         const firstPhase = hasLogoImage
@@ -246,15 +244,20 @@ export async function POST(request: NextRequest) {
 
           let lastPct = 5;
           try {
-            const genStream = await ai.models.generateContentStream({
-              model: resolvedGoogleModel,
-              contents: geminiContents,
-              config: {
-                systemInstruction: systemPrompt,
-                responseMimeType: "application/json",
-                temperature,
-                maxOutputTokens: 8192,
-              },
+            const { value: genStream } = await withGoogleTextModelFallback({
+              apiKey,
+              preferredModel: googleModel,
+              run: (model) =>
+                ai.models.generateContentStream({
+                  model,
+                  contents: geminiContents,
+                  config: {
+                    systemInstruction: systemPrompt,
+                    responseMimeType: "application/json",
+                    temperature,
+                    maxOutputTokens: 8192,
+                  },
+                }),
             });
             for await (const chunk of genStream) {
               const text = (chunk as { text?: string }).text ?? "";
@@ -267,15 +270,20 @@ export async function POST(request: NextRequest) {
             }
           } catch {
             send({ type: "progress", phase: "Gerando brandbook com Gemini...", pct: 20 });
-            const resp = await ai.models.generateContent({
-              model: resolvedGoogleModel,
-              contents: geminiContents,
-              config: {
-                systemInstruction: systemPrompt,
-                responseMimeType: "application/json",
-                temperature,
-                maxOutputTokens: 8192,
-              },
+            const { value: resp } = await withGoogleTextModelFallback({
+              apiKey,
+              preferredModel: googleModel,
+              run: (model) =>
+                ai.models.generateContent({
+                  model,
+                  contents: geminiContents,
+                  config: {
+                    systemInstruction: systemPrompt,
+                    responseMimeType: "application/json",
+                    temperature,
+                    maxOutputTokens: 8192,
+                  },
+                }),
             });
             fullContent = resp.text ?? "";
           }
@@ -342,15 +350,20 @@ export async function POST(request: NextRequest) {
           if (useGemini) {
             const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
             const ai = new GoogleGenAI({ apiKey: apiKey! });
-            const resp = await ai.models.generateContent({
-              model: resolvedGoogleJsonModel,
-              contents: repairPrompt,
-              config: {
-                systemInstruction: systemPrompt,
-                responseMimeType: "application/json",
-                temperature: 0.2,
-                maxOutputTokens: 8192,
-              },
+            const { value: resp } = await withGoogleTextModelFallback({
+              apiKey: apiKey!,
+              preferredModel: googleModel,
+              run: (model) =>
+                ai.models.generateContent({
+                  model,
+                  contents: repairPrompt,
+                  config: {
+                    systemInstruction: systemPrompt,
+                    responseMimeType: "application/json",
+                    temperature: 0.2,
+                    maxOutputTokens: 8192,
+                  },
+                }),
             });
             repairedContent = resp.text ?? "";
           } else {
@@ -400,15 +413,20 @@ export async function POST(request: NextRequest) {
         if (useGemini) {
           const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
           const ai = new GoogleGenAI({ apiKey: apiKey! });
-          const resp = await ai.models.generateContent({
-            model: resolvedGoogleJsonModel,
-            contents: fixPrompt,
-            config: {
-              systemInstruction: buildSystemPrompt(scope, creativityLevel, intentionality),
-              responseMimeType: "application/json",
-              temperature: 0.2,
-              maxOutputTokens: 8192,
-            },
+          const { value: resp } = await withGoogleTextModelFallback({
+            apiKey: apiKey!,
+            preferredModel: googleModel,
+            run: (model) =>
+              ai.models.generateContent({
+                model,
+                contents: fixPrompt,
+                config: {
+                  systemInstruction: buildSystemPrompt(scope, creativityLevel, intentionality),
+                  responseMimeType: "application/json",
+                  temperature: 0.2,
+                  maxOutputTokens: 8192,
+                },
+              }),
           });
           fixedContent = resp.text ?? "";
         } else {

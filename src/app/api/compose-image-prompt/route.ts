@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import type { BrandbookData } from "@/lib/types";
-import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { fnv1a32 } from "@/lib/common";
 
 export const runtime = "nodejs";
@@ -216,15 +216,20 @@ ${brief}`;
         ] as Parameters<typeof ai.models.generateContent>[0]["contents"])
         : userPrompt;
 
-      const resp = await ai.models.generateContent({
-        model: resolveGoogleTextModel(body.googleModel),
-        contents,
-        config: {
-          systemInstruction: systemPrompt,
-          responseMimeType: "application/json",
-          temperature,
-          maxOutputTokens: 2048,
-        },
+      const { value: resp } = await withGoogleTextModelFallback({
+        apiKey,
+        preferredModel: body.googleModel,
+        run: (model) =>
+          ai.models.generateContent({
+            model,
+            contents,
+            config: {
+              systemInstruction: systemPrompt,
+              responseMimeType: "application/json",
+              temperature,
+              maxOutputTokens: 2048,
+            },
+          }),
       });
       raw = resp.text ?? "";
     } else {

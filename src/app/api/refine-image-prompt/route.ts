@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
-import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 
 export const runtime = "nodejs";
 
@@ -65,15 +65,20 @@ ${basePrompt}`;
       const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
       if (!apiKey) return NextResponse.json({ error: "GOOGLE_API_KEY não configurada." }, { status: 500 });
       const ai = new GoogleGenAI({ apiKey });
-      const resp = await ai.models.generateContent({
-        model: resolveGoogleTextModel(googleModel),
-        contents: userPrompt,
-        config: {
-          systemInstruction: systemPrompt,
-          responseMimeType: "application/json",
-          temperature: 0.25,
-          maxOutputTokens: 2048,
-        },
+      const { value: resp } = await withGoogleTextModelFallback({
+        apiKey,
+        preferredModel: googleModel,
+        run: (model) =>
+          ai.models.generateContent({
+            model,
+            contents: userPrompt,
+            config: {
+              systemInstruction: systemPrompt,
+              responseMimeType: "application/json",
+              temperature: 0.25,
+              maxOutputTokens: 2048,
+            },
+          }),
       });
       raw = resp.text ?? "";
     } else {

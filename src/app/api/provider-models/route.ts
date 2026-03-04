@@ -97,6 +97,8 @@ async function fetchGoogleModels(apiKey: string): Promise<ProviderModels> {
   } while (pageToken);
 
   const GOOGLE_TEXT_PRIORITY: RegExp[] = [
+    /^gemini-3\.1/i,
+    /^gemini-3/i,
     /^gemini-2\.5-pro/i,
     /^gemini-2\.5-flash/i,
     /^gemini-2\.0-pro/i,

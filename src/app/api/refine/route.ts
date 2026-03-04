@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
-import { resolveGoogleTextModel } from "@/lib/googleModels";
+import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { fetchExternalReferences, formatExternalReferencesForPrompt } from "@/lib/externalReferences";
 
 export const runtime = "nodejs";
@@ -63,15 +63,20 @@ Aplique esta instrução de forma precisa e coerente. Atualize todas as seções
       const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
       if (!apiKey) return NextResponse.json({ error: "GOOGLE_API_KEY não configurada." }, { status: 500 });
       const ai = new GoogleGenAI({ apiKey });
-      const resp = await ai.models.generateContent({
-        model: resolveGoogleTextModel(googleModel),
-        contents: userPrompt,
-        config: {
-          systemInstruction: systemPrompt,
-          responseMimeType: "application/json",
-          temperature: 0.75,
-          maxOutputTokens: 8192,
-        },
+      const { value: resp } = await withGoogleTextModelFallback({
+        apiKey,
+        preferredModel: googleModel,
+        run: (model) =>
+          ai.models.generateContent({
+            model,
+            contents: userPrompt,
+            config: {
+              systemInstruction: systemPrompt,
+              responseMimeType: "application/json",
+              temperature: 0.75,
+              maxOutputTokens: 8192,
+            },
+          }),
       });
       result = resp.text ?? "";
     } else {
