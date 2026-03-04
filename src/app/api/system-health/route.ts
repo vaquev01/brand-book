@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ASSET_CATALOG } from "@/lib/imagePrompts";
 import { AssetKeySchema } from "@/lib/brandbookSchema";
+import { getRuntimeBuildMeta } from "@/lib/systemChangelog";
 
 type Severity = "critical" | "warning" | "suggestion";
 
@@ -14,6 +15,7 @@ export type Issue = {
 export type SystemHealthReport = {
   ok: boolean;
   summary: string;
+  meta: ReturnType<typeof getRuntimeBuildMeta>;
   stats: {
     assets: number;
     categories: Record<string, number>;
@@ -24,6 +26,8 @@ export type SystemHealthReport = {
 
 function buildReport(): SystemHealthReport {
   const issues: Issue[] = [];
+
+  const meta = getRuntimeBuildMeta();
 
   const keys = ASSET_CATALOG.map((a) => a.key);
   const unique = new Set(keys);
@@ -85,6 +89,7 @@ function buildReport(): SystemHealthReport {
     summary: ok
       ? "Sistema consistente: catálogo, schema e aspect ratios estão sincronizados."
       : "Sistema com inconsistências: revise os itens críticos para evitar regressões.",
+    meta,
     stats: { assets: ASSET_CATALOG.length, categories, aspectRatios },
     issues,
   };
