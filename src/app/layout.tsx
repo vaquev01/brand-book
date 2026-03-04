@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Brandbook Builder | Gerador de Manual de Marca Profissional",
   description: "Gere manuais de marca completos e profissionais para qualquer tipo de negócio usando IA.",

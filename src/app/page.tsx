@@ -28,9 +28,6 @@ import {
 type Tab = "generate" | "examples" | "viewer";
 type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 const GENERATED_ASSETS_LS_PREFIX = "bb_generated_assets::";
 const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
 const ASSET_PACK_LS_PREFIX = "bb_asset_pack::";
