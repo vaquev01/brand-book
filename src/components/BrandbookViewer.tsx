@@ -19,8 +19,10 @@ import { SectionUiGuidelines } from "./sections/SectionUiGuidelines";
 import { SectionProductionGuidelines } from "./sections/SectionProductionGuidelines";
 import { SectionBrandStory } from "./sections/SectionBrandStory";
 import { SectionSocialMedia } from "./sections/SectionSocialMedia";
+import { SectionAssetPack } from "./sections/SectionAssetPack";
 import { FontLoader } from "./FontLoader";
 import type { AssetKey } from "@/lib/imagePrompts";
+import type { AssetPackFile } from "@/lib/types";
 
 type Category =
   | "Estratégia"
@@ -41,11 +43,23 @@ interface Props {
   data: BrandbookData;
   generatedImages?: Record<string, string>;
   uploadedAssets?: UploadedAsset[];
+  assetPackFiles?: AssetPackFile[];
+  assetPackGenerating?: boolean;
+  onGenerateAssetPack?: () => void;
   onGoToImages?: () => void;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
 }
 
-export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [], onGoToImages, onUpdateApplicationImageKey }: Props) {
+export function BrandbookViewer({
+  data,
+  generatedImages = {},
+  uploadedAssets = [],
+  assetPackFiles = [],
+  assetPackGenerating = false,
+  onGenerateAssetPack,
+  onGoToImages,
+  onUpdateApplicationImageKey,
+}: Props) {
   const isAdvanced = !!data.uxPatterns;
 
   const sectionDefs: SectionDef[] = [
@@ -151,6 +165,23 @@ export function BrandbookViewer({ data, generatedImages = {}, uploadedAssets = [
       category: "Ativos & Entrega",
       when: true,
       render: (num) => <SectionKeyVisual data={data} num={num} />,
+    },
+    {
+      id: "asset-pack",
+      title: "Entrega — Asset Pack",
+      category: "Ativos & Entrega",
+      when: true,
+      render: (num) => (
+        <SectionAssetPack
+          data={data}
+          num={num}
+          uploadedAssets={uploadedAssets}
+          generatedImages={generatedImages}
+          assetPackFiles={assetPackFiles}
+          generating={assetPackGenerating}
+          onGenerate={onGenerateAssetPack}
+        />
+      ),
     },
     {
       id: "mascots",

@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
-import type { BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
+import type { AssetPackFile, BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { slugify } from "@/lib/common";
 
 export const runtime = "nodejs";
@@ -35,12 +35,21 @@ async function fetchBytes(url: string): Promise<{ bytes: Uint8Array; ext: string
   return { bytes: new Uint8Array(ab), ext: extFromContentType(ct) };
 }
 
+function safeRelPath(path: string): string | null {
+  const p = path.replace(/\\/g, "/").trim();
+  if (!p) return null;
+  if (p.startsWith("/") || p.startsWith("..") || p.includes("/../") || p.includes("\0")) return null;
+  if (p.length > 180) return null;
+  return p;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       brandbookData?: unknown;
       generatedAssets?: GeneratedAsset[];
       uploadedAssets?: UploadedAsset[];
+      assetPackFiles?: AssetPackFile[];
     };
 
     if (!body.brandbookData) {
@@ -56,6 +65,7 @@ export async function POST(request: NextRequest) {
     const brandbookData = base.data as unknown as BrandbookData;
     const assets = Array.isArray(body.generatedAssets) ? body.generatedAssets : [];
     const uploadedAssets = Array.isArray(body.uploadedAssets) ? body.uploadedAssets : [];
+    const assetPackFiles = Array.isArray(body.assetPackFiles) ? body.assetPackFiles : [];
 
     const slug = slugify(brandbookData.brandName);
     const zip = new JSZip();
@@ -112,6 +122,35 @@ export async function POST(request: NextRequest) {
       } else {
         failedFolder.file(`${baseName}.url.txt`, a.url + "\n");
         failedFolder.file(`${baseName}.prompt.txt`, a.prompt + "\n");
+      }
+    }
+
+    if (assetPackFiles.length > 0) {
+      zip.file(
+        "asset-pack/manifest.json",
+        JSON.stringify(
+          {
+            exportedAt: new Date().toISOString(),
+            files: assetPackFiles.map((f) => ({ path: f.path })),
+          },
+          null,
+          2
+        )
+      );
+
+      const packFolder = zip.folder("asset-pack")!;
+      const packFailedFolder = zip.folder("asset-pack/failed")!;
+
+      for (const f of assetPackFiles) {
+        const p = typeof f.path === "string" ? safeRelPath(f.path) : null;
+        const c = typeof f.content === "string" ? f.content : null;
+        if (!p || !c) {
+          packFailedFolder.file(`invalid_${Date.now()}.json`, JSON.stringify(f ?? null, null, 2) + "\n");
+          continue;
+        }
+        const trimmed = c.trim();
+        if (!trimmed) continue;
+        packFolder.file(p, trimmed + "\n");
       }
     }
 

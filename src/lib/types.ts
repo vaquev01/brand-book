@@ -332,6 +332,11 @@ export interface GeneratedAsset {
   generatedAt: string;
 }
 
+export interface AssetPackFile {
+  path: string;
+  content: string;
+}
+
 export interface ProductionColorSpec {
   role: string;
   name: string;

@@ -1015,7 +1015,14 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                 {assets.map((asset) => {
                   const generated = generatedAssets[asset.key];
                   const isLoading = loadingKey === asset.key;
-                  const prompt = buildImagePrompt(asset.key, data, provider);
+                  let prompt: string | null = null;
+                  if (expandedPrompt === asset.key) {
+                    try {
+                      prompt = buildImagePrompt(asset.key, data, provider);
+                    } catch {
+                      prompt = null;
+                    }
+                  }
                   const canSaveToAssets = !!onSaveToAssets && !!generated;
                   return (
                     <div key={asset.key} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -1073,7 +1080,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
 
                         {expandedPrompt === asset.key && (
                           <div className="bg-gray-900 text-gray-200 rounded-lg p-3 text-[10px] mb-3 leading-relaxed font-mono max-h-32 overflow-y-auto">
-                            {prompt}
+                            {prompt ?? "Erro ao montar o prompt desta peça."}
                           </div>
                         )}
 
