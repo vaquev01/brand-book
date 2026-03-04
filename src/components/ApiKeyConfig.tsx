@@ -55,6 +55,13 @@ export function loadApiKeys(): ApiKeys {
     }
   }
 
+  const rawGoogleImageModel = keys.googleImageModel?.trim();
+  if (rawGoogleImageModel) {
+    keys.googleImageModel = rawGoogleImageModel.startsWith("models/")
+      ? rawGoogleImageModel.slice("models/".length)
+      : rawGoogleImageModel;
+  }
+
   return keys;
 }
 
@@ -70,6 +77,13 @@ export function saveApiKeys(keys: ApiKeys) {
     next.googleTextModel = (lower === "gemini-2.0-flash" || lower.startsWith("imagen") || lower.includes("image-preview"))
       ? "gemini-1.5-flash"
       : m;
+  }
+
+  const rawGoogleImageModel = next.googleImageModel?.trim();
+  if (rawGoogleImageModel) {
+    next.googleImageModel = rawGoogleImageModel.startsWith("models/")
+      ? rawGoogleImageModel.slice("models/".length)
+      : rawGoogleImageModel;
   }
   (Object.keys(LS) as (keyof ApiKeys)[]).forEach((k) => {
     if (next[k]) localStorage.setItem(LS[k], next[k]);

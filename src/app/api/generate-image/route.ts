@@ -134,6 +134,45 @@ function bytesToBase64(bytes: unknown): string {
   throw new Error("Não foi possível converter bytes da imagem para base64");
 }
 
+async function generateImagenDataUrl(
+  ai: GoogleGenAI,
+  model: string,
+  prompt: string,
+  aspectRatio: string
+): Promise<string> {
+  const resp = await ai.models.generateImages({
+    model,
+    prompt,
+    config: {
+      numberOfImages: 1,
+      aspectRatio,
+      outputMimeType: "image/png",
+    },
+  });
+  const imageBytes = resp.generatedImages?.[0]?.image?.imageBytes;
+  if (!imageBytes) throw new Error("Imagen não retornou imagem");
+  const b64 = bytesToBase64(imageBytes);
+  return `data:image/png;base64,${b64}`;
+}
+
+async function generateImagenWithFallback(
+  ai: GoogleGenAI,
+  models: string[],
+  prompt: string,
+  aspectRatio: string
+): Promise<string> {
+  let lastErr: unknown;
+  for (const m of models) {
+    try {
+      return await generateImagenDataUrl(ai, m, prompt, aspectRatio);
+    } catch (e: unknown) {
+      lastErr = e;
+    }
+  }
+  const msg = lastErr instanceof Error ? lastErr.message : "Erro ao gerar imagem";
+  throw new Error(msg);
+}
+
 function fnv1a32(input: string): number {
   let hash = 0x811c9dc5;
   for (let i = 0; i < input.length; i++) {
@@ -388,9 +427,12 @@ export async function POST(request: NextRequest) {
         }
         const ai = new GoogleGenAI({ apiKey });
         const { positive, negative } = extractNegativePrompt(prompt);
-        const model = googleImageModel?.trim() || "gemini-3.1-flash-image-preview";
+        const rawModel = googleImageModel?.trim();
+        const model = (rawModel?.startsWith("models/") ? rawModel.slice("models/".length) : rawModel)
+          || "gemini-3.1-flash-image-preview";
+        const modelLower = model.toLowerCase();
 
-        if (model.startsWith("gemini")) {
+        if (modelLower.startsWith("gemini")) {
           const ratioHints: Record<AspectRatioKey, string> = {
             "1:1": "square 1:1 aspect ratio",
             "16:9": "wide landscape 16:9 aspect ratio",
@@ -442,44 +484,26 @@ export async function POST(request: NextRequest) {
             throw new Error("Gemini não retornou imagem.");
           } catch {
             const imagenRatio = IMAGEN_RATIOS[pickedAspectRatio];
-            const resp = await ai.models.generateImages({
-              model: "imagen-3.0-generate-002",
-              prompt: `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000),
-              config: {
-                numberOfImages: 1,
-                aspectRatio: imagenRatio,
-                outputMimeType: "image/png",
-              },
-            });
-            const imageBytes = resp.generatedImages?.[0]?.image?.imageBytes;
-            if (!imageBytes) throw new Error("Imagen não retornou imagem");
-            const b64 = bytesToBase64(imageBytes);
-            return NextResponse.json({
-              url: `data:image/png;base64,${b64}`,
-              provider: "imagen",
-              aspectRatio: pickedAspectRatio,
-            });
+            const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
+            const url = await generateImagenWithFallback(
+              ai,
+              ["imagen-3.0-generate-002", "imagen-3.0-fast-generate-001"],
+              finalPrompt,
+              imagenRatio
+            );
+            return NextResponse.json({ url, provider: "imagen", aspectRatio: pickedAspectRatio });
           }
         }
 
         const imagenRatio = IMAGEN_RATIOS[pickedAspectRatio];
-        const resp = await ai.models.generateImages({
-          model,
-          prompt: `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000),
-          config: {
-            numberOfImages: 1,
-            aspectRatio: imagenRatio,
-            outputMimeType: "image/png",
-          },
-        });
-        const imageBytes = resp.generatedImages?.[0]?.image?.imageBytes;
-        if (!imageBytes) throw new Error("Imagen não retornou imagem");
-        const b64 = bytesToBase64(imageBytes);
-        return NextResponse.json({
-          url: `data:image/png;base64,${b64}`,
-          provider: "imagen",
-          aspectRatio: pickedAspectRatio,
-        });
+        const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
+        const url = await generateImagenWithFallback(
+          ai,
+          [model, "imagen-3.0-generate-002", "imagen-3.0-fast-generate-001"].filter(Boolean),
+          finalPrompt,
+          imagenRatio
+        );
+        return NextResponse.json({ url, provider: "imagen", aspectRatio: pickedAspectRatio });
       }
 
       default:

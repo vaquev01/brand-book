@@ -160,7 +160,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const canUseRefImages =
         provider === "imagen" &&
         !!apiKeys.google &&
-        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini")) &&
+        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").replace(/^models\//i, "").toLowerCase().startsWith("gemini")) &&
         useReferenceImages;
 
       const referenceImages = canUseRefImages
@@ -278,7 +278,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const canUseRefImages =
         provider === "imagen" &&
         !!apiKeys.google &&
-        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").toLowerCase().startsWith("gemini")) &&
+        (((apiKeys.googleImageModel?.trim() || "") === "") || (apiKeys.googleImageModel?.trim() || "").replace(/^models\//i, "").toLowerCase().startsWith("gemini")) &&
         useReferenceImages;
 
       const referenceImages = canUseRefImages
