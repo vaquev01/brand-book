@@ -293,6 +293,12 @@ export interface ImageGenerationBriefing {
   patternStyle: string;
   marketingVisualLanguage: string;
   negativePrompt: string;
+  emotionalCore?: string;
+  textureLanguage?: string;
+  lightingSignature?: string;
+  cameraSignature?: string;
+  brandArchetype?: string;
+  sensoryProfile?: string;
 }
 
 export interface BrandbookData {

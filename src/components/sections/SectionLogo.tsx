@@ -1,12 +1,17 @@
 "use client";
-import { BrandbookData, UploadedAsset } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
+import type { AssetKey } from "@/lib/imagePrompts";
 
 interface Props {
   data: BrandbookData;
   num: number;
   generatedImages?: Record<string, string>;
   uploadedAssets?: UploadedAsset[];
-  onGoToImages?: () => void;
+  onGenerate?: (key: AssetKey) => void;
+  loadingKey?: string | null;
+  onDownload?: (url: string, name: string) => void;
+  onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
+  generatedAssets?: Record<string, GeneratedAsset>;
 }
 
 function LogoCard({
@@ -14,36 +19,91 @@ function LogoCard({
   image,
   placeholderText,
   bgClass,
-  onGoToImages,
+  assetKey,
+  onGenerate,
+  isLoading,
+  generated,
+  onDownload,
+  onSaveToAssets,
 }: {
   title: string;
   image: string | null;
   placeholderText: string;
   bgClass: string;
-  onGoToImages?: () => void;
+  assetKey?: AssetKey;
+  onGenerate?: (key: AssetKey) => void;
+  isLoading?: boolean;
+  generated?: GeneratedAsset | null;
+  onDownload?: (url: string, name: string) => void;
+  onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
 }) {
   return (
     <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
-      <div className="px-5 py-4 bg-gray-50 border-b">
+      <div className="px-5 py-4 bg-gray-50 border-b flex items-center justify-between">
         <h3 className="font-bold">{title}</h3>
+        {generated && onDownload && assetKey && (
+          <div className="no-print flex gap-1">
+            <button
+              onClick={() => onDownload(generated.url, assetKey)}
+              className="text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded transition"
+            >
+              ↓
+            </button>
+            {onSaveToAssets && (
+              <button
+                onClick={() => onSaveToAssets(generated, title, assetKey)}
+                className="text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded transition"
+              >
+                Salvar
+              </button>
+            )}
+          </div>
+        )}
       </div>
       {image ? (
-        <div className={`${bgClass} p-5 flex items-center justify-center h-44`}>
+        <div className={`${bgClass} p-5 flex items-center justify-center h-44 relative`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image} alt={title} className="max-h-full object-contain rounded" />
+          {generated && (
+            <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">IA</span>
+          )}
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+            </div>
+          )}
         </div>
       ) : (
-        <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 gap-2">
-          <span className="text-4xl">✦</span>
-          <span className="text-xs font-medium text-center px-4">{placeholderText}</span>
-          {onGoToImages && (
-            <button
-              onClick={onGoToImages}
-              className="mt-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition-all"
-            >
-              Gerar na aba Gerar Imagens
-            </button>
+        <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 gap-2 relative">
+          {isLoading ? (
+            <>
+              <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+              <span className="text-xs font-medium">Gerando...</span>
+            </>
+          ) : (
+            <>
+              <span className="text-4xl">✦</span>
+              <span className="text-xs font-medium text-center px-4">{placeholderText}</span>
+              {onGenerate && assetKey && (
+                <button
+                  onClick={() => onGenerate(assetKey)}
+                  className="no-print mt-1 text-xs font-bold text-white bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg transition-all"
+                >
+                  ✦ Gerar com IA
+                </button>
+              )}
+            </>
           )}
+        </div>
+      )}
+      {image && onGenerate && assetKey && !isLoading && (
+        <div className="no-print px-5 py-2 border-t bg-gray-50 flex justify-end">
+          <button
+            onClick={() => onGenerate(assetKey)}
+            className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 transition"
+          >
+            ↺ Regerar
+          </button>
         </div>
       )}
     </div>
@@ -60,7 +120,7 @@ function textOrNull(s: string | undefined): string | null {
   return s;
 }
 
-export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGoToImages }: Props) {
+export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, loadingKey, onDownload, onSaveToAssets, generatedAssets = {} }: Props) {
   const uploadedLogos = uploadedAssets.filter((a) => a.type === "logo");
 
   const logoPrimary = generatedImages["logo_primary"] || uploadedLogos[0]?.dataUrl || null;
@@ -91,14 +151,24 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
           image={logoPrimary}
           placeholderText="Gere o logo principal para visualizar aqui"
           bgClass="bg-white border-t"
-          onGoToImages={onGoToImages}
+          assetKey="logo_primary"
+          onGenerate={onGenerate}
+          isLoading={loadingKey === "logo_primary"}
+          generated={generatedAssets["logo_primary"] ?? null}
+          onDownload={onDownload}
+          onSaveToAssets={onSaveToAssets}
         />
         <LogoCard
           title="Logo — Versão Invertida"
           image={logoDarkBg}
           placeholderText="Gere a versão invertida (fundo escuro)"
           bgClass="bg-gray-900"
-          onGoToImages={onGoToImages}
+          assetKey="logo_dark_bg"
+          onGenerate={onGenerate}
+          isLoading={loadingKey === "logo_dark_bg"}
+          generated={generatedAssets["logo_dark_bg"] ?? null}
+          onDownload={onDownload}
+          onSaveToAssets={onSaveToAssets}
         />
       </div>
 

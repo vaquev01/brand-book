@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
-import { ImageGenPanel } from "@/components/ImageGenPanel";
+import { useImageGeneration } from "@/hooks/useImageGeneration";
 import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookEditor } from "@/components/BrandbookEditor";
 import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
@@ -21,12 +21,12 @@ import { decompressBrandbook } from "@/lib/shareUtils";
 import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
-  Image as ImageIcon, ImagePlus, Wand2, ShieldCheck, Download,
+  Image as ImageIcon, Wand2, ShieldCheck, Download,
   Trash2, UploadCloud, FileJson, Hexagon, Undo2, Redo2,
 } from "lucide-react";
 
 type Tab = "generate" | "examples" | "viewer";
-type ViewerTab = "preview" | "images" | "edit" | "assets" | "refine" | "consistency" | "export";
+type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
 
 const GENERATED_ASSETS_LS_PREFIX = "bb_generated_assets::";
 const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
@@ -863,24 +863,10 @@ export default function Home() {
                 }`}
               >
                 <ImageIcon className="w-4 h-4" />
-                Assets
+                Ref. Assets
                 {uploadedBrandAssets.length > 0 && (
                   <span className="ml-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                     {uploadedBrandAssets.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setViewerTab("images")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
-                  viewerTab === "images" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
-              >
-                <ImagePlus className="w-4 h-4" />
-                Gerar Imagens
-                {Object.keys(generatedAssets).length > 0 && (
-                  <span className="ml-0.5 bg-green-100 text-green-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                    {Object.keys(generatedAssets).length}
                   </span>
                 )}
               </button>
@@ -925,7 +911,18 @@ export default function Home() {
                 assetPackFiles={assetPackFiles}
                 assetPackGenerating={assetPackGenerating}
                 onGenerateAssetPack={handleGenerateAssetPack}
-                onGoToImages={() => setViewerTab("images")}
+                generatedAssets={generatedAssets}
+                apiKeys={apiKeys}
+                textProvider={textProvider}
+                onAssetGenerated={(key, asset) =>
+                  setGeneratedAssets((prev) => ({ ...prev, [key]: asset }))
+                }
+                onSaveToAssets={(asset) =>
+                  setUploadedBrandAssets((prev) => [...prev, asset])
+                }
+                onUpdateColors={(colors) => {
+                  updateBrandbook((prev) => ({ ...prev, colors }));
+                }}
                 onUpdateApplicationImageKey={(index: number, imageKey: AssetKey | undefined) => {
                   updateBrandbook((prev) => {
                     const nextApplications = prev.applications.map((a, i) =>
@@ -948,44 +945,24 @@ export default function Home() {
               />
             )}
 
-            {/* Sub-tab: Brand Assets */}
+            {/* Sub-tab: Referência Assets */}
             {viewerTab === "assets" && (
               <div>
                 <div className="mb-6 bg-blue-50 border border-blue-100 rounded-xl px-6 py-5 shadow-sm">
                   <div className="flex items-center gap-2 mb-2">
                     <ImageIcon className="w-5 h-5 text-blue-700" />
-                    <h3 className="font-bold text-blue-900 text-lg">Ativos de Marca</h3>
+                    <h3 className="font-bold text-blue-900 text-lg">Referência Assets</h3>
                   </div>
                   <p className="text-sm text-blue-800">
-                    Faça upload de logos, mascotes, elementos gráficos e padrões. Eles aparecem automaticamente
-                    nas seções correspondentes do brandbook e são salvos localmente.
+                    Faça upload de logos, mascotes, elementos gráficos e padrões de referência.
+                    Eles contribuem para a construção da marca como um todo e aparecem automaticamente
+                    nas seções correspondentes do brandbook.
                   </p>
                 </div>
                 <UploadedAssetsPanel
                   assets={uploadedBrandAssets}
                   onChange={setUploadedBrandAssets}
                 />
-              </div>
-            )}
-
-            {/* Sub-tab: Image Generation */}
-            {viewerTab === "images" && (
-              <div className="space-y-6">
-                <div className="bg-white border rounded-xl p-6 shadow-sm">
-                  <ImageGenPanel
-                    data={brandbookData}
-                    generatedAssets={generatedAssets}
-                    apiKeys={apiKeys}
-                    uploadedAssets={uploadedBrandAssets}
-                    textProvider={textProvider}
-                    onAssetGenerated={(key, asset) =>
-                      setGeneratedAssets((prev) => ({ ...prev, [key]: asset }))
-                    }
-                    onSaveToAssets={(asset) =>
-                      setUploadedBrandAssets((prev) => [...prev, asset])
-                    }
-                  />
-                </div>
               </div>
             )}
 

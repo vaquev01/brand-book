@@ -1,13 +1,18 @@
 "use client";
-import { BrandbookData, UploadedAsset } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
+import type { AssetKey } from "@/lib/imagePrompts";
 
 interface Props {
   data: BrandbookData;
   num: number;
   uploadedAssets?: UploadedAsset[];
+  generatedImages?: Record<string, string>;
+  onGenerate?: (key: AssetKey) => void;
+  loadingKey?: string | null;
+  generatedAssets?: Record<string, GeneratedAsset>;
 }
 
-export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
+export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, loadingKey, generatedAssets = {} }: Props) {
   const mascots = data.keyVisual.mascots ?? [];
   const symbols = data.keyVisual.symbols ?? [];
   const patterns = data.keyVisual.patterns ?? [];
@@ -25,25 +30,55 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
 
       {mascots.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-base font-bold mb-4">Mascotes &amp; Personagens</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-bold">Mascotes &amp; Personagens</h3>
+            {onGenerate && (
+              <button
+                onClick={() => onGenerate("brand_mascot")}
+                disabled={loadingKey !== null}
+                className="no-print text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                {loadingKey === "brand_mascot" ? "Gerando..." : generatedAssets["brand_mascot"] ? "\u21ba Regerar Mascote" : "\u2726 Gerar Mascote"}
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {mascots.map((mascot, i) => {
               const uploadedImg = uploadedMascots[i] ?? null;
+              const genMascot = generatedImages["brand_mascot"];
+              const mascotImage = uploadedImg?.dataUrl ?? (i === 0 ? genMascot : null) ?? null;
               return (
                 <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm">
-                  {uploadedImg ? (
-                    <div className="h-40 bg-gray-50 flex items-center justify-center p-4">
+                  {mascotImage ? (
+                    <div className="h-40 bg-gray-50 flex items-center justify-center p-4 relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={uploadedImg.dataUrl}
+                        src={mascotImage}
                         alt={mascot.name}
                         className="max-h-full object-contain rounded"
                       />
+                      {i === 0 && genMascot && !uploadedImg && (
+                        <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">IA</span>
+                      )}
+                      {loadingKey === "brand_mascot" && i === 0 && (
+                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                          <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400">
-                      <span className="text-5xl mb-2">🐾</span>
-                      <span className="text-xs font-medium">Suba uma imagem do mascote na aba Assets</span>
+                    <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 relative">
+                      {loadingKey === "brand_mascot" && i === 0 ? (
+                        <>
+                          <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                          <span className="text-xs font-medium mt-2">Gerando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-5xl mb-2">🐾</span>
+                          <span className="text-xs font-medium">Suba uma imagem ou gere com IA</span>
+                        </>
+                      )}
                     </div>
                   )}
                   <div className="p-4">
@@ -123,7 +158,31 @@ export function SectionMascots({ data, num, uploadedAssets = [] }: Props) {
 
         {(patterns.length > 0 || (structuredPatterns && structuredPatterns.length > 0)) && (
           <div>
-            <h3 className="text-lg font-bold mb-4">Padrões Gráficos</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Padrões Gráficos</h3>
+              {onGenerate && (
+                <button
+                  onClick={() => onGenerate("brand_pattern")}
+                  disabled={loadingKey !== null}
+                  className="no-print text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  {loadingKey === "brand_pattern" ? "Gerando..." : generatedAssets["brand_pattern"] ? "\u21ba Regerar Padr\u00e3o" : "\u2726 Gerar Padr\u00e3o"}
+                </button>
+              )}
+            </div>
+            {/* Generated pattern preview */}
+            {generatedImages["brand_pattern"] && (
+              <div className="mb-4 rounded-xl overflow-hidden border shadow-sm relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={generatedImages["brand_pattern"]} alt="Padr\u00e3o gerado" className="w-full h-32 object-cover" />
+                <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">IA</span>
+                {loadingKey === "brand_pattern" && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+            )}
             {structuredPatterns && structuredPatterns.length > 0 ? (
               <div className="space-y-4">
                 {structuredPatterns.map((pat, i) => (

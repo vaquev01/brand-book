@@ -1,7 +1,17 @@
 "use client";
-import { BrandbookData } from "@/lib/types";
+import { BrandbookData, GeneratedAsset } from "@/lib/types";
+import type { AssetKey } from "@/lib/imagePrompts";
 
-export function SectionKeyVisual({ data, num }: { data: BrandbookData; num: number }) {
+interface Props {
+  data: BrandbookData;
+  num: number;
+  generatedImages?: Record<string, string>;
+  onGenerate?: (key: AssetKey) => void;
+  loadingKey?: string | null;
+  generatedAssets?: Record<string, GeneratedAsset>;
+}
+
+export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, loadingKey, generatedAssets = {} }: Props) {
   const isAdvanced = !!data.keyVisual.iconography;
   const hasFlora = data.keyVisual.flora && data.keyVisual.flora.length > 0;
   const hasFauna = data.keyVisual.fauna && data.keyVisual.fauna.length > 0;
@@ -10,9 +20,59 @@ export function SectionKeyVisual({ data, num }: { data: BrandbookData; num: numb
 
   return (
     <section className="page-break mb-10">
-      <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
-        {String(num).padStart(2, "0")}. Key Visual &amp; Linguagem Gráfica
-      </h2>
+      <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+        <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
+          {String(num).padStart(2, "0")}. Key Visual &amp; Linguagem Gráfica
+        </h2>
+        {onGenerate && (
+          <div className="no-print flex gap-2">
+            <button
+              onClick={() => onGenerate("hero_visual")}
+              disabled={loadingKey !== null}
+              className="text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              {loadingKey === "hero_visual" ? "Gerando..." : generatedAssets["hero_visual"] ? "\u21ba Hero" : "\u2726 Gerar Hero"}
+            </button>
+            <button
+              onClick={() => onGenerate("hero_lifestyle")}
+              disabled={loadingKey !== null}
+              className="text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              {loadingKey === "hero_lifestyle" ? "Gerando..." : generatedAssets["hero_lifestyle"] ? "\u21ba Lifestyle" : "\u2726 Lifestyle"}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Generated hero images */}
+      {(generatedImages["hero_visual"] || generatedImages["hero_lifestyle"]) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {generatedImages["hero_visual"] && (
+            <div className="rounded-xl overflow-hidden border shadow-sm relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={generatedImages["hero_visual"]} alt="Hero Visual" className="w-full aspect-video object-cover" />
+              <span className="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Hero · IA</span>
+              {loadingKey === "hero_visual" && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+          )}
+          {generatedImages["hero_lifestyle"] && (
+            <div className="rounded-xl overflow-hidden border shadow-sm relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={generatedImages["hero_lifestyle"]} alt="Lifestyle" className="w-full aspect-video object-cover" />
+              <span className="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Lifestyle · IA</span>
+              {loadingKey === "hero_lifestyle" && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {data.keyVisual.compositionPhilosophy && (
         <div className="bg-gradient-to-r from-gray-50 to-white border rounded-xl p-4 mb-6">

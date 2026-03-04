@@ -1,13 +1,17 @@
 "use client";
-import { BrandbookData } from "@/lib/types";
-import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
+import { BrandbookData, GeneratedAsset } from "@/lib/types";
+import { ASSET_CATALOG, detectSizeVariants, type AssetKey } from "@/lib/imagePrompts";
+import { useState } from "react";
 
 interface Props {
   data: BrandbookData;
   num: number;
   generatedImages?: Record<string, string>;
-  onGoToImages?: () => void;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
+  onGenerateApplication?: (index: number, aspectRatio: string) => void;
+  onGenerateAllApplications?: () => void;
+  loadingKey?: string | null;
+  generatedAssets?: Record<string, GeneratedAsset>;
 }
 
 const KEYWORD_MAP: [string[], string][] = [
@@ -36,8 +40,9 @@ function findImage(app: BrandbookData["applications"][number], generatedImages: 
   return null;
 }
 
-export function SectionApplications({ data, num, generatedImages = {}, onGoToImages, onUpdateApplicationImageKey }: Props) {
+export function SectionApplications({ data, num, generatedImages = {}, onUpdateApplicationImageKey, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {} }: Props) {
   const totalGenerated = Object.keys(generatedImages).length;
+  const [activeAppVariant, setActiveAppVariant] = useState<Record<number, string>>({});
 
   return (
     <section className="page-break mb-10">
@@ -45,17 +50,18 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
         <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
           {String(num).padStart(2, "0")}. Aplicações
         </h2>
-        {onGoToImages && (
+        {onGenerateAllApplications && (
           <button
-            onClick={onGoToImages}
-            className="no-print flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+            onClick={onGenerateAllApplications}
+            disabled={loadingKey !== null}
+            className="no-print flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
-            {totalGenerated > 0 ? (
-              <span className="bg-white text-indigo-700 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{totalGenerated}</span>
+            {loadingKey && loadingKey.startsWith("app_") ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <span>✦</span>
             )}
-            Gerar Imagens com IA
+            Gerar Todas as Aplicações
           </button>
         )}
       </div>
@@ -71,6 +77,12 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
         {data.applications.map((app, i) => {
           const aiImage = findImage(app, generatedImages);
           const selectId = `application-image-key-${i}`;
+          const variants = detectSizeVariants(app.type);
+          const activeVariant = activeAppVariant[i] ?? variants[0]?.aspectRatio ?? "1:1";
+          const activeKey = `app_${i}_${activeVariant}`;
+          const isLoadingThis = loadingKey === activeKey;
+          const isAnyLoading = variants.some((v) => loadingKey === `app_${i}_${v.aspectRatio}`);
+
           return (
             <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative">
               <div className="aspect-video bg-gray-900 overflow-hidden relative">
@@ -86,14 +98,46 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
                   <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-4">
                     <span className="text-white/20 text-5xl font-black tracking-tighter select-none">{app.type.slice(0, 2).toUpperCase()}</span>
                     <span className="text-white/40 text-xs text-center font-medium">{app.type}</span>
-                    {onGoToImages && (
+                    {onGenerateApplication && (
                       <button
-                        onClick={onGoToImages}
-                        className="no-print mt-1 text-[11px] bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1 rounded-full transition"
+                        onClick={() => onGenerateApplication(i, activeVariant)}
+                        disabled={loadingKey !== null}
+                        className="no-print mt-1 text-[11px] bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1.5 rounded-full transition disabled:opacity-40"
                       >
                         + Gerar imagem
                       </button>
                     )}
+                  </div>
+                )}
+                {isAnyLoading && (
+                  <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-2">
+                    <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                    <span className="text-xs text-gray-600 font-medium">Gerando...</span>
+                  </div>
+                )}
+                {/* Variant pills */}
+                {variants.length > 1 && (
+                  <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
+                    {variants.map((v) => {
+                      const vKey = `app_${i}_${v.aspectRatio}`;
+                      const hasGen = !!generatedAssets[vKey];
+                      return (
+                        <button
+                          key={v.aspectRatio}
+                          type="button"
+                          onClick={() => setActiveAppVariant((prev) => ({ ...prev, [i]: v.aspectRatio }))}
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+                            activeVariant === v.aspectRatio
+                              ? "bg-gray-900 text-white border-gray-900"
+                              : hasGen
+                              ? "bg-green-500 text-white border-green-500"
+                              : "bg-white/90 text-gray-700 border-gray-300 hover:bg-white"
+                          }`}
+                        >
+                          {hasGen && activeVariant !== v.aspectRatio ? "✓ " : ""}{v.aspectRatio}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -126,8 +170,38 @@ export function SectionApplications({ data, num, generatedImages = {}, onGoToIma
                     )}
                   </div>
                 )}
+
+                {/* Inline generate buttons per variant */}
+                {onGenerateApplication && (
+                  <div className="no-print flex flex-wrap gap-1.5 mb-2 border-t pt-2">
+                    {variants.map((v) => {
+                      const vKey = `app_${i}_${v.aspectRatio}`;
+                      const hasGen = !!generatedAssets[vKey];
+                      const isLoadingV = loadingKey === vKey;
+                      return (
+                        <button
+                          key={v.aspectRatio}
+                          type="button"
+                          onClick={() => {
+                            setActiveAppVariant((prev) => ({ ...prev, [i]: v.aspectRatio }));
+                            onGenerateApplication(i, v.aspectRatio);
+                          }}
+                          disabled={loadingKey !== null}
+                          className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                            hasGen
+                              ? "border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+                              : "border-gray-900 bg-gray-900 text-white hover:bg-gray-800"
+                          }`}
+                        >
+                          {isLoadingV ? "..." : hasGen ? "↺ " + v.label : "✦ " + v.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {onUpdateApplicationImageKey && totalGenerated > 0 && (
-                  <div className="no-print mt-3 border-t pt-3">
+                  <div className="no-print mt-2 border-t pt-2">
                     <label
                       htmlFor={selectId}
                       className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2"

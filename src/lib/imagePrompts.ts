@@ -66,6 +66,51 @@ function industryVisualLanguage(industry: string): string {
   return "clean geometric abstraction, purposeful negative space, brand color field compositions, minimal premium design language";
 }
 
+function deriveArchetype(personality: string[], toneOfVoice: string): string {
+  const all = [...personality, toneOfVoice].join(" ").toLowerCase();
+  const archetypes: [RegExp, string, string][] = [
+    [/hero|coraj|brav|forte|power|champion|lider|conquer|vitór/, "Hero", "triumphant intensity, upward momentum, golden dramatic light, monumental scale"],
+    [/creat|innov|imagin|art|vision|origin|invent|disrupt/, "Creator", "creative tension, unexpected angles, vivid palette contrasts, workshop-to-masterpiece energy"],
+    [/sage|sáb|wisdom|knowledge|expert|mentor|teach|intelli|analy/, "Sage", "contemplative clarity, structured geometry, cool intellectual light, library-to-cosmos depth"],
+    [/explor|aventur|discover|freedom|curios|journey|pioneer|desbravar/, "Explorer", "vast horizons, atmospheric perspective, golden-hour adventure light, open landscapes"],
+    [/rebel|outlaw|revolution|quebr|desafi|provoc|disrupt|underground/, "Outlaw", "raw contrast, gritty textures, dramatic chiaroscuro, urban edge, punk energy"],
+    [/magic|encant|transform|mistic|wonder|surpr|miraculou|fantast/, "Magician", "ethereal glow, impossible perspectives, aurora-like color shifts, dreamlike depth of field"],
+    [/cuidad|care|nurtur|protect|comfort|segur|acolh|empath|warm/, "Caregiver", "warm embrace lighting, soft focus edges, intimate proximity, cocooning composition"],
+    [/amant|lover|passion|seduc|beaut|sensual|desej|intim|elegant/, "Lover", "intimate bokeh, velvet textures, warm skin-tone lighting, sensual close-ups, editorial elegance"],
+    [/jest|humor|fun|playful|divert|alegr|leve|brincalh|irrever/, "Jester", "vibrant saturated pops, dynamic diagonal compositions, playful scale contrasts, comic energy"],
+    [/everyma|commu|perten|todos|simpl|autentic|real|honest|genuin/, "Everyman", "authentic natural light, documentary framing, relatable environments, honest imperfection"],
+    [/ruler|govern|control|premium|luxo|luxury|prestig|author|elite/, "Ruler", "regal symmetry, deep contrast, metallic accents, architectural grandeur, velvet-dark backgrounds"],
+    [/innocen|pure|otimis|hope|fresh|novo|clean|simple|joy/, "Innocent", "bright high-key lighting, clean whites, airy open spaces, optimistic upward compositions"],
+  ];
+  for (const [re, name, visual] of archetypes) {
+    if (re.test(all)) return `${name} — ${visual}`;
+  }
+  return "Creator — creative tension, vivid palette, purposeful composition";
+}
+
+function deriveEmotionalCore(manifesto: string, purpose: string, moodWords: string, archetype: string): string {
+  const archetypeName = archetype.split(" — ")[0] ?? "Creator";
+  const emotionMap: Record<string, string> = {
+    Hero: "viewers should feel empowered, elevated, capable of greatness — a surge of confidence",
+    Creator: "viewers should feel inspired, curious, alive with creative possibility — the spark of invention",
+    Sage: "viewers should feel illuminated, trustful, intellectually stimulated — deep confidence in expertise",
+    Explorer: "viewers should feel free, adventurous, hungry for discovery — the call of the unknown",
+    Outlaw: "viewers should feel bold, rebellious, part of a counter-movement — electric defiance",
+    Magician: "viewers should feel wonder, transformation, the impossible becoming real — suspended disbelief",
+    Caregiver: "viewers should feel safe, nurtured, deeply understood — a warm exhale of relief",
+    Lover: "viewers should feel desired, captivated, emotionally connected — magnetic attraction",
+    Jester: "viewers should feel joy, lightness, permission to play — an irresistible smile",
+    Everyman: "viewers should feel belonging, recognition, honest connection — 'this is for me'",
+    Ruler: "viewers should feel prestige, aspiration, exclusive access — the weight of quality",
+    Innocent: "viewers should feel hope, freshness, optimistic simplicity — a bright new beginning",
+  };
+  const base = emotionMap[archetypeName] ?? emotionMap.Creator;
+  const seeds = [manifesto, purpose, moodWords].filter(Boolean);
+  return seeds.length > 0
+    ? `${base}. Brand soul: ${seeds[0].slice(0, 120)}`
+    : base;
+}
+
 function extractBrandContext(data: BrandbookData) {
   const igb = data.imageGenerationBriefing;
   const pos = data.positioning;
@@ -163,6 +208,58 @@ function extractBrandContext(data: BrandbookData) {
   // CTAs
   const sampleCTA = vi?.sampleCTAs?.[0] ?? "";
 
+  // ─── SOUL LAYER: Brand Story ─────────────────────────────────────────────
+  const bs = data.brandStory;
+  const brandManifesto = bs?.manifesto
+    ? bs.manifesto.length > 280 ? bs.manifesto.slice(0, 280).replace(/\s+\S*$/, "") + "…" : bs.manifesto
+    : "";
+  const brandPromise = bs?.brandPromise ?? "";
+  const brandBeliefs = bs?.brandBeliefs?.slice(0, 3).join("; ") ?? "";
+
+  // ─── SOUL LAYER: Composition Philosophy ──────────────────────────────────
+  const compositionPhilosophy = data.keyVisual.compositionPhilosophy ?? "";
+
+  // ─── SOUL LAYER: Flora, Fauna, Objects ────────────────────────────────────
+  const floraElements = data.keyVisual.flora?.slice(0, 4).join(", ") ?? "";
+  const faunaElements = data.keyVisual.fauna?.slice(0, 4).join(", ") ?? "";
+  const objectElements = data.keyVisual.objects?.slice(0, 4).join(", ") ?? "";
+  const identityAssets = [floraElements, faunaElements, objectElements].filter(Boolean).join(" · ");
+
+  // ─── SOUL LAYER: Structured Patterns ──────────────────────────────────────
+  const sp = data.keyVisual.structuredPatterns;
+  const structuredPatternDetails = sp?.length
+    ? sp.slice(0, 3).map((p) => `${p.name}: ${p.composition} (${p.density ?? "moderate"}, bg: ${p.background ?? "neutral"})`).join(" | ")
+    : "";
+
+  // ─── SOUL LAYER: Illustration & Iconography ──────────────────────────────
+  const illustrationStyle = data.keyVisual.illustrations ?? "";
+  const iconographyStyle = data.keyVisual.iconography ?? "";
+
+  // ─── SOUL LAYER: Archetypal Energy ────────────────────────────────────────
+  const archetypalEnergy = deriveArchetype(data.brandConcept.personality, data.brandConcept.toneOfVoice);
+
+  // ─── SOUL LAYER: Emotional Core ──────────────────────────────────────────
+  const emotionalCore = deriveEmotionalCore(brandManifesto, purpose, moodWords, archetypalEnergy);
+
+  // ─── SOUL LAYER: Sensory Profile ─────────────────────────────────────────
+  const igbExt = igb as unknown as Record<string, unknown> | undefined;
+  const textureLanguage = (igbExt?.textureLanguage as string) ?? "";
+  const lightingSignature = (igbExt?.lightingSignature as string) ?? "";
+  const cameraSignature = (igbExt?.cameraSignature as string) ?? "";
+  const sensoryProfile = (igbExt?.sensoryProfile as string) ?? "";
+
+  // ─── SOUL LAYER: Logo Variants ────────────────────────────────────────────
+  const logoVariants = data.logoVariants;
+
+  // ─── SOUL LAYER: Social Media Per-Platform ────────────────────────────────
+  const socialGuidelines = data.socialMediaGuidelines;
+
+  // ─── SOUL LAYER: Multiple Personas ────────────────────────────────────────
+  const allPersonas = data.audiencePersonas ?? [];
+  const personaSummary = allPersonas.length > 1
+    ? allPersonas.slice(0, 3).map((p) => `${p.name} (${p.role})`).join(", ")
+    : audienceDesc;
+
   return {
     primaryColor, primaryColorName, secondaryColor, accentColor,
     allPrimaryColors, allColors,
@@ -177,6 +274,13 @@ function extractBrandContext(data: BrandbookData) {
     userPsychographics, marketingArch, competitiveAngle, purpose, visualMetaphor,
     industryLang, brandApplications,
     pillarProofPoints, pillarCopy, painPoints, verbAvoid, sampleCTA,
+    // ─── Soul Layer ─────────────────────────────────────────────────────────
+    brandManifesto, brandPromise, brandBeliefs,
+    compositionPhilosophy, identityAssets, floraElements, faunaElements, objectElements,
+    structuredPatternDetails, illustrationStyle, iconographyStyle,
+    archetypalEnergy, emotionalCore,
+    textureLanguage, lightingSignature, cameraSignature, sensoryProfile,
+    logoVariants, socialGuidelines, personaSummary,
   };
 }
 

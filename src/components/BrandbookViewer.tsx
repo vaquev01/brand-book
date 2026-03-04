@@ -1,6 +1,6 @@
 "use client";
 
-import { BrandbookData, UploadedAsset } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset, Colors } from "@/lib/types";
 import { SectionCover } from "./sections/SectionCover";
 import { SectionDNA } from "./sections/SectionDNA";
 import { SectionLogo } from "./sections/SectionLogo";
@@ -22,8 +22,11 @@ import { SectionSocialMedia } from "./sections/SectionSocialMedia";
 import { SectionAssetPack } from "./sections/SectionAssetPack";
 import { SectionBrandAssets } from "./sections/SectionBrandAssets";
 import { FontLoader } from "./FontLoader";
+import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
+import { EMPTY_KEYS } from "@/components/ApiKeyConfig";
 import type { AssetKey } from "@/lib/imagePrompts";
 import type { AssetPackFile } from "@/lib/types";
+import type { ApiKeys } from "@/components/ApiKeyConfig";
 
 type Category =
   | "Essência da Marca"
@@ -53,8 +56,13 @@ interface Props {
   assetPackFiles?: AssetPackFile[];
   assetPackGenerating?: boolean;
   onGenerateAssetPack?: () => void;
-  onGoToImages?: () => void;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
+  generatedAssets?: Record<string, GeneratedAsset>;
+  apiKeys?: ApiKeys;
+  textProvider?: "openai" | "gemini";
+  onAssetGenerated?: (key: string, asset: GeneratedAsset) => void;
+  onSaveToAssets?: (asset: UploadedAsset) => void;
+  onUpdateColors?: (colors: Colors) => void;
 }
 
 export function BrandbookViewer({
@@ -64,10 +72,27 @@ export function BrandbookViewer({
   assetPackFiles = [],
   assetPackGenerating = false,
   onGenerateAssetPack,
-  onGoToImages,
   onUpdateApplicationImageKey,
+  generatedAssets = {},
+  apiKeys,
+  textProvider = "openai",
+  onAssetGenerated,
+  onSaveToAssets,
+  onUpdateColors,
 }: Props) {
   const isAdvanced = !!data.uxPatterns;
+  const hasGeneration = !!apiKeys && !!onAssetGenerated;
+
+  const noop = () => {};
+  const imgGen = useImageGeneration({
+    data,
+    generatedAssets,
+    onAssetGenerated: onAssetGenerated ?? noop,
+    onSaveToAssets,
+    apiKeys: apiKeys ?? EMPTY_KEYS,
+    uploadedAssets,
+    textProvider,
+  });
 
   const sectionDefs: SectionDef[] = [
     {
@@ -116,7 +141,11 @@ export function BrandbookViewer({
           num={num}
           generatedImages={generatedImages}
           uploadedAssets={uploadedAssets}
-          onGoToImages={onGoToImages}
+          onGenerate={hasGeneration ? (key: AssetKey) => imgGen.generate(key) : undefined}
+          loadingKey={imgGen.loadingKey}
+          onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
+          onSaveToAssets={hasGeneration ? (asset: GeneratedAsset, label: string, key?: AssetKey) => imgGen.saveGeneratedToAssets(asset, label, key) : undefined}
+          generatedAssets={generatedAssets}
         />
       ),
     },
@@ -125,7 +154,13 @@ export function BrandbookViewer({
       title: "Cores",
       category: "Paleta de Cores",
       when: true,
-      render: (num) => <SectionColors data={data} num={num} />,
+      render: (num) => (
+        <SectionColors
+          data={data}
+          num={num}
+          onUpdateColors={onUpdateColors}
+        />
+      ),
     },
     {
       id: "typography",
@@ -146,7 +181,16 @@ export function BrandbookViewer({
       title: "Key Visual",
       category: "Sistema Visual",
       when: true,
-      render: (num) => <SectionKeyVisual data={data} num={num} />,
+      render: (num) => (
+        <SectionKeyVisual
+          data={data}
+          num={num}
+          generatedImages={generatedImages}
+          onGenerate={hasGeneration ? (key: AssetKey) => imgGen.generate(key) : undefined}
+          loadingKey={imgGen.loadingKey}
+          generatedAssets={generatedAssets}
+        />
+      ),
     },
     {
       id: "mascots",
@@ -159,7 +203,17 @@ export function BrandbookViewer({
         (data.keyVisual.structuredPatterns && data.keyVisual.structuredPatterns.length > 0) ||
         uploadedAssets.some((a) => a.type === "mascot" || a.type === "element" || a.type === "pattern")
       ),
-      render: (num) => <SectionMascots data={data} num={num} uploadedAssets={uploadedAssets} />,
+      render: (num) => (
+        <SectionMascots
+          data={data}
+          num={num}
+          uploadedAssets={uploadedAssets}
+          generatedImages={generatedImages}
+          onGenerate={hasGeneration ? (key: AssetKey) => imgGen.generate(key) : undefined}
+          loadingKey={imgGen.loadingKey}
+          generatedAssets={generatedAssets}
+        />
+      ),
     },
     {
       id: "ui-guidelines",
@@ -192,8 +246,11 @@ export function BrandbookViewer({
           data={data}
           num={num}
           generatedImages={generatedImages}
-          onGoToImages={onGoToImages}
           onUpdateApplicationImageKey={onUpdateApplicationImageKey}
+          onGenerateApplication={hasGeneration ? (i: number, ar: string) => imgGen.generateApplication(i, ar as "1:1" | "16:9" | "9:16" | "4:3" | "21:9") : undefined}
+          onGenerateAllApplications={hasGeneration ? () => imgGen.generateAllApplications() : undefined}
+          loadingKey={imgGen.loadingKey}
+          generatedAssets={generatedAssets}
         />
       ),
     },
@@ -271,6 +328,68 @@ export function BrandbookViewer({
     <div className="max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="brandbook-content">
       <FontLoader data={data} />
       <SectionCover data={data} />
+
+      {/* Generation Control Bar */}
+      {hasGeneration && (
+        <div className="no-print sticky top-20 z-30 bg-white/95 backdrop-blur border rounded-xl p-4 mb-8 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Provider:</span>
+              <select
+                value={imgGen.provider}
+                onChange={(e) => imgGen.setProvider(e.target.value as "dalle3" | "stability" | "ideogram" | "imagen")}
+                className="text-sm font-semibold border rounded-lg px-2 py-1.5 bg-gray-50 focus:ring-2 focus:ring-gray-900 outline-none"
+                aria-label="Provider de imagem"
+              >
+                {PROVIDERS.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+              {!imgGen.currentProviderHasKey && (
+                <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">Sem chave</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 border-l pl-3">
+              <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+                <input type="checkbox" checked={imgGen.refineBeforeGenerate} onChange={(e) => imgGen.setRefineBeforeGenerate(e.target.checked)} className="rounded" />
+                <span className="font-medium">Refinar prompt</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+                <input type="checkbox" checked={imgGen.useReferenceImages} onChange={(e) => imgGen.setUseReferenceImages(e.target.checked)} className="rounded" />
+                <span className="font-medium">Referências</span>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                type="button"
+                onClick={() => imgGen.generateAllAssets()}
+                disabled={imgGen.loadingKey !== null}
+                className="text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                {imgGen.loadingKey ? "Gerando..." : "✦ Gerar Todos os Assets"}
+              </button>
+              {imgGen.loadingKey && (
+                <button
+                  type="button"
+                  onClick={() => imgGen.cancelBatch()}
+                  className="text-xs font-semibold bg-red-100 text-red-700 px-3 py-2 rounded-lg hover:bg-red-200 transition"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </div>
+
+          {imgGen.error && (
+            <div className="mt-3 bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-lg text-xs flex items-center justify-between">
+              <span>{imgGen.error}</span>
+              <button onClick={() => imgGen.setError(null)} className="font-bold text-lg leading-none ml-3">&times;</button>
+            </div>
+          )}
+        </div>
+      )}
 
       <section className="page-break mb-10" id="sumario">
         <div className="mb-4 border-b border-gray-100 pb-2">
