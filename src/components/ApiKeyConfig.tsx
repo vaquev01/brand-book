@@ -173,6 +173,8 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
 
   useEffect(() => {
     if (isOpen) {
+      lastAutoFetchedKeyRef.current = {};
+      if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
       setKeys(loadApiKeys());
       setSaved(false);
       setFetchedModels({});
@@ -232,8 +234,8 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
     const status = fetchStatus["google"] ?? "idle";
     if (status === "loading") return;
 
-    const alreadyFetched = !!fetchedModels["google"] && lastAutoFetchedKeyRef.current["google"] === apiKey;
-    if (alreadyFetched) return;
+    const alreadyAttempted = lastAutoFetchedKeyRef.current["google"] === apiKey;
+    if (alreadyAttempted) return;
 
     if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
     autoFetchTimerRef.current = setTimeout(() => {
@@ -244,7 +246,7 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
     return () => {
       if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
     };
-  }, [isOpen, keys.google, fetchModels, fetchStatus, fetchedModels]);
+  }, [isOpen, keys.google, fetchModels, fetchStatus]);
 
   function handleSave() {
     saveApiKeys(keys);
