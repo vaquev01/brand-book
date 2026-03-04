@@ -177,17 +177,23 @@ Regras:
  - Se houver uma imagem de referência (peça enviada), interprete a peça com precisão (layout, hierarquia, estilo, materiais, fotografia/ilustração, composição) e gere um prompt que rebrand em 100% para o sistema visual do brandbook (paleta, estilo, mood, elementos e árvore de estilo).
 ${rebrandModeRules}
 
+ALMA & INTENCIONALIDADE:
+- SEMPRE inclua no prompt: ARCHETYPE (qual arquétipo a marca expressa), EMOTIONAL_CORE (o que o espectador deve SENTIR), VIEWER_JOURNEY (0.3s → 1s → 3s).
+- Se o brandbook tem STYLE_TREE, replique-o literalmente no prompt.
+- Se há flora/fauna/objects no brandbook, use como elementos visuais sutis.
+- Se há structuredPatterns, referencie nome e composição.
+
 Formato do prompt (obrigatório):
-- Use quebras de linha e blocos claros: SUBJECT / STYLE / COMPOSITION / LIGHTING / CAMERA / MATERIALS / BACKGROUND / OUTPUT.
+- Use quebras de linha e blocos claros: SUBJECT / STYLE / EMOTION / COMPOSITION / LIGHTING / CAMERA / MATERIALS / BACKGROUND / NEGATIVE.
 - Sempre inclua um bloco negativo no final.
   - stability: termine com " --neg ..."
   - demais providers: termine com "\n\nNEGATIVE: ..."
 
 Regras por provider:
-- stability: use tags/descritores e inclua um bloco negativo ao final no formato " --neg ...".
-- dalle3: linguagem natural, sem "--neg".
-- ideogram: linguagem de design gráfico; se o usuário quiser texto, inclua instrução clara de texto; sem "--neg".
-- imagen: linguagem natural/imperativa, sem "--neg".
+- stability: use tags/descritores com pesos (tag:1.3). Estruture: qualidade → sujeito → estilo → composição → iluminação → cor → mood. Mantenha " --neg ..." no final. Máximo ~2000 chars positivo.
+- dalle3: linguagem natural cinematográfica e experiencial. Estruture em parágrafos narrativos. Use "Do not include:" no final. Máximo ~3500 chars.
+- ideogram: linguagem de design gráfico profissional. Se há texto, instruções tipográficas precisas. Use "Do not include:" no final. Máximo ~1800 chars.
+- imagen: linguagem natural/imperativa direta e concisa. Use "Do not include, do not generate:" no final. Máximo ~1600 chars.
 
 Saída: retorne EXCLUSIVAMENTE um JSON válido no formato { "prompt": "..." }.`;
 

@@ -318,11 +318,20 @@ export async function POST(request: NextRequest) {
           "materials_board",
         ].includes(assetKey ?? "");
 
+        const isSocial = ["social_post_square", "instagram_carousel", "instagram_story", "social_cover", "youtube_thumbnail"].includes(assetKey ?? "");
+        const isHero = assetKey === "hero_visual" || assetKey === "hero_lifestyle";
+
         const stylePreset = isLogo ? "digital-art"
           : isPattern ? "tile-texture"
           : isMascot ? "digital-art"
           : isMockup ? "photographic"
+          : isHero ? "cinematic"
+          : isSocial ? "digital-art"
           : "cinematic";
+
+        const cfgScale = isLogo ? 11 : isPattern ? 9 : isMascot ? 8 : isMockup ? 7 : isHero ? 7 : 8;
+        const sampler = isLogo || isPattern || isMascot ? "K_EULER" : "K_DPMPP_2M";
+        const steps = isLogo ? 60 : 50;
 
         const res = await fetch(
           `https://api.stability.ai/v1/generation/${resolvedStabilityModel}/text-to-image`,
@@ -338,14 +347,14 @@ export async function POST(request: NextRequest) {
                 { text: positive.slice(0, 2000), weight: 1 },
                 { text: negative.slice(0, 1000), weight: -1 },
               ],
-              cfg_scale: isLogo ? 10 : 8,
+              cfg_scale: cfgScale,
               height,
               width,
-              steps: 50,
+              steps,
               samples: 1,
               style_preset: stylePreset,
               seed: seed ?? 0,
-              sampler: "K_DPMPP_2M",
+              sampler,
             }),
           }
         );
@@ -372,7 +381,8 @@ export async function POST(request: NextRequest) {
         const { positive, negative } = extractNegativePrompt(prompt);
         const finalPrompt = `${positive.slice(0, 1750)}\n\nAvoid: ${negative.slice(0, 700)}.`;
         const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
-        const isDesign = ["brand_pattern", "brand_mascot", "social_cover", "social_post_square", "email_header"].includes(assetKey ?? "");
+        const isDesign = ["brand_pattern", "brand_mascot", "social_cover", "social_post_square", "email_header", "instagram_carousel", "instagram_story", "youtube_thumbnail", "presentation_bg"].includes(assetKey ?? "");
+        const isPhoto = ["hero_lifestyle", "business_card", "brand_collateral", "delivery_packaging", "takeaway_bag", "food_container", "uniform_tshirt", "uniform_apron", "materials_board", "outdoor_billboard", "app_mockup"].includes(assetKey ?? "");
 
         const res = await fetch("https://api.ideogram.ai/generate", {
           method: "POST",
@@ -385,8 +395,8 @@ export async function POST(request: NextRequest) {
               prompt: finalPrompt.slice(0, 2000),
               model: ideogramModel?.trim() || "V_2",
               aspect_ratio: IDEOGRAM_RATIOS[pickedAspectRatio],
-              magic_prompt_option: "OFF",
-              style_type: isLogo ? "DESIGN" : isDesign ? "DESIGN" : "REALISTIC",
+              magic_prompt_option: isLogo || isDesign ? "OFF" : "AUTO",
+              style_type: isLogo ? "DESIGN" : isDesign ? "DESIGN" : isPhoto ? "REALISTIC" : "AUTO",
             },
           }),
         });

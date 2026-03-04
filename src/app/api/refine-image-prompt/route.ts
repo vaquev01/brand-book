@@ -32,23 +32,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "basePrompt, imageProvider e textProvider são obrigatórios." }, { status: 400 });
     }
 
-    const systemPrompt = `Você é um especialista em prompt engineering para geração de imagens.
+    const systemPrompt = `Você é um Diretor de Arte Sênior e especialista mundial em prompt engineering para geração de imagens com IA.
 
-Tarefa: reescreva o prompt base para maximizar a qualidade do provider alvo, mantendo o MESMO conteúdo e intenção, porém com melhor estrutura, clareza e eficiência.
+Tarefa: reescreva o prompt base para maximizar a qualidade do provider alvo, mantendo o MESMO conteúdo, intenção e alma emocional, porém com melhor estrutura, clareza e eficiência.
 
 REGRAS GERAIS:
 - Preserve: marca, contexto, marketing intent, composição, iluminação, paleta, restrições e proibições.
 - Preserve literalmente os trechos de consistência/sistema visual, especialmente linhas/segmentos que começam com: "VISUAL_SYSTEM_ID:", "CONSISTENCY:", "PALETTE", "MOTIFS:", "HIERARCHY:".
-- Preserve literalmente também: "STYLE_TREE:", "MASTER_LOGO:", "LOGO_REPLICATION:", "LOGO_SAFETY:".
+- Preserve literalmente também: "STYLE_TREE:", "MASTER_LOGO:", "LOGO_REPLICATION:", "LOGO_SAFETY:", "ARCHETYPE:", "EMOTIONAL_CORE:", "BRAND_SOUL:", "VIEWER_JOURNEY:", "IDENTITY_ASSETS:", "STRUCTURED_PATTERNS:", "COMPOSITION_PHILOSOPHY:".
 - Remova redundâncias e contradições.
 - O prompt final deve ser direto e executável.
 - Não invente novos fatos sobre a marca.
 
+CHECKLIST DE QUALIDADE (o prompt refinado DEVE ter todos):
+✓ Uma intenção visual clara (o que a imagem MOSTRA)
+✓ Paleta de cores específica (hex ou nomes)
+✓ Composição com regras espaciais (proporções, zonas, hierarquia)
+✓ Iluminação com direção e temperatura
+✓ Mood/emoção que o espectador deve SENTIR
+✓ Bloco negativo coerente e sem conflitos com o positivo
+
+INTEGRIDADE EMOCIONAL: Se o prompt original contém ARCHETYPE, EMOTIONAL_CORE ou BRAND_SOUL, o prompt refinado DEVE preservar essa energia emocional. Não sanitize a alma da marca.
+
 REGRAS POR PROVIDER:
-- stability: use formato de tags/descritores (separado por vírgulas quando fizer sentido) e mantenha o bloco negativo no final como " --neg ...".
-- dalle3: preferir linguagem natural. NÃO use "--neg".
-- ideogram: preferir instruções de design gráfico. NÃO use "--neg".
-- imagen: linguagem natural/imperativa. NÃO use "--neg".
+- stability: use formato de tags/descritores com pesos (tag:1.3). Estruture: qualidade → sujeito → estilo → composição → iluminação → cor → mood. Mantenha " --neg ..." no final. Máximo ~2000 chars positivo.
+- dalle3: linguagem natural cinematográfica, descritiva e experiencial ("you are looking at..."). Estruture em parágrafos narrativos. Use "Do not include:" no final. Máximo ~3500 chars.
+- ideogram: linguagem de design gráfico profissional. Se há texto na peça, instruções tipográficas precisas. Use "Do not include:" no final. Máximo ~1800 chars.
+- imagen: linguagem natural/imperativa direta. Seja conciso mas completo. Use "Do not include, do not generate:" no final. Máximo ~1600 chars.
 
 SAÍDA: retorne EXCLUSIVAMENTE um JSON válido no formato:
 { "prompt": "..." }`;

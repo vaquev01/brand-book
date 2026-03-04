@@ -309,6 +309,12 @@ const ImageGenerationBriefingSchema = z.object({
   patternStyle: NonEmptyString,
   marketingVisualLanguage: NonEmptyString,
   negativePrompt: NonEmptyString,
+  emotionalCore: z.string().optional(),
+  textureLanguage: z.string().optional(),
+  lightingSignature: z.string().optional(),
+  cameraSignature: z.string().optional(),
+  brandArchetype: z.string().optional(),
+  sensoryProfile: z.string().optional(),
 });
 
 export const BrandbookSchemaLoose = z.object({
