@@ -1,5 +1,4 @@
 import { BrandbookData } from "./types";
-import caracaBarJson from "./caraca-bar-brandbook.json";
 
 export const saasExample: BrandbookData = {
   schemaVersion: "2.0",
@@ -680,4 +679,4 @@ export const sushiExample: BrandbookData = {
   }
 };
 
-export const caracaBarExample = caracaBarJson as unknown as BrandbookData;
+export { caracaBarExample } from "./caraca-bar-example";
