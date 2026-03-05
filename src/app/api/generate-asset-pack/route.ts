@@ -22,6 +22,75 @@ export async function GET() {
   );
 }
 
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[áàãâä]/g, "a")
+    .replace(/[éèêë]/g, "e")
+    .replace(/[íìîï]/g, "i")
+    .replace(/[óòõôö]/g, "o")
+    .replace(/[úùûü]/g, "u")
+    .replace(/[ç]/g, "c")
+    .replace(/[ñ]/g, "n")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .slice(0, 32);
+}
+
+function deriveBrandIconNames(bb: BrandbookData, brandName: string, industry: string): string[] {
+  const candidates: string[] = [];
+
+  const logoSymbol = (bb.logo?.symbol ?? "").trim();
+  const objects = (bb.keyVisual?.objects ?? []).slice(0, 6);
+  const flora = (bb.keyVisual?.flora ?? []).slice(0, 3);
+  const fauna = (bb.keyVisual?.fauna ?? []).slice(0, 4);
+  const symbols = (bb.keyVisual?.symbols ?? []).slice(0, 4);
+  const mascots = (bb.keyVisual?.mascots ?? []).map((m) => m.name ?? m.description).slice(0, 2);
+
+  if (logoSymbol) candidates.push(logoSymbol);
+  candidates.push(...symbols);
+  candidates.push(...objects);
+  candidates.push(...fauna);
+  candidates.push(...flora);
+  candidates.push(...mascots);
+
+  const named = [...new Set(candidates.map(slugify).filter(Boolean))].slice(0, 12);
+
+  const industryLower = industry.toLowerCase();
+  const industryIconSets: [string, string[]][] = [
+    ["bar",       ["cocktail-glass", "cerveja-bottle", "music-wave", "cheers-toast", "shot-glass"]],
+    ["café",      ["coffee-cup", "coffee-bean", "steam-swirl", "chemex", "barista-hand"]],
+    ["restaurante",["fork-knife", "chef-hat", "fire-flame", "plate-cover", "chopping-board"]],
+    ["food",      ["fork-knife", "chef-hat", "fire-flame", "plate-cover", "spice-jar"]],
+    ["moda",      ["hanger", "needle-thread", "scissors", "label-tag", "fabric-fold"]],
+    ["tecnologia",["circuit-node", "cursor-spark", "waveform", "code-bracket", "pixel-grid"]],
+    ["fitness",   ["dumbbell", "heartbeat-pulse", "flame-streak", "medal", "sprint-figure"]],
+    ["beleza",    ["lipstick-tube", "bloom-petal", "mirror-oval", "brush-stroke", "perfume-bottle"]],
+    ["música",    ["vinyl-record", "microphone-stand", "sound-wave", "music-note", "equalizer"]],
+    ["viagem",    ["compass", "suitcase", "map-pin", "airplane-wing", "horizon-line"]],
+  ];
+
+  const matched = industryIconSets.find(([key]) => industryLower.includes(key));
+  const fillIcons = matched ? matched[1] : [
+    `${slugify(brandName)}-star`,
+    `${slugify(brandName)}-spark`,
+    `${slugify(brandName)}-diamond`,
+    `${slugify(brandName)}-emblem`,
+    `${slugify(brandName)}-mark`,
+  ];
+
+  let fillIdx = 0;
+  while (named.length < 16 && fillIdx < fillIcons.length * 3) {
+    const candidate = fillIcons[fillIdx % fillIcons.length] + (fillIdx >= fillIcons.length ? `-${Math.floor(fillIdx / fillIcons.length)}` : "");
+    if (!named.includes(candidate)) named.push(candidate);
+    fillIdx++;
+  }
+
+  return named.slice(0, 16);
+}
+
 function safeRelPath(path: string): string | null {
   const p = path.replace(/\\/g, "/").trim();
   if (!p) return null;
@@ -77,6 +146,9 @@ export async function POST(request: NextRequest) {
     const borderRadii = (bb.designTokens?.borderRadii ?? []).join(", ");
     const logoSymbol = bb.logo?.symbol ?? "";
 
+    const iconNames = deriveBrandIconNames(bb, brandName, industry);
+    const patternSlug = slugify(brandName) || "brand";
+
     const systemPrompt =
       "Você é um Diretor de Arte e Brand Designer Sênior especializado em identidade visual. " +
       "Sua missão é criar ativos vetoriais que EXPRESSEM a alma da marca, não ícones genéricos de UI. " +
@@ -112,57 +184,46 @@ Primária: ${primaryColor}
 Secundária: ${secondaryColor}
 Acento: ${accentColor}
 
-═══════════════ INSTRUÇÃO CRÍTICA ═══════════════
-NÃO gere ícones genéricos de UI (home, user, settings, etc.) — isso é PROIBIDO.
-Em vez disso, DERIVE os ícones e elementos DO UNIVERSO SEMÂNTICO DA MARCA:
-- Se a marca é de café → grão, xícara com vapor, folha de café, barista, colher, prensa, etc.
-- Se é de tecnologia criativa → pixel, cursor, waveform, grid, nodo, etc.
-- Se é de moda → ponto de costura, silhueta, agulha, botão, etc.
-- Use os objetos, flora, fauna e símbolos listados acima como inspiração.
-- Os ícones devem parecer que foram desenhados especificamente para "${brandName}".
+═══════════════ ÍCONES — LISTA OBRIGATÓRIA (NÃO ALTERE OS NOMES) ═══════════════
+Você DEVE gerar EXATAMENTE esses 16 arquivos de ícone, com esses PATHS EXATOS.
+PROIBIDO usar home.svg, user.svg, settings.svg, search.svg, mail.svg, phone.svg, calendar.svg, ou qualquer ícone genérico de UI.
+Os nomes abaixo já foram derivados do universo semântico de "${brandName}" — apenas desenhe o SVG para cada um:
 
-═══════════════ REGRAS SVG ═══════════════
-ÍCONES (16 arquivos):
-- viewBox="0 0 24 24"
-- Estilo coerente com: ${iconographyStyle || "linha clean com personalidade"}
-- Use a cor primária ${primaryColor} no stroke ou fill quando apropriado (não apenas currentColor)
-- stroke-linecap e stroke-linejoin devem refletir o border-radius da marca (${borderRadii || "round"})
-- Cada ícone deve ter um nome descritivo derivado do universo da marca
-- Misture: 8 ícones funcionais contextualizados + 8 ícones decorativos/expressivos da marca
+${iconNames.map((n, i) => `${String(i + 1).padStart(2, "0")}. vectors/icons/${n}.svg  ← desenhe um ícone que represente "${n.replace(/-/g, " ")}"`).join("\n")}
 
-ELEMENTOS ABSTRATOS (8 arquivos):
+Cada ícone: viewBox="0 0 24 24", use ${primaryColor} como cor principal no stroke/fill, stroke-linecap="${borderRadii?.includes("0") ? "square" : "round"}", stroke-linejoin="${borderRadii?.includes("0") ? "miter" : "round"}", stroke-width="1.5".
+
+═══════════════ ELEMENTOS ABSTRATOS — 8 ARQUIVOS ═══════════════
+Inspire-se DIRETAMENTE em: ${[flora, fauna, objects, symbols].filter(Boolean).join(" | ") || "universo visual da marca"}
 - viewBox="0 0 512 512"
-- Elementos gráficos que poderiam aparecer em embalagens, posts, papelaria da marca
 - Use a paleta completa: ${primaryColor}, ${secondaryColor}, ${accentColor}
-- Inspire-se em: ${[flora, fauna, objects, symbols].filter(Boolean).join(" | ") || "formas geométricas da marca"}
-- Cada elemento deve ser único e expressivo — parte do vocabulário visual da marca
+- Gráficos premium para embalagens, posts, papelaria — não ícones simples
+- Cada elemento = uma composição artística do vocabulário visual da marca
 
-PADRÃO SEAMLESS (1 arquivo):
-- viewBox="0 0 400 400" com <defs><pattern> tileável
-- Construído com motivos do universo da marca
-- Cores: ${primaryColor} e ${secondaryColor} com transparências/opacidades variadas
-- Deve parecer premium e on-brand
+═══════════════ PADRÃO SEAMLESS ═══════════════
+Path: vectors/patterns/pattern-${patternSlug}.svg
+- viewBox="0 0 400 400" com <defs><pattern id="tile"> tileável
+- Motivos derivados de: ${[flora, fauna, objects].filter(Boolean).join(", ") || brandName}
+- Cores: ${primaryColor} e ${secondaryColor} com opacidades variadas — premium e on-brand
 
-MOTION SVGs (2 arquivos — loading + success):
-- viewBox="0 0 64 64"
-- Animações SMIL leves (animateTransform, animate)
-- loading-spinner: incorpore um elemento visual da marca na rotação (ex: o símbolo ${logoSymbol || "da marca"})
-- success-check: celebração on-brand, não o check genérico verde
+═══════════════ MOTION SVGs ═══════════════
+- motion/loading-spinner.svg: viewBox="0 0 64 64", animate um elemento de "${logoSymbol || brandName}", não círculo genérico
+- motion/success-check.svg: viewBox="0 0 64 64", celebração on-brand com cor ${primaryColor}
 
-═══════════════ SAÍDA ═══════════════
+═══════════════ SAÍDA JSON OBRIGATÓRIA ═══════════════
 {
   "files": [
-    { "path": "vectors/icons/<nome-da-marca>.svg", "content": "<svg...>" },
-    ... (16 ícones)
-    { "path": "vectors/elements/<nome-expressivo>.svg", "content": "<svg...>" },
+    { "path": "vectors/icons/${iconNames[0] ?? "brand-icon"}.svg", "content": "<svg viewBox=\\"0 0 24 24\\" ...>...</svg>" },
+    ... (todos os 16 ícones da lista acima)
+    { "path": "vectors/elements/element-01.svg", "content": "<svg viewBox=\\"0 0 512 512\\" ...>...</svg>" },
     ... (8 elementos)
-    { "path": "vectors/patterns/pattern-${brandName.toLowerCase().replace(/\s+/g, "-")}.svg", "content": "<svg...>" },
-    { "path": "motion/loading-spinner.svg", "content": "<svg...>" },
-    { "path": "motion/success-check.svg", "content": "<svg...>" }
+    { "path": "vectors/patterns/pattern-${patternSlug}.svg", "content": "<svg viewBox=\\"0 0 400 400\\" ...>...</svg>" },
+    { "path": "motion/loading-spinner.svg", "content": "<svg viewBox=\\"0 0 64 64\\" ...>...</svg>" },
+    { "path": "motion/success-check.svg", "content": "<svg viewBox=\\"0 0 64 64\\" ...>...</svg>" }
   ]
 }
 
-Brandbook completo para referência adicional:
+Contexto do brandbook:
 ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVisual: bb.keyVisual, logo: bb.logo, colors: bb.colors, positioning: bb.positioning, motion: bb.motion }, null, 2)}
 `;
 
