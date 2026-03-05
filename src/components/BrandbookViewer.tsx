@@ -28,6 +28,7 @@ import { SectionBrandStory } from "./sections/SectionBrandStory";
 import { SectionSocialMedia } from "./sections/SectionSocialMedia";
 import { SectionAssetPack } from "./sections/SectionAssetPack";
 import { SectionBrandAssets } from "./sections/SectionBrandAssets";
+import { SectionGovernance } from "./sections/SectionGovernance";
 import { FontLoader } from "./FontLoader";
 import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
 import { EMPTY_KEYS } from "@/components/ApiKeyConfig";
@@ -280,6 +281,13 @@ export function BrandbookViewer({
       render: (num) => <SectionSocialMedia data={data} num={num} />,
     },
     {
+      id: "governance",
+      title: "Governança do Design System",
+      category: "Diretrizes de Uso",
+      when: !!data.governance,
+      render: (num) => <SectionGovernance data={data} num={num} />,
+    },
+    {
       id: "asset-pack",
       title: "Entrega — Asset Pack",
       category: "Diretrizes de Uso",
@@ -452,7 +460,7 @@ export function BrandbookViewer({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
           {byCategory.map((g) => (
             <div key={g.cat} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
               <h3 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-[0.25em] mb-3">

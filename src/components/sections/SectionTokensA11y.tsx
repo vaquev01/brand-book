@@ -10,7 +10,7 @@ export function SectionTokensA11y({ data, num }: { data: BrandbookData; num: num
         {String(num).padStart(2, "0")}. Design Tokens &amp; Acessibilidade
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <div>
           <h3 className="text-base font-bold mb-3">Acessibilidade (WCAG 2.2)</h3>
           <div className="space-y-4">

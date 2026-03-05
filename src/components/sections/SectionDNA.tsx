@@ -10,7 +10,7 @@ export function SectionDNA({ data, num }: { data: BrandbookData; num: number }) 
         {String(num).padStart(2, "0")}. DNA da Marca &amp; Estratégia
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         <div>
           <div className="mb-4">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Propósito</h3>

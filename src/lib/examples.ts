@@ -17,7 +17,8 @@ export const saasExample: BrandbookData = {
     userPsychographics: "CTOs e DevOps que temem perder controle sobre a infraestrutura e sofrem de 'burnout' com ferramentas complexas demais.",
     values: ["Simplicidade", "Confiança", "Agilidade", "Transparência"],
     personality: ["Profissional", "Especialista", "Acessível", "Inovadora"],
-    toneOfVoice: "Claro, objetivo, orientativo e seguro. Voz ativa e no tempo presente."
+    toneOfVoice: "Claro, objetivo, orientativo e seguro. Voz ativa e no tempo presente.",
+    brandArchetype: "Sábio — dados claros, visualizações sem ruído, linguagem técnica acessível. O produto guia com conhecimento, não com autoridade imposta."
   },
   positioning: {
     category: "Plataforma de Automação DevOps / Orquestração de Infra",
@@ -48,6 +49,8 @@ export const saasExample: BrandbookData = {
       painPoints: ["Ferramentas desconectadas", "Falta de auditoria", "Deploys inconsistentes"],
       objections: ["Tempo de adoção", "Segurança", "Lock-in"],
       channels: ["LinkedIn", "Eventos de tecnologia", "Webinars"],
+      companySize: "Scale-up 200-500 pessoas",
+      digitalMaturity: "Avançada: stack integrado, data-driven, CI/CD maduro",
     },
     {
       name: "Rafael",
@@ -57,6 +60,8 @@ export const saasExample: BrandbookData = {
       painPoints: ["Alert fatigue", "Pipelines quebradiços", "Config sprawl"],
       objections: ["Integração com stack atual", "Performance", "Preço"],
       channels: ["GitHub", "Comunidades DevOps", "YouTube"],
+      companySize: "Startup 50-200 pessoas",
+      digitalMaturity: "Intermediária: ferramentas isoladas, pipelines artesanais",
     },
     {
       name: "Ana",
@@ -130,8 +135,15 @@ export const saasExample: BrandbookData = {
   },
   colors: {
     primary: [
-      { name: "Trust Blue (Brand-600)", hex: "#2563EB", rgb: "37, 99, 235", cmyk: "84, 58, 0, 8" },
-      { name: "Deep Space (Navy-900)", hex: "#0F172A", rgb: "15, 23, 42", cmyk: "90, 75, 45, 75" }
+      { name: "Trust Blue (Brand-600)", hex: "#2563EB", rgb: "37, 99, 235", cmyk: "84, 58, 0, 8", tonalScale: [
+        { shade: "50", hex: "#EFF6FF" }, { shade: "100", hex: "#DBEAFE" }, { shade: "200", hex: "#BFDBFE" },
+        { shade: "300", hex: "#93C5FD" }, { shade: "400", hex: "#60A5FA" }, { shade: "500", hex: "#3B82F6" },
+        { shade: "600", hex: "#2563EB" }, { shade: "700", hex: "#1D4ED8" }, { shade: "800", hex: "#1E40AF" }, { shade: "900", hex: "#1E3A8A" }
+      ] },
+      { name: "Deep Space (Navy-900)", hex: "#0F172A", rgb: "15, 23, 42", cmyk: "90, 75, 45, 75", tonalScale: [
+        { shade: "50", hex: "#F8FAFC" }, { shade: "100", hex: "#F1F5F9" }, { shade: "200", hex: "#E2E8F0" },
+        { shade: "300", hex: "#CBD5E1" }, { shade: "500", hex: "#64748B" }, { shade: "700", hex: "#334155" }, { shade: "900", hex: "#0F172A" }
+      ] }
     ],
     secondary: [
       { name: "Slate Gray (Gray-500)", hex: "#64748B", rgb: "100, 116, 139", cmyk: "60, 45, 35, 10" },
@@ -207,7 +219,8 @@ export const saasExample: BrandbookData = {
   microcopy: {
     buttonRules: "Omitir artigos, usar Sentence Case (ex: 'Criar servidor').",
     errorMessages: "Nunca culpar o usuário. Substituir 'Senha errada' por 'A senha não confere. Tente novamente.'",
-    emptyStateCopy: "Focar na próxima ação acionável. Ex: 'Comece conectando sua conta AWS.'"
+    emptyStateCopy: "Focar na próxima ação acionável. Ex: 'Comece conectando sua conta AWS.'",
+    writingConventions: "Sentence case em toda a UI. Voz ativa sempre ('Criamos sua campanha', não 'A campanha foi criada'). Botões sem artigos ('Criar servidor', não 'Criar um servidor'). Máx: botão 3 palavras, título 70 chars, tooltip 120 chars. Erros nunca culpam o usuário."
   },
   accessibility: {
     contrastRules: "Taxa de contraste mínima de 4.5:1 (WCAG AA) para textos em botões primários.",
@@ -291,6 +304,14 @@ export const saasExample: BrandbookData = {
     patternStyle: "Isometric grid lines or circuit-board inspired tessellation in Trust Blue on transparent/navy background. Subtle, low opacity.",
     marketingVisualLanguage: "Code snippets as decorative graphic elements. UI component cards floating with subtle glow. Bold Inter ExtraBold claims. Terminal/CLI aesthetics in hero sections.",
     negativePrompt: "blurry, low quality, watermark, stock photo, fake smile, warm colors, retro, vintage, handwriting, decorative ornaments, gradients unless purposeful, overexposed, jpeg artifacts"
+  },
+  governance: {
+    designTools: "Figma com auto-layout obrigatório e componentes em library compartilhada. Design reviews semanais.",
+    documentationPlatform: "Zeroheight sincronizado com Figma, acesso público para stakeholders via link protegido.",
+    componentLibrary: "Storybook v7 com visual regression testing via Chromatic, publicado como pacote npm @cloudflow/ui.",
+    versioningStrategy: "Semantic versioning para tokens e componentes. Changelog automático via conventional commits.",
+    updateProcess: "RFC para mudanças breaking. Review de 2 designers + 1 dev. Deploy quinzenal com release notes.",
+    ownershipRoles: "Design System Team: 1 Design Lead + 2 Front-end Engineers. Office hours semanais abertos para squads.",
   }
 };
 

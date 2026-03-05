@@ -128,25 +128,25 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-50 border rounded-xl p-5">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Logo</div>
-          <div className="mt-1 text-sm font-semibold text-gray-900">{hasLogo ? "OK" : "Pendente"}</div>
-          <div className="mt-2 text-xs text-gray-600">Uploads: {uploadedLogos.length} • Gerado: {(generatedImages["logo_primary"] || generatedImages["logo_dark_bg"]) ? "sim" : "não"}</div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="bg-gray-50 border rounded-lg p-3">
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Logo</div>
+          <div className="mt-0.5 text-sm font-semibold text-gray-900">{hasLogo ? "OK" : "Pendente"}</div>
+          <div className="mt-1 text-[10px] text-gray-500">Uploads: {uploadedLogos.length} • Gerado: {(generatedImages["logo_primary"] || generatedImages["logo_dark_bg"]) ? "sim" : "não"}</div>
         </div>
-        <div className="bg-gray-50 border rounded-xl p-5">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Mascote / Elementos</div>
-          <div className="mt-1 text-sm font-semibold text-gray-900">{hasMascotImage || uploadedElements.length > 0 ? "OK" : "Opcional"}</div>
-          <div className="mt-2 text-xs text-gray-600">Mascotes: {uploadedMascots.length} • Elementos: {uploadedElements.length}</div>
+        <div className="bg-gray-50 border rounded-lg p-3">
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Mascote / Elementos</div>
+          <div className="mt-0.5 text-sm font-semibold text-gray-900">{hasMascotImage || uploadedElements.length > 0 ? "OK" : "Opcional"}</div>
+          <div className="mt-1 text-[10px] text-gray-500">Mascotes: {uploadedMascots.length} • Elementos: {uploadedElements.length}</div>
         </div>
-        <div className="bg-gray-50 border rounded-xl p-5">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Padrões</div>
-          <div className="mt-1 text-sm font-semibold text-gray-900">{hasPatternImage ? "OK" : "Pendente"}</div>
-          <div className="mt-2 text-xs text-gray-600">Uploads: {uploadedPatterns.length} • Gerado: {generatedImages["brand_pattern"] ? "sim" : "não"}</div>
+        <div className="bg-gray-50 border rounded-lg p-3">
+          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Padrões</div>
+          <div className="mt-0.5 text-sm font-semibold text-gray-900">{hasPatternImage ? "OK" : "Pendente"}</div>
+          <div className="mt-1 text-[10px] text-gray-500">Uploads: {uploadedPatterns.length} • Gerado: {generatedImages["brand_pattern"] ? "sim" : "não"}</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <div className="bg-white border rounded-xl p-5 shadow-sm">
           <h3 className="font-bold text-gray-900">Vetor — Ícones</h3>
           <p className="text-xs text-gray-500 mt-1">{byBucket.icons.length} arquivos</p>

@@ -10,7 +10,7 @@ export function SectionAudiencePersonas({ data, num }: { data: BrandbookData; nu
         {String(num).padStart(2, "0")}. Público-alvo (Personas)
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {data.audiencePersonas.map((p, i) => (
           <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm">
             <div className="px-5 py-4 bg-gray-50 border-b">
@@ -40,7 +40,7 @@ export function SectionAudiencePersonas({ data, num }: { data: BrandbookData; nu
                 <p className="text-sm text-gray-700">{p.context}</p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
                 <div>
                   <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Objetivos</div>
                   <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
@@ -59,7 +59,7 @@ export function SectionAudiencePersonas({ data, num }: { data: BrandbookData; nu
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
                 <div>
                   <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Objeções</div>
                   <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">

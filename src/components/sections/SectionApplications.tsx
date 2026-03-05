@@ -202,7 +202,7 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
         {data.applications.map((app, i) => {
           const variants = detectSizeVariants(app.type);
           const activeVariant = activeAppVariant[i] ?? variants[0]?.aspectRatio ?? "1:1";

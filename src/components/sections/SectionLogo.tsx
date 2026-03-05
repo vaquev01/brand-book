@@ -371,7 +371,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
       </h2>
 
       {/* Main logo images */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 items-start">
         <div>
           <LogoCard
             title="Logo Principal — Fundo Claro"
@@ -408,7 +408,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
 
       {/* Logo description cards */}
       {(secondaryText || symbolText) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
           {secondaryText && (
             <div className="bg-white border rounded-xl p-5 shadow-sm">
               <div className="flex items-start gap-3 mb-2">
@@ -434,7 +434,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
       {variantEntries.length > 0 && (
         <div className="mb-6">
           <h3 className="text-base font-bold mb-3">Variações de Logo</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 items-start">
             {variantEntries.map((v) => (
               <div key={v.key} className="bg-white border rounded-xl p-4 shadow-sm">
                 <h4 className="font-bold text-sm text-gray-900 mb-2">{v.label}</h4>
@@ -446,7 +446,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
       )}
 
       {/* Technical specs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 items-start">
         <div className="bg-gray-50 p-4 rounded border">
           <h3 className="font-bold mb-1">Clear Space</h3>
           <p className="text-gray-600 text-sm">{data.logo.clearSpace}</p>

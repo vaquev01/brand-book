@@ -12,7 +12,7 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
         {String(num).padStart(2, "0")}. Identidade Verbal &amp; Mensagens
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-start">
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-gray-900 text-white rounded-xl p-5">
             <div className="text-xs uppercase tracking-widest text-gray-300 font-bold mb-2">Tagline</div>
@@ -138,7 +138,7 @@ export function SectionVerbalIdentity({ data, num }: { data: BrandbookData; num:
       {v.tonePerChannel && v.tonePerChannel.length > 0 && (
         <div className="mt-6">
           <h3 className="text-base font-bold mb-3">Tom de Voz por Canal</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
             {v.tonePerChannel.map((t, i) => (
               <div key={i} className="bg-white border rounded-xl p-5 space-y-3">
                 <div className="flex items-center gap-2">

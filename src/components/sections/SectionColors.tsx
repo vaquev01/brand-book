@@ -144,7 +144,7 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
           <button onClick={() => setShowAddPrimary(false)} className="text-xs text-gray-400 hover:text-gray-700 transition">×</button>
         </div>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
         {data.colors.primary.map((c, i) => (
           <ColorSwatch key={i} color={c} onRemove={onUpdateColors ? () => removeColor("primary", i) : undefined} />
         ))}
@@ -169,7 +169,7 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
           <button onClick={() => setShowAddSecondary(false)} className="text-xs text-gray-400 hover:text-gray-700 transition">×</button>
         </div>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
         {data.colors.secondary.map((c, i) => (
           <ColorSwatch key={i} color={c} onRemove={onUpdateColors ? () => removeColor("secondary", i) : undefined} />
         ))}
@@ -178,7 +178,7 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
       {isAdvanced && data.colors.semantic && (
         <>
           <h3 className="text-base font-semibold mb-3 border-l-4 border-blue-500 pl-3">Cores Semânticas (Feedback UI)</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
             <ColorSwatch color={data.colors.semantic.success} />
             <ColorSwatch color={data.colors.semantic.error} />
             <ColorSwatch color={data.colors.semantic.warning} />
@@ -190,7 +190,7 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
       {isAdvanced && data.colors.dataViz && (
         <>
           <h3 className="text-base font-semibold mb-3 border-l-4 border-purple-500 pl-3">DataViz (Gráficos)</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
             {data.colors.dataViz.map((c, i) => <ColorSwatch key={i} color={c} />)}
           </div>
         </>

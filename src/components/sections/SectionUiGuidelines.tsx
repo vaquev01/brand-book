@@ -12,7 +12,7 @@ export function SectionUiGuidelines({ data, num }: { data: BrandbookData; num: n
         {String(num).padStart(2, "0")}. Guidelines de UI
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-start">
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Layout / Grid</div>
@@ -52,7 +52,7 @@ export function SectionUiGuidelines({ data, num }: { data: BrandbookData; num: n
                     </div>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                     <div>
                       <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Estados</div>
                       <div className="flex flex-wrap gap-2">

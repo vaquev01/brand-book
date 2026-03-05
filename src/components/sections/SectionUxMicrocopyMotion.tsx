@@ -54,6 +54,12 @@ export function SectionUxMicrocopyMotion({ data, num }: { data: BrandbookData; n
               <h4 className="font-bold text-sm text-green-900 mb-1">Copy de Empty States</h4>
               <p className="text-sm text-gray-700">{data.microcopy.emptyStateCopy}</p>
             </div>
+            {data.microcopy.writingConventions && (
+              <div className="bg-green-50 p-4 rounded border border-green-100">
+                <h4 className="font-bold text-sm text-green-900 mb-1">Convenções de Escrita</h4>
+                <p className="text-sm text-gray-700 whitespace-pre-line">{data.microcopy.writingConventions}</p>
+              </div>
+            )}
           </div>
         </div>
 

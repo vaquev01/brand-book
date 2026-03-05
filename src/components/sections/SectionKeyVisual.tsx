@@ -204,7 +204,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
 
       {/* Generated hero images */}
       {(generatedImages["hero_visual"] || generatedImages["hero_lifestyle"]) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
           {generatedImages["hero_visual"] && (
             <div className="rounded-xl overflow-hidden border shadow-sm relative group">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -246,7 +246,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
 
       {/* Briefing panels for hero images */}
       {onGenerate && (
-        <div className="no-print grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="no-print grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
           <div className="bg-white border rounded-xl p-3">
             <span className="text-xs font-bold text-gray-700">Hero Visual</span>
             {renderBriefingPanel("hero_visual", "Hero")}
@@ -265,7 +265,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 items-start">
         <div>
           <h3 className="text-base font-bold mb-3">Elementos Gráficos</h3>
           <ul className="space-y-3">
@@ -308,7 +308,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
       </div>
 
       {hasAssetCategories && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {hasFlora && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-5">
               <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">

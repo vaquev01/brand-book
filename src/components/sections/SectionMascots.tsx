@@ -195,7 +195,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold">Mascotes &amp; Personagens</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
             {mascots.map((mascot, i) => {
               const storageKey = `mascot_${i}`;
               const uploadedImg = uploadedMascots[i] ?? null;
@@ -300,7 +300,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {symbols.length > 0 && (
           <div>
             <h3 className="text-lg font-bold mb-4">Símbolos Identitários</h3>
