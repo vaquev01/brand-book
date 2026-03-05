@@ -308,7 +308,7 @@ export function useImageGeneration({
   );
 
   const generateApplication = useCallback(
-    async (appIndex: number, aspectRatio: AspectRatioOption) => {
+    async (appIndex: number, aspectRatio: AspectRatioOption, customInstruction?: string, userReferenceImages?: string[]) => {
       const app = data.applications[appIndex];
       const appKey = `app_${appIndex}_${aspectRatio}`;
       setLoadingKey(appKey);
@@ -325,7 +325,8 @@ export function useImageGeneration({
           app,
           data,
           provider,
-          aspectRatio
+          aspectRatio,
+          customInstruction
         );
         let prompt = basePrompt;
         if (refineBeforeGenerate) {
@@ -356,12 +357,14 @@ export function useImageGeneration({
         }
         const canUseRefImages =
           provider === "imagen" && !!apiKeys.google && useReferenceImages;
-        const referenceImagesRaw = canUseRefImages
+        const autoRefs = canUseRefImages
           ? pickReferenceImages(6)
-          : undefined;
-        const referenceImages = referenceImagesRaw?.length
-          ? referenceImagesRaw
-          : undefined;
+          : [];
+        const allRefs = [
+          ...(userReferenceImages ?? []),
+          ...autoRefs,
+        ].slice(0, 8);
+        const referenceImages = allRefs.length > 0 ? allRefs : undefined;
         const res = await fetch("/api/generate-image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

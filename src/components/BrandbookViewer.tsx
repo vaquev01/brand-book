@@ -247,7 +247,7 @@ export function BrandbookViewer({
           num={num}
           generatedImages={generatedImages}
           onUpdateApplicationImageKey={onUpdateApplicationImageKey}
-          onGenerateApplication={hasGeneration ? (i: number, ar: string) => imgGen.generateApplication(i, ar as "1:1" | "16:9" | "9:16" | "4:3" | "21:9") : undefined}
+          onGenerateApplication={hasGeneration ? (i: number, ar: string, ci?: string, refs?: string[]) => imgGen.generateApplication(i, ar as "1:1" | "16:9" | "9:16" | "4:3" | "21:9", ci, refs) : undefined}
           onGenerateAllApplications={hasGeneration ? () => imgGen.generateAllApplications() : undefined}
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}

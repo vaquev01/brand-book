@@ -1169,7 +1169,8 @@ export function buildApplicationPrompt(
   },
   data: BrandbookData,
   provider: ImageProvider,
-  aspectRatio: AspectRatioOption = "1:1"
+  aspectRatio: AspectRatioOption = "1:1",
+  customInstruction?: string
 ): string {
   const ctx = extractBrandContext(data);
   const B = `"${data.brandName}"`;
@@ -1208,6 +1209,7 @@ export function buildApplicationPrompt(
     ctx.tagline,
     `REFERENCES: ${ctx.artisticRef}.`,
     ctx.competitiveAngle,
+    customInstruction ? `CUSTOM CREATIVE DIRECTION FROM CLIENT: ${customInstruction}.` : null,
     sTags, q, neg(ctx, provider),
   );
 }
