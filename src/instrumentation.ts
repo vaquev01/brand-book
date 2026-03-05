@@ -1,4 +1,5 @@
 import { bbLog, captureMem, memToJson, serializeError } from "@/lib/serverLog";
+import v8 from "node:v8";
 
 let handlersInstalled = false;
 let memInterval: NodeJS.Timeout | null = null;
@@ -12,9 +13,13 @@ function parseIntervalMs(v: string | undefined): number {
 
 export async function register() {
   const mem0 = captureMem();
+  const heapStats = v8.getHeapStatistics();
   bbLog("info", "server.register", {
     mem: memToJson(mem0),
     uptimeSec: Math.round(process.uptime()),
+    heapLimitMB: Math.round((heapStats.heap_size_limit / 1024 / 1024) * 10) / 10,
+    nodeOptions: process.env.NODE_OPTIONS || undefined,
+    maxOldSpaceSize: process.env.MAX_OLD_SPACE_SIZE || undefined,
   });
 
   if (!handlersInstalled) {
