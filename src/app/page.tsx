@@ -717,14 +717,14 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center shadow-inner">
-              <Hexagon className="text-white w-6 h-6" fill="currentColor" />
+        <div className="max-w-full px-4 sm:px-6 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gray-900 rounded-xl flex items-center justify-center shadow-inner flex-shrink-0">
+              <Hexagon className="text-white w-4 h-4" fill="currentColor" />
             </div>
             <div>
-              <h1 className="text-xl font-extrabold tracking-tight text-gray-900 leading-tight">Brandbook Builder</h1>
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Gerador de Manual com IA</p>
+              <h1 className="text-base font-extrabold tracking-tight text-gray-900 leading-tight">Brandbook Builder</h1>
+              {tab !== "viewer" && <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Gerador de Manual com IA</p>}
             </div>
           </div>
 
@@ -776,7 +776,7 @@ export default function Home() {
         }}
       />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className={tab === "viewer" ? "w-full px-4 sm:px-6 pt-3 pb-8" : "max-w-7xl mx-auto px-6 py-8"}>
         {/* Error Banner */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
@@ -923,51 +923,51 @@ export default function Home() {
         {tab === "viewer" && brandbookData && (
           <div>
             {/* Viewer Header */}
-            <div className="no-print flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">{brandbookData.brandName}</h2>
-                <p className="text-gray-500 font-medium">{brandbookData.industry}</p>
+            <div className="no-print flex items-center justify-between gap-3 mb-2">
+              <div className="min-w-0">
+                <h2 className="text-lg font-extrabold tracking-tight text-gray-900 truncate">{brandbookData.brandName}</h2>
+                <p className="text-xs text-gray-500 font-medium truncate">{brandbookData.industry}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
                   onClick={handleUndo}
                   disabled={undoStack.length === 0}
-                  className="flex items-center gap-2 bg-gray-100 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1.5 bg-gray-100 text-gray-600 py-1.5 px-3 rounded-lg text-xs font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   title="Desfazer última alteração"
                 >
-                  <Undo2 className="w-4 h-4" />
+                  <Undo2 className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Desfazer</span>
                 </button>
                 <button
                   onClick={handleRedo}
                   disabled={redoStack.length === 0}
-                  className="flex items-center gap-2 bg-gray-100 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1.5 bg-gray-100 text-gray-600 py-1.5 px-3 rounded-lg text-xs font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   title="Refazer"
                 >
-                  <Redo2 className="w-4 h-4" />
+                  <Redo2 className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Refazer</span>
                 </button>
                 <button
                   onClick={handleClearImageCache}
                   disabled={Object.keys(generatedAssets).length === 0}
-                  className="flex items-center gap-2 bg-gray-100 text-gray-600 py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-1.5 bg-gray-100 text-gray-600 py-1.5 px-3 rounded-lg text-xs font-semibold hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   title="Remove as imagens de IA geradas para este brandbook"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Limpar imagens</span>
                 </button>
                 <button
                   onClick={() => setViewerTab("export")}
-                  className="flex items-center gap-2 bg-indigo-600 text-white py-2.5 px-6 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-sm hover:shadow transition-all"
+                  className="flex items-center gap-1.5 bg-indigo-600 text-white py-1.5 px-4 rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-sm hover:shadow transition-all"
                 >
-                  <Download className="w-4 h-4" />
-                  Exportar e Baixar
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Exportar</span>
                 </button>
               </div>
             </div>
 
             {/* Viewer Sub-tabs */}
-            <div className="no-print sticky top-20 z-40 bg-gray-50 pt-2 pb-4 -mx-6 px-6 shadow-sm mb-6 border-b border-gray-200/50">
+            <div className="no-print sticky top-12 z-40 bg-gray-50 pt-2 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 shadow-sm mb-4 border-b border-gray-200/50">
             <div className="flex flex-wrap gap-1 bg-gray-200/60 p-1.5 rounded-xl w-fit border border-gray-200/50">
               <button
                 onClick={() => setViewerTab("preview")}

@@ -405,7 +405,7 @@ export function BrandbookViewer({
 
   return (
     <div
-      className={`max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${immersive ? "bb-immersive" : ""}`}
+      className={`w-full px-4 sm:px-6 ${immersive ? "bb-immersive" : ""}`}
       id="brandbook-content"
       style={immersiveStyle}
     >
@@ -445,7 +445,7 @@ export function BrandbookViewer({
 
       {/* Generation Control Bar */}
       {hasGeneration && (
-        <div className="no-print sticky top-20 z-30 bg-white/95 backdrop-blur border rounded-xl p-4 mb-8 shadow-sm">
+        <div className="no-print sticky top-[104px] z-30 bg-white/95 backdrop-blur border rounded-xl p-4 mb-8 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Provider:</span>
