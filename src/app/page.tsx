@@ -776,7 +776,7 @@ export default function Home() {
         }}
       />
 
-      <main className={tab === "viewer" ? "w-full px-4 sm:px-6 pt-3 pb-8" : "max-w-7xl mx-auto px-6 py-8"}>
+      <main className={tab === "viewer" ? "w-full pt-2 pb-8" : "max-w-7xl mx-auto px-6 py-8"}>
         {/* Error Banner */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
@@ -923,7 +923,7 @@ export default function Home() {
         {tab === "viewer" && brandbookData && (
           <div>
             {/* Viewer Header */}
-            <div className="no-print flex items-center justify-between gap-3 mb-2">
+            <div className="no-print flex items-center justify-between gap-3 mb-2 px-4 sm:px-6">
               <div className="min-w-0">
                 <h2 className="text-lg font-extrabold tracking-tight text-gray-900 truncate">{brandbookData.brandName}</h2>
                 <p className="text-xs text-gray-500 font-medium truncate">{brandbookData.industry}</p>
@@ -967,7 +967,7 @@ export default function Home() {
             </div>
 
             {/* Viewer Sub-tabs */}
-            <div className="no-print sticky top-12 z-40 bg-gray-50 pt-2 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 shadow-sm mb-4 border-b border-gray-200/50">
+            <div className="no-print sticky top-12 z-40 bg-gray-50 pt-2 pb-3 px-4 sm:px-6 shadow-sm mb-4 border-b border-gray-200/50">
             <div className="flex flex-wrap gap-1 bg-gray-200/60 p-1.5 rounded-xl w-fit border border-gray-200/50">
               <button
                 onClick={() => setViewerTab("preview")}
