@@ -717,54 +717,112 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
-        <div className="max-w-full px-4 sm:px-6 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gray-900 rounded-xl flex items-center justify-center shadow-inner flex-shrink-0">
-              <Hexagon className="text-white w-4 h-4" fill="currentColor" />
-            </div>
-            <div>
-              <h1 className="text-base font-extrabold tracking-tight text-gray-900 leading-tight">Brandbook Builder</h1>
-              {tab !== "viewer" && <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Gerador de Manual com IA</p>}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <ApiKeyStatusBadge keys={apiKeys} />
-            <button
-              onClick={() => setShowApiConfig(true)}
-              className="flex items-center gap-2 bg-gray-100 text-gray-700 text-sm font-semibold px-3 py-2 rounded-xl hover:bg-gray-200 transition"
-              title="Configurar chaves de API"
-            >
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">APIs</span>
-            </button>
-            <nav className="flex gap-1 bg-gray-100 rounded-xl p-1">
+        {tab === "viewer" && brandbookData ? (
+          /* ── Viewer mode: single consolidated row ── */
+          <div className="px-3 sm:px-4 py-1.5 flex items-center gap-2 min-w-0">
+            {/* Logo — click to go back */}
             <button
               onClick={() => setTab("generate")}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "generate" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}
+              className="w-7 h-7 bg-gray-900 rounded-lg flex items-center justify-center shadow-inner flex-shrink-0 hover:bg-gray-700 transition"
+              title="Voltar ao gerador"
             >
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">Gerar com IA</span>
+              <Hexagon className="text-white w-3.5 h-3.5" fill="currentColor" />
             </button>
-            <button
-              onClick={() => setTab("examples")}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "examples" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}
-            >
-              <Library className="w-4 h-4" />
-              <span className="hidden sm:inline">Exemplos</span>
-            </button>
-            {brandbookData && (
-              <button
-                onClick={() => setTab("viewer")}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "viewer" ? "bg-white shadow-sm text-indigo-700" : "text-gray-500 hover:text-gray-900"}`}
-              >
-                <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">Visualizar</span>
+
+            {/* Brand name */}
+            <span className="text-sm font-extrabold text-gray-900 truncate flex-shrink-0 max-w-[120px] sm:max-w-[180px] hidden xs:block">
+              {brandbookData.brandName}
+            </span>
+
+            {/* Divider */}
+            <div className="w-px h-4 bg-gray-200 flex-shrink-0 hidden sm:block" />
+
+            {/* Sub-tabs — flex-1 with overflow scroll */}
+            <nav className="flex gap-0.5 bg-gray-100 rounded-xl p-1 flex-1 min-w-0 overflow-x-auto">
+              <button onClick={() => setViewerTab("preview")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "preview" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Brandbook</span>
               </button>
-            )}
-          </nav>
+              <button onClick={() => setViewerTab("edit")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "edit" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+                <Pencil className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Editar</span>
+              </button>
+              <button onClick={() => setViewerTab("assets")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "assets" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Ref. Assets</span>
+                {uploadedBrandAssets.length > 0 && <span className="bg-indigo-100 text-indigo-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">{uploadedBrandAssets.length}</span>}
+              </button>
+              <button onClick={() => setViewerTab("refine")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "refine" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+                <Wand2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Refinar</span>
+              </button>
+              <button onClick={() => setViewerTab("consistency")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "consistency" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Consistência</span>
+              </button>
+              <button onClick={() => setViewerTab("export")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "export" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Exportar</span>
+              </button>
+            </nav>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={handleUndo} disabled={undoStack.length === 0} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Desfazer">
+                <Undo2 className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={handleRedo} disabled={redoStack.length === 0} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Refazer">
+                <Redo2 className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={handleClearImageCache} disabled={Object.keys(generatedAssets).length === 0} className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Limpar imagens geradas">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => setShowApiConfig(true)} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition" title="APIs">
+                <Settings className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => setViewerTab("export")} className="flex items-center gap-1 bg-indigo-600 text-white py-1.5 px-3 rounded-lg text-xs font-bold hover:bg-indigo-700 transition ml-1">
+                <Download className="w-3 h-3" />
+                <span className="hidden sm:inline">Exportar</span>
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* ── Default mode ── */
+          <div className="max-w-full px-4 sm:px-6 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gray-900 rounded-xl flex items-center justify-center shadow-inner flex-shrink-0">
+                <Hexagon className="text-white w-4 h-4" fill="currentColor" />
+              </div>
+              <div>
+                <h1 className="text-base font-extrabold tracking-tight text-gray-900 leading-tight">Brandbook Builder</h1>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Gerador de Manual com IA</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <ApiKeyStatusBadge keys={apiKeys} />
+              <button onClick={() => setShowApiConfig(true)} className="flex items-center gap-2 bg-gray-100 text-gray-700 text-sm font-semibold px-3 py-2 rounded-xl hover:bg-gray-200 transition" title="Configurar chaves de API">
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">APIs</span>
+              </button>
+              <nav className="flex gap-1 bg-gray-100 rounded-xl p-1">
+                <button onClick={() => setTab("generate")} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "generate" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}>
+                  <Sparkles className="w-4 h-4" />
+                  <span className="hidden sm:inline">Gerar com IA</span>
+                </button>
+                <button onClick={() => setTab("examples")} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "examples" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}>
+                  <Library className="w-4 h-4" />
+                  <span className="hidden sm:inline">Exemplos</span>
+                </button>
+                {brandbookData && (
+                  <button onClick={() => setTab("viewer")} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "viewer" ? "bg-white shadow-sm text-indigo-700" : "text-gray-500 hover:text-gray-900"}`}>
+                    <Eye className="w-4 h-4" />
+                    <span className="hidden sm:inline">Visualizar</span>
+                  </button>
+                )}
+              </nav>
+            </div>
+          </div>
+        )}
       </header>
 
       <ApiKeyConfig
@@ -922,114 +980,6 @@ export default function Home() {
         {/* Tab: Viewer */}
         {tab === "viewer" && brandbookData && (
           <div>
-            {/* Viewer Header */}
-            <div className="no-print flex items-center justify-between gap-3 mb-2 px-4 sm:px-6">
-              <div className="min-w-0">
-                <h2 className="text-lg font-extrabold tracking-tight text-gray-900 truncate">{brandbookData.brandName}</h2>
-                <p className="text-xs text-gray-500 font-medium truncate">{brandbookData.industry}</p>
-              </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  onClick={handleUndo}
-                  disabled={undoStack.length === 0}
-                  className="flex items-center gap-1.5 bg-gray-100 text-gray-600 py-1.5 px-3 rounded-lg text-xs font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  title="Desfazer última alteração"
-                >
-                  <Undo2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Desfazer</span>
-                </button>
-                <button
-                  onClick={handleRedo}
-                  disabled={redoStack.length === 0}
-                  className="flex items-center gap-1.5 bg-gray-100 text-gray-600 py-1.5 px-3 rounded-lg text-xs font-semibold hover:bg-gray-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  title="Refazer"
-                >
-                  <Redo2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Refazer</span>
-                </button>
-                <button
-                  onClick={handleClearImageCache}
-                  disabled={Object.keys(generatedAssets).length === 0}
-                  className="flex items-center gap-1.5 bg-gray-100 text-gray-600 py-1.5 px-3 rounded-lg text-xs font-semibold hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  title="Remove as imagens de IA geradas para este brandbook"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Limpar imagens</span>
-                </button>
-                <button
-                  onClick={() => setViewerTab("export")}
-                  className="flex items-center gap-1.5 bg-indigo-600 text-white py-1.5 px-4 rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-sm hover:shadow transition-all"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Exportar</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Viewer Sub-tabs */}
-            <div className="no-print sticky top-12 z-40 bg-gray-50 pt-2 pb-3 px-4 sm:px-6 shadow-sm mb-4 border-b border-gray-200/50">
-            <div className="flex flex-wrap gap-1 bg-gray-200/60 p-1.5 rounded-xl w-fit border border-gray-200/50">
-              <button
-                onClick={() => setViewerTab("preview")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
-                  viewerTab === "preview" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Brandbook
-              </button>
-              <button
-                onClick={() => setViewerTab("edit")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
-                  viewerTab === "edit" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
-              >
-                <Pencil className="w-4 h-4" />
-                Editar
-              </button>
-              <button
-                onClick={() => setViewerTab("assets")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
-                  viewerTab === "assets" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
-              >
-                <ImageIcon className="w-4 h-4" />
-                Ref. Assets
-                {uploadedBrandAssets.length > 0 && (
-                  <span className="ml-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                    {uploadedBrandAssets.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setViewerTab("refine")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
-                  viewerTab === "refine" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
-              >
-                <Wand2 className="w-4 h-4" />
-                Refinar
-              </button>
-              <button
-                onClick={() => setViewerTab("consistency")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
-                  viewerTab === "consistency" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4" />
-                Consistência
-              </button>
-              <button
-                onClick={() => setViewerTab("export")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg transition-all ${
-                  viewerTab === "export" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
-              >
-                <Download className="w-4 h-4" />
-                Exportar
-              </button>
-            </div>
-            </div>
 
             {/* Sub-tab: Brandbook Preview */}
             {viewerTab === "preview" && (
