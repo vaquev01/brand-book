@@ -53,35 +53,117 @@ export async function POST(request: NextRequest) {
 
     const brandbookData = base.data as unknown as BrandbookData;
 
+    const bb = brandbookData;
+
+    const primaryColor = bb.colors?.primary?.[0]?.hex ?? "#000000";
+    const secondaryColor = bb.colors?.secondary?.[0]?.hex ?? "#666666";
+    const accentColor = bb.colors?.primary?.[1]?.hex ?? bb.colors?.secondary?.[1]?.hex ?? "#999999";
+    const personality = (bb.brandConcept?.personality ?? []).join(", ");
+    const archetype = bb.brandConcept?.brandArchetype ?? "";
+    const industry = bb.positioning?.category ?? "";
+    const brandName = bb.brandName ?? "";
+    const illustrationStyle = bb.keyVisual?.illustrations ?? "";
+    const iconographyStyle = bb.keyVisual?.iconography ?? "";
+    const flora = (bb.keyVisual?.flora ?? []).slice(0, 5).join(", ");
+    const fauna = (bb.keyVisual?.fauna ?? []).slice(0, 5).join(", ");
+    const objects = (bb.keyVisual?.objects ?? []).slice(0, 8).join(", ");
+    const symbols = (bb.keyVisual?.symbols ?? []).slice(0, 6).join(", ");
+    const mascots = (bb.keyVisual?.mascots ?? []).map((m) => m.name ?? m.description).slice(0, 3).join(", ");
+    const patternDesc = bb.keyVisual?.structuredPatterns?.[0]?.description ?? bb.keyVisual?.patterns?.[0] ?? "";
+    const toneOfVoice = bb.brandConcept?.toneOfVoice ?? "";
+    const values = (bb.brandConcept?.values ?? []).slice(0, 4).join(", ");
+    const tagline = bb.verbalIdentity?.tagline ?? "";
+    const motionDesc = bb.motion?.microinteractions ?? bb.motion?.transitions ?? "";
+    const borderRadii = (bb.designTokens?.borderRadii ?? []).join(", ");
+    const logoSymbol = bb.logo?.symbol ?? "";
+
     const systemPrompt =
-      "Você é um Diretor de Arte e Designer Sênior. Gere arquivos de identidade visual PRONTOS para uso. " +
+      "Você é um Diretor de Arte e Brand Designer Sênior especializado em identidade visual. " +
+      "Sua missão é criar ativos vetoriais que EXPRESSEM a alma da marca, não ícones genéricos de UI. " +
+      "Cada SVG deve ser inconfundível — qualquer pessoa que veja deve reconhecer que pertence a ESTA marca específica. " +
       "Retorne EXCLUSIVAMENTE JSON válido, sem markdown e sem texto fora do JSON.";
 
-    const userPrompt = `Gere um asset pack com arquivos vetoriais e motion básicos, consistentes com o brandbook.
+    const userPrompt = `Gere um asset pack de identidade visual AUTÊNTICO e com PERSONALIDADE FORTE para a marca "${brandName}".
 
-Saída obrigatória:
+═══════════════ DNA DA MARCA ═══════════════
+Marca: ${brandName}
+Tagline: ${tagline}
+Setor/Categoria: ${industry}
+Arquétipo: ${archetype}
+Personalidade: ${personality}
+Valores: ${values}
+Tom de voz: ${toneOfVoice}
+
+═══════════════ LINGUAGEM VISUAL ═══════════════
+Símbolo/logo: ${logoSymbol}
+Estilo de ilustração: ${illustrationStyle}
+Estilo de iconografia: ${iconographyStyle}
+Flora (referências naturais): ${flora}
+Fauna (referências animais): ${fauna}
+Objetos do universo da marca: ${objects}
+Símbolos/ícones da marca: ${symbols}
+Mascotes: ${mascots}
+Padrão visual: ${patternDesc}
+Border-radii / forma visual: ${borderRadii}
+Motion/microinterações: ${motionDesc}
+
+═══════════════ PALETA ═══════════════
+Primária: ${primaryColor}
+Secundária: ${secondaryColor}
+Acento: ${accentColor}
+
+═══════════════ INSTRUÇÃO CRÍTICA ═══════════════
+NÃO gere ícones genéricos de UI (home, user, settings, etc.) — isso é PROIBIDO.
+Em vez disso, DERIVE os ícones e elementos DO UNIVERSO SEMÂNTICO DA MARCA:
+- Se a marca é de café → grão, xícara com vapor, folha de café, barista, colher, prensa, etc.
+- Se é de tecnologia criativa → pixel, cursor, waveform, grid, nodo, etc.
+- Se é de moda → ponto de costura, silhueta, agulha, botão, etc.
+- Use os objetos, flora, fauna e símbolos listados acima como inspiração.
+- Os ícones devem parecer que foram desenhados especificamente para "${brandName}".
+
+═══════════════ REGRAS SVG ═══════════════
+ÍCONES (16 arquivos):
+- viewBox="0 0 24 24"
+- Estilo coerente com: ${iconographyStyle || "linha clean com personalidade"}
+- Use a cor primária ${primaryColor} no stroke ou fill quando apropriado (não apenas currentColor)
+- stroke-linecap e stroke-linejoin devem refletir o border-radius da marca (${borderRadii || "round"})
+- Cada ícone deve ter um nome descritivo derivado do universo da marca
+- Misture: 8 ícones funcionais contextualizados + 8 ícones decorativos/expressivos da marca
+
+ELEMENTOS ABSTRATOS (8 arquivos):
+- viewBox="0 0 512 512"
+- Elementos gráficos que poderiam aparecer em embalagens, posts, papelaria da marca
+- Use a paleta completa: ${primaryColor}, ${secondaryColor}, ${accentColor}
+- Inspire-se em: ${[flora, fauna, objects, symbols].filter(Boolean).join(" | ") || "formas geométricas da marca"}
+- Cada elemento deve ser único e expressivo — parte do vocabulário visual da marca
+
+PADRÃO SEAMLESS (1 arquivo):
+- viewBox="0 0 400 400" com <defs><pattern> tileável
+- Construído com motivos do universo da marca
+- Cores: ${primaryColor} e ${secondaryColor} com transparências/opacidades variadas
+- Deve parecer premium e on-brand
+
+MOTION SVGs (2 arquivos — loading + success):
+- viewBox="0 0 64 64"
+- Animações SMIL leves (animateTransform, animate)
+- loading-spinner: incorpore um elemento visual da marca na rotação (ex: o símbolo ${logoSymbol || "da marca"})
+- success-check: celebração on-brand, não o check genérico verde
+
+═══════════════ SAÍDA ═══════════════
 {
   "files": [
-    { "path": "vectors/icons/<nome>.svg", "content": "<svg...>" },
-    { "path": "vectors/elements/<nome>.svg", "content": "<svg...>" },
-    { "path": "vectors/patterns/pattern.svg", "content": "<svg...>" },
+    { "path": "vectors/icons/<nome-da-marca>.svg", "content": "<svg...>" },
+    ... (16 ícones)
+    { "path": "vectors/elements/<nome-expressivo>.svg", "content": "<svg...>" },
+    ... (8 elementos)
+    { "path": "vectors/patterns/pattern-${brandName.toLowerCase().replace(/\s+/g, "-")}.svg", "content": "<svg...>" },
     { "path": "motion/loading-spinner.svg", "content": "<svg...>" },
     { "path": "motion/success-check.svg", "content": "<svg...>" }
   ]
 }
 
-Regras:
-- SVGs válidos e renderizáveis.
-- Ícones: viewBox="0 0 24 24", stroke="currentColor", fill="none" (exceto quando necessário), stroke-linecap e stroke-linejoin arredondados.
-- Elementos/padrões/motion: viewBox="0 0 512 512".
-- Padrão: deve ser tileável (seamless) usando pattern.
-- Motion: animações simples (SMIL ou CSS embutido no SVG) e leves.
-- Não use fontes externas.
-- Gere 16 ícones (home, user, settings, search, mail, phone, location, calendar, check, x, plus, minus, arrow-right, arrow-left, download, upload).
-- Gere 8 elementos abstratos.
-
-Brandbook (JSON):
-${JSON.stringify(brandbookData, null, 2)}
+Brandbook completo para referência adicional:
+${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVisual: bb.keyVisual, logo: bb.logo, colors: bb.colors, positioning: bb.positioning, motion: bb.motion }, null, 2)}
 `;
 
     let raw = "";
@@ -100,8 +182,8 @@ ${JSON.stringify(brandbookData, null, 2)}
             config: {
               systemInstruction: systemPrompt,
               responseMimeType: "application/json",
-              temperature: 0.6,
-              maxOutputTokens: 8192,
+              temperature: 0.85,
+              maxOutputTokens: 16384,
             },
           }),
       });
@@ -112,8 +194,8 @@ ${JSON.stringify(brandbookData, null, 2)}
       const openai = new OpenAI({ apiKey });
       const completion = await openai.chat.completions.create({
         model: body.openaiModel?.trim() || "gpt-4o",
-        temperature: 0.35,
-        max_tokens: 8192,
+        temperature: 0.75,
+        max_tokens: 16384,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
