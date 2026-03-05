@@ -353,6 +353,7 @@ export type ImageProvider = "dalle3" | "stability" | "ideogram" | "imagen";
 export interface GeneratedAsset {
   key: string;
   url: string;
+  originalUrl?: string;
   provider: ImageProvider;
   prompt: string;
   generatedAt: string;

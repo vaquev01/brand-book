@@ -20,6 +20,12 @@ import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { decompressBrandbook } from "@/lib/shareUtils";
 import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
 import {
+  getActiveSlug, setActiveSlug,
+  saveBrandbookData, loadBrandbookData,
+  saveGeneratedImage, loadGeneratedImages, clearGeneratedImages,
+  saveBrandAssets, loadBrandAssets,
+} from "@/lib/imageStorage";
+import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
   Image as ImageIcon, Wand2, ShieldCheck, Download,
   Trash2, UploadCloud, FileJson, Hexagon, Undo2, Redo2,
@@ -292,8 +298,12 @@ export default function Home() {
           resetHistory();
           setBrandbookData(migrated as BrandbookData);
           const slug = slugifyForStorage((migrated as BrandbookData).brandName);
-          setGeneratedAssets(loadCachedGeneratedAssets(slug));
-          setUploadedBrandAssets(loadCachedBrandAssets(slug));
+          loadGeneratedImages(slug)
+            .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
+            .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
+          loadBrandAssets(slug)
+            .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
+            .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
           setAssetPackFiles(loadCachedAssetPack(slug));
           window.history.replaceState({}, "", window.location.pathname);
         })
@@ -304,6 +314,30 @@ export default function Home() {
         .finally(() => {
           setLoadingShared(false);
         });
+      return;
+    }
+
+    // Restore last active brandbook session from storage
+    const activeSlug = getActiveSlug();
+    if (activeSlug) {
+      const savedData = loadBrandbookData(activeSlug);
+      if (savedData) {
+        try {
+          const migrated = migrateBrandbook(savedData);
+          resetHistory();
+          setBrandbookData(migrated as BrandbookData);
+          setTab("viewer");
+          loadGeneratedImages(activeSlug)
+            .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(activeSlug)))
+            .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(activeSlug)));
+          loadBrandAssets(activeSlug)
+            .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(activeSlug)))
+            .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(activeSlug)));
+          setAssetPackFiles(loadCachedAssetPack(activeSlug));
+        } catch {
+          // Corrupt saved data — ignore and show default screen
+        }
+      }
     }
   }, []);
 
@@ -377,8 +411,12 @@ export default function Home() {
               const slug = slugifyForStorage(nextBrandbook.brandName);
               resetHistory();
               setBrandbookData(nextBrandbook);
-              setGeneratedAssets(loadCachedGeneratedAssets(slug));
-              setUploadedBrandAssets(loadCachedBrandAssets(slug));
+              loadGeneratedImages(slug)
+                .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
+                .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
+              loadBrandAssets(slug)
+                .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
+                .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
               setAssetPackFiles(loadCachedAssetPack(slug));
               setTab("viewer");
 
@@ -411,8 +449,12 @@ export default function Home() {
       resetHistory();
       setBrandbookData(migrated);
       const slug = slugifyForStorage(migrated.brandName);
-      setGeneratedAssets(loadCachedGeneratedAssets(slug));
-      setUploadedBrandAssets(loadCachedBrandAssets(slug));
+      loadGeneratedImages(slug)
+        .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
+        .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
+      loadBrandAssets(slug)
+        .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
+        .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
       setAssetPackFiles(loadCachedAssetPack(slug));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao carregar exemplo");
@@ -491,8 +533,12 @@ export default function Home() {
       resetHistory();
       setBrandbookData(migrated);
       const slug = slugifyForStorage(migrated.brandName);
-      setGeneratedAssets(loadCachedGeneratedAssets(slug));
-      setUploadedBrandAssets(loadCachedBrandAssets(slug));
+      loadGeneratedImages(slug)
+        .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
+        .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
+      loadBrandAssets(slug)
+        .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
+        .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
       setAssetPackFiles(loadCachedAssetPack(slug));
       setTab("viewer");
       setError("");
@@ -536,9 +582,22 @@ export default function Home() {
     }
   }
 
+  // Persist brandbook JSON to localStorage whenever it changes
   useEffect(() => {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
+    saveBrandbookData(slug, brandbookData);
+    setActiveSlug(slug);
+  }, [brandbookData]);
+
+  useEffect(() => {
+    if (!brandbookData) return;
+    const slug = slugifyForStorage(brandbookData.brandName);
+    // Save each image to IndexedDB (primary — handles multi-MB base64 blobs)
+    for (const [key, asset] of Object.entries(generatedAssets)) {
+      saveGeneratedImage(slug, key, asset).catch(() => {});
+    }
+    // Also attempt localStorage as lightweight backup (will warn if full)
     const msg = saveCachedGeneratedAssets(slug, generatedAssets);
     if (msg) {
       setStorageWarning(msg);
@@ -549,6 +608,9 @@ export default function Home() {
   useEffect(() => {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
+    // Save to IndexedDB (handles large dataUrls)
+    saveBrandAssets(slug, uploadedBrandAssets).catch(() => {});
+    // Attempt localStorage as backup
     const msg = saveCachedBrandAssets(slug, uploadedBrandAssets);
     if (msg) {
       setStorageWarning(msg);
@@ -572,7 +634,37 @@ export default function Home() {
     const ok = window.confirm("Remover imagens geradas salvas (cache) para este brandbook?");
     if (!ok) return;
     clearCachedGeneratedAssets(slug);
+    clearGeneratedImages(slug).catch(() => {});
     setGeneratedAssets({});
+  }
+
+  async function handleAssetGenerated(key: string, asset: GeneratedAsset) {
+    let storedAsset = asset;
+    // For DALL-E 3 / Ideogram: external URLs expire — display immediately,
+    // then convert to permanent data URL in the background
+    if (asset.url.startsWith("https://")) {
+      storedAsset = { ...asset, originalUrl: asset.url };
+      setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
+      fetch("/api/image-to-dataurl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: asset.url }),
+      })
+        .then((r) => r.json())
+        .then((j: { dataUrl?: string }) => {
+          if (!j.dataUrl) return;
+          const permanent = { ...storedAsset, url: j.dataUrl };
+          setGeneratedAssets((prev) => ({ ...prev, [key]: permanent }));
+          const current = brandbookRef.current;
+          if (current) {
+            const slug = slugifyForStorage(current.brandName);
+            saveGeneratedImage(slug, key, permanent).catch(() => {});
+          }
+        })
+        .catch(() => {}); // Keep external URL if conversion fails
+      return;
+    }
+    setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
   }
 
   return (
@@ -914,9 +1006,7 @@ export default function Home() {
                 generatedAssets={generatedAssets}
                 apiKeys={apiKeys}
                 textProvider={textProvider}
-                onAssetGenerated={(key, asset) =>
-                  setGeneratedAssets((prev) => ({ ...prev, [key]: asset }))
-                }
+                onAssetGenerated={handleAssetGenerated}
                 onSaveToAssets={(asset) =>
                   setUploadedBrandAssets((prev) => [...prev, asset])
                 }

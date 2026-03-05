@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 
@@ -8,7 +8,7 @@ interface Props {
   num: number;
   generatedImages?: Record<string, string>;
   uploadedAssets?: UploadedAsset[];
-  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void;
+  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
   loadingKey?: string | null;
   onDownload?: (url: string, name: string) => void;
   onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
@@ -171,12 +171,16 @@ function downloadImageDirect(url: string, name: string) {
 }
 
 export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, loadingKey, onDownload, onSaveToAssets, generatedAssets = {} }: Props) {
-  const uploadedLogos = uploadedAssets.filter((a) => a.type === "logo");
+  const uploadedLogos = useMemo(
+    () => uploadedAssets.filter((a) => a.type === "logo"),
+    [uploadedAssets]
+  );
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const [briefings, setBriefings] = useState<Record<string, CardBriefing>>({});
   const [expandedBriefing, setExpandedBriefing] = useState<string | null>(null);
   const [linkInput, setLinkInput] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [sectionGenerating, setSectionGenerating] = useState(false);
 
   useEffect(() => {
     if (!previewImage) return;
@@ -225,7 +229,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
     updateBriefing(key, { referenceLinks: links });
   }, [getBriefing, updateBriefing]);
 
-  const handleGenerateWithDirection = useCallback((assetKey: AssetKey) => {
+  const handleGenerateWithDirection = useCallback(async (assetKey: AssetKey) => {
     if (!onGenerate) return;
     const b = getBriefing(assetKey);
     const parts: string[] = [];
@@ -233,8 +237,28 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
     if (b.referenceLinks.length > 0) parts.push(`Reference links: ${b.referenceLinks.join(", ")}`);
     const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-    onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
+    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
   }, [onGenerate, getBriefing]);
+
+  const handleGenerateSection = useCallback(async () => {
+    if (!onGenerate) return;
+    if (sectionGenerating) return;
+    setSectionGenerating(true);
+    try {
+      const hasUploadedPrimary = !!uploadedLogos[0];
+      const hasUploadedDark = !!uploadedLogos[1];
+
+      if (!hasUploadedPrimary && !generatedAssets["logo_primary"]) {
+        await handleGenerateWithDirection("logo_primary");
+      }
+
+      if (!hasUploadedDark && !generatedAssets["logo_dark_bg"]) {
+        await handleGenerateWithDirection("logo_dark_bg");
+      }
+    } finally {
+      setSectionGenerating(false);
+    }
+  }, [onGenerate, sectionGenerating, uploadedLogos, generatedAssets, handleGenerateWithDirection]);
 
   const logoPrimary = generatedImages["logo_primary"] || uploadedLogos[0]?.dataUrl || null;
   const logoDarkBg = generatedImages["logo_dark_bg"] || uploadedLogos[1]?.dataUrl || null;
@@ -366,9 +390,26 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
 
   return (
     <section className="page-break mb-6">
-      <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
-        {String(num).padStart(2, "0")}. Logo &amp; Identidade Visual
-      </h2>
+      <div className="flex items-center justify-between gap-4 mb-4 border-b border-gray-100 pb-2">
+        <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
+          {String(num).padStart(2, "0")}. Logo &amp; Identidade Visual
+        </h2>
+        {onGenerate && (
+          <button
+            type="button"
+            onClick={handleGenerateSection}
+            disabled={loadingKey !== null || sectionGenerating}
+            className="no-print flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            {sectionGenerating ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <span>✦</span>
+            )}
+            Gerar seção
+          </button>
+        )}
+      </div>
 
       {/* Main logo images */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 items-start">

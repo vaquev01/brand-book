@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 
@@ -8,7 +8,7 @@ interface Props {
   num: number;
   uploadedAssets?: UploadedAsset[];
   generatedImages?: Record<string, string>;
-  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void;
+  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -39,20 +39,33 @@ function downloadImageDirect(url: string, name: string) {
 }
 
 export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload }: Props) {
-  const mascots = data.keyVisual.mascots ?? [];
-  const symbols = data.keyVisual.symbols ?? [];
-  const patterns = data.keyVisual.patterns ?? [];
-  const structuredPatterns = data.keyVisual.structuredPatterns ?? [];
+  const mascots = useMemo(() => data.keyVisual.mascots ?? [], [data.keyVisual.mascots]);
+  const symbols = useMemo(() => data.keyVisual.symbols ?? [], [data.keyVisual.symbols]);
+  const patterns = useMemo(() => data.keyVisual.patterns ?? [], [data.keyVisual.patterns]);
+  const structuredPatterns = useMemo(
+    () => data.keyVisual.structuredPatterns ?? [],
+    [data.keyVisual.structuredPatterns]
+  );
 
-  const uploadedMascots = uploadedAssets.filter((a) => a.type === "mascot");
-  const uploadedElements = uploadedAssets.filter((a) => a.type === "element");
-  const uploadedPatterns = uploadedAssets.filter((a) => a.type === "pattern");
+  const uploadedMascots = useMemo(
+    () => uploadedAssets.filter((a) => a.type === "mascot"),
+    [uploadedAssets]
+  );
+  const uploadedElements = useMemo(
+    () => uploadedAssets.filter((a) => a.type === "element"),
+    [uploadedAssets]
+  );
+  const uploadedPatterns = useMemo(
+    () => uploadedAssets.filter((a) => a.type === "pattern"),
+    [uploadedAssets]
+  );
 
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const [briefings, setBriefings] = useState<Record<string, CardBriefing>>({});
   const [expandedBriefing, setExpandedBriefing] = useState<string | null>(null);
   const [linkInput, setLinkInput] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [sectionGenerating, setSectionGenerating] = useState(false);
 
   useEffect(() => {
     if (!previewImage) return;
@@ -99,7 +112,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
     updateBriefing(key, { referenceLinks: links });
   }, [getBriefing, updateBriefing]);
 
-  const handleGenerateWithDirection = useCallback((assetKey: AssetKey, storageKey?: string, extraContext?: string) => {
+  const handleGenerateWithDirection = useCallback(async (assetKey: AssetKey, storageKey?: string, extraContext?: string) => {
     if (!onGenerate) return;
     const briefingKey = storageKey ?? assetKey;
     const b = getBriefing(briefingKey);
@@ -109,8 +122,53 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
     if (b.referenceLinks.length > 0) parts.push(`Reference links: ${b.referenceLinks.join(", ")}`);
     const customInstruction = parts.length > 0 ? parts.join(". ") : extraContext;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-    onGenerate(assetKey, { customInstruction, userReferenceImages: refs, storageKey });
+    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs, storageKey });
   }, [onGenerate, getBriefing]);
+
+  const handleGenerateSection = useCallback(async () => {
+    if (!onGenerate) return;
+    if (sectionGenerating) return;
+    setSectionGenerating(true);
+    try {
+      const tasks: Array<() => void | Promise<void>> = [];
+
+      for (let i = 0; i < mascots.length; i++) {
+        const storageKey = `mascot_${i}`;
+        if (generatedAssets[storageKey]) continue;
+        if (uploadedMascots[i]) continue;
+        const mascot = mascots[i];
+        const mascotContext = `Generate mascot "${mascot.name}". Visual description: ${mascot.description}. Personality: ${mascot.personality}. Usage: ${mascot.usageGuidelines.join("; ")}`;
+        tasks.push(() => handleGenerateWithDirection("brand_mascot", storageKey, mascotContext));
+      }
+
+      for (let i = 0; i < symbols.length; i++) {
+        const symKey = `symbol_${i}`;
+        if (generatedAssets[symKey]) continue;
+        const sym = symbols[i];
+        const symContext = `Generate a visual symbol/icon for: "${sym}". This is a brand identity symbol — render as a standalone graphic element.`;
+        tasks.push(() => handleGenerateWithDirection("brand_pattern", symKey, symContext));
+      }
+
+      const patternsToUse = structuredPatterns && structuredPatterns.length > 0 ? structuredPatterns : patterns;
+      for (let i = 0; i < patternsToUse.length; i++) {
+        const patKey = `pattern_${i}`;
+        if (generatedAssets[patKey]) continue;
+
+        const pat = patternsToUse[i] as (typeof structuredPatterns)[number] | (typeof patterns)[number];
+        const patContext = typeof pat === "string"
+          ? `Generate a seamless brand pattern based on: "${pat}"`
+          : `Generate pattern "${pat.name}". Description: ${pat.description}. Composition: ${pat.composition}. Usage: ${pat.usage}.${pat.density ? ` Density: ${pat.density}.` : ""}${pat.background ? ` Background: ${pat.background}.` : ""}`;
+
+        tasks.push(() => handleGenerateWithDirection("brand_pattern", patKey, patContext));
+      }
+
+      for (const t of tasks) {
+        await t();
+      }
+    } finally {
+      setSectionGenerating(false);
+    }
+  }, [onGenerate, sectionGenerating, mascots, symbols, patterns, structuredPatterns, generatedAssets, uploadedMascots, handleGenerateWithDirection]);
 
   function renderBriefingPanel(briefingKey: string, label: string, baseAssetKey?: AssetKey, extraContext?: string) {
     if (!onGenerate) return null;
@@ -186,9 +244,26 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
 
   return (
     <section className="page-break mb-6">
-      <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
-        {String(num).padStart(2, "0")}. Mascotes, Símbolos &amp; Padrões
-      </h2>
+      <div className="flex items-center justify-between gap-4 mb-4 border-b border-gray-100 pb-2">
+        <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
+          {String(num).padStart(2, "0")}. Mascotes, Símbolos &amp; Padrões
+        </h2>
+        {onGenerate && (
+          <button
+            type="button"
+            onClick={handleGenerateSection}
+            disabled={loadingKey !== null || sectionGenerating}
+            className="no-print flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            {sectionGenerating ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <span>✦</span>
+            )}
+            Gerar seção
+          </button>
+        )}
+      </div>
 
       {mascots.length > 0 && (
         <div className="mb-6">

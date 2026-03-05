@@ -7,7 +7,7 @@ interface Props {
   data: BrandbookData;
   num: number;
   generatedImages?: Record<string, string>;
-  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void;
+  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -49,6 +49,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
   const [expandedBriefing, setExpandedBriefing] = useState<string | null>(null);
   const [linkInput, setLinkInput] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [sectionGenerating, setSectionGenerating] = useState(false);
 
   useEffect(() => {
     if (!previewImage) return;
@@ -95,7 +96,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
     updateBriefing(key, { referenceLinks: links });
   }, [getBriefing, updateBriefing]);
 
-  const handleGenerateWithDirection = useCallback((assetKey: AssetKey) => {
+  const handleGenerateWithDirection = useCallback(async (assetKey: AssetKey) => {
     if (!onGenerate) return;
     const b = getBriefing(assetKey);
     const parts: string[] = [];
@@ -103,8 +104,23 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
     if (b.referenceLinks.length > 0) parts.push(`Reference links: ${b.referenceLinks.join(", ")}`);
     const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-    onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
+    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
   }, [onGenerate, getBriefing]);
+
+  const handleGenerateSection = useCallback(async () => {
+    if (!onGenerate) return;
+    if (sectionGenerating) return;
+    setSectionGenerating(true);
+    try {
+      const tasks: AssetKey[] = ["hero_visual", "hero_lifestyle"];
+      for (const k of tasks) {
+        if (generatedAssets[k]) continue;
+        await handleGenerateWithDirection(k);
+      }
+    } finally {
+      setSectionGenerating(false);
+    }
+  }, [onGenerate, sectionGenerating, generatedAssets, handleGenerateWithDirection]);
 
   function renderBriefingPanel(assetKey: AssetKey, label: string) {
     if (!onGenerate) return null;
@@ -184,6 +200,14 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
         </h2>
         {onGenerate && (
           <div className="no-print flex gap-2">
+            <button
+              type="button"
+              onClick={handleGenerateSection}
+              disabled={loadingKey !== null || sectionGenerating}
+              className="text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              {sectionGenerating ? "Gerando..." : "✦ Gerar seção"}
+            </button>
             <button
               onClick={() => handleGenerateWithDirection("hero_visual")}
               disabled={loadingKey !== null}
