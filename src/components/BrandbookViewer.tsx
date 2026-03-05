@@ -550,6 +550,7 @@ export function BrandbookViewer({
                   immersive ? "bb-sumario-card" : "bg-white border border-gray-100"
                 }`}
               >
+                {immersive && <div className="bb-sumario-mascot" aria-hidden="true" />}
                 <h3
                   className={`text-[11px] font-extrabold uppercase tracking-[0.25em] mb-3 ${
                     immersive ? "bb-sumario-cat" : "text-gray-500"
@@ -613,19 +614,59 @@ export function BrandbookViewer({
         <div key={g.cat}>
           {/* Category divider */}
           {immersive ? (
-            <div className="page-break mb-6 mt-8">
-              <div className="bb-cat-banner">
-                <div className="flex items-center justify-between">
-                  <h2>{g.cat}</h2>
-                  <a
-                    href="#sumario"
-                    className="no-print text-xs font-semibold bb-cat-back transition"
-                  >
-                    Voltar ao sumário
-                  </a>
+            <>
+              {/* Atmosphere hero interlude between categories */}
+              {immersiveAssets.atmosphereUrl && catIdx > 0 && catIdx % 2 === 0 && (
+                <div className="bb-atmo-hero no-print">
+                  <div className="bb-atmo-img" />
+                  <div className="bb-atmo-overlay" />
+                  <div className="bb-atmo-pattern" />
+                  <div className="bb-atmo-mascot" />
+                  <div className="bb-atmo-content">
+                    <div
+                      className="text-2xl font-black"
+                      style={{
+                        color: theme.isDark ? "#fff" : "#fff",
+                        fontFamily: `'${theme.headingFont}', sans-serif`,
+                        textShadow: "0 2px 16px rgba(0,0,0,0.3)",
+                      }}
+                    >
+                      {data.brandName}
+                    </div>
+                    <div className="flex gap-1.5 mt-3">
+                      {theme.allColors.slice(0, 6).map((c, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: 14,
+                            height: 14,
+                            borderRadius: "50%",
+                            background: c,
+                            border: "2px solid rgba(255,255,255,0.3)",
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="page-break mb-6 mt-8">
+                <div className="bb-cat-banner">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="bb-cat-brand">{data.brandName}</div>
+                      <h2>{g.cat}</h2>
+                    </div>
+                    <a
+                      href="#sumario"
+                      className="no-print text-xs font-semibold bb-cat-back transition"
+                    >
+                      Voltar ao sumário
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           ) : (
             <div className="page-break mb-4 mt-6">
               <div className="flex items-center justify-between border-b border-gray-100 pb-2">
@@ -643,6 +684,7 @@ export function BrandbookViewer({
                 {/* Color strip between sections */}
                 {immersive && sIdx > 0 && <ColorStrip />}
                 <div className={immersive ? "bb-section-shell" : ""}>
+                  {immersive && <div className="bb-section-mascot" aria-hidden="true" />}
                   {quote && (
                     <div className="bb-voice mb-5 px-5 py-4 rounded-xl border">
                       <div className="flex items-center gap-2 mb-2">
@@ -683,7 +725,7 @@ export function BrandbookViewer({
           <div className="flex items-center justify-between">
             <div>
               <div
-                className="text-lg font-black"
+                className="text-xl font-black"
                 style={{
                   color: theme.isDark ? "#fff" : "#111",
                   fontFamily: `'${theme.headingFont}', sans-serif`,
@@ -691,26 +733,43 @@ export function BrandbookViewer({
               >
                 {data.brandName}
               </div>
+              {data.verbalIdentity?.tagline && (
+                <div
+                  className="text-sm italic mt-1"
+                  style={{ color: theme.isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)" }}
+                >
+                  &ldquo;{data.verbalIdentity.tagline}&rdquo;
+                </div>
+              )}
               <div
-                className="text-xs font-medium mt-1"
-                style={{ color: theme.isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)" }}
+                className="text-[10px] font-bold uppercase tracking-[0.2em] mt-3"
+                style={{ color: theme.isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)" }}
               >
                 Manual de Identidade Visual — {new Date().getFullYear()}
               </div>
             </div>
-            <div className="flex gap-1.5">
-              {theme.allColors.slice(0, 8).map((c, i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    background: c,
-                    border: `2px solid ${theme.isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}`,
-                  }}
-                />
-              ))}
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex gap-1.5">
+                {theme.allColors.slice(0, 8).map((c, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: c,
+                      border: `2px solid ${theme.isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}`,
+                      boxShadow: `0 2px 6px ${rgba(c, 0.3)}`,
+                    }}
+                  />
+                ))}
+              </div>
+              <div
+                className="text-[9px] font-bold uppercase tracking-[0.15em]"
+                style={{ color: theme.isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.3)" }}
+              >
+                {data.industry}
+              </div>
             </div>
           </div>
         </div>

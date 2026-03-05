@@ -120,43 +120,50 @@ export function BrandImmersiveTheme({
   const P = theme.primaryHex;
   const A = theme.accentHex;
   const T = theme.tertiaryHex;
+  const dk = theme.isDark;
+  const bannerText = dk ? "#fff" : "#111";
+  const bannerSub = dk ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.5)";
 
   return (
     <>
       <div className="bb-ornament bb-ornament-a" aria-hidden="true" />
       <div className="bb-ornament bb-ornament-b" aria-hidden="true" />
       <div className="bb-ornament bb-ornament-c" aria-hidden="true" />
+      <div className="bb-noise" aria-hidden="true" />
       <style>{`
         /* ═══════ IMMERSIVE BASE ═══════ */
         #brandbook-content.bb-immersive {
           --bb-pattern-url: ${patternUrl ? `url(${JSON.stringify(patternUrl)})` : "none"};
           --bb-atmosphere-url: ${atmosphereUrl ? `url(${JSON.stringify(atmosphereUrl)})` : "none"};
           --bb-watermark-url: ${watermarkUrl ? `url(${JSON.stringify(watermarkUrl)})` : "none"};
-          --bb-surface: rgba(255, 255, 255, 0.92);
-          --bb-surface-strong: rgba(255, 255, 255, 0.96);
-          --bb-shadow: 0 24px 64px ${rgba(P, 0.12)}, 0 4px 16px rgba(0,0,0,0.06);
-          --bb-glow: ${rgba(P, 0.15)};
+          --bb-surface: rgba(255, 255, 255, 0.88);
+          --bb-surface-strong: rgba(255, 255, 255, 0.94);
+          --bb-shadow: 0 24px 64px ${rgba(P, 0.14)}, 0 4px 16px rgba(0,0,0,0.07);
+          --bb-glow: ${rgba(P, 0.18)};
 
           position: relative;
           isolation: isolate;
           overflow: hidden;
           background: var(--bb-bg);
-          border-radius: 24px;
+          border-radius: 28px;
           padding-top: 1px;
-          box-shadow: 0 10px 50px ${rgba(P, 0.10)}, 0 0 0 1px ${rgba(P, 0.08)};
+          box-shadow:
+            0 10px 60px ${rgba(P, 0.12)},
+            0 0 0 1px ${rgba(P, 0.10)},
+            inset 0 1px 0 rgba(255,255,255,0.6);
         }
 
         /* atmosphere hero behind everything */
         #brandbook-content.bb-immersive::before {
           content: "";
           position: absolute;
-          inset: -60px;
+          inset: -80px;
           background-image: var(--bb-atmosphere-url);
           background-size: cover;
           background-position: center;
-          opacity: 0.18;
-          transform: scale(1.05);
-          filter: saturate(1.2) contrast(1.05) blur(2px);
+          opacity: 0.22;
+          transform: scale(1.08);
+          filter: saturate(1.3) contrast(1.08) blur(3px);
           pointer-events: none;
           z-index: 0;
         }
@@ -165,32 +172,48 @@ export function BrandImmersiveTheme({
         #brandbook-content.bb-immersive::after {
           content: "";
           position: absolute;
-          inset: -30%;
+          inset: -40%;
           background-image: var(--bb-pattern-url);
           background-repeat: repeat;
-          background-size: 480px 480px;
-          opacity: 0.10;
+          background-size: 420px 420px;
+          opacity: 0.12;
           mix-blend-mode: multiply;
           pointer-events: none;
           z-index: 1;
-          animation: bb-drift 120s linear infinite;
+          animation: bb-drift 100s linear infinite;
         }
 
         @keyframes bb-drift {
           from { transform: translate(0, 0); }
-          to { transform: translate(-480px, -480px); }
+          to { transform: translate(-420px, -420px); }
         }
 
-        #brandbook-content.bb-immersive > *:not(.bb-ornament) {
+        #brandbook-content.bb-immersive > *:not(.bb-ornament):not(.bb-noise) {
           position: relative;
           z-index: 3;
+        }
+
+        /* ═══════ NOISE / GRAIN TEXTURE ═══════ */
+        #brandbook-content.bb-immersive .bb-noise {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          pointer-events: none;
+          opacity: 0.035;
+          mix-blend-mode: overlay;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+          background-size: 256px 256px;
         }
 
         /* hide decorations for PDF export */
         #brandbook-content.bb-immersive[data-exporting="1"]::before,
         #brandbook-content.bb-immersive[data-exporting="1"]::after,
         #brandbook-content.bb-immersive[data-exporting="1"] .bb-ornament,
+        #brandbook-content.bb-immersive[data-exporting="1"] .bb-noise,
         #brandbook-content.bb-immersive[data-exporting="1"] .bb-color-strip,
+        #brandbook-content.bb-immersive[data-exporting="1"] .bb-atmo-hero,
+        #brandbook-content.bb-immersive[data-exporting="1"] .bb-section-mascot,
         #brandbook-content.bb-immersive[data-exporting="1"] .bb-cat-banner::before,
         #brandbook-content.bb-immersive[data-exporting="1"] .bb-cat-banner::after {
           display: none !important;
@@ -205,51 +228,88 @@ export function BrandImmersiveTheme({
           mix-blend-mode: multiply;
           pointer-events: none;
           z-index: 2;
-          filter: saturate(1.1) contrast(1.08);
+          filter: saturate(1.15) contrast(1.1);
         }
 
         #brandbook-content.bb-immersive .bb-ornament-a {
-          width: 600px; height: 600px;
-          top: -100px; right: -100px;
-          opacity: 0.07;
+          width: 700px; height: 700px;
+          top: -80px; right: -80px;
+          opacity: 0.09;
           transform: rotate(12deg);
         }
 
         #brandbook-content.bb-immersive .bb-ornament-b {
-          width: 500px; height: 500px;
-          bottom: 20%; left: -120px;
-          opacity: 0.05;
-          transform: rotate(-15deg) scale(0.9);
+          width: 550px; height: 550px;
+          top: 35%; left: -140px;
+          opacity: 0.06;
+          transform: rotate(-18deg) scale(0.85);
         }
 
         #brandbook-content.bb-immersive .bb-ornament-c {
-          width: 400px; height: 400px;
-          bottom: -80px; right: 10%;
-          opacity: 0.04;
-          transform: rotate(8deg) scale(0.7);
+          width: 480px; height: 480px;
+          bottom: 8%; right: -60px;
+          opacity: 0.05;
+          transform: rotate(6deg) scale(0.75);
         }
 
         /* ═══════ SECTION SHELLS ═══════ */
         #brandbook-content.bb-immersive .bb-section-shell {
           background: var(--bb-surface);
-          border: 1px solid ${rgba(P, 0.15)};
-          border-left: 4px solid ${P};
-          border-radius: 20px;
+          border: 1px solid ${rgba(P, 0.13)};
+          border-left: 5px solid ${P};
+          border-radius: 22px;
           box-shadow: var(--bb-shadow);
-          padding: 28px 28px 28px 24px;
+          padding: 32px 32px 32px 28px;
           margin-bottom: 0;
-          backdrop-filter: blur(16px);
+          backdrop-filter: blur(20px) saturate(1.2);
           position: relative;
           overflow: hidden;
         }
 
+        /* glow corner top-right */
         #brandbook-content.bb-immersive .bb-section-shell::before {
           content: "";
           position: absolute;
-          top: 0; right: 0;
-          width: 200px; height: 200px;
-          background: radial-gradient(circle at top right, ${rgba(P, 0.06)}, transparent 70%);
+          top: -40px; right: -40px;
+          width: 280px; height: 280px;
+          background: radial-gradient(circle at center, ${rgba(P, 0.08)}, transparent 65%);
           pointer-events: none;
+          z-index: 0;
+        }
+
+        /* pattern texture inside section */
+        #brandbook-content.bb-immersive .bb-section-shell::after {
+          content: "";
+          position: absolute;
+          inset: -30%;
+          background-image: var(--bb-pattern-url);
+          background-repeat: repeat;
+          background-size: 380px 380px;
+          opacity: 0.04;
+          mix-blend-mode: multiply;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        #brandbook-content.bb-immersive .bb-section-shell > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        /* ═══════ INLINE MASCOT per section ═══════ */
+        #brandbook-content.bb-immersive .bb-section-mascot {
+          position: absolute;
+          bottom: -30px; right: -20px;
+          width: 200px; height: 200px;
+          background-image: var(--bb-watermark-url);
+          background-size: contain;
+          background-repeat: no-repeat;
+          opacity: 0.06;
+          mix-blend-mode: multiply;
+          pointer-events: none;
+          z-index: 0;
+          transform: rotate(-8deg);
+          filter: saturate(1.1);
         }
 
         @media print {
@@ -270,10 +330,10 @@ export function BrandImmersiveTheme({
           content: "";
           display: block;
           height: 4px;
-          width: 72px;
+          width: 80px;
           border-radius: 999px;
           background: linear-gradient(90deg, ${P}, ${A}, ${T});
-          opacity: 0.85;
+          opacity: 0.9;
           margin-top: 12px;
         }
 
@@ -306,42 +366,109 @@ export function BrandImmersiveTheme({
         }
 
         #brandbook-content.bb-immersive .bg-gray-50 {
-          background-color: ${rgba(P, 0.04)} !important;
+          background-color: ${rgba(P, 0.035)} !important;
         }
 
-        /* ═══════ CATEGORY BANNER ═══════ */
-        #brandbook-content.bb-immersive .bb-cat-banner {
-          background: linear-gradient(135deg, ${P} 0%, ${rgba(A, 0.9)} 100%);
-          border-radius: 20px;
-          padding: 32px 36px;
-          margin-bottom: 24px;
-          margin-top: 32px;
+        /* ═══════ ATMOSPHERE HERO INTERLUDE ═══════ */
+        #brandbook-content.bb-immersive .bb-atmo-hero {
           position: relative;
+          border-radius: 22px;
           overflow: hidden;
-          box-shadow: 0 16px 48px ${rgba(P, 0.25)}, 0 4px 12px rgba(0,0,0,0.08);
+          margin: 20px 0 8px;
+          min-height: 180px;
+          display: flex;
+          align-items: flex-end;
+          box-shadow: 0 20px 56px ${rgba(P, 0.20)}, inset 0 0 0 1px ${rgba(P, 0.12)};
         }
 
-        #brandbook-content.bb-immersive .bb-cat-banner::before {
-          content: "";
+        #brandbook-content.bb-immersive .bb-atmo-hero .bb-atmo-img {
           position: absolute;
-          inset: -50%;
+          inset: 0;
+          background-image: var(--bb-atmosphere-url);
+          background-size: cover;
+          background-position: center;
+          filter: saturate(1.25) contrast(1.05);
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-hero .bb-atmo-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to top,
+            ${rgba(P, 0.85)} 0%,
+            ${rgba(P, 0.45)} 40%,
+            transparent 100%
+          );
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-hero .bb-atmo-pattern {
+          position: absolute;
+          inset: -40%;
           background-image: var(--bb-pattern-url);
           background-repeat: repeat;
-          background-size: 400px 400px;
+          background-size: 320px 320px;
           opacity: 0.12;
           mix-blend-mode: overlay;
           pointer-events: none;
         }
 
-        #brandbook-content.bb-immersive .bb-cat-banner::after {
-          content: "";
+        #brandbook-content.bb-immersive .bb-atmo-hero .bb-atmo-mascot {
           position: absolute;
-          bottom: -40px; right: -40px;
-          width: 200px; height: 200px;
+          right: 20px; bottom: 10px;
+          width: 140px; height: 140px;
           background-image: var(--bb-watermark-url);
           background-size: contain;
           background-repeat: no-repeat;
-          opacity: 0.12;
+          opacity: 0.18;
+          mix-blend-mode: overlay;
+          transform: rotate(-5deg);
+          pointer-events: none;
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-hero .bb-atmo-content {
+          position: relative;
+          z-index: 2;
+          padding: 28px 32px;
+          width: 100%;
+        }
+
+        /* ═══════ CATEGORY BANNER ═══════ */
+        #brandbook-content.bb-immersive .bb-cat-banner {
+          background: linear-gradient(135deg, ${P} 0%, ${rgba(A, 0.92)} 100%);
+          border-radius: 22px;
+          padding: 36px 40px;
+          margin-bottom: 24px;
+          margin-top: 32px;
+          position: relative;
+          overflow: hidden;
+          box-shadow:
+            0 20px 56px ${rgba(P, 0.28)},
+            0 4px 14px rgba(0,0,0,0.10),
+            inset 0 1px 0 ${rgba("#ffffff", 0.15)};
+        }
+
+        #brandbook-content.bb-immersive .bb-cat-banner::before {
+          content: "";
+          position: absolute;
+          inset: -60%;
+          background-image: var(--bb-pattern-url);
+          background-repeat: repeat;
+          background-size: 350px 350px;
+          opacity: 0.15;
+          mix-blend-mode: overlay;
+          pointer-events: none;
+          animation: bb-drift 80s linear infinite;
+        }
+
+        #brandbook-content.bb-immersive .bb-cat-banner::after {
+          content: "";
+          position: absolute;
+          bottom: -50px; right: -30px;
+          width: 260px; height: 260px;
+          background-image: var(--bb-watermark-url);
+          background-size: contain;
+          background-repeat: no-repeat;
+          opacity: 0.14;
           mix-blend-mode: overlay;
           pointer-events: none;
           transform: rotate(-10deg);
@@ -353,8 +480,8 @@ export function BrandImmersiveTheme({
         }
 
         #brandbook-content.bb-immersive .bb-cat-banner h2 {
-          color: ${theme.isDark ? "#fff" : "#111"} !important;
-          font-size: 1.5rem;
+          color: ${bannerText} !important;
+          font-size: 1.6rem;
           font-weight: 900;
           text-transform: uppercase;
           letter-spacing: 0.15em;
@@ -362,41 +489,64 @@ export function BrandImmersiveTheme({
         }
 
         #brandbook-content.bb-immersive .bb-cat-banner h2::after {
-          background: ${theme.isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.2)"};
-          width: 48px;
+          background: ${dk ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.2)"};
+          width: 56px;
           height: 3px;
           margin-top: 14px;
         }
 
         #brandbook-content.bb-immersive .bb-cat-banner .bb-cat-back {
-          color: ${theme.isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.5)"};
+          color: ${bannerSub};
         }
 
         #brandbook-content.bb-immersive .bb-cat-banner .bb-cat-back:hover {
-          color: ${theme.isDark ? "#fff" : "#000"};
+          color: ${bannerText};
+        }
+
+        #brandbook-content.bb-immersive .bb-cat-banner .bb-cat-brand {
+          color: ${bannerSub};
+          font-family: var(--bb-heading-font);
+          font-size: 0.7rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
         }
 
         /* ═══════ VOICE QUOTE ═══════ */
         #brandbook-content.bb-immersive .bb-voice {
           border-left: 5px solid ${P};
-          border-radius: 16px;
-          background: linear-gradient(135deg, ${rgba(P, 0.08)}, ${rgba(A, 0.05)});
+          border-radius: 18px;
+          background: linear-gradient(135deg, ${rgba(P, 0.10)}, ${rgba(A, 0.06)}, ${rgba(T, 0.04)});
           position: relative;
           overflow: hidden;
-          box-shadow: 0 12px 36px ${rgba(P, 0.10)};
-          backdrop-filter: blur(8px);
+          box-shadow: 0 14px 40px ${rgba(P, 0.12)};
+          backdrop-filter: blur(12px) saturate(1.1);
         }
 
         #brandbook-content.bb-immersive .bb-voice::before {
           content: "";
           position: absolute;
-          inset: -30%;
+          inset: -40%;
           background-image: var(--bb-pattern-url);
           background-repeat: repeat;
-          background-size: 400px 400px;
+          background-size: 360px 360px;
           opacity: 0.08;
           mix-blend-mode: multiply;
           pointer-events: none;
+        }
+
+        #brandbook-content.bb-immersive .bb-voice::after {
+          content: "";
+          position: absolute;
+          right: -10px; bottom: -10px;
+          width: 120px; height: 120px;
+          background-image: var(--bb-watermark-url);
+          background-size: contain;
+          background-repeat: no-repeat;
+          opacity: 0.07;
+          mix-blend-mode: multiply;
+          pointer-events: none;
+          transform: rotate(-12deg);
         }
 
         #brandbook-content.bb-immersive .bb-voice > * {
@@ -406,8 +556,8 @@ export function BrandImmersiveTheme({
 
         #brandbook-content.bb-immersive .bb-voice .bb-voice-text {
           font-family: var(--bb-heading-font);
-          font-size: 1rem;
-          line-height: 1.6;
+          font-size: 1.05rem;
+          line-height: 1.65;
           font-style: italic;
           color: ${rgba(P, 0.8)};
         }
@@ -415,11 +565,11 @@ export function BrandImmersiveTheme({
         /* ═══════ COLOR STRIP DIVIDER ═══════ */
         #brandbook-content.bb-immersive .bb-color-strip {
           display: flex;
-          height: 6px;
+          height: 5px;
           border-radius: 999px;
           overflow: hidden;
-          margin: 16px 0;
-          box-shadow: 0 2px 8px ${rgba(P, 0.15)};
+          margin: 20px 0;
+          box-shadow: 0 2px 10px ${rgba(P, 0.18)};
         }
 
         #brandbook-content.bb-immersive .bb-color-strip > span {
@@ -427,8 +577,8 @@ export function BrandImmersiveTheme({
           transition: flex 0.3s ease;
         }
 
-        #brandbook-content.bb-immersive .bb-color-strip:hover > span {
-          flex: 1.2;
+        #brandbook-content.bb-immersive .bb-color-strip:hover > span:first-child {
+          flex: 2;
         }
 
         /* ═══════ SUMÁRIO ═══════ */
@@ -440,15 +590,15 @@ export function BrandImmersiveTheme({
           position: relative;
           overflow: hidden;
           border: 1px solid ${rgba(P, 0.12)};
-          border-top: 3px solid ${P};
+          border-top: 4px solid ${P};
           background: var(--bb-surface);
-          backdrop-filter: blur(8px);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          backdrop-filter: blur(12px) saturate(1.1);
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
         #brandbook-content.bb-immersive #sumario .bb-sumario-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 32px ${rgba(P, 0.15)};
+          transform: translateY(-3px);
+          box-shadow: 0 16px 40px ${rgba(P, 0.18)};
         }
 
         #brandbook-content.bb-immersive #sumario .bb-sumario-card::before {
@@ -458,10 +608,23 @@ export function BrandImmersiveTheme({
           width: 100%; height: 100%;
           background-image: var(--bb-pattern-url);
           background-repeat: repeat;
-          background-size: 300px 300px;
-          opacity: 0.05;
+          background-size: 260px 260px;
+          opacity: 0.06;
           mix-blend-mode: multiply;
           pointer-events: none;
+        }
+
+        #brandbook-content.bb-immersive #sumario .bb-sumario-card .bb-sumario-mascot {
+          position: absolute;
+          bottom: -15px; right: -10px;
+          width: 100px; height: 100px;
+          background-image: var(--bb-watermark-url);
+          background-size: contain;
+          background-repeat: no-repeat;
+          opacity: 0.06;
+          mix-blend-mode: multiply;
+          pointer-events: none;
+          transform: rotate(-8deg);
         }
 
         #brandbook-content.bb-immersive #sumario .bb-sumario-card > * {
@@ -506,25 +669,42 @@ export function BrandImmersiveTheme({
         /* ═══════ FOOTER BRAND BAR ═══════ */
         #brandbook-content.bb-immersive .bb-brand-footer {
           background: linear-gradient(135deg, ${P}, ${A});
-          border-radius: 16px;
-          padding: 24px 32px;
+          border-radius: 22px;
+          padding: 32px 40px;
           margin-top: 48px;
           margin-bottom: 16px;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 12px 40px ${rgba(P, 0.20)};
+          box-shadow:
+            0 16px 48px ${rgba(P, 0.24)},
+            inset 0 1px 0 ${rgba("#ffffff", 0.15)};
         }
 
         #brandbook-content.bb-immersive .bb-brand-footer::before {
           content: "";
           position: absolute;
-          inset: -50%;
+          inset: -60%;
           background-image: var(--bb-pattern-url);
           background-repeat: repeat;
-          background-size: 300px 300px;
-          opacity: 0.10;
+          background-size: 280px 280px;
+          opacity: 0.12;
           mix-blend-mode: overlay;
           pointer-events: none;
+          animation: bb-drift 80s linear infinite;
+        }
+
+        #brandbook-content.bb-immersive .bb-brand-footer::after {
+          content: "";
+          position: absolute;
+          right: -30px; bottom: -20px;
+          width: 180px; height: 180px;
+          background-image: var(--bb-watermark-url);
+          background-size: contain;
+          background-repeat: no-repeat;
+          opacity: 0.12;
+          mix-blend-mode: overlay;
+          pointer-events: none;
+          transform: rotate(-8deg);
         }
 
         #brandbook-content.bb-immersive .bb-brand-footer > * {
