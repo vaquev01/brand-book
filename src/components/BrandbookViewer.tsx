@@ -344,6 +344,33 @@ export function BrandbookViewer({
     .filter((g) => g.items.length > 0);
 
   const theme = useMemo(() => getImmersiveTheme(data), [data]);
+
+  const immersiveAssets = useMemo(() => {
+    const genUrl = (k: string) => generatedAssets?.[k]?.url ?? null;
+    const legacyUrl = (k: string) => generatedImages?.[k] ?? null;
+    const firstUploaded = (types: UploadedAsset["type"][]) =>
+      uploadedAssets.find((a) => types.includes(a.type))?.dataUrl ?? null;
+
+    const patternUrl =
+      genUrl("brand_pattern") ??
+      legacyUrl("brand_pattern") ??
+      genUrl("pattern_0") ??
+      firstUploaded(["pattern"]);
+    const atmosphereUrl =
+      genUrl("presentation_bg") ??
+      legacyUrl("presentation_bg") ??
+      genUrl("hero_visual") ??
+      legacyUrl("hero_visual") ??
+      null;
+    const watermarkUrl =
+      genUrl("brand_mascot") ??
+      legacyUrl("brand_mascot") ??
+      genUrl("mascot_0") ??
+      firstUploaded(["mascot", "element"]);
+
+    return { patternUrl, atmosphereUrl, watermarkUrl };
+  }, [generatedAssets, generatedImages, uploadedAssets]);
+
   const immersiveStyle: CSSProperties | undefined = immersive
     ? ({
         ["--bb-primary" as unknown as keyof CSSProperties]: theme.primaryHex,
@@ -362,7 +389,12 @@ export function BrandbookViewer({
       id="brandbook-content"
       style={immersiveStyle}
     >
-      <BrandImmersiveTheme immersive={immersive} />
+      <BrandImmersiveTheme
+        immersive={immersive}
+        patternUrl={immersiveAssets.patternUrl}
+        atmosphereUrl={immersiveAssets.atmosphereUrl}
+        watermarkUrl={immersiveAssets.watermarkUrl}
+      />
       <FontLoader data={data} />
       <SectionCover data={data} />
 
@@ -453,37 +485,39 @@ export function BrandbookViewer({
       )}
 
       <section className="page-break mb-10" id="sumario">
-        <div className="mb-4 border-b border-gray-100 pb-2">
-          <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">Sumário</h2>
-          <p className="text-gray-500 mt-1 text-sm">
-            Navegue por categorias e vá direto à seção desejada.
-          </p>
-        </div>
+        <div className={immersive ? "bb-section-shell" : ""}>
+          <div className="mb-4 border-b border-gray-100 pb-2">
+            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">Sumário</h2>
+            <p className="text-gray-500 mt-1 text-sm">
+              Navegue por categorias e vá direto à seção desejada.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
-          {byCategory.map((g) => (
-            <div key={g.cat} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <h3 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-[0.25em] mb-3">
-                {g.cat}
-              </h3>
-              <div className="space-y-2">
-                {g.items.map((s) => (
-                  <a
-                    key={s.id}
-                    href={`#${s.id}`}
-                    className="block rounded-xl px-3 py-2 hover:bg-gray-50 transition"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-xs font-bold text-gray-400 mt-0.5 tabular-nums">
-                        {String(s.num).padStart(2, "0")}
-                      </span>
-                      <span className="font-semibold text-gray-900 leading-snug">{s.title}</span>
-                    </div>
-                  </a>
-                ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+            {byCategory.map((g) => (
+              <div key={g.cat} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+                <h3 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-[0.25em] mb-3">
+                  {g.cat}
+                </h3>
+                <div className="space-y-2">
+                  {g.items.map((s) => (
+                    <a
+                      key={s.id}
+                      href={`#${s.id}`}
+                      className="block rounded-xl px-3 py-2 hover:bg-gray-50 transition"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-xs font-bold text-gray-400 mt-0.5 tabular-nums">
+                          {String(s.num).padStart(2, "0")}
+                        </span>
+                        <span className="font-semibold text-gray-900 leading-snug">{s.title}</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
@@ -501,20 +535,22 @@ export function BrandbookViewer({
             const quote = immersive ? brandVoiceQuote(s.id, data) : null;
             return (
               <div key={s.id} id={s.id} className="scroll-mt-24">
-                {quote && (
-                  <div className="bb-voice mb-4 px-4 py-3 rounded-xl border">
-                    <div
-                      className="text-xs font-bold uppercase tracking-wider"
-                      style={{ color: "var(--bb-primary)" }}
-                    >
-                      Voz da Marca
+                <div className={immersive ? "bb-section-shell" : ""}>
+                  {quote && (
+                    <div className="bb-voice mb-5 px-4 py-3 rounded-xl border">
+                      <div
+                        className="text-xs font-bold uppercase tracking-wider"
+                        style={{ color: "var(--bb-primary)" }}
+                      >
+                        Voz da Marca
+                      </div>
+                      <div className="text-sm italic text-gray-700 leading-relaxed">
+                        {quote}
+                      </div>
                     </div>
-                    <div className="text-sm italic text-gray-700 leading-relaxed">
-                      {quote}
-                    </div>
-                  </div>
-                )}
-                {s.render(s.num)}
+                  )}
+                  {s.render(s.num)}
+                </div>
               </div>
             );
           })}
