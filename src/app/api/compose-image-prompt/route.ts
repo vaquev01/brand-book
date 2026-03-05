@@ -42,6 +42,7 @@ function compactBrandContext(brandbook: BrandbookData): string {
     ? brandbook.brandConcept.personality.slice(0, 6).join(", ")
     : "";
   const tone = brandbook.brandConcept?.toneOfVoice ?? "";
+  const archetype = brandbook.brandConcept?.brandArchetype ?? "";
 
   const primaryColors = (brandbook.colors?.primary ?? [])
     .slice(0, 3)
@@ -55,22 +56,44 @@ function compactBrandContext(brandbook: BrandbookData): string {
   const displayFont = brandbook.typography?.marketing?.name ?? brandbook.typography?.primary?.name ?? "";
   const bodyFont = brandbook.typography?.ui?.name ?? brandbook.typography?.secondary?.name ?? "";
 
-  const visualStyle = brandbook.imageGenerationBriefing?.visualStyle ?? "";
-  const colorMood = brandbook.imageGenerationBriefing?.colorMood ?? "";
-  const compositionNotes = brandbook.imageGenerationBriefing?.compositionNotes ?? "";
-  const moodKeywords = (brandbook.imageGenerationBriefing?.moodKeywords ?? []).slice(0, 8).join(", ");
-  const artisticReferences = brandbook.imageGenerationBriefing?.artisticReferences ?? "";
-  const avoidElements = brandbook.imageGenerationBriefing?.avoidElements ?? "";
-  const negativePrompt = brandbook.imageGenerationBriefing?.negativePrompt ?? "";
+  const igb = brandbook.imageGenerationBriefing;
+  const igbExt = igb as unknown as Record<string, unknown> | undefined;
+  const visualStyle = igb?.visualStyle ?? "";
+  const colorMood = igb?.colorMood ?? "";
+  const compositionNotes = igb?.compositionNotes ?? "";
+  const moodKeywords = (igb?.moodKeywords ?? []).slice(0, 8).join(", ");
+  const artisticReferences = igb?.artisticReferences ?? "";
+  const avoidElements = igb?.avoidElements ?? "";
+  const negativePrompt = igb?.negativePrompt ?? "";
+  const emotionalCore = (igbExt?.emotionalCore as string) ?? "";
+  const textureLanguage = (igbExt?.textureLanguage as string) ?? "";
+  const lightingSignature = (igbExt?.lightingSignature as string) ?? "";
+  const cameraSignature = (igbExt?.cameraSignature as string) ?? "";
+  const sensoryProfile = (igbExt?.sensoryProfile as string) ?? "";
 
-  const logoStyleGuide = brandbook.imageGenerationBriefing?.logoStyleGuide ?? "";
-  const patternStyle = brandbook.imageGenerationBriefing?.patternStyle ?? "";
+  const logoStyleGuide = igb?.logoStyleGuide ?? "";
+  const patternStyle = igb?.patternStyle ?? "";
 
   const logoSymbol = brandbook.logo?.symbol ?? "";
   const symbols = (brandbook.keyVisual?.symbols ?? []).slice(0, 6).join(" | ");
   const patterns = (brandbook.keyVisual?.patterns ?? []).slice(0, 6).join(" | ");
-
   const elements = (brandbook.keyVisual?.elements ?? []).slice(0, 6).join(" | ");
+  const flora = (brandbook.keyVisual?.flora ?? []).slice(0, 4).join(", ");
+  const fauna = (brandbook.keyVisual?.fauna ?? []).slice(0, 4).join(", ");
+  const objects = (brandbook.keyVisual?.objects ?? []).slice(0, 4).join(", ");
+
+  const manifesto = brandbook.brandStory?.manifesto
+    ? brandbook.brandStory.manifesto.slice(0, 400)
+    : "";
+  const brandPromise = brandbook.brandStory?.brandPromise ?? "";
+
+  const mascot = brandbook.keyVisual?.mascots?.[0];
+  const mascotInfo = mascot ? `Mascot: ${mascot.name} — ${mascot.description}. Personality: ${mascot.personality}` : "";
+
+  const spList = brandbook.keyVisual?.structuredPatterns;
+  const structuredPatterns = spList?.length
+    ? spList.slice(0, 2).map((p) => `${p.name}: ${p.composition} (${p.density ?? "moderate"})`).join(" | ")
+    : "";
 
   const tree = [
     logoSymbol ? `STYLE_TREE: ROOT=${logoSymbol}.` : "",
@@ -86,16 +109,29 @@ function compactBrandContext(brandbook: BrandbookData): string {
     purpose ? `Purpose: ${purpose}` : "",
     personality ? `Personality: ${personality}` : "",
     tone ? `Tone of voice: ${tone}` : "",
+    archetype ? `Brand archetype: ${archetype}` : "",
+    manifesto ? `Brand manifesto: "${manifesto}"` : "",
+    brandPromise ? `Brand promise: "${brandPromise}"` : "",
     displayFont || bodyFont ? `Typography: display=${displayFont || "-"}; body=${bodyFont || "-"}` : "",
     primaryColors ? `Primary colors: ${primaryColors}` : "",
     secondaryColors ? `Secondary colors: ${secondaryColors}` : "",
     tree ? tree : "",
     elements ? `Key visual elements: ${elements}` : "",
+    flora ? `Flora: ${flora}` : "",
+    fauna ? `Fauna: ${fauna}` : "",
+    objects ? `Objects: ${objects}` : "",
+    mascotInfo,
+    structuredPatterns ? `Structured patterns: ${structuredPatterns}` : "",
     visualStyle ? `Visual style: ${visualStyle}` : "",
     colorMood ? `Color mood: ${colorMood}` : "",
     compositionNotes ? `Composition: ${compositionNotes}` : "",
     moodKeywords ? `Mood keywords: ${moodKeywords}` : "",
     artisticReferences ? `Artistic references: ${artisticReferences}` : "",
+    emotionalCore ? `Emotional core: ${emotionalCore}` : "",
+    textureLanguage ? `Texture language: ${textureLanguage}` : "",
+    lightingSignature ? `Lighting signature: ${lightingSignature}` : "",
+    cameraSignature ? `Camera signature: ${cameraSignature}` : "",
+    sensoryProfile ? `Sensory profile: ${sensoryProfile}` : "",
     logoStyleGuide ? `Logo style guide: ${logoStyleGuide}` : "",
     patternStyle ? `Pattern style: ${patternStyle}` : "",
     avoidElements ? `Avoid elements: ${avoidElements}` : "",
@@ -160,40 +196,54 @@ export async function POST(request: NextRequest) {
       )
       : "";
 
-    const systemPrompt = `Você é um Diretor de Arte Sênior e especialista em prompt engineering para geração de imagens.
+    const systemPrompt = `Você é um Diretor de Arte Sênior de classe mundial — referência em branding, prompt engineering para IA e design com alma. Você pensa como Paula Scher, Stefan Sagmeister e David Carson combinados: cada decisão visual carrega intenção, emoção e significado.
 
-Tarefa: Dado o contexto do brandbook e uma intenção curta do usuário, gere um prompt FINAL e completo para gerar uma imagem com altíssima qualidade.
+Tarefa: Dado o contexto do brandbook e uma intenção curta do usuário, gere um prompt FINAL e completo para gerar uma imagem com qualidade de estúdio top-tier.
+
+COMO PENSAR (antes de escrever o prompt):
+1. CONCEITO → O que esta imagem SIGNIFICA para a marca? Qual é a história que ela conta?
+2. EMOÇÃO → O que o espectador deve SENTIR nos primeiros 0.5 segundos?
+3. MATERIALIDADE → Quais texturas, superfícies e materiais traduzem a alma da marca?
+4. EXECUÇÃO → Como a câmera, a luz e a composição servem ao conceito?
 
 Controle de criatividade (CREATIVITY_MODE):
-- consistent: máxima fidelidade ao briefing e ao brandbook. Não invente nada além do estritamente necessário.
-- balanced: equilíbrio entre precisão e refinamento estético.
-- creative: pode propor soluções mais ousadas (metáforas visuais, composição e direção de arte mais cinematográfica), mas SEM quebrar o brandbook e SEM introduzir elementos fora da árvore de estilo.
+- consistent: máxima fidelidade ao briefing e ao brandbook. Sem improvisação.
+- balanced: equilíbrio entre precisão e refinamento estético. Pequenas surpresas visuais bem-vindas.
+- creative: soluções ousadas (metáforas visuais, composição cinematográfica, referências culturais), mas SEM quebrar o brandbook e SEM introduzir elementos fora da árvore de estilo.
 
 Regras:
-- Integre SEMPRE o brandbook (paleta, tipografia, estilo visual, mood, composição, elementos) de forma coerente.
-- Não invente fatos sobre a marca. Se faltar detalhe, complete com escolhas genéricas mas compatíveis com o brandbook (não com o setor).
+- Integre SEMPRE o brandbook (paleta, tipografia, estilo visual, mood, composição, elementos, arquétipo, alma emocional) de forma coerente.
+- Não invente fatos sobre a marca.
 - Não escreva textos legíveis na imagem, a menos que o usuário peça explicitamente.
 - Obedeça o aspect ratio solicitado.
- - Se houver uma imagem de referência (peça enviada), interprete a peça com precisão (layout, hierarquia, estilo, materiais, fotografia/ilustração, composição) e gere um prompt que rebrand em 100% para o sistema visual do brandbook (paleta, estilo, mood, elementos e árvore de estilo).
+- Se houver uma imagem de referência, interprete-a com precisão e gere um prompt que rebrand em 100% para o sistema visual do brandbook.
 ${rebrandModeRules}
 
-ALMA & INTENCIONALIDADE:
-- SEMPRE inclua no prompt: ARCHETYPE (qual arquétipo a marca expressa), EMOTIONAL_CORE (o que o espectador deve SENTIR), VIEWER_JOURNEY (0.3s → 1s → 3s).
-- Se o brandbook tem STYLE_TREE, replique-o literalmente no prompt.
-- Se há flora/fauna/objects no brandbook, use como elementos visuais sutis.
-- Se há structuredPatterns, referencie nome e composição.
+ALMA & INTENCIONALIDADE (OBRIGATÓRIO):
+- SEMPRE inclua: ARCHETYPE (arquétipo com tradução visual), EMOTIONAL_CORE (o que o espectador SENTE), VIEWER_JOURNEY (timing adaptado ao medium).
+- Se o brandbook tem STYLE_TREE, replique literalmente.
+- Se há flora/fauna/objects, use-os como elementos visuais com protagonismo proporcional à importância na marca (marcas com identidade forte em flora/fauna → elementos PROEMINENTES, não sutis).
+- Se há structuredPatterns, referencie nome, composição e densidade.
+- Se há manifesto/brandPromise, deixe a essência emocional permear a direção de arte.
+- Se há sensoryProfile/textureLanguage, traduza em instruções visuais concretas (materiais, superfícies, temperatura tátil).
+
+ESSÊNCIA HUMANA:
+- O prompt deve soar como se um diretor de arte sênior o tivesse escrito à mão — não como um template.
+- Inclua referências culturais reais (fotógrafos, revistas, movimentos artísticos, campanhas) conectadas ao arquétipo da marca.
+- Use metáforas sensoriais: "warm 3200K candlelight reflecting off kraft paper" > "warm lighting".
+- Cada prompt deve ter um "conceito" — uma ideia central que unifica todos os elementos visuais.
 
 Formato do prompt (obrigatório):
-- Use quebras de linha e blocos claros: SUBJECT / STYLE / EMOTION / COMPOSITION / LIGHTING / CAMERA / MATERIALS / BACKGROUND / NEGATIVE.
-- Sempre inclua um bloco negativo no final.
-  - stability: termine com " --neg ..."
-  - demais providers: termine com "\n\nNEGATIVE: ..."
+- Use blocos claros: SUBJECT / STYLE / EMOTION / COMPOSITION / LIGHTING / CAMERA / MATERIALS / BACKGROUND / NEGATIVE.
+- Sempre inclua bloco negativo no final.
+  - stability: " --neg ..."
+  - demais providers: "\\n\\nNEGATIVE: ..."
 
 Regras por provider:
-- stability: use tags/descritores com pesos (tag:1.3). Estruture: qualidade → sujeito → estilo → composição → iluminação → cor → mood. Mantenha " --neg ..." no final. Máximo ~2000 chars positivo.
-- dalle3: linguagem natural cinematográfica e experiencial. Estruture em parágrafos narrativos. Use "Do not include:" no final. Máximo ~3500 chars.
-- ideogram: linguagem de design gráfico profissional. Se há texto, instruções tipográficas precisas. Use "Do not include:" no final. Máximo ~1800 chars.
-- imagen: linguagem natural/imperativa direta e concisa. Use "Do not include, do not generate:" no final. Máximo ~1600 chars.
+- stability: tags com pesos (tag:1.3). Estruture: qualidade → sujeito → estilo → composição → iluminação → cor → mood. " --neg ..." no final. Máximo ~2000 chars.
+- dalle3: linguagem natural cinematográfica e experiencial ("you are looking at..."). Parágrafos narrativos. "Do not include:" no final. Máximo ~3500 chars.
+- ideogram: linguagem de design gráfico profissional. Instruções tipográficas precisas se há texto. "Do not include:" no final. Máximo ~1800 chars.
+- imagen: linguagem natural/imperativa direta. "Do not include, do not generate:" no final. Máximo ~1600 chars.
 
 Saída: retorne EXCLUSIVAMENTE um JSON válido no formato { "prompt": "..." }.`;
 

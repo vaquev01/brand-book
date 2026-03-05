@@ -871,54 +871,56 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         : `Must visually communicate: ${ctx.uniqueValue}.`;
       return parts(
         prefix,
-        `PLATFORM: Website hero / key visual banner for ${B} (${data.industry}) — 16:9 widescreen.`,
+        `PLATFORM: Website hero / key visual banner for ${B} (${data.industry}) — 16:9 widescreen cinematic composition.`,
         soul, journey,
-        `INTENT: Establish immediate brand impression (positioning + credibility + mood). This is a brandbook application image, not a generic "landing page" template.`,
+        `INTENT: This is the brand's first visual handshake with the world. It must establish positioning, credibility, and emotional territory in one image. Not a generic "landing page" — this is a brandbook key visual.`,
         `TARGET VIEWER: ${ctx.userPsychographics}.`,
         `CORE MESSAGE TO VISUALIZE: ${ctx.messagingPillar}.`,
         intentCopy,
         ctx.tagline,
-        `VISUAL SUBJECT: Abstract-cinematic interpretation of ${ctx.visualMetaphor}.`,
+        `VISUAL SUBJECT: Cinematic interpretation of ${ctx.visualMetaphor}. The subject should feel like a still frame from the brand's origin story.`,
         `INDUSTRY-SPECIFIC VISUAL LANGUAGE: ${ctx.industryLang}.`,
-        `Art direction: ${ctx.photoStyle}. Visual language: ${ctx.marketingArch}.`,
-        `CREDIBILITY SIGNALS embedded in imagery: ${ctx.reasonsToBelieve}.`,
-        `${ctx.competitiveAngle}`,
-        `Brand elements present: ${ctx.elements}. References: ${ctx.artisticRef}.`,
+        `Art direction: ${ctx.photoStyle}. Visual architecture: ${ctx.marketingArch}.`,
+        `CREDIBILITY embedded in imagery: ${ctx.reasonsToBelieve}.`,
+        ctx.competitiveAngle,
+        `Brand elements: ${ctx.elements}. Artistic references: ${ctx.artisticRef}.`,
         tree, idAssets,
-        `COLOR GRADING: ${ctx.colorMood}. Dominant ${ctx.primaryColor}, accent ${ctx.secondaryColor}. Cinematic color cast.`,
+        humanLayer,
+        `COLOR GRADING: ${ctx.colorMood}. Dominant ${ctx.primaryColor}, accent ${ctx.secondaryColor}. Cinematic LUT applied.`,
         sensory,
         `CAMERA: ${camera}.`,
-        `LIGHTING: Dramatic three-point studio-cinematic light. Key light warm ${ctx.primaryColor} from upper-left. Deep shadow falloff to right.`,
-        `COMPOSITION: ${ctx.composition}. Strong depth of field, foreground-to-background layers. Rule of thirds.`,
-        `MOOD: ${ctx.moodWords}. Mission: ${ctx.mission}.`,
+        `LIGHTING: Dramatic three-point cinematic light adapted to ${archetypeName} archetype. Key light from upper-left. Deep shadow falloff creates depth and mystery.`,
+        `COMPOSITION: ${ctx.composition}. Foreground-to-background depth layers. Rule of thirds with intentional tension point.`,
+        `MOOD: ${ctx.moodWords}. The image should make the viewer pause and feel something before reading any text.`,
         sTags,
-        `No text, no logos — keep a clean copy-safe negative space area for website headline.`,
-        q, neg(ctx, provider, "text overlays, logos, generic stock, flat even lighting, overcrowded scene"),
+        `COPY SPACE: Keep a clean negative space area (left or right third) for website headline overlay. No text or logos in the image.`,
+        q, neg(ctx, provider, "text overlays, logos, generic stock photography, flat even lighting, overcrowded scene, centered subject"),
       );
     }
 
     case "hero_lifestyle": {
       return parts(
         prefix,
-        `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — brandbook application for web and campaigns.`,
+        `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — brandbook application for web, campaigns, and social.`,
         soul, journey,
-        `INTENT: Human, believable brand storytelling. Show the audience living the brand values and desired outcome — without looking like stock photo.`,
-        `SUBJECT: ${ctx.userPsychographics}. Authentic unstaged moment in their real environment.`,
-        `PAIN CONTEXT (the problem being solved): ${ctx.painPoints} — the image shows the AFTER state, not the pain itself.`,
-        `SCENE: ${ctx.audienceDesc} in a realistic ${data.industry} context — relaxed, confident, successful outcome.`,
+        `INTENT: Human storytelling. Show a real person living the brand promise — the AFTER state, the desired outcome achieved. This must feel like a documentary moment, not a stock photo.`,
+        `SUBJECT: ${ctx.userPsychographics}. Authentic, unstaged moment in their natural environment. They are not performing for the camera.`,
+        `NARRATIVE ARC: ${ctx.painPoints} → RESOLVED. The image shows the outcome, the relief, the success. The viewer should think "I want to be there."`,
+        `SCENE: ${ctx.audienceDesc} in a realistic ${data.industry} context — relaxed, confident, successful.`,
         `INDUSTRY SCENE LANGUAGE: ${ctx.industryLang}.`,
         idAssets,
+        humanLayer,
         `VISUAL LANGUAGE: ${ctx.photoStyle}. ${ctx.colorMood}.`,
-        `Brand color ${ctx.primaryColor} organically present in environment, clothing detail, or prop — subtle, never forced.`,
+        `Brand color ${ctx.primaryColor} organically present in environment — a clothing detail, a wall, a prop, natural light reflection. Never forced, never painted on.`,
         `EMOTIONAL CORE: ${ctx.messagingPillar}. Viewer should feel: ${ctx.moodWords}.`,
-        `${ctx.competitiveAngle}`,
+        ctx.competitiveAngle,
         sensory,
         `CAMERA: ${camera}.`,
-        `LIGHTING: Golden hour or diffused natural daylight. Warm key light 3200K, cool fill 5600K. Film-like tonal range, Kodak Portra palette.`,
-        `PEOPLE: Authentic, diverse, non-model-perfect. Real emotion — not corporate smiling. Candid or near-candid.`,
-        `${ctx.artisticRef} editorial approach. Wide 16:9. Left or center clear zone for optional copy overlay.`,
-        `No logos visible, no text on clothing, pure documentary editorial quality.`,
-        sTags, q, neg(ctx, provider, `overly posed, fake corporate smile, stock photo aesthetic, generic office, plastic-looking, HDR${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
+        `LIGHTING: Golden hour or soft diffused daylight. Warm key 3200K, cool fill 5600K. Film-like tonal range — Kodak Portra 400 palette with subtle grain.`,
+        `PEOPLE: Authentic, diverse, non-model-perfect. Real micro-expressions — not corporate smiling. Candid or near-candid. Hands doing something meaningful.`,
+        `${ctx.artisticRef} editorial approach. Wide 16:9. Left or center third kept clear for optional copy overlay.`,
+        `No logos visible, no text on clothing, no brand placement that breaks the documentary spell.`,
+        sTags, q, neg(ctx, provider, `overly posed, fake corporate smile, stock photo aesthetic, generic office, plastic-looking skin, HDR overprocessing, visible branding on clothing${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -942,6 +944,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `PROOF POINTS to visualize: ${ctx.pillarProofPoints}.`,
         `MOOD: ${ctx.moodWords}. Energy: high-impact, thumb-stopping, premium, social-native.`,
         `${ctx.competitiveAngle}`,
+        humanLayer,
         `Reference: Spotify, Apple, top-performing ${data.industry} carousel decks. No actual text.`,
         sTags, q, neg(ctx, provider, `cluttered, multiple competing elements, generic gradient, centered symmetry${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
@@ -968,6 +971,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         - Bottom 85–100%: CTA/link sticker zone — keep flat ${ctx.primaryColor} or ${ctx.secondaryColor}`,
         `MOOD: ${ctx.moodWords}. Immediate, bold, vertically dynamic, recognizable even as a 60px thumbnail.`,
         `${ctx.competitiveAngle}`,
+        humanLayer,
         `Inspired by top brand stories: Apple, Spotify, Airbnb, Nike — adapted to ${data.industry}. No actual text.`,
         sTags, q, neg(ctx, provider, "horizontal elements, landscape framing, cluttered bottom, multiple focal points"),
       );
@@ -992,6 +996,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         - Right edge: ${ctx.accentColor} vertical accent stripe (optional depth element)`,
         `VISUAL ELEMENTS: ${ctx.elements}. Bold, architectural, professional. Not decorative — structural.`,
         `MOOD: ${ctx.moodWords}. Confident, credible, premium, memorable.`,
+        humanLayer,
         `No text, no lorem ipsum — pure brand graphic authority.`,
         sTags, q, neg(ctx, provider, "cluttered, multiple focal points, text overlays, generic corporate clip art, low contrast"),
       );
@@ -1016,6 +1021,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `${ctx.visualStyle}.`,
         `PHOTOGRAPHY (if lifestyle): ${ctx.photoStyle}. Camera: 35mm, f/2.0, square crop.`,
         `${ctx.competitiveAngle}`,
+        humanLayer,
         `No text in image — pure brand visual language.`,
         sTags, q, neg(ctx, provider, `generic stock imagery, overcrowded, multiple competing focal points${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
@@ -1038,6 +1044,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `Rule of thirds — subject eyes/peak at upper-right third intersection if human subject.`,
         `MOOD: ${ctx.moodWords}. Energy: bold, premium, unmistakably clickable.`,
         `LIGHTING: Dramatic rim light in ${ctx.accentColor}, dark background shadow — creates depth and intrigue.`,
+        humanLayer,
         `Reference: MrBeast, Kurzgesagt, top ${data.industry} premium channels. No actual text. Works at 1/10th scale.`,
         sTags, q, neg(ctx, provider, "low contrast, muddy mid-tones, text, cluttered background, flat even lighting"),
       );
@@ -1056,6 +1063,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COLOR RULE: Monochromatic brand palette only. Varying opacity 5–20%. Never full-saturation. Never photographic.`,
         `COMPOSITION: Visual texture in far corners and edges. Center 60% of frame must be plain and flat — this is the content zone.`,
         `Bottom-left or top-right: subtle brand motif at 10% opacity.`,
+        journey,
         `MOOD: ${ctx.moodWords} — but whispered, not shouted. Background is the frame, not the art.`,
         sTags, q, neg(ctx, provider, "busy pattern, high saturation, distracting, photographic, text, logos, centered elements"),
       );
@@ -1075,6 +1083,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `VISUAL ELEMENT: ${ctx.elements} — abstracted, single motif, left-anchored. Thin horizontal strip composition.`,
         `COMPOSITION: Left 30%: brand visual/motif in ${ctx.accentColor} or ${ctx.secondaryColor}. Right 70%: clean flat ${ctx.primaryColor} field for headline text overlay.`,
         `MOOD: ${ctx.moodWords}. Tone: ${ctx.toneOfVoice}. Minimal, premium, brand-consistent.`,
+        journey,
         `${ctx.visualStyle}. No actual text — graphic background layer only.`,
         sTags, q, neg(ctx, provider, `text, lorem ipsum, photographic busy background, centered composition, multiple elements${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
@@ -1098,6 +1107,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MOCKUP SCENE: Device on minimal studio desk surface. Soft ambient bokeh background in ${ctx.primaryColor} dark tint.`,
         `LIGHTING: Subtle edge screen glow, realistic device reflections, soft top-down studio light on device body.`,
         `Perspective: natural 3/4 tilt, 15–20° rotation, professional product photography angle.`,
+        humanLayer,
         sTags, q, neg(ctx, provider, "generic UI template, lorem ipsum, fake stock data, flat perspective, plastic device"),
       );
     }
@@ -1116,8 +1126,9 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `Surface: marble, dark stone, or fine textured paper. Matches brand: ${ctx.visualStyle}.`,
         `LIGHTING: Soft directional studio light 45°, long sharp shadow, premium paper stock texture visible.`,
         `Both cards arranged with intentional angle, depth of field, luxury photographic quality.`,
-        `MOOD: ${ctx.moodWords}. Premium, confident, tasteful.`,
-        sTags, q, neg(ctx, provider, "flat illustration, cartoon style, plastic-looking surface, harsh or flat lighting"),
+        `MOOD: ${ctx.moodWords}. Premium, confident, tasteful. The viewer should want to reach out and pick up this card.`,
+        humanLayer,
+        sTags, q, neg(ctx, provider, "flat illustration, cartoon style, plastic-looking surface, harsh or flat lighting, cheap paper stock"),
       );
     }
 
@@ -1135,8 +1146,9 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `SURFACE: ${ctx.photoStyle} — marble, raw concrete, natural linen, or fine wood. Style: ${ctx.visualStyle}.`,
         `LIGHTING: Soft natural window light from 45°, crisp soft shadows, luxury editorial feel.`,
         `COMPOSITION: ${ctx.composition}. Artfully arranged with intentional negative space, slight overlapping.`,
-        `MOOD: ${ctx.moodWords}. Tasteful, editorial, premium.`,
-        sTags, q, neg(ctx, provider, "plastic surfaces, harsh shadows, poor lighting, off-brand colors, generic office supplies"),
+        `MOOD: ${ctx.moodWords}. Tasteful, editorial, premium. Each item must feel like it was crafted by a world-class identity studio.`,
+        humanLayer,
+        sTags, q, neg(ctx, provider, "plastic surfaces, harsh shadows, poor lighting, off-brand colors, generic office supplies, cheap materials"),
       );
     }
 
@@ -1154,7 +1166,8 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MATERIALS: premium matte paper, kraft paper, soft-touch coating, embossed stamp look, clean die-cuts.`,
         `SCENE: Overhead or 3/4 flat-lay on stylish surface consistent with brand: ${ctx.photoStyle}.`,
         `LIGHTING: soft natural window light, crisp soft shadows, editorial realism.`,
-        sTags, q, neg(ctx, provider, "generic fast-food branding, messy food spills, low-res print, random colors, illegible noisy text"),
+        humanLayer,
+        sTags, q, neg(ctx, provider, "generic fast-food branding, messy food spills, low-res print, random colors, illegible noisy text, cheap disposable look"),
       );
     }
 
@@ -1169,6 +1182,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COLOR: strict palette ${ctx.allColors}. Dominant ${ctx.primaryColor}.`,
         `SCENE: realistic in-hand or on counter scene, no faces, clean background, editorial lifestyle realism.`,
         `LIGHTING: soft natural light, realistic shadows, premium material texture visible.`,
+        humanLayer,
         sTags, q, neg(ctx, provider, "cheap plastic bag, low-quality print, clutter, messy background, cartoon, generic branding"),
       );
     }
@@ -1185,6 +1199,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `MATERIAL: matte coated cardboard or premium paper, crisp edges, realistic print alignment.`,
         `SCENE: minimal studio surface matching ${ctx.visualStyle}.`,
         `LIGHTING: soft studio light, shallow depth of field, premium editorial shot.`,
+        humanLayer,
         sTags, q, neg(ctx, provider, "messy food, grease stains, low-end packaging, random colors, noisy text, watermark"),
       );
     }
@@ -1200,6 +1215,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COLOR: strict palette only ${ctx.allColors}.`,
         `SCENE: on a person with face out of frame OR clean flat-lay; realistic folds and fabric texture.`,
         `LIGHTING: soft natural light, editorial realism, premium feel.`,
+        humanLayer,
         sTags, q, neg(ctx, provider, "visible faces, cheap fabric, distorted logo, low-res print, messy background"),
       );
     }
@@ -1215,6 +1231,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `COLOR: strict palette only ${ctx.allColors}.`,
         `SCENE: kitchen/work counter context, face out of frame, clean and premium, not stock photo.`,
         `LIGHTING: warm natural light, shallow depth of field, editorial texture.`,
+        humanLayer,
         sTags, q, neg(ctx, provider, "visible faces, greasy messy kitchen, cheap apron, distorted print, watermark"),
       );
     }
@@ -1229,7 +1246,8 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `BRAND SYSTEM: derived from ${ctx.logoSymbol} and pattern ${ctx.patternStyle}.`,
         `COLOR: strict palette only ${ctx.allColors}.`,
         `STYLE: ${ctx.visualStyle}. Mood: ${ctx.moodWords}.`,
-        `COMPOSITION: clean top-down flat-lay, premium editorial, precise grid, soft shadows.`,
+        `COMPOSITION: clean top-down flat-lay, premium editorial, precise grid, soft shadows. Each material should feel like it was hand-selected by the creative director.`,
+        humanLayer,
         sTags, q, neg(ctx, provider, "random unrelated materials, off-brand colors, messy collage, low-res textures, text"),
       );
     }
@@ -1253,6 +1271,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         `TIME OF DAY: Blue hour (just after sunset) — dramatic sky gradient, artificial street lighting creating depth.`,
         `LIGHTING on billboard: Bright billboard illumination against dim urban atmosphere — creates maximum contrast.`,
         `MOOD: ${ctx.moodWords}. Culturally present, confident, unmistakable at speed.`,
+        humanLayer,
         sTags, q, neg(ctx, provider, "CGI plastic billboard, flat daytime lighting, empty street, cartoon quality, dark unlit billboard"),
       );
     }
@@ -1364,43 +1383,60 @@ export function buildApplicationPrompt(
   customInstruction?: string
 ): string {
   const ctx = extractBrandContext(data);
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
   const B = `"${data.brandName}"`;
-  const baseKey = "brand_collateral" as AssetKey;
-  const q = providerQuality(provider, baseKey);
-  const prefix = providerPrefix(provider, baseKey) + consistencyPrefix(ctx, data, baseKey) + " ";
-  const sTags = provider === "stability" ? stabilityTags(ctx, baseKey) : "";
+
+  const t = app.type.toLowerCase();
+  const detectedKey: AssetKey = /card|cartão|visita/.test(t) ? "business_card"
+    : /outdoor|billboard|ooh/.test(t) ? "outdoor_billboard"
+    : /story|stories|reels/.test(t) ? "instagram_story"
+    : /instagram|social|post|feed/.test(t) ? "social_post_square"
+    : /email|newsletter/.test(t) ? "email_header"
+    : /embalagem|packaging|sacola|caixa|bag|delivery/.test(t) ? "delivery_packaging"
+    : /uniforme|camiseta|avental|camisa/.test(t) ? "uniform_tshirt"
+    : /menu|cardápio|folder|brochure/.test(t) ? "brand_collateral"
+    : /\bapp\b|mobile|interface|tela|screen|dashboard/.test(t) ? "app_mockup"
+    : /banner|hero|site|web|landing|header|cover|capa/.test(t) ? "hero_visual"
+    : /apresentação|slide|presentation/.test(t) ? "presentation_bg"
+    : "brand_collateral";
+
+  const q = providerQuality(provider, detectedKey, archetypeName);
+  const prefix = providerPrefix(provider, detectedKey) + consistencyPrefix(ctx, data, detectedKey) + " ";
+  const sTags = provider === "stability" ? stabilityTags(ctx, detectedKey) : "";
 
   const parts = (...lines: (string | false | undefined | null)[]): string =>
     lines.filter(Boolean).join(" ");
 
   const soul = soulAnchor(ctx);
-  const journey = emotionalJourney(baseKey, ctx);
-  const sensory = sensoryDirectives(baseKey, ctx);
+  const journey = emotionalJourney(detectedKey, ctx);
+  const sensory = sensoryDirectives(detectedKey, ctx);
   const tree = styleAnchorTree(ctx, data);
-  const idAssets = identityAssetsDirective(ctx);
+  const idAssets = identityAssetsDirective(ctx, detectedKey);
+  const humanLayer = humanEssenceLayer(detectedKey, ctx, data);
 
   return parts(
     prefix,
-    `Professional brand application mockup — ${app.type} for ${B} (${data.industry}).`,
+    `Professional brand application — ${app.type} for ${B} (${data.industry}).`,
     soul, journey,
-    `APPLICATION DESCRIPTION: ${app.description}.`,
+    `APPLICATION: ${app.description}.`,
     app.dimensions ? `DIMENSIONS/FORMAT: ${app.dimensions}. Aspect ratio: ${aspectRatio}.` : `ASPECT RATIO: ${aspectRatio}.`,
-    app.materialSpecs && `MATERIAL/FINISH: ${app.materialSpecs}.`,
-    app.layoutGuidelines && `LAYOUT GUIDELINES: ${app.layoutGuidelines}.`,
+    app.materialSpecs && `MATERIAL & FINISH (render with haptic realism): ${app.materialSpecs}.`,
+    app.layoutGuidelines && `LAYOUT RULES: ${app.layoutGuidelines}.`,
     app.typographyHierarchy && `TYPOGRAPHY HIERARCHY: ${app.typographyHierarchy}.`,
     app.artDirection && `ART DIRECTION: ${app.artDirection}.`,
-    (app.substrates && app.substrates.length > 0) ? `SUBSTRATES: ${app.substrates.join(", ")}.` : null,
-    `BRAND PERSONALITY: ${ctx.personality}. Values: ${ctx.values}. Tone: ${ctx.toneOfVoice}.`,
+    (app.substrates && app.substrates.length > 0) ? `SUBSTRATES & MATERIALS: ${app.substrates.join(", ")}.` : null,
+    `BRAND DNA: personality=${ctx.personality}. Values=${ctx.values}. Tone=${ctx.toneOfVoice}.`,
     `COLOR PALETTE (strict): ${ctx.allColors}.`,
     `LOGO: ${ctx.logoPrimary}. Symbol: ${ctx.logoSymbol}.`,
     tree, idAssets, sensory,
-    `VISUAL STYLE: ${ctx.visualStyle}. Photography direction: ${ctx.photoStyle}.`,
+    `VISUAL STYLE: ${ctx.visualStyle}. Photography: ${ctx.photoStyle}.`,
     `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
     `COMPOSITION: ${ctx.composition}. Mood: ${ctx.moodWords}.`,
     ctx.tagline,
     `REFERENCES: ${ctx.artisticRef}.`,
     ctx.competitiveAngle,
-    customInstruction ? `CUSTOM CREATIVE DIRECTION FROM CLIENT: ${customInstruction}.` : null,
+    humanLayer,
+    customInstruction ? `CUSTOM CREATIVE DIRECTION: ${customInstruction}.` : null,
     sTags, q, neg(ctx, provider),
   );
 }
