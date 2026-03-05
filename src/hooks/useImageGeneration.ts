@@ -90,6 +90,26 @@ function defaultUploadedTypeFromAssetKey(
   return "reference";
 }
 
+async function readJsonResponse<T>(
+  res: Response,
+  endpointLabel: string
+): Promise<T> {
+  const raw = await res.text();
+  if (!raw) return {} as T;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    const trimmed = raw.trim().toLowerCase();
+    const looksMarkup = trimmed.startsWith("<") || trimmed.startsWith("<?xml");
+    if (looksMarkup) {
+      throw new Error(
+        `${endpointLabel} retornou XML/HTML em vez de JSON. Verifique a chave da API e o provider selecionado.`
+      );
+    }
+    throw new Error(`${endpointLabel} retornou uma resposta inválida.`);
+  }
+}
+
 export interface UseImageGenerationProps {
   data: BrandbookData;
   generatedAssets: Record<string, GeneratedAsset>;
@@ -215,26 +235,30 @@ export function useImageGeneration({
             (textProvider === "openai" && !!apiKeys.openai) ||
             (textProvider === "gemini" && !!apiKeys.google);
           if (canRefine && hasTextKey) {
-            const refineRes = await fetch("/api/refine-image-prompt", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                basePrompt,
-                imageProvider: provider,
-                assetKey,
-                textProvider,
-                openaiKey: apiKeys.openai || undefined,
-                googleKey: apiKeys.google || undefined,
-                openaiModel: apiKeys.openaiTextModel || undefined,
-                googleModel: apiKeys.googleTextModel || undefined,
-              }),
-            });
-            const refineJson = (await refineRes.json()) as {
-              prompt?: string;
-              error?: string;
-            };
-            if (refineRes.ok && refineJson.prompt) {
-              prompt = refineJson.prompt;
+            try {
+              const refineRes = await fetch("/api/refine-image-prompt", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  basePrompt,
+                  imageProvider: provider,
+                  assetKey,
+                  textProvider,
+                  openaiKey: apiKeys.openai || undefined,
+                  googleKey: apiKeys.google || undefined,
+                  openaiModel: apiKeys.openaiTextModel || undefined,
+                  googleModel: apiKeys.googleTextModel || undefined,
+                }),
+              });
+              const refineJson = await readJsonResponse<{
+                prompt?: string;
+                error?: string;
+              }>(refineRes, "/api/refine-image-prompt");
+              if (refineRes.ok && refineJson.prompt) {
+                prompt = refineJson.prompt;
+              }
+            } catch {
+              // Prompt refinement is optional; fall back to base prompt.
             }
           }
         }
@@ -284,7 +308,10 @@ export function useImageGeneration({
             googleImageModel: apiKeys.googleImageModel || undefined,
           }),
         });
-        const result = (await res.json()) as { url?: string; error?: string };
+        const result = await readJsonResponse<{ url?: string; error?: string }>(
+          res,
+          "/api/generate-image"
+        );
         if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
         if (!result.url) throw new Error("API não retornou URL de imagem");
         onAssetGenerated(effectiveKey, {
@@ -339,25 +366,29 @@ export function useImageGeneration({
             (textProvider === "openai" && !!apiKeys.openai) ||
             (textProvider === "gemini" && !!apiKeys.google);
           if (hasTextKey) {
-            const refineRes = await fetch("/api/refine-image-prompt", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                basePrompt,
-                imageProvider: provider,
-                assetKey: "brand_collateral",
-                textProvider,
-                openaiKey: apiKeys.openai || undefined,
-                googleKey: apiKeys.google || undefined,
-                openaiModel: apiKeys.openaiTextModel || undefined,
-                googleModel: apiKeys.googleTextModel || undefined,
-              }),
-            });
-            const refineJson = (await refineRes.json()) as {
-              prompt?: string;
-              error?: string;
-            };
-            if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
+            try {
+              const refineRes = await fetch("/api/refine-image-prompt", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  basePrompt,
+                  imageProvider: provider,
+                  assetKey: "brand_collateral",
+                  textProvider,
+                  openaiKey: apiKeys.openai || undefined,
+                  googleKey: apiKeys.google || undefined,
+                  openaiModel: apiKeys.openaiTextModel || undefined,
+                  googleModel: apiKeys.googleTextModel || undefined,
+                }),
+              });
+              const refineJson = await readJsonResponse<{
+                prompt?: string;
+                error?: string;
+              }>(refineRes, "/api/refine-image-prompt");
+              if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
+            } catch {
+              // Prompt refinement is optional; fall back to base prompt.
+            }
           }
         }
         const canUseRefImages =
@@ -388,7 +419,10 @@ export function useImageGeneration({
             googleImageModel: apiKeys.googleImageModel || undefined,
           }),
         });
-        const result = (await res.json()) as { url?: string; error?: string };
+        const result = await readJsonResponse<{ url?: string; error?: string }>(
+          res,
+          "/api/generate-image"
+        );
         if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
         if (!result.url) throw new Error("API não retornou URL de imagem");
         onAssetGenerated(appKey, {
@@ -472,10 +506,10 @@ export function useImageGeneration({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: asset.url }),
         });
-        const json = (await res.json()) as {
+        const json = await readJsonResponse<{
           dataUrl?: string;
           error?: string;
-        };
+        }>(res, "/api/image-to-dataurl");
         if (!res.ok || !json.dataUrl)
           throw new Error(json.error ?? "Erro ao baixar imagem");
         dataUrl = json.dataUrl;
@@ -506,7 +540,10 @@ export function useImageGeneration({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url }),
         });
-        const json = (await res.json()) as { dataUrl?: string; error?: string };
+        const json = await readJsonResponse<{ dataUrl?: string; error?: string }>(
+          res,
+          "/api/image-to-dataurl"
+        );
         if (!res.ok || !json.dataUrl) throw new Error(json.error ?? "Erro ao baixar imagem");
         blobUrl = json.dataUrl;
       }

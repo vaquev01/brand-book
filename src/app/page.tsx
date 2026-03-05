@@ -36,6 +36,20 @@ import {
 type Tab = "generate" | "examples" | "viewer";
 type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
 
+async function readJsonResponse<T>(res: Response): Promise<T> {
+  const raw = await res.text();
+  if (!raw) return {} as T;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    const trimmed = raw.trim().toLowerCase();
+    if (trimmed.startsWith("<") || trimmed.startsWith("<?xml")) {
+      throw new Error("A API retornou XML/HTML em vez de JSON.");
+    }
+    throw new Error("A API retornou JSON inválido.");
+  }
+}
+
 const GENERATED_ASSETS_LS_PREFIX = "bb_generated_assets::";
 const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
 const ASSET_PACK_LS_PREFIX = "bb_asset_pack::";
@@ -524,17 +538,18 @@ export default function Home() {
         }),
       });
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
+        const j = await readJsonResponse<{ error?: string }>(res).catch(() => ({}));
         throw new Error((j as { error?: string }).error ?? "Erro ao exportar pack");
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
+      a.rel = "noopener";
       const slug = brandbookData.brandName.replace(/\s+/g, "-").toLowerCase();
       a.download = `${slug}-brandbook-pack.zip`;
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao exportar pack");
     } finally {
@@ -547,9 +562,10 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
+    a.rel = "noopener";
     a.download = filename;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1200);
   }
 
   function handleExportBrandbook() {

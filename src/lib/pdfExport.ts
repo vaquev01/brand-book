@@ -9,13 +9,50 @@ function cssUrlToRawUrl(v: string): string | null {
   return inner.replace(/^['"]/, "").replace(/['"]$/, "");
 }
 
+function extractCssUrls(v: string): string[] {
+  const out: string[] = [];
+  const s = (v ?? "").trim();
+  if (!s || s === "none") return out;
+  const re = /url\(([^)]+)\)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const raw = (m[1] ?? "").trim().replace(/^['"]/, "").replace(/['"]$/, "");
+    if (raw) out.push(raw);
+  }
+  return out;
+}
+
+function replaceCssUrls(v: string, map: Map<string, string>): string {
+  if (!v || v === "none") return v;
+  return v.replace(/url\(([^)]+)\)/gi, (full, inner: string) => {
+    const raw = (inner ?? "").trim().replace(/^['"]/, "").replace(/['"]$/, "");
+    const next = map.get(raw);
+    if (!next) return full;
+    return `url(${JSON.stringify(next)})`;
+  });
+}
+
+async function readJsonResponse<T>(res: Response): Promise<T> {
+  const raw = await res.text();
+  if (!raw) return {} as T;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    const trimmed = raw.trim().toLowerCase();
+    if (trimmed.startsWith("<") || trimmed.startsWith("<?xml")) {
+      throw new Error("/api/image-to-dataurl retornou XML/HTML em vez de JSON");
+    }
+    throw new Error("/api/image-to-dataurl retornou resposta inválida");
+  }
+}
+
 async function toDataUrlViaProxy(url: string): Promise<string> {
   const res = await fetch("/api/image-to-dataurl", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ url }),
   });
-  const json = (await res.json()) as { dataUrl?: string; error?: string };
+  const json = await readJsonResponse<{ dataUrl?: string; error?: string }>(res);
   if (!res.ok || !json.dataUrl) {
     throw new Error(json.error ?? "Falha ao converter imagem para data URL");
   }
@@ -39,7 +76,7 @@ export async function exportBrandbookPDF(
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
-    allowTaint: true,
+    allowTaint: false,
     backgroundColor: "#ffffff",
     logging: false,
     windowWidth: element.scrollWidth,
@@ -83,7 +120,29 @@ export async function exportBrandbookPDFMultiPage(
     : ({} as Record<string, string | null>);
 
   const inlineVarMap = new Map<string, string>();
+  const externalAssetMap = new Map<string, string>();
   let hadConversionFailure = false;
+
+  const externalUrls = new Set<string>();
+
+  const originalNodes = [element, ...Array.from(element.querySelectorAll("*"))] as HTMLElement[];
+  for (const node of originalNodes) {
+    const bg = getComputedStyle(node).backgroundImage;
+    for (const bgUrl of extractCssUrls(bg)) {
+      if (!bgUrl.startsWith("data:") && /^https?:\/\//i.test(bgUrl)) {
+        externalUrls.add(bgUrl);
+      }
+    }
+    if (node.tagName.toLowerCase() === "img") {
+      const img = node as HTMLImageElement;
+      const candidates = [img.currentSrc, img.src, img.getAttribute("src") ?? ""];
+      for (const src of candidates) {
+        if (src && !src.startsWith("data:") && /^https?:\/\//i.test(src)) {
+          externalUrls.add(src);
+        }
+      }
+    }
+  }
 
   if (isImmersive) {
     for (const k of varsToInline) {
@@ -102,6 +161,15 @@ export async function exportBrandbookPDFMultiPage(
     }
   }
 
+  for (const url of externalUrls) {
+    try {
+      const dataUrl = await toDataUrlViaProxy(url);
+      externalAssetMap.set(url, dataUrl);
+    } catch {
+      hadConversionFailure = true;
+    }
+  }
+
   const A4_W = 595;
   const A4_H = 842;
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
@@ -109,15 +177,40 @@ export async function exportBrandbookPDFMultiPage(
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
-    allowTaint: true,
+    allowTaint: false,
     backgroundColor: "#ffffff",
     logging: false,
     onclone: (doc) => {
-      if (!isImmersive) return;
       const el = doc.getElementById(elementId);
       if (!el) return;
       const h = el as HTMLElement;
       if (hadConversionFailure) h.setAttribute("data-exporting", "1");
+
+      const cloneNodes = [h, ...Array.from(h.querySelectorAll("*"))] as HTMLElement[];
+      for (const n of cloneNodes) {
+        if (n.tagName.toLowerCase() === "img") {
+          const img = n as HTMLImageElement;
+          const candidates = [img.currentSrc, img.src, img.getAttribute("src") ?? ""];
+          for (const src of candidates) {
+            const mapped = externalAssetMap.get(src);
+            if (mapped) {
+              img.src = mapped;
+              break;
+            }
+          }
+        }
+
+        const view = doc.defaultView;
+        if (view) {
+          const bg = view.getComputedStyle(n).backgroundImage;
+          const replaced = replaceCssUrls(bg, externalAssetMap);
+          if (replaced && replaced !== "none" && replaced !== bg) {
+            n.style.backgroundImage = replaced;
+          }
+        }
+      }
+
+      if (!isImmersive) return;
       for (const [k, v] of inlineVarMap.entries()) {
         h.style.setProperty(k, v);
       }

@@ -56,11 +56,44 @@ export function buildShareUrl(compressed: string): string {
   return `${base}/?bb=${compressed}`;
 }
 
-export async function copyShareUrl(data: object): Promise<{ url: string; sizeKB: number } | null> {
+function legacyCopyText(text: string): boolean {
+  if (typeof document === "undefined") return false;
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "true");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function copyShareUrl(data: object): Promise<{ url: string; sizeKB: number; copied: boolean } | null> {
   const compressed = await compressBrandbook(data);
   if (!compressed) return null;
   const url = buildShareUrl(compressed);
   const sizeKB = Math.round(url.length / 1024);
-  await navigator.clipboard.writeText(url);
-  return { url, sizeKB };
+
+  let copied = false;
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      copied = true;
+    }
+  } catch {
+    copied = false;
+  }
+
+  if (!copied) {
+    copied = legacyCopyText(url);
+  }
+
+  return { url, sizeKB, copied };
 }

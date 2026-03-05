@@ -22,75 +22,106 @@ interface ExportState {
   share: ExportStatus;
 }
 
+type ExportKey = keyof ExportState;
+
+type ExportErrors = Partial<Record<ExportKey, string>>;
+
 export function ExportPanel({ brandbook, viewerElementId }: Props) {
   const [status, setStatus] = useState<ExportState>({
     css: "idle", tokens: "idle", tailwind: "idle", pdf: "idle", share: "idle",
   });
   const [shareMsg, setShareMsg] = useState("");
+  const [errors, setErrors] = useState<ExportErrors>({});
 
   function setS(key: keyof ExportState, val: ExportStatus) {
     setStatus((p) => ({ ...p, [key]: val }));
   }
 
+  function setErr(key: ExportKey, msg = "") {
+    setErrors((p) => ({ ...p, [key]: msg }));
+  }
+
   async function handleCSS() {
     setS("css", "loading");
+    setErr("css", "");
     try {
       const content = exportCSSTokens(brandbook);
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
       downloadTextFile(content, `${slug}-tokens.css`, "text/css");
       setS("css", "done");
       setTimeout(() => setS("css", "idle"), 3000);
-    } catch { setS("css", "error"); }
+    } catch (err: unknown) {
+      setS("css", "error");
+      setErr("css", err instanceof Error ? err.message : "Falha ao exportar CSS.");
+    }
   }
 
   async function handleW3C() {
     setS("tokens", "loading");
+    setErr("tokens", "");
     try {
       const content = exportW3CTokens(brandbook);
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
       downloadTextFile(content, `${slug}-tokens.json`, "application/json");
       setS("tokens", "done");
       setTimeout(() => setS("tokens", "idle"), 3000);
-    } catch { setS("tokens", "error"); }
+    } catch (err: unknown) {
+      setS("tokens", "error");
+      setErr("tokens", err instanceof Error ? err.message : "Falha ao exportar tokens.");
+    }
   }
 
   async function handleTailwind() {
     setS("tailwind", "loading");
+    setErr("tailwind", "");
     try {
       const content = exportTailwindConfig(brandbook);
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
       downloadTextFile(content, `${slug}-tailwind.config.js`, "text/javascript");
       setS("tailwind", "done");
       setTimeout(() => setS("tailwind", "idle"), 3000);
-    } catch { setS("tailwind", "error"); }
+    } catch (err: unknown) {
+      setS("tailwind", "error");
+      setErr("tailwind", err instanceof Error ? err.message : "Falha ao exportar Tailwind config.");
+    }
   }
 
   async function handlePDF() {
     setS("pdf", "loading");
+    setErr("pdf", "");
     try {
       await exportBrandbookPDFMultiPage(viewerElementId, brandbook);
       setS("pdf", "done");
       setTimeout(() => setS("pdf", "idle"), 3000);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       setS("pdf", "error");
+      setErr("pdf", err instanceof Error ? err.message : "Falha ao exportar PDF.");
       setTimeout(() => setS("pdf", "idle"), 4000);
     }
   }
 
   async function handleShare() {
     setS("share", "loading");
+    setErr("share", "");
     setShareMsg("");
     try {
       const result = await copyShareUrl(brandbook);
       if (!result) throw new Error("Falha ao comprimir dados");
       const sizeLabel = result.sizeKB > 100 ? ` (${result.sizeKB}KB — URL longa)` : "";
-      setShareMsg(`URL copiada para o clipboard!${sizeLabel}`);
+      if (!result.copied) {
+        window.prompt("Clipboard bloqueado. Copie o link manualmente:", result.url);
+        setShareMsg(`Link gerado. Copie manualmente.${sizeLabel}`);
+      } else {
+        setShareMsg(`URL copiada para o clipboard!${sizeLabel}`);
+      }
       setS("share", "done");
       setTimeout(() => { setS("share", "idle"); setShareMsg(""); }, 5000);
-    } catch {
-      setShareMsg("Erro ao gerar link. Tente exportar o JSON.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao gerar link.";
+      setShareMsg(message);
       setS("share", "error");
+      setErr("share", message);
       setTimeout(() => { setS("share", "idle"); setShareMsg(""); }, 4000);
     }
   }
@@ -202,6 +233,9 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">{item.label}</div>
                     <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.sub}</div>
+                    {s === "error" && errors[item.key] && (
+                      <div className="text-[11px] text-red-600 mt-1 line-clamp-2">{errors[item.key]}</div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
                     {btnTrailing(s)}
