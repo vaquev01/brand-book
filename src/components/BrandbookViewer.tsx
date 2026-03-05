@@ -34,9 +34,39 @@ import { SectionGovernance } from "./sections/SectionGovernance";
 import { FontLoader } from "./FontLoader";
 import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
 import { EMPTY_KEYS } from "@/components/ApiKeyConfig";
-import type { AssetKey } from "@/lib/imagePrompts";
+import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
 import type { AssetPackFile } from "@/lib/types";
 import type { ApiKeys } from "@/components/ApiKeyConfig";
+
+const SECTION_HERO_ASSETS: Record<string, string[]> = {
+  "dna": ["hero_visual", "presentation_bg"],
+  "brand-story": ["hero_lifestyle", "hero_visual"],
+  "positioning": ["presentation_bg", "hero_visual"],
+  "personas": ["hero_lifestyle"],
+  "verbal-identity": ["presentation_bg"],
+  "logo": ["logo_primary", "brand_collateral"],
+  "colors": ["materials_board", "brand_pattern"],
+  "typography": ["presentation_bg"],
+  "key-visual": ["hero_visual", "hero_lifestyle"],
+  "mascots": ["brand_mascot", "brand_pattern"],
+  "applications": ["business_card", "brand_collateral"],
+  "social-media": ["social_post_square", "instagram_story", "social_cover"],
+  "governance": ["presentation_bg"],
+};
+
+const CATEGORY_ATMO_ASSETS: Record<string, string[]> = {
+  "Essência da Marca": ["hero_visual", "presentation_bg"],
+  "Público-Alvo": ["hero_lifestyle"],
+  "Identidade Verbal": ["presentation_bg", "hero_visual"],
+  "Identidade Visual": ["logo_primary", "brand_collateral"],
+  "Paleta de Cores": ["materials_board", "brand_pattern"],
+  "Tipografia": ["presentation_bg"],
+  "Sistema Visual": ["hero_visual", "hero_lifestyle"],
+  "Padrões Gráficos": ["brand_pattern", "brand_mascot"],
+  "Design System": ["app_mockup", "presentation_bg"],
+  "Aplicações da Marca": ["business_card", "brand_collateral", "delivery_packaging"],
+  "Diretrizes de Uso": ["outdoor_billboard", "presentation_bg"],
+};
 
 type Category =
   | "Essência da Marca"
@@ -353,6 +383,11 @@ export function BrandbookViewer({
 
   const theme = useMemo(() => getImmersiveTheme(data), [data]);
 
+  const getAssetUrl = useMemo(() => {
+    return (key: string): string | null =>
+      generatedAssets?.[key]?.url ?? generatedImages?.[key] ?? null;
+  }, [generatedAssets, generatedImages]);
+
   const immersiveAssets = useMemo(() => {
     const genUrl = (k: string) => generatedAssets?.[k]?.url ?? null;
     const legacyUrl = (k: string) => generatedImages?.[k] ?? null;
@@ -378,6 +413,35 @@ export function BrandbookViewer({
 
     return { patternUrl, atmosphereUrl, watermarkUrl };
   }, [generatedAssets, generatedImages, uploadedAssets]);
+
+  const getSectionHeroUrl = (sectionId: string): string | null => {
+    const keys = SECTION_HERO_ASSETS[sectionId];
+    if (!keys) return null;
+    for (const k of keys) {
+      const url = getAssetUrl(k);
+      if (url) return url;
+    }
+    return null;
+  };
+
+  const getCategoryAtmoUrl = (cat: string): string | null => {
+    const keys = CATEGORY_ATMO_ASSETS[cat];
+    if (!keys) return null;
+    for (const k of keys) {
+      const url = getAssetUrl(k);
+      if (url) return url;
+    }
+    return immersiveAssets.atmosphereUrl;
+  };
+
+  const getAvailableAssets = (): { url: string; label: string }[] => {
+    const result: { url: string; label: string }[] = [];
+    for (const asset of ASSET_CATALOG) {
+      const url = getAssetUrl(asset.key);
+      if (url) result.push({ url, label: asset.label });
+    }
+    return result;
+  };
 
   const immersiveStyle: CSSProperties | undefined = immersive
     ? ({
@@ -615,41 +679,22 @@ export function BrandbookViewer({
           {/* Category divider */}
           {immersive ? (
             <>
-              {/* Atmosphere hero interlude between categories */}
-              {immersiveAssets.atmosphereUrl && catIdx > 0 && catIdx % 2 === 0 && (
-                <div className="bb-atmo-hero no-print">
-                  <div className="bb-atmo-img" />
-                  <div className="bb-atmo-overlay" />
-                  <div className="bb-atmo-pattern" />
-                  <div className="bb-atmo-mascot" />
-                  <div className="bb-atmo-content">
-                    <div
-                      className="text-2xl font-black"
-                      style={{
-                        color: theme.isDark ? "#fff" : "#fff",
-                        fontFamily: `'${theme.headingFont}', sans-serif`,
-                        textShadow: "0 2px 16px rgba(0,0,0,0.3)",
-                      }}
-                    >
-                      {data.brandName}
-                    </div>
-                    <div className="flex gap-1.5 mt-3">
-                      {theme.allColors.slice(0, 6).map((c, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            width: 14,
-                            height: 14,
-                            borderRadius: "50%",
-                            background: c,
-                            border: "2px solid rgba(255,255,255,0.3)",
-                          }}
-                        />
-                      ))}
+              {/* Atmosphere divider between categories — uses category-specific or fallback image */}
+              {catIdx > 0 && (() => {
+                const dividerUrl = getCategoryAtmoUrl(g.cat);
+                if (!dividerUrl) return null;
+                return (
+                  <div className="bb-atmo-divider no-print">
+                    <img src={dividerUrl} alt="" />
+                    <div className="bb-divider-gradient" />
+                    <div className="bb-divider-pattern" />
+                    <div className="bb-divider-content">
+                      <h3>{data.brandName}</h3>
+                      <p>{g.cat}</p>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
               <div className="page-break mb-6 mt-8">
                 <div className="bb-cat-banner">
                   <div className="flex items-center justify-between">
@@ -685,6 +730,18 @@ export function BrandbookViewer({
                 {immersive && sIdx > 0 && <ColorStrip />}
                 <div className={immersive ? "bb-section-shell" : ""}>
                   {immersive && <div className="bb-section-mascot" aria-hidden="true" />}
+                  {/* Section hero image — shows relevant generated asset */}
+                  {immersive && (() => {
+                    const heroUrl = getSectionHeroUrl(s.id);
+                    if (!heroUrl) return null;
+                    return (
+                      <div className="bb-section-hero">
+                        <img src={heroUrl} alt={`${data.brandName} — ${s.title}`} />
+                        <div className="bb-hero-overlay" />
+                        <div className="bb-hero-label">{data.brandName} — {s.title}</div>
+                      </div>
+                    );
+                  })()}
                   {quote && (
                     <div className="bb-voice mb-5 px-5 py-4 rounded-xl border">
                       <div className="flex items-center gap-2 mb-2">
@@ -718,6 +775,31 @@ export function BrandbookViewer({
           })}
         </div>
       ))}
+
+      {/* Pattern band before footer */}
+      {immersive && immersiveAssets.patternUrl && (
+        <div className="bb-pattern-band" aria-hidden="true">
+          <div className="bb-band-pattern" />
+          <div className="bb-band-mascot" />
+          <div className="bb-band-name">{data.brandName}</div>
+        </div>
+      )}
+
+      {/* Asset gallery strip — shows all generated brand assets */}
+      {immersive && (() => {
+        const assets = getAvailableAssets();
+        if (assets.length < 3) return null;
+        return (
+          <div className="bb-asset-strip">
+            {assets.map((a, i) => (
+              <div key={i} className="bb-strip-item">
+                <img src={a.url} alt={a.label} />
+                <div className="bb-strip-label">{a.label}</div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Brand footer in immersive mode */}
       {immersive && (

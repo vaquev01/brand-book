@@ -711,6 +711,212 @@ export function BrandImmersiveTheme({
           position: relative;
           z-index: 1;
         }
+
+        /* ═══════ SECTION HERO IMAGE ═══════ */
+        #brandbook-content.bb-immersive .bb-section-hero {
+          position: relative;
+          border-radius: 18px;
+          overflow: hidden;
+          margin-bottom: 20px;
+          box-shadow: 0 16px 48px ${rgba(P, 0.18)};
+        }
+
+        #brandbook-content.bb-immersive .bb-section-hero img {
+          display: block;
+          width: 100%;
+          height: auto;
+          max-height: 320px;
+          object-fit: cover;
+          filter: saturate(1.1) contrast(1.02);
+        }
+
+        #brandbook-content.bb-immersive .bb-section-hero .bb-hero-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to top,
+            ${rgba(P, 0.55)} 0%,
+            transparent 50%
+          );
+          pointer-events: none;
+        }
+
+        #brandbook-content.bb-immersive .bb-section-hero .bb-hero-label {
+          position: absolute;
+          bottom: 16px; left: 20px;
+          font-family: var(--bb-heading-font);
+          font-size: 0.7rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: rgba(255,255,255,0.8);
+          z-index: 1;
+        }
+
+        /* ═══════ PATTERN BAND ═══════ */
+        #brandbook-content.bb-immersive .bb-pattern-band {
+          position: relative;
+          height: 80px;
+          border-radius: 16px;
+          overflow: hidden;
+          margin: 24px 0;
+          background: linear-gradient(135deg, ${rgba(P, 0.08)}, ${rgba(A, 0.06)});
+          box-shadow: inset 0 0 0 1px ${rgba(P, 0.10)};
+        }
+
+        #brandbook-content.bb-immersive .bb-pattern-band .bb-band-pattern {
+          position: absolute;
+          inset: -50%;
+          background-image: var(--bb-pattern-url);
+          background-repeat: repeat;
+          background-size: 200px 200px;
+          opacity: 0.25;
+          mix-blend-mode: multiply;
+          animation: bb-drift 60s linear infinite;
+        }
+
+        #brandbook-content.bb-immersive .bb-pattern-band .bb-band-mascot {
+          position: absolute;
+          right: 20px; top: 50%;
+          transform: translateY(-50%);
+          width: 60px; height: 60px;
+          background-image: var(--bb-watermark-url);
+          background-size: contain;
+          background-repeat: no-repeat;
+          opacity: 0.12;
+          mix-blend-mode: multiply;
+        }
+
+        #brandbook-content.bb-immersive .bb-pattern-band .bb-band-name {
+          position: absolute;
+          left: 24px; top: 50%;
+          transform: translateY(-50%);
+          font-family: var(--bb-heading-font);
+          font-weight: 900;
+          font-size: 1.4rem;
+          color: ${rgba(P, 0.12)};
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+
+        /* ═══════ ASSET GALLERY STRIP ═══════ */
+        #brandbook-content.bb-immersive .bb-asset-strip {
+          display: flex;
+          gap: 12px;
+          overflow-x: auto;
+          padding: 8px 0 16px;
+          margin: 16px 0;
+          scrollbar-width: thin;
+          scrollbar-color: ${rgba(P, 0.2)} transparent;
+        }
+
+        #brandbook-content.bb-immersive .bb-asset-strip::-webkit-scrollbar {
+          height: 4px;
+        }
+
+        #brandbook-content.bb-immersive .bb-asset-strip::-webkit-scrollbar-thumb {
+          background: ${rgba(P, 0.2)};
+          border-radius: 2px;
+        }
+
+        #brandbook-content.bb-immersive .bb-asset-strip .bb-strip-item {
+          flex: 0 0 auto;
+          position: relative;
+          border-radius: 14px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px ${rgba(P, 0.12)};
+          border: 1px solid ${rgba(P, 0.10)};
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #brandbook-content.bb-immersive .bb-asset-strip .bb-strip-item:hover {
+          transform: scale(1.03);
+          box-shadow: 0 12px 36px ${rgba(P, 0.18)};
+        }
+
+        #brandbook-content.bb-immersive .bb-asset-strip .bb-strip-item img {
+          display: block;
+          height: 160px;
+          width: auto;
+          min-width: 160px;
+          object-fit: cover;
+        }
+
+        #brandbook-content.bb-immersive .bb-asset-strip .bb-strip-label {
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          padding: 6px 10px;
+          background: linear-gradient(to top, ${rgba(P, 0.7)}, transparent);
+          font-size: 0.6rem;
+          font-weight: 700;
+          color: #fff;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
+
+        /* ═══════ FULL-WIDTH ATMOSPHERE DIVIDER ═══════ */
+        #brandbook-content.bb-immersive .bb-atmo-divider {
+          position: relative;
+          border-radius: 20px;
+          overflow: hidden;
+          margin: 32px 0;
+          height: 220px;
+          box-shadow: 0 20px 56px ${rgba(P, 0.22)};
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-divider img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          filter: saturate(1.2) contrast(1.05);
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-divider .bb-divider-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            135deg,
+            ${rgba(P, 0.6)} 0%,
+            ${rgba(A, 0.3)} 50%,
+            transparent 100%
+          );
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-divider .bb-divider-pattern {
+          position: absolute;
+          inset: -50%;
+          background-image: var(--bb-pattern-url);
+          background-repeat: repeat;
+          background-size: 280px 280px;
+          opacity: 0.14;
+          mix-blend-mode: overlay;
+          pointer-events: none;
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-divider .bb-divider-content {
+          position: absolute;
+          bottom: 24px; left: 28px;
+          z-index: 2;
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-divider .bb-divider-content h3 {
+          color: #fff !important;
+          font-family: var(--bb-heading-font);
+          font-weight: 900;
+          font-size: 1.5rem;
+          text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+          margin: 0;
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-divider .bb-divider-content h3::after {
+          display: none;
+        }
+
+        #brandbook-content.bb-immersive .bb-atmo-divider .bb-divider-content p {
+          color: rgba(255,255,255,0.7);
+          font-size: 0.75rem;
+          margin-top: 4px;
+        }
       `}</style>
     </>
   );
