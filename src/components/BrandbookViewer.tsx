@@ -1,5 +1,12 @@
 "use client";
 
+import { useMemo, useState, type CSSProperties } from "react";
+import {
+  BrandImmersiveTheme,
+  brandVoiceQuote,
+  getImmersiveTheme,
+} from "./BrandImmersiveTheme";
+
 import { BrandbookData, UploadedAsset, GeneratedAsset, Colors } from "@/lib/types";
 import { SectionCover } from "./sections/SectionCover";
 import { SectionDNA } from "./sections/SectionDNA";
@@ -82,6 +89,8 @@ export function BrandbookViewer({
 }: Props) {
   const isAdvanced = !!data.uxPatterns;
   const hasGeneration = !!apiKeys && !!onAssetGenerated;
+
+  const [immersive, setImmersive] = useState(false);
 
   const noop = () => {};
   const imgGen = useImageGeneration({
@@ -326,10 +335,52 @@ export function BrandbookViewer({
     }))
     .filter((g) => g.items.length > 0);
 
+  const theme = useMemo(() => getImmersiveTheme(data), [data]);
+  const immersiveStyle: CSSProperties | undefined = immersive
+    ? ({
+        ["--bb-primary" as unknown as keyof CSSProperties]: theme.primaryHex,
+        ["--bb-accent" as unknown as keyof CSSProperties]: theme.accentHex,
+        ["--bb-bg" as unknown as keyof CSSProperties]: theme.bg,
+        ["--bb-border" as unknown as keyof CSSProperties]: theme.border,
+        ["--bb-muted" as unknown as keyof CSSProperties]: theme.muted,
+        ["--bb-heading-font" as unknown as keyof CSSProperties]:
+          `'${theme.headingFont}', ui-sans-serif, system-ui`,
+      } as unknown as CSSProperties)
+    : undefined;
+
   return (
-    <div className="max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="brandbook-content">
+    <div
+      className={`max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${immersive ? "bb-immersive" : ""}`}
+      id="brandbook-content"
+      style={immersiveStyle}
+    >
+      <BrandImmersiveTheme immersive={immersive} />
       <FontLoader data={data} />
       <SectionCover data={data} />
+
+      {/* Immersive Mode Toggle — always visible */}
+      <div className="no-print flex justify-end mb-4">
+        <button
+          type="button"
+          onClick={() => setImmersive((v) => !v)}
+          className={`text-xs font-bold px-4 py-2.5 rounded-xl border transition-all shadow-sm ${
+            immersive
+              ? "text-white shadow-md"
+              : "text-gray-700 bg-white hover:bg-gray-50 border-gray-200"
+          }`}
+          style={
+            immersive
+              ? {
+                  background: theme.primaryHex,
+                  borderColor: theme.primaryHex,
+                }
+              : undefined
+          }
+          title="Ativa uma apresentação imersiva: o brandbook se veste da marca com cores, tipografia e linguagem em primeira pessoa"
+        >
+          🎨 Modo Imersivo{immersive ? " ✓" : ""}
+        </button>
+      </div>
 
       {/* Generation Control Bar */}
       {hasGeneration && (
@@ -438,11 +489,27 @@ export function BrandbookViewer({
               </a>
             </div>
           </div>
-          {g.items.map((s) => (
-            <div key={s.id} id={s.id} className="scroll-mt-24">
-              {s.render(s.num)}
-            </div>
-          ))}
+          {g.items.map((s) => {
+            const quote = immersive ? brandVoiceQuote(s.id, data) : null;
+            return (
+              <div key={s.id} id={s.id} className="scroll-mt-24">
+                {quote && (
+                  <div className="bb-voice mb-4 px-4 py-3 rounded-xl border">
+                    <div
+                      className="text-xs font-bold uppercase tracking-wider"
+                      style={{ color: "var(--bb-primary)" }}
+                    >
+                      Voz da Marca
+                    </div>
+                    <div className="text-sm italic text-gray-700 leading-relaxed">
+                      {quote}
+                    </div>
+                  </div>
+                )}
+                {s.render(s.num)}
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>

@@ -66,6 +66,13 @@ export function SectionDNA({ data, num }: { data: BrandbookData; num: number }) 
         </div>
       </div>
 
+      {data.brandConcept.brandArchetype && (
+        <div className="mt-5 bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+          <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-2">Arquétipo da Marca</h3>
+          <p className="text-indigo-900 font-medium">{data.brandConcept.brandArchetype}</p>
+        </div>
+      )}
+
       <div className="mt-5">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Tom de Voz</h3>
         <p className="text-gray-700 italic border-l-4 border-gray-300 pl-4 py-2">{data.brandConcept.toneOfVoice}</p>

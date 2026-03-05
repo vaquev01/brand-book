@@ -30,6 +30,46 @@ function ColorSwatch({ color, onRemove }: { color: Color; onRemove?: () => void 
             <p className="text-[10px] text-gray-600 leading-relaxed"><span className="font-semibold text-gray-700">Uso:</span> {color.usage}</p>
           </div>
         )}
+        {color.tonalScale && color.tonalScale.length > 0 && (
+          <div className="mt-2 pt-2 border-t">
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Escala Tonal</p>
+            <div className="flex rounded overflow-hidden">
+              {color.tonalScale.map((s, i) => (
+                <div
+                  key={i}
+                  className="flex-1 h-5 relative group/shade"
+                  style={{ backgroundColor: s.hex }}
+                  title={`${s.shade}: ${s.hex}`}
+                >
+                  <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold opacity-0 group-hover/shade:opacity-100 transition-opacity" style={{ color: parseInt(s.shade) >= 500 ? '#fff' : '#000' }}>{s.shade}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TonalScaleStrip({ color }: { color: Color }) {
+  if (!color.tonalScale || color.tonalScale.length === 0) return null;
+  return (
+    <div className="mb-4">
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color.hex }} />
+        <span className="text-xs font-bold text-gray-700">{color.name}</span>
+      </div>
+      <div className="flex rounded-lg overflow-hidden shadow-sm border">
+        {color.tonalScale.map((s, i) => (
+          <div key={i} className="flex-1 flex flex-col items-center group/shade" style={{ backgroundColor: s.hex }}>
+            <div className="h-10 w-full" />
+            <div className="w-full text-center py-1" style={{ backgroundColor: 'rgba(255,255,255,0.85)' }}>
+              <span className="block text-[9px] font-bold text-gray-800">{s.shade}</span>
+              <span className="block text-[8px] font-mono text-gray-500">{s.hex}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -150,10 +190,46 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
       {isAdvanced && data.colors.dataViz && (
         <>
           <h3 className="text-base font-semibold mb-3 border-l-4 border-purple-500 pl-3">DataViz (Gráficos)</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
             {data.colors.dataViz.map((c, i) => <ColorSwatch key={i} color={c} />)}
           </div>
         </>
+      )}
+
+      {/* Tonal Scale Strips — full-width view for colors that have scales */}
+      {(() => {
+        const colorsWithScale = [...data.colors.primary, ...data.colors.secondary].filter(c => c.tonalScale && c.tonalScale.length > 0);
+        if (colorsWithScale.length === 0) return null;
+        return (
+          <>
+            <h3 className="text-base font-semibold mb-3 border-l-4 border-gray-600 pl-3">Escalas Tonais (50–900)</h3>
+            {colorsWithScale.map((c, i) => <TonalScaleStrip key={i} color={c} />)}
+          </>
+        );
+      })()}
+
+      {isAdvanced && data.colors.semantic && (
+        <div className="mt-5 bg-gray-50 border rounded-lg p-4">
+          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Regras de Uso Semântico</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-700">
+            <div className="flex items-start gap-2">
+              <span className="w-3 h-3 rounded-full mt-0.5 shrink-0" style={{ backgroundColor: data.colors.semantic.error.hex }} />
+              <span>Erros devem combinar <strong>cor + texto explicativo</strong>. Nunca depender apenas de cor.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-3 h-3 rounded-full mt-0.5 shrink-0" style={{ backgroundColor: data.colors.semantic.success.hex }} />
+              <span>Sucesso confirmado com <strong>feedback visual + mensagem</strong> de conclusão.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-3 h-3 rounded-full mt-0.5 shrink-0" style={{ backgroundColor: data.colors.semantic.warning.hex }} />
+              <span>Alertas devem ter <strong>borda + texto</strong>, sem bloquear a ação do usuário.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-3 h-3 rounded-full mt-0.5 shrink-0" style={{ backgroundColor: data.colors.semantic.info.hex }} />
+              <span>Informações contextuais em <strong>banners discretos</strong> ou tooltips, nunca modais.</span>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

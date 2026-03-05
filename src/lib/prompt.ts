@@ -96,19 +96,19 @@ REGRAS AVANÇADAS DE QUALIDADE (OBRIGATÓRIAS):
 
 INSTRUÇÕES POR SEÇÃO:
 1. "brandName" + "industry": nome exato e nicho preciso (não genérico).
-2. "brandConcept": propósito filosófico profundo, missão acionável, visão aspiracional, UVP diferenciada (não clichê), RTBs verificáveis, psicografia do usuário detalhada, valores com conexão visual, personalidade com nuances, tom de voz com exemplos.
+2. "brandConcept": propósito filosófico profundo, missão acionável, visão aspiracional, UVP diferenciada (não clichê), RTBs verificáveis, psicografia do usuário detalhada, valores com conexão visual, personalidade com nuances, tom de voz com exemplos. "brandArchetype" — arquétipo dominante da marca (Sábio, Criador, Governante, Herói, Explorador, Rebelde, Mago, Cuidador, Amante, Bobo, Cara Comum, Inocente) com breve explicação de COMO esse arquétipo se manifesta na interface e no comportamento do produto (ex: "Sábio — dados claros, visualizações sem ruído, linguagem técnica acessível").
 3. "positioning": categoria inovadora (não a óbvia), mercado-alvo preciso, positioning statement memorável, diferenciais realmente únicos, concorrentes honestos, RTBs concretos.
-4. "audiencePersonas": 2-4 personas ricas — nomes reais, contextos de vida detalhados, objetivos com emoção por trás, dores com profundidade, objeções específicas, canais preferidos com frequência de uso.
+4. "audiencePersonas": 2-4 personas ricas — nomes reais, contextos de vida detalhados, objetivos com emoção por trás, dores com profundidade, objeções específicas, canais preferidos com frequência de uso. Para SaaS/produtos digitais, inclua também: "companySize" (tamanho da empresa — ex: "Startup 10-50 pessoas", "Scale-up 200-500", "Enterprise 1000+") e "digitalMaturity" (maturidade digital — ex: "Avançada: usa ferramentas integradas, data-driven", "Intermediária: planilhas + ferramentas básicas", "Iniciante: processos manuais").
 5. "verbalIdentity": tagline memorável e intraduzível (que se perde algo na tradução), one-liner com ganchos, traços de voz com exemplos, messaging pillars com copy real, vocabulário com pelo menos 8 palavras em cada lista, do/don'ts acionáveis, 5+ headlines e CTAs variados.
 6. "logo": URLs placehold.co realistas (use cores da paleta no URL). Conceito do símbolo claro no clearSpace. Regras de uso incorreto específicas e ilustrativas (mínimo 5).
 7. "logoVariants": todas as 6 variações com URLs placehold.co.
-8. "colors": paleta primária (2-3 cores), secundária (2-4 cores), semântica completa, dataViz (5-8 cores). Nomes criativos e específicos. HEX preciso, RGB e CMYK corretos. Cada cor DEVE ter "usage" explicando onde e como usar (ex: "Fundo principal de materiais impressos", "Texto primário e blocos sólidos", "Destaques e call-to-action"). Inclua "pantone" quando aplicável (ex: "Pantone 286 C" para cores sólidas) — essencial para produção física (uniformes, sinalização, embalagens).
+8. "colors": paleta primária (2-3 cores), secundária (2-4 cores), semântica completa, dataViz (5-8 cores). Nomes criativos e específicos. HEX preciso, RGB e CMYK corretos. Cada cor DEVE ter "usage" explicando onde e como usar (ex: "Fundo principal de materiais impressos", "Texto primário e blocos sólidos", "Destaques e call-to-action"). Inclua "pantone" quando aplicável (ex: "Pantone 286 C" para cores sólidas) — essencial para produção física (uniformes, sinalização, embalagens). ESCALA TONAL (OBRIGATÓRIA PARA CORES PRIMÁRIAS E SECUNDÁRIAS): Cada cor primária e secundária DEVE incluir "tonalScale" — array de shades de 50 a 900 (mínimo 7 shades: 50, 100, 200, 300, 500, 700, 900). Shade 500 deve ser a cor principal. Shades claros (50-200) para backgrounds e hover states. Shades escuros (700-900) para textos e estados pressed. Ex: [{"shade":"50","hex":"#EFF6FF"},{"shade":"100","hex":"#DBEAFE"},{"shade":"500","hex":"#3B82F6"},{"shade":"700","hex":"#1D4ED8"},{"shade":"900","hex":"#1E3A8A"}]. Essencial para UI/produto digital.
 9. "typography": 3 famílias distintas com personalidades complementares — marketing/display, UI/interface, monospace/código. Cada fonte DEVE ter: "fallbackFont" (alternativa Google Fonts gratuita), "textTransform" se aplicável (lowercase, uppercase, capitalize, none), "category" (Script, Sans-Serif, Serif, Display, Monospace).
 10. "typographyScale": mínimo 8 níveis (Display, H1, H2, H3, H4, Body Large, Body, Body Small, Caption, Overline) com medidas em px, line-heights calculados, letter-spacing em em.
 11. "designTokens": mínimo 10 valores de spacing (4px grid), 6+ border-radii com casos de uso, shadows (3-5 níveis: sm, md, lg, xl), breakpoints (mobile, tablet, desktop, wide), grid (sistema de grid responsivo).
 12. "uiGuidelines": grid responsivo detalhado, densidade/espaçamento com exemplos, estilo de iconografia com peso e estilo, estilo de ilustração coerente com a marca, guidelines de dataviz, mínimo 6 componentes com estados completos (default, hover, focus, active, disabled, error).
 13. "uxPatterns": descrições detalhadas com fluxos, exemplos de copy real para cada pattern.
-14. "microcopy": regras com exemplos reais de copy em cada contexto.
+14. "microcopy": regras com exemplos reais de copy em cada contexto. "writingConventions" — convenções de escrita para produto digital: capitalização (Sentence case vs Title Case), voz (ativa sempre, nunca passiva), regras de botões (sem artigos: "Criar campanha" não "Criar uma campanha"), tom de erro (nunca culpar o usuário), máximo de caracteres por contexto (botão: 3 palavras, título: 70 chars, tooltip: 120 chars).
 15. "accessibility": regras WCAG 2.2 AA/AAA específicas, exemplos de ratios de contraste, CSS de focus states, estratégias de independência de cor.
 16. "motion": durações em ms, funções de easing específicas (cubic-bezier), triggers e estados de carregamento com exemplos.
 17. "keyVisual": mínimo 6 elementos gráficos detalhados, estilo fotográfico com referências reais, iconografia com peso e estilo, ilustrações com técnica, arquitetura de marketing com hierarquia, compositionPhilosophy (filosofia de composição — como organizar os elementos visuais: abundância vs minimalismo, bordas vs centro, hierarquia espacial). MASCOTES: Avalie e crie se aplicável (1-3 mascotes ricos). SÍMBOLOS: mínimo 3 símbolos identitários. PADRÕES: "patterns" (string[] legado) E "structuredPatterns" (array de objetos detalhados com name, description, composition, usage, density, background — mínimo 2 padrões). CATEGORIZAÇÃO DE ATIVOS VISUAIS: preencher "flora" (elementos botânicos/naturais), "fauna" (animais/mascotes informais), "objects" (objetos identitários — instrumentos, utensílios, elementos culturais).
@@ -119,6 +119,14 @@ INSTRUÇÕES POR SEÇÃO:
 21. "brandStory": narrativa profunda da marca em 3 campos — "manifesto" (texto de marca de 2-3 parágrafos, estilo manifesto, na voz da marca, emocional e aspiracional), "originStory" (história de origem — por que a marca foi criada, o problema que resolve, o momento da virada), "brandPromise" (promessa central e inquebrável da marca para seus clientes — 1-2 frases precisas), "brandBeliefs" (lista de 4-6 crenças que a marca defende, no formato "Acreditamos que...").
 22. "verbalIdentity.tonePerChannel": para cada canal relevante (Instagram, LinkedIn, WhatsApp, Email, TikTok, Site, Atendimento), especifique: "channel", "tone" (como a marca fala nesse canal especificamente), "example" (exemplo real de post/mensagem/resposta naquele canal).
 23. "socialMediaGuidelines": guia completo de redes sociais. Para cada plataforma relevante: "platform", "primaryFormats" (formatos com dimensões exatas: ex: "Feed 1080×1080px, Reels 1080×1920px, Stories 1080×1920px"), "tone" (tom específico para esta plataforma), "contentPillars" (4-5 pilares de conteúdo — o que postar), "frequency" (frequência recomendada), "doList" (3+ práticas recomendadas), "dontList" (3+ proibições), "examplePost" (exemplo de post pronto para publicar). Inclua também: "globalHashtagStrategy" e "brandVoiceAdaptation" (como adaptar a voz global por canal).
+24. "governance": governança do design system — como a marca é mantida viva e consistente. "designTools" (ferramentas de design — ex: "Figma para design, com auto-layout obrigatório e componentes em library compartilhada"), "documentationPlatform" (onde vive a documentação — ex: "Zeroheight sincronizado com Figma, acesso por link para stakeholders"), "componentLibrary" (biblioteca de componentes — ex: "Storybook v7 com visual regression testing via Chromatic, publicado no npm interno"), "versioningStrategy" (como versionar mudanças — ex: "Semantic versioning para tokens e componentes, changelog automático via conventional commits"), "updateProcess" (processo de atualização — ex: "RFC para mudanças breaking, review de 2 designers + 1 dev, deploy quinzenal"), "ownershipRoles" (quem é responsável — ex: "Design System Team: 1 Design Lead + 2 Engineers, com office hours semanais para squads").
+
+NOTA SOBRE ICONOGRAFIA E ILUSTRAÇÃO:
+- "uiGuidelines.iconographyStyle" = especificação TÉCNICA para produto (grid px, stroke weight, corner radius, biblioteca recomendada como Lucide/Phosphor)
+- "keyVisual.iconography" = estilo ARTÍSTICO/identitário da marca (linguagem visual, personalidade, como os ícones se conectam à marca)
+- "uiGuidelines.illustrationStyle" = diretrizes de IMPLEMENTAÇÃO (paleta permitida, nível de detalhe, formato de entrega)
+- "keyVisual.illustrations" = estilo CONCEITUAL (técnica artística, referências de ilustradores, mood)
+Não duplique o conteúdo — cada campo tem propósito distinto.
 
 ESTRUTURA JSON EXIGIDA:
 {
@@ -134,7 +142,8 @@ ESTRUTURA JSON EXIGIDA:
     "userPsychographics": "string",
     "values": ["string"],
     "personality": ["string"],
-    "toneOfVoice": "string"
+    "toneOfVoice": "string",
+    "brandArchetype": "string (arquétipo dominante — ex: 'Sábio — dados claros, visualizações sem ruído, linguagem técnica acessível')"
   },
   "positioning": {
     "category": "string",
@@ -152,7 +161,9 @@ ESTRUTURA JSON EXIGIDA:
       "goals": ["string"],
       "painPoints": ["string"],
       "objections": ["string"],
-      "channels": ["string"]
+      "channels": ["string"],
+      "companySize": "string (ex: 'Startup 10-50 pessoas', 'Scale-up 200-500', 'Enterprise 1000+')",
+      "digitalMaturity": "string (ex: 'Avançada: data-driven, ferramentas integradas')"
     }
   ],
   "verbalIdentity": {
@@ -203,8 +214,8 @@ ESTRUTURA JSON EXIGIDA:
     "brandBeliefs": ["string (ex: 'Acreditamos que...' — 4-6 crenças da marca)"]
   },
   "colors": {
-    "primary": [{ "name": "string (nome criativo com simbolismo)", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (ex: Pantone 286 C — para produção física)", "usage": "string (onde e como usar esta cor — ex: fundo principal, texto, destaques, CTA)" }],
-    "secondary": [{ "name": "string", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (opcional)", "usage": "string" }],
+    "primary": [{ "name": "string (nome criativo com simbolismo)", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (ex: Pantone 286 C — para produção física)", "usage": "string (onde e como usar esta cor — ex: fundo principal, texto, destaques, CTA)", "tonalScale": [{"shade": "string (50|100|200|300|400|500|600|700|800|900)", "hex": "string"}] }],
+    "secondary": [{ "name": "string", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (opcional)", "usage": "string", "tonalScale": [{"shade": "string", "hex": "string"}] }],
     "semantic": {
       "success": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" },
       "error": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" },
@@ -262,7 +273,8 @@ ESTRUTURA JSON EXIGIDA:
   "microcopy": {
     "buttonRules": "string (com exemplos reais de copy)",
     "errorMessages": "string (com exemplos reais de mensagens)",
-    "emptyStateCopy": "string (com exemplos reais de copy)"
+    "emptyStateCopy": "string (com exemplos reais de copy)",
+    "writingConventions": "string (regras de escrita para produto: Sentence case, voz ativa, sem artigos em botões, limites de caracteres)"
   },
   "accessibility": {
     "contrastRules": "string (ratios específicos para cada combinação de cor da paleta, WCAG 2.2)",
@@ -382,6 +394,14 @@ ESTRUTURA JSON EXIGIDA:
     "cameraSignature": "string (linguagem de câmera padrão da marca — lente, DOF, perspectiva. Ex: '50mm f/1.8 para lifestyle (intimidade sem distorção), 85mm f/2.8 para produto (compressão premium), 24mm f/8 para arquitetura/espaço (profundidade e contexto)'. Define como a marca 'vê' o mundo.)",
     "brandArchetype": "string (arquétipo dominante + secundário da marca com tradução visual. Ex: 'Creator (dominante) + Sage (secundário) — tensão criativa com clareza intelectual: ângulos inesperados mas composição estruturada, paleta vívida mas tons sofisticados, energia de workshop mas profundidade de biblioteca'.)",
     "sensoryProfile": "string (perfil sensorial completo — como a marca seria percebida pelos 5 sentidos traduzidos em linguagem visual. Ex: 'Visual: linhas limpas com micro-detalhes orgânicos. Tátil: superfícies frias com warmth spots. Olfativo (traduzido): frescor de hortelã + madeira. Sonoro (traduzido): silêncio contemplativo pontuado por notas claras. Esse perfil guia a atmosfera de todas as imagens.')"
+  },
+  "governance": {
+    "designTools": "string (ferramentas de design — Figma, Sketch, Adobe XD, com regras de uso)",
+    "documentationPlatform": "string (onde vive a documentação — Zeroheight, Notion, Storybook Docs)",
+    "componentLibrary": "string (biblioteca de componentes — Storybook, npm package, monorepo)",
+    "versioningStrategy": "string (semantic versioning, changelog, breaking changes)",
+    "updateProcess": "string (processo de atualização — RFC, reviews, deploy cadence)",
+    "ownershipRoles": "string (quem mantém — Design System Team, responsabilidades, office hours)"
   }
 }`;
 }

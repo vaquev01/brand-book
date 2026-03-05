@@ -19,6 +19,22 @@ export function SectionAudiencePersonas({ data, num }: { data: BrandbookData; nu
               <div className="text-sm text-gray-600 mt-1">{p.role}</div>
             </div>
             <div className="p-4 space-y-4">
+              {(p.companySize || p.digitalMaturity) && (
+                <div className="flex flex-wrap gap-3">
+                  {p.companySize && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 flex-1 min-w-[140px]">
+                      <div className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">Porte</div>
+                      <p className="text-xs text-blue-900 font-medium">{p.companySize}</p>
+                    </div>
+                  )}
+                  {p.digitalMaturity && (
+                    <div className="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 flex-1 min-w-[140px]">
+                      <div className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Maturidade Digital</div>
+                      <p className="text-xs text-purple-900 font-medium">{p.digitalMaturity}</p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contexto</div>
                 <p className="text-sm text-gray-700">{p.context}</p>

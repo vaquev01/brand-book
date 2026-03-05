@@ -1,3 +1,8 @@
+export interface ColorShade {
+  shade: string;
+  hex: string;
+}
+
 export interface Color {
   name: string;
   hex: string;
@@ -5,6 +10,7 @@ export interface Color {
   cmyk: string;
   pantone?: string;
   usage?: string;
+  tonalScale?: ColorShade[];
 }
 
 export interface Typography {
@@ -50,6 +56,7 @@ export interface BrandConcept {
   values: string[];
   personality: string[];
   toneOfVoice: string;
+  brandArchetype?: string;
 }
 
 export interface Logo {
@@ -101,6 +108,7 @@ export interface Microcopy {
   buttonRules: string;
   errorMessages: string;
   emptyStateCopy: string;
+  writingConventions?: string;
 }
 
 export interface Accessibility {
@@ -208,6 +216,8 @@ export interface AudiencePersona {
   painPoints: string[];
   objections: string[];
   channels: string[];
+  companySize?: string;
+  digitalMaturity?: string;
 }
 
 export interface LogoVariants {
@@ -301,6 +311,15 @@ export interface ImageGenerationBriefing {
   sensoryProfile?: string;
 }
 
+export interface Governance {
+  designTools: string;
+  documentationPlatform: string;
+  componentLibrary: string;
+  versioningStrategy: string;
+  updateProcess: string;
+  ownershipRoles: string;
+}
+
 export interface BrandbookData {
   schemaVersion?: string;
   brandName: string;
@@ -326,6 +345,7 @@ export interface BrandbookData {
   applications: Application[];
   productionGuidelines?: ProductionGuidelines;
   imageGenerationBriefing?: ImageGenerationBriefing;
+  governance?: Governance;
 }
 
 export type ImageProvider = "dalle3" | "stability" | "ideogram" | "imagen";

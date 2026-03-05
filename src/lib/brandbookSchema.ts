@@ -3,6 +3,11 @@ import { ASSET_CATALOG } from "@/lib/imagePrompts";
 
 const NonEmptyString = z.string().min(1);
 
+const ColorShadeSchema = z.object({
+  shade: NonEmptyString,
+  hex: NonEmptyString,
+});
+
 const ColorSchema = z.object({
   name: NonEmptyString,
   hex: NonEmptyString,
@@ -10,6 +15,7 @@ const ColorSchema = z.object({
   cmyk: NonEmptyString,
   pantone: z.string().optional(),
   usage: z.string().optional(),
+  tonalScale: z.array(ColorShadeSchema).optional(),
 });
 
 const BrandConceptSchema = z.object({
@@ -22,6 +28,7 @@ const BrandConceptSchema = z.object({
   values: z.array(NonEmptyString).min(3),
   personality: z.array(NonEmptyString).min(3),
   toneOfVoice: NonEmptyString,
+  brandArchetype: z.string().optional(),
 });
 
 const LogoSchema = z.object({
@@ -121,6 +128,7 @@ const MicrocopySchema = z.object({
   buttonRules: NonEmptyString,
   errorMessages: NonEmptyString,
   emptyStateCopy: NonEmptyString,
+  writingConventions: z.string().optional(),
 });
 
 const AccessibilitySchema = z.object({
@@ -261,6 +269,8 @@ const AudiencePersonaSchema = z.object({
   painPoints: z.array(NonEmptyString).min(2),
   objections: z.array(NonEmptyString).min(2),
   channels: z.array(NonEmptyString).min(2),
+  companySize: z.string().optional(),
+  digitalMaturity: z.string().optional(),
 });
 
 const ProductionDeliverableSchema = z.object({
@@ -295,6 +305,15 @@ const ProductionGuidelinesSchema = z.object({
   }),
   deliverables: z.array(ProductionDeliverableSchema).min(2),
   productionMethods: z.array(ProductionMethodSchema).optional(),
+});
+
+const GovernanceSchema = z.object({
+  designTools: NonEmptyString,
+  documentationPlatform: NonEmptyString,
+  componentLibrary: NonEmptyString,
+  versioningStrategy: NonEmptyString,
+  updateProcess: NonEmptyString,
+  ownershipRoles: NonEmptyString,
 });
 
 const ImageGenerationBriefingSchema = z.object({
@@ -342,6 +361,7 @@ export const BrandbookSchemaLoose = z.object({
   applications: z.array(ApplicationSchema).min(1),
   productionGuidelines: ProductionGuidelinesSchema.optional(),
   imageGenerationBriefing: ImageGenerationBriefingSchema.optional(),
+  governance: GovernanceSchema.optional(),
 });
 
 export const BrandbookSchemaV2 = BrandbookSchemaLoose.extend({
@@ -361,6 +381,7 @@ export const BrandbookSchemaV2 = BrandbookSchemaLoose.extend({
   productionGuidelines: ProductionGuidelinesSchema,
   imageGenerationBriefing: ImageGenerationBriefingSchema,
   applications: z.array(ApplicationSchemaV2).min(3),
+  governance: GovernanceSchema,
 });
 
 export type BrandbookV2 = z.infer<typeof BrandbookSchemaV2>;
