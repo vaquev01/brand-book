@@ -57,6 +57,15 @@ export const PROVIDERS: {
   },
 ];
 
+export const IMMERSIVE_ESSENTIALS: AssetKey[] = [
+  "hero_visual",
+  "brand_pattern",
+  "brand_mascot",
+  "hero_lifestyle",
+  "presentation_bg",
+  "materials_board",
+];
+
 const STRICT_LOGO_ASSETS: AssetKey[] = [
   "logo_primary",
   "logo_dark_bg",
@@ -459,6 +468,23 @@ export function useImageGeneration({
     }
   }, [generate, generatedAssets]);
 
+  const generateImmersiveAssets = useCallback(async (): Promise<number> => {
+    const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
+    if (!providerKey) return 0;
+    const missing = IMMERSIVE_ESSENTIALS.filter((k) => !generatedAssets[k]);
+    if (missing.length === 0) return 0;
+    batchAbortRef.current = false;
+    let generated = 0;
+    for (const key of missing) {
+      if (batchAbortRef.current) break;
+      await generate(key);
+      generated++;
+    }
+    return generated;
+  }, [generate, generatedAssets, apiKeys, provider]);
+
+  const immersiveMissing = IMMERSIVE_ESSENTIALS.filter((k) => !generatedAssets[k]).length;
+
   const generateCategory = useCallback(
     async (category: string) => {
       batchAbortRef.current = false;
@@ -573,6 +599,8 @@ export function useImageGeneration({
     generate,
     generateApplication,
     generateAllAssets,
+    generateImmersiveAssets,
+    immersiveMissing,
     generateCategory,
     generateAllApplications,
     cancelBatch,

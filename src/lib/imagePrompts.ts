@@ -42,73 +42,159 @@ export type AssetKey = (typeof ASSET_CATALOG)[number]["key"];
 function industryVisualLanguage(industry: string): string {
   const i = industry.toLowerCase();
   if (/saas|software|tech|cloud|ai|data|platform|digital|startup|api|b2b/.test(i))
-    return "glowing data nodes, interconnected digital flows, floating UI panels, luminous gradient fields, geometric circuit-like patterns, abstract network topology";
-  if (/restauran|food|gastro|caf|coffee|bar|sushi|pizza|chef|culin|bistr/.test(i))
-    return "food textures and macro close-ups, steam wisps, overhead plating photography, ingredient details, warm candlelit or amber kitchen light";
+    return "Photography: glowing data nodes, abstract UI panels floating in depth, luminous gradient fields — ref. Linear/Stripe brand photography. Illustration: geometric circuit-like topology, isometric systems. Materiality: glass surfaces, frosted acrylic, backlit screens, holographic foil. Cultural ref: Dieter Rams precision meets Silicon Valley optimism.";
+  if (/restauran|food|gastro|caf|coffee|bar|sushi|pizza|chef|culin|bistr|boteco|empório/.test(i))
+    return "Photography: overhead plating (David Loftus style), macro ingredient textures, steam wisps, candlelit amber warmth 2700K, shallow DOF on garnish. Illustration: botanical engravings, hand-drawn menu art, woodcut prints. Materiality: kraft paper, ceramic, cast iron, reclaimed wood, linen napkin textures. Cultural ref: Bon Appétit editorial meets local terroir storytelling.";
   if (/fintech|financ|bank|invest|crédit|crypto|insurance|wealth|asset/.test(i))
-    return "geometric precision, golden ratio compositions, metallic gradient fields (gold/platinum), abstract data flow lines, architectural security-suggesting forms";
+    return "Photography: geometric precision, golden ratio compositions, architectural facades, metallic gradient fields (gold/platinum). Illustration: abstract data flow lines, topographic contours. Materiality: brushed metal, embossed paper, wax seal, heavy cotton stock. Cultural ref: Swiss Style grid discipline meets Bloomberg Terminal authority.";
   if (/health|saúde|medic|clinic|pharma|wellness|biotech|hospital/.test(i))
-    return "clean whites and calming blues, human touch moments, scientific precision, cell/molecular abstract forms, soft clinical lighting";
+    return "Photography: clean whites and calming blues, human touch moments, scientific precision, soft clinical lighting 5000K. Illustration: cell/molecular forms, anatomical line art, organic flow diagrams. Materiality: surgical steel, white ceramic, frosted glass, cotton gauze. Cultural ref: Apple Health purity meets Mayo Clinic trust.";
   if (/fitness|gym|sport|treino|esport|atleta|performanc/.test(i))
-    return "kinetic motion blur, muscle definition close-ups, outdoor dramatic light, explosive energy gestures, high-contrast athletic body forms";
+    return "Photography: kinetic motion blur, muscle definition close-ups, outdoor dramatic light, explosive energy — ref. Nike campaign photography. Illustration: dynamic vector forms, speed lines, athletic silhouettes. Materiality: rubber, mesh fabric, carbon fiber, anodized aluminum. Cultural ref: Wieden+Kennedy intensity meets Olympic graphic language.";
   if (/fashion|moda|luxury|luxo|jewel|jóia|accessory|beauty|cosmetic|skin/.test(i))
-    return "editorial negative space, fabric texture close-ups, product on skin/body, dramatic shadow play, high-fashion side lighting";
+    return "Photography: editorial negative space (Irving Penn approach), fabric texture close-ups, product on skin/body, dramatic shadow play, Rembrandt side lighting. Illustration: fashion croquis, minimal line drawings. Materiality: velvet, silk, marble, rose gold, hand-stitched leather. Cultural ref: Vogue Italia editorial meets Celine minimalism.";
   if (/education|educação|cours|learn|school|universit|ensino/.test(i))
-    return "open knowledge metaphors, light streaming through windows, collaborative group moments, books and growth symbolism, bright optimistic environments";
+    return "Photography: light streaming through windows, collaborative group moments, candid learning moments, bright optimistic environments 5600K. Illustration: open knowledge metaphors, growth diagrams, playful infographic elements. Materiality: chalk, worn wood, notebook paper, colored pencils. Cultural ref: TED visual identity meets Montessori warmth.";
   if (/construc|constru|architect|real estate|imobil|engenharia/.test(i))
-    return "architectural perspective lines, material textures (concrete, glass, steel), spatial depth through structures, morning golden light on facades";
+    return "Photography: architectural perspective lines, material textures (exposed concrete, steel I-beams, glass curtain walls), morning golden light on facades — ref. Iwan Baan architectural photography. Illustration: blueprint line drawings, section cuts, axonometric projections. Materiality: concrete, Corten steel, terrazzo, travertine marble. Cultural ref: Zaha Hadid Studio meets Dezeen editorial.";
   if (/ecommerc|retail|loja|shop|market|varejo/.test(i))
-    return "product hero shots, lifestyle-in-context, clean product-on-surface photography, packaging details, aspirational home/lifestyle environments";
+    return "Photography: product hero shots on clean surfaces, lifestyle-in-context, packaging close-ups, aspirational home environments — ref. Kinfolk/Cereal magazine style. Illustration: product line drawings, packaging diagrams. Materiality: recycled cardboard, tissue paper, cotton bag, washi tape, embossed stickers. Cultural ref: Glossier unboxing experience meets Muji simplicity.";
   if (/creat|design|agência|agency|media|publicidad|estúdio|studio/.test(i))
-    return "bold typographic compositions, Pantone color chips, creative process artifacts, sketches and screens, vibrant creative workspace environments";
+    return "Photography: bold typographic compositions, Pantone swatches, creative process artifacts (sketches, screens, mockups), vibrant workspace — ref. Sagmeister & Walsh. Illustration: hand-lettering, experimental layouts. Materiality: Fedrigoni paper, letterpress, silkscreen ink, neon signage. Cultural ref: Pentagram case studies meets It's Nice That editorial.";
   if (/logistic|transport|frete|supply chain|entregas/.test(i))
-    return "movement and speed trails, infrastructure scale, precise mechanical systems, global network maps, urban logistics contexts";
-  return "clean geometric abstraction, purposeful negative space, brand color field compositions, minimal premium design language";
+    return "Photography: movement trails, infrastructure at scale, precise mechanical systems, aerial cargo perspectives. Illustration: network maps, route diagrams, isometric warehouse views. Materiality: corrugated cardboard, aluminum truck panels, reflective safety tape. Cultural ref: DHL brand system precision meets FedEx operational clarity.";
+  if (/pet|animal|vet|cachorro|gato|cat|dog/.test(i))
+    return "Photography: authentic pet portraits (not studio stock), playful candid moments, soft natural light, shallow DOF on fur texture. Illustration: character-driven pet illustrations, paw prints, playful shapes. Materiality: natural wool, cork, denim, sustainable rubber. Cultural ref: BarkBox playfulness meets Patagonia warmth.";
+  if (/auto|car|motor|veículo|concessionária|oficina|moto/.test(i))
+    return "Photography: dramatic rim lighting on bodywork, reflections on polished paint, motion blur on wheels, cinematic highway perspectives. Illustration: technical line art, cross-sections, blueprint renderings. Materiality: brushed aluminum, leather, carbon fiber, rubber tire texture. Cultural ref: Porsche visual precision meets Top Gear cinematography.";
+  if (/travel|viagem|turismo|hotel|hostel|resort|airbnb/.test(i))
+    return "Photography: golden hour landscapes, aerial drone perspectives, intimate cultural moments, authentic local scenes — ref. National Geographic Traveler. Illustration: hand-drawn maps, travel journal sketches, vintage postal stamps. Materiality: leather journal, aged paper, linen, natural stone. Cultural ref: Airbnb belonging meets Condé Nast Traveler aspiration.";
+  if (/music|música|som|audio|podcast|rádio|dj|festival/.test(i))
+    return "Photography: dramatic stage lighting, analog equipment close-ups, audience energy, sound wave visualizations. Illustration: psychedelic patterns, vinyl cover art, typographic experiments. Materiality: vinyl grooves, speaker mesh, guitar strings, neon tubes. Cultural ref: Spotify Wrapped meets Pitchfork editorial meets album cover art history.";
+  if (/imobil|property|house|apartment|apart|condomin|loteamento/.test(i))
+    return "Photography: architectural interiors with natural light streaming, lifestyle shots in aspirational living spaces, aerial perspectives of neighborhoods. Illustration: floor plans, elevation drawings, neighborhood maps. Materiality: marble, hardwood flooring, brushed brass, handmade tiles. Cultural ref: Architectural Digest meets WeWork spatial branding.";
+  if (/agro|farm|agricultura|orgânic|natural|bio|horta|café|cacau/.test(i))
+    return "Photography: sunrise over fields, macro textures of soil/seeds/leaves, farmer's hands at work, harvest abundance — ref. documentary agricultural photography. Illustration: botanical specimens, vintage seed packet art, woodcut rural scenes. Materiality: burlap, raw cotton, terracotta, dried botanicals, hand-stamped kraft. Cultural ref: Whole Foods Market storytelling meets terroir wine label craft.";
+  if (/gaming|game|esport|jogo|console|streamer/.test(i))
+    return "Photography: neon-lit setups, RGB keyboard close-ups, team competition moments, immersive dark environments. Illustration: pixel art meets vector, character splash art, HUD-inspired graphics. Materiality: matte black plastic, RGB LED strips, holographic stickers, metallic ink on dark stock. Cultural ref: Riot Games brand system meets Razer visual intensity.";
+  if (/legal|law|advocacia|jurídic|escritório|direito/.test(i))
+    return "Photography: architectural library interiors, leather-bound volumes, judicial balance symbolism, mahogany and marble textures. Illustration: serif-heavy monograms, classical engravings, heraldic elements. Materiality: heavy linen paper, gold foil stamping, leather emboss, wax seal. Cultural ref: British barristers' chambers meets Swiss private banking sobriety.";
+  if (/infantil|child|kid|baby|bebê|brinquedo|toy|escola infantil/.test(i))
+    return "Photography: bright high-key environments, playful compositions with saturated primary colors, authentic child laughter moments. Illustration: rounded friendly shapes, hand-drawn characters, crayon/watercolor textures. Materiality: soft-touch surfaces, rounded wooden toys, cotton fabric, non-toxic paint. Cultural ref: LEGO playfulness meets Montessori simplicity meets Studio Ghibli warmth.";
+  return "Photography: purposeful negative space, controlled natural light, balanced compositions. Illustration: clean geometric abstraction, brand color field compositions. Materiality: premium paper stocks, subtle embossing, matte finishes. Cultural ref: Pentagram design thinking meets Wallpaper* magazine editorial quality.";
 }
 
-function deriveArchetype(personality: string[], toneOfVoice: string): string {
-  const all = [...personality, toneOfVoice].join(" ").toLowerCase();
-  const archetypes: [RegExp, string, string][] = [
-    [/hero|coraj|brav|forte|power|champion|lider|conquer|vitór/, "Hero", "triumphant intensity, upward momentum, golden dramatic light, monumental scale"],
-    [/creat|innov|imagin|art|vision|origin|invent|disrupt/, "Creator", "creative tension, unexpected angles, vivid palette contrasts, workshop-to-masterpiece energy"],
-    [/sage|sáb|wisdom|knowledge|expert|mentor|teach|intelli|analy/, "Sage", "contemplative clarity, structured geometry, cool intellectual light, library-to-cosmos depth"],
-    [/explor|aventur|discover|freedom|curios|journey|pioneer|desbravar/, "Explorer", "vast horizons, atmospheric perspective, golden-hour adventure light, open landscapes"],
-    [/rebel|outlaw|revolution|quebr|desafi|provoc|disrupt|underground/, "Outlaw", "raw contrast, gritty textures, dramatic chiaroscuro, urban edge, punk energy"],
-    [/magic|encant|transform|mistic|wonder|surpr|miraculou|fantast/, "Magician", "ethereal glow, impossible perspectives, aurora-like color shifts, dreamlike depth of field"],
-    [/cuidad|care|nurtur|protect|comfort|segur|acolh|empath|warm/, "Caregiver", "warm embrace lighting, soft focus edges, intimate proximity, cocooning composition"],
-    [/amant|lover|passion|seduc|beaut|sensual|desej|intim|elegant/, "Lover", "intimate bokeh, velvet textures, warm skin-tone lighting, sensual close-ups, editorial elegance"],
-    [/jest|humor|fun|playful|divert|alegr|leve|brincalh|irrever/, "Jester", "vibrant saturated pops, dynamic diagonal compositions, playful scale contrasts, comic energy"],
-    [/everyma|commu|perten|todos|simpl|autentic|real|honest|genuin/, "Everyman", "authentic natural light, documentary framing, relatable environments, honest imperfection"],
-    [/ruler|govern|control|premium|luxo|luxury|prestig|author|elite/, "Ruler", "regal symmetry, deep contrast, metallic accents, architectural grandeur, velvet-dark backgrounds"],
-    [/innocen|pure|otimis|hope|fresh|novo|clean|simple|joy/, "Innocent", "bright high-key lighting, clean whites, airy open spaces, optimistic upward compositions"],
-  ];
-  for (const [re, name, visual] of archetypes) {
-    if (re.test(all)) return `${name} — ${visual}`;
+const ARCHETYPE_VISUALS: Record<string, string> = {
+  Hero: "triumphant intensity, upward momentum, golden dramatic light, monumental scale, victory gestures, Olympian proportions",
+  Creator: "creative tension, unexpected camera angles, vivid palette contrasts, workshop-to-masterpiece energy, visible process marks, raw-material-to-art transformation",
+  Sage: "contemplative clarity, structured geometry, cool intellectual light 5600K, library-to-cosmos depth, information-as-beauty, data-visualization aesthetics",
+  Explorer: "vast horizons, atmospheric perspective, golden-hour adventure light, open landscapes, weather textures, journey-not-destination framing",
+  Outlaw: "raw contrast, gritty textures, dramatic chiaroscuro, urban edge, punk energy, defiant angles, torn-and-remade surfaces",
+  Magician: "ethereal glow, impossible perspectives, aurora-like color shifts, dreamlike depth of field, transformation mid-process, before-and-after implied in one frame",
+  Caregiver: "warm embrace lighting 2800K, soft focus edges, intimate proximity, cocooning composition, hands-touching-hands, shelter metaphors",
+  Lover: "intimate bokeh, velvet textures, warm skin-tone lighting, sensual close-ups, editorial elegance, magnetic tension between elements",
+  Jester: "vibrant saturated pops, dynamic diagonal compositions, playful scale contrasts, comic energy, surprise elements, intentional rule-breaking",
+  Everyman: "authentic natural light, documentary framing, relatable environments, honest imperfection, eye-level camera, unstaged moments",
+  Ruler: "regal symmetry, deep contrast, metallic accents (gold/platinum), architectural grandeur, velvet-dark backgrounds, monumental scale with human absence",
+  Innocent: "bright high-key lighting, clean whites, airy open spaces, optimistic upward compositions, morning-light warmth, childlike wonder perspective",
+};
+
+function deriveArchetype(personality: string[], toneOfVoice: string, explicitArchetype?: string): string {
+  if (explicitArchetype) {
+    const explicit = explicitArchetype.trim();
+    for (const [name, visual] of Object.entries(ARCHETYPE_VISUALS)) {
+      if (explicit.toLowerCase().includes(name.toLowerCase())) {
+        return `${name} — ${visual}`;
+      }
+    }
+    return explicit.includes(" — ") ? explicit : `${explicit.split(/\s*[-—]\s*/)[0]} — ${ARCHETYPE_VISUALS.Creator}`;
   }
-  return "Creator — creative tension, vivid palette, purposeful composition";
+
+  const all = [...personality, toneOfVoice].join(" ").toLowerCase();
+  const archetypes: [RegExp, string][] = [
+    [/hero|coraj|brav|forte|power|champion|lider|conquer|vitór|guerreir/, "Hero"],
+    [/creat|innov|imagin|art|vision|origin|invent/, "Creator"],
+    [/sage|sáb|wisdom|knowledge|expert|mentor|teach|intelli|analy/, "Sage"],
+    [/explor|aventur|discover|freedom|curios|journey|pioneer|desbravar/, "Explorer"],
+    [/rebel|outlaw|revolution|quebr|desafi|provoc|underground/, "Outlaw"],
+    [/magic|encant|transform|mistic|wonder|surpr|miraculou|fantast/, "Magician"],
+    [/cuidad|care|nurtur|protect|comfort|segur|acolh|empath|warm/, "Caregiver"],
+    [/amant|lover|passion|seduc|beaut|sensual|desej|intim|elegant/, "Lover"],
+    [/jest|humor|fun|playful|divert|alegr|leve|brincalh|irrever|entusias/, "Jester"],
+    [/everyma|commu|perten|todos|simpl|autentic|real|honest|genuin/, "Everyman"],
+    [/ruler|govern|control|premium|luxo|luxury|prestig|author|elite/, "Ruler"],
+    [/innocen|pure|otimis|hope|fresh|novo|clean|simple|joy/, "Innocent"],
+  ];
+
+  const scores: Record<string, number> = {};
+  for (const [re, name] of archetypes) {
+    const matches = all.match(new RegExp(re.source, "gi"));
+    if (matches) scores[name] = (scores[name] ?? 0) + matches.length;
+  }
+
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  if (sorted.length > 0) {
+    const primary = sorted[0][0];
+    const visual = ARCHETYPE_VISUALS[primary] ?? ARCHETYPE_VISUALS.Creator;
+    return `${primary} — ${visual}`;
+  }
+  return `Creator — ${ARCHETYPE_VISUALS.Creator}`;
 }
 
-function deriveEmotionalCore(manifesto: string, purpose: string, moodWords: string, archetype: string): string {
+function deriveEmotionalCore(manifesto: string, purpose: string, moodWords: string, archetype: string, brandPromise?: string): string {
   const archetypeName = archetype.split(" — ")[0] ?? "Creator";
   const emotionMap: Record<string, string> = {
-    Hero: "viewers should feel empowered, elevated, capable of greatness — a surge of confidence",
-    Creator: "viewers should feel inspired, curious, alive with creative possibility — the spark of invention",
-    Sage: "viewers should feel illuminated, trustful, intellectually stimulated — deep confidence in expertise",
-    Explorer: "viewers should feel free, adventurous, hungry for discovery — the call of the unknown",
-    Outlaw: "viewers should feel bold, rebellious, part of a counter-movement — electric defiance",
-    Magician: "viewers should feel wonder, transformation, the impossible becoming real — suspended disbelief",
-    Caregiver: "viewers should feel safe, nurtured, deeply understood — a warm exhale of relief",
-    Lover: "viewers should feel desired, captivated, emotionally connected — magnetic attraction",
-    Jester: "viewers should feel joy, lightness, permission to play — an irresistible smile",
-    Everyman: "viewers should feel belonging, recognition, honest connection — 'this is for me'",
-    Ruler: "viewers should feel prestige, aspiration, exclusive access — the weight of quality",
-    Innocent: "viewers should feel hope, freshness, optimistic simplicity — a bright new beginning",
+    Hero: "the viewer must feel empowered — a surge of confidence, the sense that greatness is within reach. Every composition should lift the gaze upward.",
+    Creator: "the viewer must feel inspired — alive with creative possibility, the spark of invention. Every image should feel like an idea about to happen.",
+    Sage: "the viewer must feel illuminated — intellectually stimulated, trusting in deep expertise. Every image should radiate quiet authority and clarity.",
+    Explorer: "the viewer must feel free — hungry for discovery, called by the unknown. Every image should expand horizons and suggest journeys.",
+    Outlaw: "the viewer must feel defiant — bold, electric, part of something that challenges the status quo. Every image should feel like a manifesto.",
+    Magician: "the viewer must feel wonder — the impossible becoming real, transformation mid-process. Every image should suspend disbelief.",
+    Caregiver: "the viewer must feel safe — nurtured, deeply understood, a warm exhale of relief. Every image should feel like arriving home.",
+    Lover: "the viewer must feel captivated — magnetically drawn in, emotionally connected. Every image should create intimate tension.",
+    Jester: "the viewer must feel joy — permission to play, lightness, an irresistible smile. Every image should break rules with a wink.",
+    Everyman: "the viewer must feel belonging — honest connection, 'this is for me'. Every image should feel real, relatable, unstaged.",
+    Ruler: "the viewer must feel prestige — aspiration, exclusive access, the weight of quality. Every image should command reverence.",
+    Innocent: "the viewer must feel hope — freshness, optimistic simplicity, a bright new beginning. Every image should feel like morning light.",
   };
-  const base = emotionMap[archetypeName] ?? emotionMap.Creator;
-  const seeds = [manifesto, purpose, moodWords].filter(Boolean);
-  return seeds.length > 0
-    ? `${base}. Brand soul: ${seeds[0].slice(0, 120)}`
-    : base;
+  const base = emotionMap[archetypeName] ?? emotionMap.Creator!;
+  const soulParts: string[] = [];
+  if (manifesto) soulParts.push(manifesto.slice(0, 500).replace(/\s+\S*$/, ""));
+  if (purpose && purpose !== manifesto) soulParts.push(purpose.slice(0, 200));
+  if (brandPromise) soulParts.push(`Promise: ${brandPromise.slice(0, 150)}`);
+  const soulStr = soulParts.length > 0
+    ? ` Brand soul distilled: "${soulParts.join(" — ")}". Mood essence: ${moodWords || "premium, intentional"}.`
+    : moodWords ? ` Mood essence: ${moodWords}.` : "";
+  return `${base}${soulStr}`;
+}
+
+function deriveDesignPhilosophy(ctx: {
+  compositionPhilosophy: string;
+  illustrationStyle: string;
+  photoStyle: string;
+  visualStyle: string;
+  archetypalEnergy: string;
+}): string {
+  const parts: string[] = [];
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+  const philosophyMap: Record<string, string> = {
+    Hero: "Bold, ascending, monumental. Negative space is earned, not default. Every element serves the upward narrative.",
+    Creator: "Intentionally imperfect, process-visible. The hand of the maker should be felt. Tension between chaos and order.",
+    Sage: "Structured, grid-aligned, information-beautiful. Clarity is the aesthetic. Swiss Style rigor with human warmth.",
+    Explorer: "Expansive, breathing, horizon-seeking. Let the composition wander with purpose. Natural light always.",
+    Outlaw: "Asymmetric, clashing, deliberately uncomfortable. Break one rule per composition — intentionally.",
+    Magician: "Layered, dreamlike, depth-ambiguous. Foreground and background should blur. Light should feel impossible.",
+    Caregiver: "Enveloping, soft-edged, proximate. Compositions should feel like an embrace. Warm tones dominant.",
+    Lover: "Intimate, detail-obsessed, sensual surfaces. Everything is close-up, touchable, desirable.",
+    Jester: "Diagonal, dynamic, playfully off-balance. Scale surprises. Color pops where you don't expect them.",
+    Everyman: "Eye-level, unstaged, documentary. Imperfections are features. Natural light, natural moments.",
+    Ruler: "Symmetrical, architectural, grand. Perfect proportions. Metallic accents. Dark backgrounds with illuminated subjects.",
+    Innocent: "High-key, airy, upward. White space is generous. Morning light. Simple forms, pure colors.",
+  };
+  parts.push(philosophyMap[archetypeName] ?? philosophyMap.Creator);
+  if (ctx.compositionPhilosophy) parts.push(ctx.compositionPhilosophy);
+  if (ctx.illustrationStyle) parts.push(`Illustration language: ${ctx.illustrationStyle}`);
+  return parts.join(" ");
 }
 
 function extractBrandContext(data: BrandbookData) {
@@ -211,35 +297,52 @@ function extractBrandContext(data: BrandbookData) {
   // ─── SOUL LAYER: Brand Story ─────────────────────────────────────────────
   const bs = data.brandStory;
   const brandManifesto = bs?.manifesto
-    ? bs.manifesto.length > 280 ? bs.manifesto.slice(0, 280).replace(/\s+\S*$/, "") + "…" : bs.manifesto
+    ? bs.manifesto.length > 500 ? bs.manifesto.slice(0, 500).replace(/\s+\S*$/, "") + "…" : bs.manifesto
     : "";
   const brandPromise = bs?.brandPromise ?? "";
-  const brandBeliefs = bs?.brandBeliefs?.slice(0, 3).join("; ") ?? "";
+  const brandBeliefs = bs?.brandBeliefs?.slice(0, 4).join("; ") ?? "";
+  const originStory = bs?.originStory
+    ? bs.originStory.length > 300 ? bs.originStory.slice(0, 300).replace(/\s+\S*$/, "") + "…" : bs.originStory
+    : "";
 
   // ─── SOUL LAYER: Composition Philosophy ──────────────────────────────────
   const compositionPhilosophy = data.keyVisual.compositionPhilosophy ?? "";
 
   // ─── SOUL LAYER: Flora, Fauna, Objects ────────────────────────────────────
-  const floraElements = data.keyVisual.flora?.slice(0, 4).join(", ") ?? "";
-  const faunaElements = data.keyVisual.fauna?.slice(0, 4).join(", ") ?? "";
-  const objectElements = data.keyVisual.objects?.slice(0, 4).join(", ") ?? "";
+  const floraElements = data.keyVisual.flora?.slice(0, 6).join(", ") ?? "";
+  const faunaElements = data.keyVisual.fauna?.slice(0, 6).join(", ") ?? "";
+  const objectElements = data.keyVisual.objects?.slice(0, 6).join(", ") ?? "";
   const identityAssets = [floraElements, faunaElements, objectElements].filter(Boolean).join(" · ");
+  const hasStrongIdentityAssets = identityAssets.length > 20;
 
   // ─── SOUL LAYER: Structured Patterns ──────────────────────────────────────
   const sp = data.keyVisual.structuredPatterns;
   const structuredPatternDetails = sp?.length
-    ? sp.slice(0, 3).map((p) => `${p.name}: ${p.composition} (${p.density ?? "moderate"}, bg: ${p.background ?? "neutral"})`).join(" | ")
+    ? sp.slice(0, 3).map((p) => `${p.name}: ${p.composition} (density: ${p.density ?? "moderate"}, background: ${p.background ?? "neutral"}, usage: ${p.usage ?? "general"})`).join(" | ")
     : "";
+  const primaryPattern = sp?.[0];
 
   // ─── SOUL LAYER: Illustration & Iconography ──────────────────────────────
   const illustrationStyle = data.keyVisual.illustrations ?? "";
   const iconographyStyle = data.keyVisual.iconography ?? "";
 
+  // ─── SOUL LAYER: Mascot Directive ──────────────────────────────────────────
+  const mascot = data.keyVisual.mascots?.[0];
+  const mascotDirective = mascot
+    ? `MASCOT IDENTITY: ${mascot.name} — ${mascot.description}. Personality: ${mascot.personality}. Guidelines: ${mascot.usageGuidelines?.slice(0, 4).join("; ") ?? "versatile brand character"}.`
+    : "";
+
   // ─── SOUL LAYER: Archetypal Energy ────────────────────────────────────────
-  const archetypalEnergy = deriveArchetype(data.brandConcept.personality, data.brandConcept.toneOfVoice);
+  const explicitArchetype = data.brandConcept.brandArchetype || (igb as unknown as Record<string, unknown> | undefined)?.brandArchetype as string | undefined;
+  const archetypalEnergy = deriveArchetype(data.brandConcept.personality, data.brandConcept.toneOfVoice, explicitArchetype);
 
   // ─── SOUL LAYER: Emotional Core ──────────────────────────────────────────
-  const emotionalCore = deriveEmotionalCore(brandManifesto, purpose, moodWords, archetypalEnergy);
+  const emotionalCore = deriveEmotionalCore(brandManifesto, purpose, moodWords, archetypalEnergy, brandPromise);
+
+  // ─── SOUL LAYER: Design Philosophy ─────────────────────────────────────────
+  const designPhilosophy = deriveDesignPhilosophy({
+    compositionPhilosophy, illustrationStyle, photoStyle, visualStyle, archetypalEnergy,
+  });
 
   // ─── SOUL LAYER: Sensory Profile ─────────────────────────────────────────
   const igbExt = igb as unknown as Record<string, unknown> | undefined;
@@ -275,58 +378,65 @@ function extractBrandContext(data: BrandbookData) {
     industryLang, brandApplications,
     pillarProofPoints, pillarCopy, painPoints, verbAvoid, sampleCTA,
     // ─── Soul Layer ─────────────────────────────────────────────────────────
-    brandManifesto, brandPromise, brandBeliefs,
-    compositionPhilosophy, identityAssets, floraElements, faunaElements, objectElements,
-    structuredPatternDetails, illustrationStyle, iconographyStyle,
-    archetypalEnergy, emotionalCore,
+    brandManifesto, brandPromise, brandBeliefs, originStory,
+    compositionPhilosophy, identityAssets, hasStrongIdentityAssets,
+    floraElements, faunaElements, objectElements,
+    structuredPatternDetails, primaryPattern, illustrationStyle, iconographyStyle,
+    archetypalEnergy, emotionalCore, designPhilosophy,
+    mascotDirective, mascot,
     textureLanguage, lightingSignature, cameraSignature, sensoryProfile,
     logoVariants, socialGuidelines, personaSummary,
   };
 }
 
-function providerQuality(provider: ImageProvider, key: AssetKey): string {
-  const isMockup = [
-    "business_card",
-    "brand_collateral",
-    "app_mockup",
-    "outdoor_billboard",
-    "delivery_packaging",
-    "takeaway_bag",
-    "food_container",
-    "uniform_tshirt",
-    "uniform_apron",
-    "materials_board",
-  ].includes(key);
+function providerQuality(provider: ImageProvider, key: AssetKey, archetypeName?: string): string {
+  const isMockup = ["business_card", "brand_collateral", "app_mockup", "outdoor_billboard", "delivery_packaging", "takeaway_bag", "food_container", "uniform_tshirt", "uniform_apron", "materials_board"].includes(key);
   const isLogo = key === "logo_primary" || key === "logo_dark_bg";
   const isPattern = key === "brand_pattern" || key === "presentation_bg";
   const isSocial = ["social_post_square", "instagram_carousel", "instagram_story", "social_cover", "youtube_thumbnail"].includes(key);
   const isMascot = key === "brand_mascot";
 
+  const arch = archetypeName ?? "Creator";
+  const archetypeQuality: Record<string, string> = {
+    Ruler: "luxury advertising campaign quality, Hasselblad precision, velvet-dark tonality, editorial authority",
+    Lover: "intimate editorial quality, skin-tone accuracy, warm sensual lighting, Vogue Italia standard",
+    Jester: "vibrant pop-art energy, saturated colors, playful composition, Wieden+Kennedy campaign quality",
+    Explorer: "National Geographic photographic quality, atmospheric depth, adventure-grade clarity",
+    Sage: "Swiss Design precision, information-beautiful clarity, intellectual sharpness, Bloomberg editorial quality",
+    Caregiver: "warm documentary quality, soft human intimacy, Kodak Portra tonality, empathetic framing",
+    Outlaw: "raw editorial grit, high-contrast chiaroscuro, Vice magazine intensity, intentional grain",
+    Hero: "Olympic-grade dramatic photography, heroic lighting, monumental scale, Nike campaign quality",
+    Magician: "surreal editorial quality, dreamlike depth, impossible perspectives, Taschen art book standard",
+    Everyman: "authentic documentary photography, honest natural light, relatable framing, unstaged moments",
+    Innocent: "bright high-key clarity, morning-light purity, Apple-clean composition, optimistic warmth",
+    Creator: "award-winning design craftsmanship, intentional imperfection, visible creative process, Pentagram studio quality",
+  };
+  const archQ = archetypeQuality[arch] ?? archetypeQuality.Creator;
+
   if (provider === "dalle3") {
-    if (isLogo)    return "vector-perfect illustration, sharp crisp edges, Pentagram identity studio quality, clean professional logo design, award-winning brand identity";
-    if (isMockup)  return "hyperrealistic commercial product photography, ultra-sharp, Hasselblad medium format quality, octane render 8K, studio-grade lighting, advertising campaign quality";
-    if (isPattern) return "precise geometric illustration, crisp vector-quality edges, perfect seamless tile, professional brand pattern system, Dribbble-quality design";
-    if (isSocial)  return "social media design excellence, Dribbble award-winning, sharp bold graphic, thumb-stopping visual hierarchy, mobile-optimized for 2x retina";
-    if (isMascot)  return "professional mascot character design, clean modern 2D illustration, vector-like crisp edges, consistent line weights, premium brand character, animation-ready silhouette";
-    return "ultra-high resolution commercial photography, award-winning brand campaign, shot on Phase One IQ4, published in Wallpaper magazine, masterpiece quality";
+    if (isLogo) return `professional brand identity mark, precise geometric construction, clean crisp edges, Pentagram/Wolff Olins studio quality, ${archQ}`;
+    if (isMockup) return `hyperrealistic commercial product photography, ultra-sharp material textures, medium-format sensor quality, studio-grade three-point lighting, ${archQ}`;
+    if (isPattern) return `precise geometric illustration, mathematically perfect seamless tile, professional brand pattern system, ${archQ}`;
+    if (isSocial) return `social media design excellence, thumb-stopping visual hierarchy, mobile-optimized composition, ${archQ}`;
+    if (isMascot) return `professional character design, clean modern 2D illustration, consistent line weights, animation-ready silhouette, ${archQ}`;
+    return `ultra-high resolution commercial photography, award-winning brand campaign, ${archQ}`;
   }
   if (provider === "stability") {
-    if (isMockup)  return "hyperrealistic product photography, 8K UHD, Hasselblad medium format, professional studio lighting, octane render, photorealistic material texture";
-    if (isLogo || isPattern) return "precise clean graphic illustration, sharp geometric edges, professional brand identity quality, crisp details";
-    if (isMascot) return "professional mascot character illustration, clean vector-like linework, brand-consistent color palette, expressive but simple shapes, animation-ready design";
-    return "8K UHD, award-winning editorial photography, sharp focus, highly detailed, Kodak Portra 400 film aesthetic, professional color grading";
+    if (isMockup) return `hyperrealistic product photography, 8K UHD, professional studio lighting, photorealistic material texture, ${archQ}`;
+    if (isLogo || isPattern) return `precise clean graphic illustration, sharp geometric edges, professional brand identity quality, ${archQ}`;
+    if (isMascot) return `professional character illustration, clean linework, expressive simple shapes, ${archQ}`;
+    return `8K UHD editorial photography, sharp focus, highly detailed, professional color grading, ${archQ}`;
   }
   if (provider === "imagen") {
-    if (isMockup)  return "photorealistic commercial photography, professional studio lighting, sharp details, high fidelity";
-    if (isLogo || isPattern) return "clean precise graphic design, sharp edges, professional illustration quality";
-    if (isMascot) return "professional mascot character illustration, clean 2D design, crisp edges, consistent line weights, brand-consistent color palette";
-    return "high-fidelity photorealistic image, professional photography quality, rich color, balanced exposure";
+    if (isMockup) return `photorealistic commercial photography, professional studio lighting, sharp material details, ${archQ}`;
+    if (isLogo || isPattern) return `clean precise graphic design, sharp edges, professional illustration quality, ${archQ}`;
+    if (isMascot) return `professional character illustration, clean 2D design, crisp edges, ${archQ}`;
+    return `high-fidelity photorealistic image, professional photography quality, rich color, ${archQ}`;
   }
-  // ideogram
-  if (isLogo)   return "vector logo design, precise linework, professional brand identity, clean scalable symbol";
-  if (isSocial) return "bold graphic design, high contrast, clear visual hierarchy, professional design quality";
-  if (isMascot) return "professional mascot character design, clean vector illustration, crisp linework, simple shapes, brand-consistent palette";
-  return "professional graphic design, crisp edges, bold visual impact, commercial quality";
+  if (isLogo) return `professional logo design, precise linework, clean scalable identity mark, ${archQ}`;
+  if (isSocial) return `bold graphic design, high contrast, clear visual hierarchy, ${archQ}`;
+  if (isMascot) return `professional character design, clean illustration, crisp linework, ${archQ}`;
+  return `professional graphic design, crisp edges, bold visual impact, ${archQ}`;
 }
 
 function neg(ctx: ReturnType<typeof extractBrandContext>, provider: ImageProvider, extra = ""): string {
@@ -461,33 +571,37 @@ function consistencyPrefix(
 }
 
 function stabilityTags(ctx: ReturnType<typeof extractBrandContext>, key: AssetKey): string {
-  const isPhoto = [
-    "hero_visual",
-    "hero_lifestyle",
-    "app_mockup",
-    "business_card",
-    "brand_collateral",
-    "outdoor_billboard",
-    "delivery_packaging",
-    "takeaway_bag",
-    "food_container",
-    "uniform_tshirt",
-    "uniform_apron",
-    "materials_board",
-  ].includes(key);
+  const isPhoto = ["hero_visual", "hero_lifestyle", "app_mockup", "business_card", "brand_collateral", "outdoor_billboard", "delivery_packaging", "takeaway_bag", "food_container", "uniform_tshirt", "uniform_apron", "materials_board"].includes(key);
   const isMascot = key === "brand_mascot";
-  if (isPhoto) return `(masterpiece:1.4), (best quality:1.3), (photorealistic:1.3), (8k uhd:1.2), (sharp focus:1.2), ${ctx.primaryColor} color grade, ${ctx.moodWords}`;
-  if (isMascot) return `(masterpiece:1.4), (best quality:1.3), (character illustration:1.3), (clean linework:1.2), (simple shapes:1.2), (flat colors:1.2), ${ctx.primaryColor} dominant, ${ctx.moodWords}`;
-  return `(masterpiece:1.4), (best quality:1.3), (crisp vector:1.3), (sharp edges:1.2), professional graphic design, ${ctx.primaryColor} dominant`;
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+  const archTags: Record<string, string> = {
+    Ruler: "(regal:1.2), (luxury:1.2), (symmetry:1.1)",
+    Lover: "(intimate:1.2), (warm tones:1.2), (soft bokeh:1.1)",
+    Jester: "(vibrant:1.3), (playful:1.2), (dynamic:1.1)",
+    Explorer: "(atmospheric:1.2), (vast:1.1), (adventure:1.1)",
+    Sage: "(precise:1.2), (structured:1.1), (clarity:1.2)",
+    Caregiver: "(warm:1.3), (soft:1.2), (nurturing:1.1)",
+    Outlaw: "(gritty:1.2), (raw:1.2), (contrast:1.3)",
+    Hero: "(dramatic:1.3), (heroic:1.2), (monumental:1.1)",
+    Magician: "(ethereal:1.2), (dreamlike:1.2), (luminous:1.1)",
+    Everyman: "(authentic:1.2), (natural:1.2), (honest:1.1)",
+    Innocent: "(bright:1.3), (clean:1.2), (optimistic:1.1)",
+    Creator: "(creative:1.2), (crafted:1.2), (intentional:1.1)",
+  };
+  const at = archTags[archetypeName] ?? archTags.Creator;
+  if (isPhoto) return `(masterpiece:1.4), (best quality:1.3), (photorealistic:1.3), (8k uhd:1.2), (sharp focus:1.2), ${at}, ${ctx.primaryColor} color grade, ${ctx.moodWords}`;
+  if (isMascot) return `(masterpiece:1.4), (best quality:1.3), (character illustration:1.3), (clean linework:1.2), (simple shapes:1.2), ${at}, ${ctx.primaryColor} dominant, ${ctx.moodWords}`;
+  return `(masterpiece:1.4), (best quality:1.3), (crisp vector:1.3), (sharp edges:1.2), ${at}, professional graphic design, ${ctx.primaryColor} dominant`;
 }
 
 function soulAnchor(ctx: ReturnType<typeof extractBrandContext>): string {
   const lines: string[] = [];
   if (ctx.archetypalEnergy) lines.push(`ARCHETYPE: ${ctx.archetypalEnergy}.`);
-  if (ctx.emotionalCore) lines.push(`EMOTIONAL_CORE: ${ctx.emotionalCore}.`);
+  if (ctx.emotionalCore) lines.push(`EMOTIONAL_CORE: ${ctx.emotionalCore}`);
   if (ctx.brandManifesto) lines.push(`BRAND_SOUL: "${ctx.brandManifesto}"`);
-  if (ctx.brandPromise) lines.push(`PROMISE: ${ctx.brandPromise}.`);
+  if (ctx.brandPromise) lines.push(`BRAND_PROMISE: "${ctx.brandPromise}"`);
   if (ctx.brandBeliefs) lines.push(`BELIEFS: ${ctx.brandBeliefs}.`);
+  if (ctx.designPhilosophy) lines.push(`DESIGN_PHILOSOPHY: ${ctx.designPhilosophy}`);
   return lines.length > 0 ? lines.join(" ") : "";
 }
 
@@ -496,36 +610,57 @@ function emotionalJourney(key: AssetKey, ctx: ReturnType<typeof extractBrandCont
   const isSocial = ["social_post_square", "instagram_carousel", "instagram_story", "social_cover", "youtube_thumbnail"].includes(key);
   const isHero = key === "hero_visual" || key === "hero_lifestyle";
   const isMockup = ["business_card", "brand_collateral", "delivery_packaging", "takeaway_bag", "food_container", "uniform_tshirt", "uniform_apron", "materials_board", "outdoor_billboard", "app_mockup"].includes(key);
+  const sensoryHint = ctx.sensoryProfile ? ` Sensory anchor: ${ctx.sensoryProfile.slice(0, 100)}.` : "";
 
-  if (isSocial) return `VIEWER_JOURNEY: 0.3s → instant brand recognition (${ctx.primaryColor} + ${ctx.logoSymbol} motif). 1s → emotional hook (${archetypeName} energy: ${ctx.moodWords}). 3s → desire to engage/save/share.`;
-  if (isHero) return `VIEWER_JOURNEY: 0.5s → atmospheric immersion (${ctx.colorMood}). 2s → understand brand positioning (${ctx.uniqueValue}). 5s → emotional connection (${ctx.emotionalCore}).`;
-  if (isMockup) return `VIEWER_JOURNEY: 0.5s → "this is real, premium, intentional". 2s → notice brand details (logo, pattern, materials). 5s → feel the brand's ${ctx.personality} through physical touch.`;
-  if (key === "brand_pattern") return `VIEWER_JOURNEY: instant → visual rhythm from ${ctx.logoSymbol}. 2s → discover hidden motif relationships. 5s → meditative repetition embodies ${ctx.moodWords}.`;
-  if (key === "brand_mascot") return `VIEWER_JOURNEY: 0.3s → immediate warmth/recognition. 1s → personality decoded (${ctx.personality}). 3s → emotional bond — "I like this character".`;
-  return `VIEWER_JOURNEY: 0.5s → brand recognition. 2s → message clarity. 5s → emotional resonance with ${ctx.moodWords}.`;
+  if (isSocial) return `VIEWER_JOURNEY: 0.3s → thumb stops: instant brand color + motif recognition (${ctx.primaryColor}). 1s → emotional hook: ${archetypeName} energy floods — viewer feels ${ctx.moodWords}. 3s → desire to save/share/follow. The image must earn those 3 seconds.${sensoryHint}`;
+  if (isHero) return `VIEWER_JOURNEY: 0.5s → atmospheric immersion: the brand world envelops (${ctx.colorMood}). 2s → positioning decoded: viewer understands "${ctx.uniqueValue}". 5s → emotional resonance: viewer feels the brand promise in their body.${sensoryHint}`;
+  if (isMockup) return `VIEWER_JOURNEY: 0.5s → "this is real, premium, designed with intention — not a template". 2s → brand details emerge: logo placement, pattern intelligence, material quality. 5s → the viewer imagines touching this object, feeling ${ctx.personality} through the material.${sensoryHint}`;
+  if (key === "brand_pattern") return `VIEWER_JOURNEY: instant → visual rhythm captures the eye (derived from ${ctx.logoSymbol}). 2s → hidden relationships between motifs reveal themselves. 5s → the repetition becomes meditative, embodying ${ctx.moodWords}. The pattern must feel like the brand breathing.${sensoryHint}`;
+  if (key === "brand_mascot") return `VIEWER_JOURNEY: 0.3s → instant warmth and approachability. 1s → personality decoded through expression and pose (${ctx.personality}). 3s → emotional bond forms — "I trust this character, I like this brand".${sensoryHint}`;
+  if (key === "email_header") return `VIEWER_JOURNEY: 0.2s → brand recognition in inbox preview. 0.5s → visual primes the reader for the content below. 2s → the banner has done its job — viewer scrolls to CTA.${sensoryHint}`;
+  if (key === "presentation_bg") return `VIEWER_JOURNEY: the background should be felt, not seen. It creates atmospheric brand presence while the audience reads slide content. It whispers ${ctx.moodWords} without competing.${sensoryHint}`;
+  if (key === "outdoor_billboard") return `VIEWER_JOURNEY: 1s at 60km/h → ONE feeling, ONE recognition. 3s max → the brand is burned into memory. This is not nuance — this is impact.${sensoryHint}`;
+  return `VIEWER_JOURNEY: 0.5s → brand recognition through color and motif. 2s → message clarity. 5s → emotional resonance — viewer feels ${ctx.moodWords}.${sensoryHint}`;
 }
 
 function sensoryDirectives(key: AssetKey, ctx: ReturnType<typeof extractBrandContext>): string {
   const lines: string[] = [];
-  if (ctx.textureLanguage) lines.push(`TEXTURES: ${ctx.textureLanguage}.`);
-  if (ctx.sensoryProfile) lines.push(`SENSORY: ${ctx.sensoryProfile}.`);
+  const isMockup = ["business_card", "brand_collateral", "delivery_packaging", "takeaway_bag", "food_container", "uniform_tshirt", "uniform_apron", "materials_board"].includes(key);
+  if (ctx.textureLanguage) lines.push(`TEXTURES (the viewer should almost feel these): ${ctx.textureLanguage}.`);
+  if (ctx.sensoryProfile) lines.push(`SENSORY TRANSLATION: ${ctx.sensoryProfile}.`);
   if (ctx.lightingSignature) lines.push(`LIGHTING_SIGNATURE: ${ctx.lightingSignature}.`);
-  if (ctx.cameraSignature) lines.push(`CAMERA_SIGNATURE: ${ctx.cameraSignature}.`);
-  if (ctx.compositionPhilosophy) lines.push(`COMPOSITION_PHILOSOPHY: ${ctx.compositionPhilosophy}.`);
+  if (isMockup && ctx.textureLanguage) lines.push(`MATERIAL CLOSE-UP PRIORITY: render material textures with haptic realism — the viewer should imagine touching the surface.`);
   return lines.length > 0 ? lines.join(" ") : "";
 }
 
 function cameraDirective(key: AssetKey, ctx: ReturnType<typeof extractBrandContext>): string {
   if (ctx.cameraSignature) return ctx.cameraSignature;
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
   const isLifestyle = key === "hero_lifestyle";
   const isProduct = ["business_card", "brand_collateral", "delivery_packaging", "takeaway_bag", "food_container", "uniform_tshirt", "uniform_apron", "materials_board"].includes(key);
   const isHero = key === "hero_visual";
-  if (isLifestyle) return "50mm f/1.8, shallow depth of field, natural light, slight motion blur on background, documentary intimacy";
-  if (isProduct) return "85mm f/4, product photography, controlled studio light, sharp focus on brand details, slight depth falloff on background";
-  if (isHero) return "35mm f/2.0, cinematic wide, dramatic depth layers, foreground bokeh element, atmospheric perspective";
-  if (key === "app_mockup") return "65mm f/2.8, 3/4 device angle 15-20°, shallow DOF on background, sharp screen, studio product photography";
-  if (key === "outdoor_billboard") return "24mm f/8, urban context, deep focus, environmental scale, golden hour or blue hour";
-  return "50mm f/2.8, balanced depth, professional studio, clean sharp focus";
+
+  const archCamera: Record<string, string> = {
+    Ruler: "85mm f/2.8, regal compression, controlled depth, low angle suggesting grandeur",
+    Lover: "50mm f/1.4, intimate shallow DOF, warm skin-tone rendering, close proximity",
+    Jester: "24mm f/4, wide playful perspective, slight barrel distortion for energy, eye-level",
+    Explorer: "24mm f/8, vast deep focus, horizon visible, atmospheric haze in distance",
+    Sage: "50mm f/4, balanced neutral perspective, structured depth layers, clinical precision",
+    Caregiver: "35mm f/2.0, warm proximity, soft background, eye-level empathetic framing",
+    Outlaw: "35mm f/2.8, handheld energy, slight tilt, gritty street-level perspective",
+    Hero: "24mm f/2.8, low angle upward, dramatic foreshortening, sky visible, monumental",
+    Magician: "85mm f/1.8, dreamlike compression, extreme shallow DOF, foreground blur elements",
+    Everyman: "35mm f/2.8, eye-level documentary, natural depth, unstaged framing",
+    Innocent: "50mm f/2.0, bright open framing, high vantage, generous negative space",
+    Creator: "35mm f/2.0, dynamic angle, visible process elements, creative workshop depth",
+  };
+
+  if (isLifestyle) return `${archCamera[archetypeName] ?? archCamera.Creator}, shallow depth of field, natural light, documentary intimacy, slight motion blur on background`;
+  if (isProduct) return "85mm f/4, product photography, controlled studio three-point light, sharp focus on brand details and material texture, subtle depth falloff";
+  if (isHero) return `${archCamera[archetypeName] ?? "35mm f/2.0"}, cinematic wide composition, dramatic depth layers, foreground bokeh element, atmospheric perspective`;
+  if (key === "app_mockup") return "65mm f/2.8, 3/4 device angle 15-20°, shallow DOF on background, razor-sharp screen, studio product photography";
+  if (key === "outdoor_billboard") return "24mm f/8, street-level urban context, deep focus showing environmental scale, blue hour or golden hour";
+  return `${archCamera[archetypeName] ?? "50mm f/2.8"}, balanced depth, professional studio, clean sharp focus`;
 }
 
 function socialPlatformContext(key: AssetKey, ctx: ReturnType<typeof extractBrandContext>): string {
@@ -550,13 +685,55 @@ function socialPlatformContext(key: AssetKey, ctx: ReturnType<typeof extractBran
   ].filter(Boolean).join(" ");
 }
 
-function identityAssetsDirective(ctx: ReturnType<typeof extractBrandContext>): string {
+function identityAssetsDirective(ctx: ReturnType<typeof extractBrandContext>, key?: AssetKey): string {
   if (!ctx.identityAssets) return "";
   const parts: string[] = [];
   if (ctx.floraElements) parts.push(`Flora: ${ctx.floraElements}`);
   if (ctx.faunaElements) parts.push(`Fauna: ${ctx.faunaElements}`);
   if (ctx.objectElements) parts.push(`Objects: ${ctx.objectElements}`);
-  return parts.length > 0 ? `IDENTITY_ASSETS (use as subtle environmental elements): ${parts.join(" · ")}.` : "";
+  if (parts.length === 0) return "";
+  const isHeroOrLifestyle = key === "hero_visual" || key === "hero_lifestyle";
+  const prominence = ctx.hasStrongIdentityAssets
+    ? (isHeroOrLifestyle
+      ? "IDENTITY_ASSETS (PROMINENT — these ARE the brand's visual DNA, feature them boldly as environmental and compositional elements)"
+      : "IDENTITY_ASSETS (VISIBLE — weave into composition as recognizable brand elements, not merely background decoration)")
+    : "IDENTITY_ASSETS (subtle environmental elements that reinforce brand identity)";
+  return `${prominence}: ${parts.join(" · ")}.`;
+}
+
+function humanEssenceLayer(key: AssetKey, ctx: ReturnType<typeof extractBrandContext>, data: BrandbookData): string {
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+  const lines: string[] = [];
+
+  const storyHint = ctx.originStory
+    ? `ORIGIN STORY SUBTEXTURE: The visual should subtly echo the brand's origin — ${ctx.originStory.slice(0, 200)}.`
+    : "";
+
+  const archetypeRef: Record<string, string> = {
+    Hero: "Reference: Nike 'Just Do It' campaigns, Gatorade athlete portraits, Olympic ceremony visuals.",
+    Creator: "Reference: Adobe creative campaigns, Moleskine brand world, Bauhaus workshop aesthetic.",
+    Sage: "Reference: Bloomberg editorial design, The Economist covers, MIT Media Lab visual identity.",
+    Explorer: "Reference: Patagonia campaign photography, National Geographic visual storytelling, Land Rover adventure aesthetic.",
+    Outlaw: "Reference: Diesel 'Be Stupid' campaign energy, Supreme brand drops, Vice magazine editorial.",
+    Magician: "Reference: Cirque du Soleil visual world, Apple product reveals, Disney Imagineering concept art.",
+    Caregiver: "Reference: Dove 'Real Beauty' campaign warmth, Johnson & Johnson heritage, IKEA family moments.",
+    Lover: "Reference: Chanel editorial, Tom Ford campaign aesthetics, Dior beauty photography.",
+    Jester: "Reference: Mailchimp brand illustration, M&M's character world, Old Spice campaign energy.",
+    Everyman: "Reference: IKEA lifestyle photography, Uniqlo brand simplicity, Muji honest design.",
+    Ruler: "Reference: Rolls-Royce brand photography, Rolex campaign imagery, Cartier jewellery editorial.",
+    Innocent: "Reference: Innocent Drinks brand world, Glossier clean aesthetic, Apple product photography simplicity.",
+  };
+
+  if (storyHint && (key === "hero_visual" || key === "hero_lifestyle" || key === "brand_mascot")) {
+    lines.push(storyHint);
+  }
+  lines.push(archetypeRef[archetypeName] ?? archetypeRef.Creator);
+
+  if (ctx.mascotDirective && key !== "brand_mascot") {
+    lines.push(`Brand character context: ${ctx.mascot?.name ?? "mascot"} may appear as subtle motif or environmental element.`);
+  }
+
+  return lines.filter(Boolean).join(" ");
 }
 
 function structuredPatternDirective(ctx: ReturnType<typeof extractBrandContext>): string {
@@ -566,7 +743,8 @@ function structuredPatternDirective(ctx: ReturnType<typeof extractBrandContext>)
 
 export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: ImageProvider): string {
   const ctx = extractBrandContext(data);
-  const q = providerQuality(provider, key);
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+  const q = providerQuality(provider, key, archetypeName);
   const B = `"${data.brandName}"`;
   const prefix = providerPrefix(provider, key) + consistencyPrefix(ctx, data, key) + " ";
   const sTags = provider === "stability" ? stabilityTags(ctx, key) : "";
@@ -579,9 +757,10 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
   const sensory = sensoryDirectives(key, ctx);
   const camera = cameraDirective(key, ctx);
   const tree = styleAnchorTree(ctx, data);
-  const idAssets = identityAssetsDirective(ctx);
+  const idAssets = identityAssetsDirective(ctx, key);
   const spDir = structuredPatternDirective(ctx);
   const platCtx = socialPlatformContext(key, ctx);
+  const humanLayer = humanEssenceLayer(key, ctx, data);
 
   switch (key) {
 
@@ -590,21 +769,23 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography.` : "";
       return parts(
         prefix,
-        `Professional brand identity logo for ${B}, a ${data.industry} company.`,
+        `Professional brand identity mark for ${B}, a ${data.industry} company.`,
         ideogramWord,
         soul,
         `BRAND PURPOSE: ${ctx.purpose}.`,
         tree,
-        `LOGO CONCEPT: ${ctx.logoStyle}. Symbol concept: ${ctx.logoSymbol} — evokes ${ctx.moodWords}.`,
-        `COLOR: ${ctx.primaryColor} (${ctx.primaryColorName}) on pure white (#FFFFFF). Accent: ${ctx.accentColor}.`,
-        `TYPOGRAPHY: ${ctx.displayFont} wordmark. PERSONALITY: ${ctx.personality}. VALUES: ${ctx.values}.`,
-        `VISUAL STYLE: ${ctx.visualStyle}. ${ctx.competitiveAngle}`,
-        `TECHNICAL: Output ONLY the isolated logomark + wordmark lockup (like an exported SVG/PNG).`,
-        `Background must be a FLAT solid #FFFFFF with no noise, no texture, no vignette, no paper/wood, no scene.`,
-        `flat 2D vector mark (SVG-like), consistent line weights, sharp edges, scalable symbol,`,
-        `no gradients, no 3D, no mockups, no perspective, no lighting effects, no reflections,`,
-        `no drop shadows, no textures, no bevel/emboss, centered composition with generous margin.`,
-        sTags, q, neg(ctx, provider, "photography, photorealistic, mockup, scene, table, bowls, plates, wood, paper texture, fabric, perspective, gradients, bevel, emboss, realistic lighting, shadows"),
+        `LOGO CONCEPT: ${ctx.logoStyle}. Symbol: ${ctx.logoSymbol} — this shape must embody ${ctx.moodWords} at a glance.`,
+        `PHILOSOPHICAL INTENT: The mark distills the brand's entire worldview into a single visual gesture. It should feel inevitable — as if no other symbol could represent this brand.`,
+        `COLOR: ${ctx.primaryColor} (${ctx.primaryColorName}) on pure white (#FFFFFF). Accent: ${ctx.accentColor} (use sparingly or not at all).`,
+        `TYPOGRAPHY: ${ctx.displayFont} wordmark paired with the symbol. PERSONALITY: ${ctx.personality}. VALUES: ${ctx.values}.`,
+        `${ctx.competitiveAngle}`,
+        humanLayer,
+        `TECHNICAL: Output ONLY the isolated logomark + wordmark lockup (like an exported flat design file).`,
+        `Background: FLAT solid #FFFFFF. No noise, no texture, no vignette, no scene, no paper, no wood.`,
+        `Flat 2D mark, consistent line weights, sharp clean edges, scalable construction,`,
+        `no gradients, no 3D effects, no mockups, no perspective, no lighting, no reflections,`,
+        `no drop shadows, no bevel/emboss, centered composition with generous margin.`,
+        sTags, q, neg(ctx, provider, "photography, photorealistic, mockup, scene, table, bowls, plates, wood, paper texture, fabric, perspective, gradients, bevel, emboss, realistic lighting, shadows, 3D rendering"),
       );
     }
 
@@ -613,64 +794,74 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography, white/light version.` : "";
       return parts(
         prefix,
-        `Brand identity logo — dark background version for ${B} (${data.industry}).`,
+        `Brand identity mark — dark background version for ${B} (${data.industry}).`,
         ideogramWord,
         soul,
         `BRAND PURPOSE: ${ctx.purpose}.`,
         tree,
-        `LOGO: EXACT SAME logo lockup as the primary logo (same symbol + same wordmark + same layout).`,
+        `LOGO: EXACT SAME logo lockup as the primary version (same symbol + same wordmark + same proportions + same layout).`,
         `Only change: invert/reverse colors for dark background. Do NOT redesign any part of the logo.`,
-        `COLOR: White or very light (#FFFFFF or near-white) logo on FLAT solid deep dark background (use ${ctx.primaryColor} or near-black).`,
+        `COLOR: White or near-white (#FFFFFF) logo on FLAT solid deep dark background (${ctx.primaryColor} darkened or near-black #0a0a0a).`,
         `PERSONALITY: ${ctx.personality}. Tone: ${ctx.toneOfVoice}.`,
-        `PURPOSE: Dark websites, video intros, event backdrops, dark mode UI, investor decks.`,
-        `TECHNICAL: Output ONLY the isolated logo (export-like). Flat 2D vector mark (SVG-like).`,
-        `Background must be a FLAT solid dark color with no noise, no texture, no scene, no materials.`,
-        `no gradients, no textures, no halos, no glow, no 3D, no mockups, centered with generous margin.`,
+        `USE CASES: Dark websites, video intros, event backdrops, dark mode UI, investor decks, nighttime signage.`,
+        humanLayer,
+        `TECHNICAL: Output ONLY the isolated logo (export-like). Flat 2D mark, clean edges.`,
+        `Background: FLAT solid dark color. No noise, no texture, no scene, no materials, no glow, no halo.`,
+        `No gradients, no 3D, no mockups, centered with generous margin all around.`,
         sTags, q, neg(ctx, provider, "photography, photorealistic, mockup, scene, table, paper texture, fabric, perspective, gradients, glow, bevel, emboss, realistic lighting, shadows"),
       );
     }
 
     case "brand_pattern": {
       const patternEls = data.keyVisual.patterns?.length
-        ? `Specific motifs: ${data.keyVisual.patterns.slice(0, 4).join(", ")}.`
+        ? `Specific motifs: ${data.keyVisual.patterns.slice(0, 5).join(", ")}.`
         : `Derived from brand symbol: ${ctx.logoSymbol}.`;
+      const ppat = ctx.primaryPattern;
+      const patternDirective = ppat
+        ? `PRIMARY PATTERN: "${ppat.name}" — ${ppat.composition}. Density: ${ppat.density ?? "moderate"}. Background: ${ppat.background ?? "neutral"}. Usage: ${ppat.usage ?? "packaging, stationery, backgrounds"}.`
+        : `PATTERN DIRECTION: ${ctx.patternStyle}.`;
       return parts(
         prefix,
         `Seamless infinitely-tileable brand surface pattern for ${B} (${data.industry}).`,
         soul, journey, spDir, idAssets, tree,
-        `PATTERN DESIGN: ${ctx.patternStyle}. ${patternEls}`,
-        `STRICT COLOR PALETTE — no other colors: ${ctx.allPrimaryColors}.`,
-        `VISUAL LANGUAGE: ${ctx.visualStyle}. Brand elements: ${ctx.elements}. Mood: ${ctx.moodWords}.`,
-        `PURPOSE: Packaging, stationery, website backgrounds, slide decks, event materials.`,
-        `TECHNICAL: Geometric precision, perfect tile zero visible seams, flat design,`,
-        `consistent line weights, square composition, abstract shapes — no text, no logos, no photographic content.`,
-        sTags, q, neg(ctx, provider, "visible seams, text, logos, photographic content, random noise"),
+        patternDirective,
+        patternEls,
+        `STRICT COLOR PALETTE — use ONLY these colors, no others: ${ctx.allPrimaryColors}.`,
+        `VISUAL LANGUAGE: ${ctx.visualStyle}. Mood: ${ctx.moodWords}.`,
+        ctx.illustrationStyle ? `ILLUSTRATION STYLE REFERENCE: ${ctx.illustrationStyle}.` : "",
+        humanLayer,
+        `PURPOSE: Packaging wraps, stationery backgrounds, website surfaces, slide decks, event materials, textile prints.`,
+        `MATHEMATICAL PRECISION: The pattern must tile perfectly with zero visible seams at any scale.`,
+        `Consistent line weights throughout. Square 1:1 composition. Abstract shapes only.`,
+        `No text, no logos, no wordmarks, no photographic content. Pure geometric/organic motif system.`,
+        sTags, q, neg(ctx, provider, "visible seams, text, logos, wordmarks, photographic content, random noise, asymmetric layout, gradient washes"),
       );
     }
 
     case "brand_mascot": {
-      const m = data.keyVisual.mascots?.[0];
+      const m = ctx.mascot;
       const mascotIdentity = m
-        ? `MASCOT: Name=${m.name}. Description: ${m.description}. Personality: ${m.personality}.`
-        : `MASCOT: Create a brand mascot derived from the logo symbol (${ctx.logoSymbol}) and the STYLE_TREE motifs.`;
+        ? `MASCOT CHARACTER: Name="${m.name}". Physical appearance: ${m.description}. Inner personality: ${m.personality}. This character IS the brand's human face — every trait connects to a brand value.`
+        : `MASCOT: Create a brand mascot derived from the logo symbol (${ctx.logoSymbol}) and the STYLE_TREE motifs. The character should personify ${ctx.personality}.`;
       const usage = m?.usageGuidelines?.length
-        ? `USAGE GUIDELINES: ${m.usageGuidelines.slice(0, 5).join(" ")}`
-        : "USAGE: Must work as a repeatable brand character across campaigns, social posts, and stickers.";
+        ? `USAGE & POSE GUIDELINES: ${m.usageGuidelines.slice(0, 5).map((g, i) => `${i + 1}) ${g}`).join(". ")}. Translate these guidelines into the character's pose, expression, and context.`
+        : "USAGE: Must work as a repeatable brand character across campaigns, social posts, stickers, and merchandise.";
       return parts(
         prefix,
         `Design a professional brand mascot character for ${B} (${data.industry}).`,
         soul, journey, tree,
         mascotIdentity,
         usage,
-        ctx.illustrationStyle ? `ILLUSTRATION REFERENCE: ${ctx.illustrationStyle}.` : "",
-        `DESIGN GOALS: instantly recognizable, simple silhouette, scalable from 64px icon to poster, animation-ready, consistent proportions.`,
-        `STYLE: premium modern 2D illustration, vector-like crisp edges, consistent line weights, minimal shading, no 3D, no photorealism.`,
-        `PALETTE (strict): ${ctx.allColors}. Use ${ctx.primaryColor} as dominant and ${ctx.accentColor} for small highlights only.`,
-        `PERSONALITY/TONE: ${ctx.personality}. Voice energy: ${ctx.toneOfVoice}. Mood: ${ctx.moodWords}.`,
-        `COMPOSITION: centered full-body character, clear negative space around, square 1:1 framing.`,
-        `BACKGROUND: clean solid background (white or a very light tint of ${ctx.secondaryColor}).`,
-        `NO TEXT. No wordmark. No readable lettering.`,
-        sTags, q, neg(ctx, provider, "photorealistic, 3D, complex background, clutter, gradients, shadows, watermark, text, wordmark, deformed anatomy"),
+        ctx.illustrationStyle ? `ILLUSTRATION STYLE: ${ctx.illustrationStyle}. Apply this technique to the character.` : "",
+        humanLayer,
+        `DESIGN PHILOSOPHY: The mascot must be instantly recognizable in silhouette alone. Scalable from 64px favicon to poster. Animation-ready with consistent proportions. The character should feel like it has a life beyond this single image.`,
+        `STYLE: premium modern 2D illustration, crisp edges, consistent line weights, minimal shading (flat color with max 2 shadow tones), no 3D, no photorealism.`,
+        `PALETTE (strict): ${ctx.allColors}. ${ctx.primaryColor} as dominant body color, ${ctx.accentColor} for expressive details (eyes, accessories, small highlights).`,
+        `EXPRESSION & POSE: The character's default expression should embody ${ctx.toneOfVoice}. Body language should communicate ${ctx.moodWords}.`,
+        `COMPOSITION: centered full-body character, clear negative space around, square 1:1 framing. The character should feel grounded, not floating.`,
+        `BACKGROUND: clean solid background (white or very light tint of ${ctx.secondaryColor}). No scene, no props.`,
+        `NO TEXT. No wordmark. No readable lettering anywhere.`,
+        sTags, q, neg(ctx, provider, "photorealistic, 3D render, complex background, clutter, gradients, heavy shadows, watermark, text, wordmark, deformed anatomy, extra limbs, inconsistent proportions"),
       );
     }
 

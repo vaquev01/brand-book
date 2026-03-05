@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   BrandImmersiveTheme,
   brandVoiceQuote,
@@ -32,7 +32,7 @@ import { SectionAssetPack } from "./sections/SectionAssetPack";
 import { SectionBrandAssets } from "./sections/SectionBrandAssets";
 import { SectionGovernance } from "./sections/SectionGovernance";
 import { FontLoader } from "./FontLoader";
-import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
+import { useImageGeneration, PROVIDERS, IMMERSIVE_ESSENTIALS } from "@/hooks/useImageGeneration";
 import { EMPTY_KEYS } from "@/components/ApiKeyConfig";
 import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
 import type { AssetPackFile } from "@/lib/types";
@@ -126,6 +126,8 @@ export function BrandbookViewer({
   const hasGeneration = !!apiKeys && !!onAssetGenerated;
 
   const [immersive, setImmersive] = useState(false);
+  const [immersiveGenerating, setImmersiveGenerating] = useState(false);
+  const immersiveTriggered = useRef(false);
 
   const noop = () => {};
   const imgGen = useImageGeneration({
@@ -484,10 +486,34 @@ export function BrandbookViewer({
       <SectionCover data={data} />
 
       {/* Immersive Mode Toggle — always visible */}
-      <div className="no-print flex justify-end mb-4">
+      <div className="no-print flex items-center justify-end gap-2 mb-4 flex-wrap">
+        {/* Ambientar Brandbook — generate decorative assets */}
+        {immersive && hasGeneration && imgGen.currentProviderHasKey && imgGen.immersiveMissing > 0 && !immersiveGenerating && (
+          <button
+            type="button"
+            onClick={async () => {
+              setImmersiveGenerating(true);
+              try { await imgGen.generateImmersiveAssets(); } finally { setImmersiveGenerating(false); }
+            }}
+            disabled={imgGen.loadingKey !== null}
+            className="text-xs font-bold px-4 py-2.5 rounded-xl border transition-all shadow-sm bg-white hover:bg-gray-50 border-gray-200 text-gray-700 disabled:opacity-40"
+          >
+            Ambientar Brandbook ({imgGen.immersiveMissing} assets)
+          </button>
+        )}
         <button
           type="button"
-          onClick={() => setImmersive((v) => !v)}
+          onClick={() => {
+            setImmersive((v) => {
+              const next = !v;
+              if (next && hasGeneration && imgGen.currentProviderHasKey && imgGen.immersiveMissing > 0 && !immersiveTriggered.current) {
+                immersiveTriggered.current = true;
+                setImmersiveGenerating(true);
+                imgGen.generateImmersiveAssets().finally(() => setImmersiveGenerating(false));
+              }
+              return next;
+            });
+          }}
           className={`text-xs font-bold px-4 py-2.5 rounded-xl border transition-all shadow-sm ${
             immersive
               ? "text-white shadow-md"
@@ -506,6 +532,30 @@ export function BrandbookViewer({
           🎨 Modo Imersivo{immersive ? " ✓" : ""}
         </button>
       </div>
+
+      {/* Immersive generation progress banner */}
+      {immersive && immersiveGenerating && (
+        <div
+          className="no-print mb-4 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium animate-pulse"
+          style={{
+            background: rgba(theme.primaryHex, 0.08),
+            border: `1px solid ${rgba(theme.primaryHex, 0.15)}`,
+            color: theme.primaryHex,
+          }}
+        >
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeLinecap="round" />
+          </svg>
+          <span>Gerando texturas e imagens da marca para ambientar o brandbook...</span>
+          <button
+            type="button"
+            onClick={() => { imgGen.cancelBatch(); setImmersiveGenerating(false); }}
+            className="ml-auto text-xs font-semibold opacity-60 hover:opacity-100"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
 
       {/* Generation Control Bar */}
       {hasGeneration && (
