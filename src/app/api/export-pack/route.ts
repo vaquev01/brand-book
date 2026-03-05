@@ -5,6 +5,7 @@ import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
 import type { AssetPackFile, BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { slugify } from "@/lib/common";
+import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
 
 export const runtime = "nodejs";
 
@@ -55,6 +56,29 @@ function safeRelPath(path: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  const memBefore = captureMem();
+
+  function respondJson(status: number, body: Record<string, unknown>, extra: Record<string, unknown> = {}) {
+    const memAfter = captureMem();
+    const durationMs = Date.now() - startedAt;
+    const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+    bbLog(level, status >= 400 ? "api.export-pack.error" : "api.export-pack.ok", {
+      requestId,
+      status,
+      durationMs,
+      memDelta: diffMem(memBefore, memAfter),
+      ...extra,
+    });
+    return NextResponse.json(body, { status, headers: { "x-request-id": requestId } });
+  }
+
+  bbLog("info", "api.export-pack.start", {
+    requestId,
+    mem: memToJson(memBefore),
+  });
+
   try {
     const body = (await request.json()) as {
       brandbookData?: unknown;
@@ -64,19 +88,26 @@ export async function POST(request: NextRequest) {
     };
 
     if (!body.brandbookData) {
-      return NextResponse.json({ error: "brandbookData é obrigatório" }, { status: 400 });
+      return respondJson(400, { error: "brandbookData é obrigatório" });
     }
 
     const migrated = migrateBrandbook(body.brandbookData);
     const base = BrandbookSchemaLoose.safeParse(migrated);
     if (!base.success) {
-      return NextResponse.json({ error: "brandbookData inválido para export" }, { status: 400 });
+      return respondJson(400, { error: "brandbookData inválido para export" });
     }
 
     const brandbookData = base.data as unknown as BrandbookData;
     const assets = Array.isArray(body.generatedAssets) ? body.generatedAssets : [];
     const uploadedAssets = Array.isArray(body.uploadedAssets) ? body.uploadedAssets : [];
     const assetPackFiles = Array.isArray(body.assetPackFiles) ? body.assetPackFiles : [];
+
+    bbLog("debug", "api.export-pack.payload", {
+      requestId,
+      assetsCount: assets.length,
+      uploadedAssetsCount: uploadedAssets.length,
+      assetPackFilesCount: assetPackFiles.length,
+    });
 
     const slug = slugify(brandbookData.brandName);
     const zip = new JSZip();
@@ -217,14 +248,33 @@ export async function POST(request: NextRequest) {
 
     const out = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
 
+    const memAfter = captureMem();
+    bbLog("info", "api.export-pack.ok", {
+      requestId,
+      status: 200,
+      durationMs: Date.now() - startedAt,
+      memDelta: diffMem(memBefore, memAfter),
+      zipSize: typeof (out as unknown as { size?: unknown }).size === "number" ? (out as unknown as { size: number }).size : undefined,
+      assetsCount: assets.length,
+      uploadedAssetsCount: uploadedAssets.length,
+      assetPackFilesCount: assetPackFiles.length,
+    });
+
     return new NextResponse(out, {
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename=\"${slug}-brandbook-pack.zip\"`,
+        "x-request-id": requestId,
       },
     });
   } catch (error: unknown) {
+    bbLog("error", "api.export-pack.exception", {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      error: serializeError(error),
+      mem: memToJson(captureMem()),
+    });
     const message = error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return respondJson(500, { error: message });
   }
 }

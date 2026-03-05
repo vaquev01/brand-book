@@ -1,5 +1,5 @@
 "use client";
-import { BrandbookData, GeneratedAsset } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, Application } from "@/lib/types";
 import { ASSET_CATALOG, detectSizeVariants, type AssetKey } from "@/lib/imagePrompts";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -12,6 +12,7 @@ interface Props {
   onGenerateAllApplications?: () => void;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
+  onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
 }
 
 interface AppBriefing {
@@ -99,7 +100,7 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-export function SectionApplications({ data, num, generatedImages = {}, onUpdateApplicationImageKey, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {} }: Props) {
+export function SectionApplications({ data, num, generatedImages = {}, onUpdateApplicationImageKey, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {}, onUpdateData }: Props) {
   const totalGenerated = Object.keys(generatedImages).length;
   const [activeAppVariant, setActiveAppVariant] = useState<Record<number, string>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
@@ -107,6 +108,9 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
   const [expandedBriefing, setExpandedBriefing] = useState<number | null>(null);
   const [linkInput, setLinkInput] = useState<Record<number, string>>({});
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<Partial<Application>>({});
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   useEffect(() => {
     if (!previewImage) return;
@@ -172,6 +176,51 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
     onGenerateApplication(i, aspectRatio, customInstruction, refs);
   }, [onGenerateApplication, getBriefing]);
+
+  const startEditing = useCallback((i: number) => {
+    setEditingIndex(i);
+    setEditDraft({ ...data.applications[i] });
+  }, [data.applications]);
+
+  const cancelEditing = useCallback(() => {
+    setEditingIndex(null);
+    setEditDraft({});
+  }, []);
+
+  const saveEditing = useCallback(() => {
+    if (editingIndex === null || !onUpdateData) return;
+    const idx = editingIndex;
+    onUpdateData((prev) => {
+      const next = [...prev.applications];
+      next[idx] = { ...next[idx], ...editDraft } as Application;
+      return { ...prev, applications: next };
+    });
+    setEditingIndex(null);
+    setEditDraft({});
+  }, [editingIndex, editDraft, onUpdateData]);
+
+  const deleteApplication = useCallback((i: number) => {
+    if (!onUpdateData) return;
+    onUpdateData((prev) => ({
+      ...prev,
+      applications: prev.applications.filter((_, j) => j !== i),
+    }));
+    setConfirmDelete(null);
+  }, [onUpdateData]);
+
+  const addApplication = useCallback(() => {
+    if (!onUpdateData) return;
+    const newApp: Application = {
+      type: "Nova Aplicação",
+      description: "Descreva esta aplicação da marca",
+      imagePlaceholder: "https://placehold.co/800x600/cccccc/666666?text=Nova+Aplicação",
+    };
+    onUpdateData((prev) => ({
+      ...prev,
+      applications: [...prev.applications, newApp],
+    }));
+    setTimeout(() => startEditing(data.applications.length), 50);
+  }, [onUpdateData, data.applications.length, startEditing]);
 
   return (
     <section className="page-break mb-6">
@@ -287,33 +336,112 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
                 )}
               </div>
               <div className="p-4">
-                <h3 className="font-bold mb-1">{app.type}</h3>
-                <p className="text-gray-600 text-sm mb-2">{app.description}</p>
-                {(app.dimensions || app.materialSpecs || app.layoutGuidelines || app.typographyHierarchy || app.artDirection || app.substrates) && (
-                  <div className="space-y-1 mb-2 border-t pt-2">
-                    {app.dimensions && (
-                      <div className="text-xs"><span className="font-semibold text-gray-700">Dimensões:</span> <span className="text-gray-600 font-mono">{app.dimensions}</span></div>
-                    )}
-                    {app.materialSpecs && (
-                      <div className="text-xs"><span className="font-semibold text-gray-700">Material:</span> <span className="text-gray-600">{app.materialSpecs}</span></div>
-                    )}
-                    {app.layoutGuidelines && (
-                      <div className="text-xs"><span className="font-semibold text-gray-700">Layout:</span> <span className="text-gray-600">{app.layoutGuidelines}</span></div>
-                    )}
-                    {app.typographyHierarchy && (
-                      <div className="text-xs"><span className="font-semibold text-gray-700">Tipografia:</span> <span className="text-gray-600">{app.typographyHierarchy}</span></div>
-                    )}
-                    {app.artDirection && (
-                      <div className="text-xs"><span className="font-semibold text-gray-700">Direção de Arte:</span> <span className="text-gray-600">{app.artDirection}</span></div>
-                    )}
-                    {app.substrates && app.substrates.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {app.substrates.map((s, j) => (
-                          <span key={j} className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded">{s}</span>
-                        ))}
+                {editingIndex === i ? (
+                  <div className="no-print space-y-2">
+                    <input
+                      type="text"
+                      value={editDraft.type ?? ""}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, type: e.target.value }))}
+                      placeholder="Tipo (ex: Cartão de Visita)"
+                      className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    />
+                    <textarea
+                      value={editDraft.description ?? ""}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, description: e.target.value }))}
+                      placeholder="Descrição da aplicação"
+                      rows={2}
+                      className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-y"
+                    />
+                    <input
+                      type="text"
+                      value={editDraft.dimensions ?? ""}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, dimensions: e.target.value }))}
+                      placeholder="Dimensões (ex: 90×50mm)"
+                      className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    />
+                    <input
+                      type="text"
+                      value={editDraft.materialSpecs ?? ""}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, materialSpecs: e.target.value }))}
+                      placeholder="Material (ex: Papel Kraft 250g)"
+                      className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    />
+                    <textarea
+                      value={editDraft.layoutGuidelines ?? ""}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, layoutGuidelines: e.target.value }))}
+                      placeholder="Diretrizes de Layout"
+                      rows={2}
+                      className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-y"
+                    />
+                    <input
+                      type="text"
+                      value={editDraft.typographyHierarchy ?? ""}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, typographyHierarchy: e.target.value }))}
+                      placeholder="Hierarquia Tipográfica"
+                      className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    />
+                    <input
+                      type="text"
+                      value={editDraft.artDirection ?? ""}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, artDirection: e.target.value }))}
+                      placeholder="Direção de Arte"
+                      className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                    />
+                    <div className="flex gap-2 pt-1">
+                      <button type="button" onClick={saveEditing} className="flex-1 text-xs font-bold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition">Salvar</button>
+                      <button type="button" onClick={cancelEditing} className="flex-1 text-xs font-bold text-gray-600 border px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">Cancelar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold mb-1">{app.type}</h3>
+                      {onUpdateData && (
+                        <div className="no-print flex items-center gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                          <button type="button" onClick={() => startEditing(i)} className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition" title="Editar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          {confirmDelete === i ? (
+                            <div className="flex items-center gap-1">
+                              <button type="button" onClick={() => deleteApplication(i)} className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded hover:bg-red-100 transition">Sim</button>
+                              <button type="button" onClick={() => setConfirmDelete(null)} className="text-[10px] font-bold text-gray-500 px-1 py-0.5 rounded hover:bg-gray-100 transition">Não</button>
+                            </div>
+                          ) : (
+                            <button type="button" onClick={() => setConfirmDelete(i)} className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition" title="Excluir">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-gray-600 text-sm mb-2">{app.description}</p>
+                    {(app.dimensions || app.materialSpecs || app.layoutGuidelines || app.typographyHierarchy || app.artDirection || app.substrates) && (
+                      <div className="space-y-1 mb-2 border-t pt-2">
+                        {app.dimensions && (
+                          <div className="text-xs"><span className="font-semibold text-gray-700">Dimensões:</span> <span className="text-gray-600 font-mono">{app.dimensions}</span></div>
+                        )}
+                        {app.materialSpecs && (
+                          <div className="text-xs"><span className="font-semibold text-gray-700">Material:</span> <span className="text-gray-600">{app.materialSpecs}</span></div>
+                        )}
+                        {app.layoutGuidelines && (
+                          <div className="text-xs"><span className="font-semibold text-gray-700">Layout:</span> <span className="text-gray-600">{app.layoutGuidelines}</span></div>
+                        )}
+                        {app.typographyHierarchy && (
+                          <div className="text-xs"><span className="font-semibold text-gray-700">Tipografia:</span> <span className="text-gray-600">{app.typographyHierarchy}</span></div>
+                        )}
+                        {app.artDirection && (
+                          <div className="text-xs"><span className="font-semibold text-gray-700">Direção de Arte:</span> <span className="text-gray-600">{app.artDirection}</span></div>
+                        )}
+                        {app.substrates && app.substrates.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {app.substrates.map((s, j) => (
+                              <span key={j} className="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded">{s}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
+                  </>
                 )}
 
                 {onGenerateApplication && (
@@ -478,6 +606,16 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
             </div>
           );
         })}
+        {onUpdateData && (
+          <button
+            type="button"
+            onClick={addApplication}
+            className="no-print w-full border-2 border-dashed border-gray-300 rounded-xl py-8 text-sm font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex flex-col items-center gap-2"
+          >
+            <span className="text-2xl leading-none">+</span>
+            <span>Nova Aplicação</span>
+          </button>
+        )}
       </div>
 
       {previewImage && (

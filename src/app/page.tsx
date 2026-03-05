@@ -24,6 +24,8 @@ import {
   saveBrandbookData, loadBrandbookData,
   saveGeneratedImage, loadGeneratedImages, clearGeneratedImages,
   saveBrandAssets, loadBrandAssets,
+  isIndexedDBAvailable,
+  saveAssetPack, loadAssetPack,
 } from "@/lib/imageStorage";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
@@ -61,17 +63,6 @@ function loadCachedGeneratedAssets(slug: string): Record<string, GeneratedAsset>
   }
 }
 
-function saveCachedGeneratedAssets(slug: string, assets: Record<string, GeneratedAsset>): string | null {
-  if (typeof window === "undefined") return null;
-  if (!slug) return null;
-  try {
-    localStorage.setItem(GENERATED_ASSETS_LS_PREFIX + slug, JSON.stringify(assets));
-    return null;
-  } catch {
-    return "Armazenamento local cheio. Não foi possível salvar o cache de imagens. Tente limpar o cache de imagens ou remover alguns Assets.";
-  }
-}
-
 function clearCachedGeneratedAssets(slug: string) {
   if (typeof window === "undefined") return;
   if (!slug) return;
@@ -92,17 +83,6 @@ function loadCachedBrandAssets(slug: string): UploadedAsset[] {
   }
 }
 
-function saveCachedBrandAssets(slug: string, assets: UploadedAsset[]): string | null {
-  if (typeof window === "undefined") return null;
-  if (!slug) return null;
-  try {
-    localStorage.setItem(BRAND_ASSETS_LS_PREFIX + slug, JSON.stringify(assets));
-    return null;
-  } catch {
-    return "Armazenamento local cheio. Não foi possível salvar seus Assets. Remova alguns itens (ou reduza o tamanho das imagens) e tente novamente.";
-  }
-}
-
 function loadCachedAssetPack(slug: string): AssetPackFile[] {
   if (typeof window === "undefined") return [];
   if (!slug) return [];
@@ -117,14 +97,66 @@ function loadCachedAssetPack(slug: string): AssetPackFile[] {
   }
 }
 
-function saveCachedAssetPack(slug: string, files: AssetPackFile[]): string | null {
-  if (typeof window === "undefined") return null;
-  if (!slug) return null;
+async function migrateLegacyLocalStorageToIndexedDB(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const ok = await isIndexedDBAvailable();
+  if (!ok) return;
+
+  const slugs = new Set<string>();
   try {
-    localStorage.setItem(ASSET_PACK_LS_PREFIX + slug, JSON.stringify(files));
-    return null;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (k.startsWith(GENERATED_ASSETS_LS_PREFIX)) slugs.add(k.slice(GENERATED_ASSETS_LS_PREFIX.length));
+      else if (k.startsWith(BRAND_ASSETS_LS_PREFIX)) slugs.add(k.slice(BRAND_ASSETS_LS_PREFIX.length));
+      else if (k.startsWith(ASSET_PACK_LS_PREFIX)) slugs.add(k.slice(ASSET_PACK_LS_PREFIX.length));
+    }
   } catch {
-    return "Armazenamento local cheio. Não foi possível salvar o Asset Pack.";
+    return;
+  }
+
+  for (const slug of slugs) {
+    try {
+      const rawGen = localStorage.getItem(GENERATED_ASSETS_LS_PREFIX + slug);
+      if (rawGen) {
+        const parsed = JSON.parse(rawGen) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const rec = parsed as Record<string, GeneratedAsset>;
+          for (const [key, asset] of Object.entries(rec)) {
+            await saveGeneratedImage(slug, key, asset);
+          }
+          localStorage.removeItem(GENERATED_ASSETS_LS_PREFIX + slug);
+        }
+      }
+    } catch {
+      // keep legacy cache if parsing fails
+    }
+
+    try {
+      const rawBrand = localStorage.getItem(BRAND_ASSETS_LS_PREFIX + slug);
+      if (rawBrand) {
+        const parsed = JSON.parse(rawBrand) as unknown;
+        if (Array.isArray(parsed)) {
+          await saveBrandAssets(slug, parsed as UploadedAsset[]);
+          localStorage.removeItem(BRAND_ASSETS_LS_PREFIX + slug);
+        }
+      }
+    } catch {
+      // keep legacy cache if parsing fails
+    }
+
+    try {
+      const rawPack = localStorage.getItem(ASSET_PACK_LS_PREFIX + slug);
+      if (rawPack) {
+        const parsed = JSON.parse(rawPack) as unknown;
+        if (Array.isArray(parsed)) {
+          await saveAssetPack(slug, parsed as AssetPackFile[]);
+          localStorage.removeItem(ASSET_PACK_LS_PREFIX + slug);
+        }
+      }
+    } catch {
+      // keep legacy cache if parsing fails
+    }
   }
 }
 
@@ -135,7 +167,6 @@ export default function Home() {
   const [generationPhase, setGenerationPhase] = useState("");
   const [generationPct, setGenerationPct] = useState(0);
   const [error, setError] = useState("");
-  const [storageWarning, setStorageWarning] = useState("");
   const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
   const brandbookRef = useRef<BrandbookData | null>(null);
   const [jsonText, setJsonText] = useState("");
@@ -202,8 +233,10 @@ export default function Home() {
 
     const logoKeys: AssetKey[] = ["logo_primary", "logo_dark_bg"];
     const slug = slugifyForStorage(bbData.brandName);
-    const cached = loadCachedGeneratedAssets(slug);
-    const toGenerate = logoKeys.filter((k) => !cached[k]);
+    const cached = await loadGeneratedImages(slug).catch(() => ({})) as Record<string, GeneratedAsset>;
+    const legacy = Object.keys(cached).length > 0 ? {} : loadCachedGeneratedAssets(slug);
+    const merged = { ...legacy, ...cached };
+    const toGenerate = logoKeys.filter((k) => !merged[k]);
     if (toGenerate.length === 0) return;
 
     setGenerationPhase("Gerando logos automaticamente...");
@@ -282,70 +315,77 @@ export default function Home() {
     if (!keys.openai && keys.google) setTextProvider("gemini");
     else if (keys.openai) setTextProvider("openai");
 
-    // Load shared brandbook from URL
-    const params = new URLSearchParams(window.location.search);
-    const bbParam = params.get("bb");
-    if (bbParam) {
-      setLoadingShared(true);
-      setTab("viewer");
-      setViewerTab("preview");
-      decompressBrandbook(bbParam)
-        .then((raw) => {
-          if (!raw) throw new Error("Link inválido");
-          const migrated = migrateBrandbook(raw);
-          const validated = BrandbookSchemaLoose.safeParse(migrated);
-          if (!validated.success) throw new Error("Link inválido");
-          resetHistory();
-          setBrandbookData(migrated as BrandbookData);
-          const slug = slugifyForStorage((migrated as BrandbookData).brandName);
-          loadGeneratedImages(slug)
-            .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
-            .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
-          loadBrandAssets(slug)
-            .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
-            .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-          setAssetPackFiles(loadCachedAssetPack(slug));
-          window.history.replaceState({}, "", window.location.pathname);
-        })
-        .catch(() => {
-          setError("Link compartilhado inválido ou expirado.");
-          setTab("examples");
-        })
-        .finally(() => {
-          setLoadingShared(false);
-        });
-      return;
-    }
+    void (async () => {
+      await migrateLegacyLocalStorageToIndexedDB().catch(() => {});
 
-    // Restore last active brandbook session from storage
-    const activeSlug = getActiveSlug();
-    if (activeSlug) {
-      const savedData = loadBrandbookData(activeSlug);
-      if (savedData) {
-        try {
-          const migrated = migrateBrandbook(savedData);
-          resetHistory();
-          setBrandbookData(migrated as BrandbookData);
-          setTab("viewer");
-          loadGeneratedImages(activeSlug)
-            .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(activeSlug)))
-            .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(activeSlug)));
-          loadBrandAssets(activeSlug)
-            .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(activeSlug)))
-            .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(activeSlug)));
-          setAssetPackFiles(loadCachedAssetPack(activeSlug));
-        } catch {
-          // Corrupt saved data — ignore and show default screen
+      // Load shared brandbook from URL
+      const params = new URLSearchParams(window.location.search);
+      const bbParam = params.get("bb");
+      if (bbParam) {
+        setLoadingShared(true);
+        setTab("viewer");
+        setViewerTab("preview");
+        decompressBrandbook(bbParam)
+          .then((raw) => {
+            if (!raw) throw new Error("Link inválido");
+            const migrated = migrateBrandbook(raw);
+            const validated = BrandbookSchemaLoose.safeParse(migrated);
+            if (!validated.success) throw new Error("Link inválido");
+            resetHistory();
+            setBrandbookData(migrated as BrandbookData);
+            const slug = slugifyForStorage((migrated as BrandbookData).brandName);
+            loadGeneratedImages(slug)
+              .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
+              .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
+            loadBrandAssets(slug)
+              .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
+              .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
+            loadAssetPack(slug)
+              .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
+              .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
+            window.history.replaceState({}, "", window.location.pathname);
+          })
+          .catch(() => {
+            setError("Link compartilhado inválido ou expirado.");
+            setTab("examples");
+          })
+          .finally(() => {
+            setLoadingShared(false);
+          });
+        return;
+      }
+
+      // Restore last active brandbook session from storage
+      const activeSlug = getActiveSlug();
+      if (activeSlug) {
+        const savedData = loadBrandbookData(activeSlug);
+        if (savedData) {
+          try {
+            const migrated = migrateBrandbook(savedData);
+            resetHistory();
+            setBrandbookData(migrated as BrandbookData);
+            setTab("viewer");
+            loadGeneratedImages(activeSlug)
+              .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(activeSlug)))
+              .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(activeSlug)));
+            loadBrandAssets(activeSlug)
+              .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(activeSlug)))
+              .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(activeSlug)));
+            loadAssetPack(activeSlug)
+              .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(activeSlug)))
+              .catch(() => setAssetPackFiles(loadCachedAssetPack(activeSlug)));
+          } catch {
+            // Corrupt saved data — ignore and show default screen
+          }
         }
       }
-    }
+    })();
   }, []);
 
 
   async function handleGenerate(formData: GenerateBriefingData) {
     setLoading(true);
     setError("");
-    setStorageWarning("");
     setBrandbookData(null);
     resetHistory();
     setGenerationPhase("Preparando geração...");
@@ -417,7 +457,9 @@ export default function Home() {
               loadBrandAssets(slug)
                 .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
                 .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-              setAssetPackFiles(loadCachedAssetPack(slug));
+              loadAssetPack(slug)
+                .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
+                .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
               setTab("viewer");
 
               // Auto-generate logo images
@@ -455,7 +497,9 @@ export default function Home() {
       loadBrandAssets(slug)
         .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
         .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-      setAssetPackFiles(loadCachedAssetPack(slug));
+      loadAssetPack(slug)
+        .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
+        .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao carregar exemplo");
       return;
@@ -539,7 +583,9 @@ export default function Home() {
       loadBrandAssets(slug)
         .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
         .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-      setAssetPackFiles(loadCachedAssetPack(slug));
+      loadAssetPack(slug)
+        .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
+        .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
       setTab("viewer");
       setError("");
     } catch {
@@ -597,12 +643,6 @@ export default function Home() {
     for (const [key, asset] of Object.entries(generatedAssets)) {
       saveGeneratedImage(slug, key, asset).catch(() => {});
     }
-    // Also attempt localStorage as lightweight backup (will warn if full)
-    const msg = saveCachedGeneratedAssets(slug, generatedAssets);
-    if (msg) {
-      setStorageWarning(msg);
-      setTimeout(() => setStorageWarning(""), 8000);
-    }
   }, [generatedAssets, brandbookData]);
 
   useEffect(() => {
@@ -610,22 +650,12 @@ export default function Home() {
     const slug = slugifyForStorage(brandbookData.brandName);
     // Save to IndexedDB (handles large dataUrls)
     saveBrandAssets(slug, uploadedBrandAssets).catch(() => {});
-    // Attempt localStorage as backup
-    const msg = saveCachedBrandAssets(slug, uploadedBrandAssets);
-    if (msg) {
-      setStorageWarning(msg);
-      setTimeout(() => setStorageWarning(""), 8000);
-    }
   }, [uploadedBrandAssets, brandbookData]);
 
   useEffect(() => {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
-    const msg = saveCachedAssetPack(slug, assetPackFiles);
-    if (msg) {
-      setStorageWarning(msg);
-      setTimeout(() => setStorageWarning(""), 8000);
-    }
+    saveAssetPack(slug, assetPackFiles).catch(() => {});
   }, [assetPackFiles, brandbookData]);
 
   function handleClearImageCache() {
@@ -736,13 +766,6 @@ export default function Home() {
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
             <span className="text-sm">{error}</span>
             <button onClick={() => setError("")} className="text-red-600 hover:text-red-800 font-bold text-lg leading-none">&times;</button>
-          </div>
-        )}
-
-        {storageWarning && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="text-sm">{storageWarning}</span>
-            <button onClick={() => setStorageWarning("")} className="text-amber-700 hover:text-amber-900 font-bold text-lg leading-none">&times;</button>
           </div>
         )}
 
@@ -1021,6 +1044,7 @@ export default function Home() {
                     return { ...prev, applications: nextApplications };
                   });
                 }}
+                onUpdateData={(updater) => updateBrandbook(updater)}
               />
             )}
 

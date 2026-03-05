@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 import { ASSET_CATALOG } from "@/lib/imagePrompts";
 import { bytesToBase64, fnv1a32, isPrivateHostname } from "@/lib/common";
+import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
 
 export const runtime = "nodejs";
 
@@ -212,6 +213,31 @@ async function refToInlineData(ref: string): Promise<{ inlineData: { mimeType: s
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  const memBefore = captureMem();
+  let providerName: string | undefined;
+  let assetKeyName: string | undefined;
+
+  function respond(status: number, body: Record<string, unknown>, extra: Record<string, unknown> = {}) {
+    const memAfter = captureMem();
+    const durationMs = Date.now() - startedAt;
+    const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+    bbLog(level, status >= 400 ? "api.generate-image.error" : "api.generate-image.ok", {
+      requestId,
+      status,
+      durationMs,
+      memDelta: diffMem(memBefore, memAfter),
+      ...extra,
+    });
+    return NextResponse.json(body, { status, headers: { "x-request-id": requestId } });
+  }
+
+  bbLog("info", "api.generate-image.start", {
+    requestId,
+    mem: memToJson(memBefore),
+  });
+
   try {
     const { prompt, provider, assetKey, openaiKey, stabilityKey, ideogramKey, googleKey,
       openaiImageModel, stabilityModel, ideogramModel, googleImageModel, referenceImages, aspectRatio } = await request.json() as {
@@ -230,8 +256,20 @@ export async function POST(request: NextRequest) {
       referenceImages?: string[];
     };
 
+    providerName = provider;
+    assetKeyName = assetKey;
+
+    bbLog("debug", "api.generate-image.payload", {
+      requestId,
+      provider,
+      assetKey,
+      aspectRatio,
+      promptChars: typeof prompt === "string" ? prompt.length : 0,
+      referenceImagesCount: Array.isArray(referenceImages) ? referenceImages.length : 0,
+    });
+
     if (!prompt || !provider) {
-      return NextResponse.json({ error: "prompt e provider são obrigatórios" }, { status: 400 });
+      return respond(400, { error: "prompt e provider são obrigatórios" }, { provider, assetKey });
     }
 
     const pickedAspectRatio: AspectRatioKey = (aspectRatio && IMAGEN_RATIOS[aspectRatio])
@@ -257,7 +295,7 @@ export async function POST(request: NextRequest) {
       case "dalle3": {
         const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
         if (!apiKey) {
-          return NextResponse.json({ error: "OPENAI_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
+          return respond(500, { error: "OPENAI_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { provider: "dalle3", assetKey });
         }
         const openai = new OpenAI({ apiKey });
         const size = DALLE3_SIZES[pickedAspectRatio];
@@ -288,13 +326,13 @@ export async function POST(request: NextRequest) {
         });
         const url = response.data?.[0]?.url;
         if (!url) throw new Error("DALL-E 3 não retornou URL de imagem");
-        return NextResponse.json({ url, provider: "dalle3", size, aspectRatio: pickedAspectRatio });
+        return respond(200, { url, provider: "dalle3", size, aspectRatio: pickedAspectRatio }, { provider: "dalle3", assetKey, aspectRatio: pickedAspectRatio });
       }
 
       case "stability": {
         const apiKey = stabilityKey?.trim() || process.env.STABILITY_API_KEY;
         if (!apiKey) {
-          return NextResponse.json({ error: "STABILITY_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
+          return respond(500, { error: "STABILITY_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { provider: "stability", assetKey });
         }
         const { positive, negative } = extractNegativePrompt(prompt);
         const seed = extractVisualSystemSeed(prompt, assetKey);
@@ -365,18 +403,18 @@ export async function POST(request: NextRequest) {
         const sdData = await res.json() as { artifacts?: { base64: string; finishReason: string }[] };
         const base64 = sdData.artifacts?.[0]?.base64;
         if (!base64) throw new Error("Stability AI não retornou dados de imagem");
-        return NextResponse.json({
+        return respond(200, {
           url: `data:image/png;base64,${base64}`,
           provider: "stability",
           size: `${width}x${height}`,
           aspectRatio: pickedAspectRatio,
-        });
+        }, { provider: "stability", assetKey, aspectRatio: pickedAspectRatio });
       }
 
       case "ideogram": {
         const apiKey = ideogramKey?.trim() || process.env.IDEOGRAM_API_KEY;
         if (!apiKey) {
-          return NextResponse.json({ error: "IDEOGRAM_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
+          return respond(500, { error: "IDEOGRAM_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { provider: "ideogram", assetKey });
         }
         const { positive, negative } = extractNegativePrompt(prompt);
         const finalPrompt = `${positive.slice(0, 1750)}\n\nAvoid: ${negative.slice(0, 700)}.`;
@@ -407,13 +445,13 @@ export async function POST(request: NextRequest) {
         const ideogramData = await res.json() as { data?: { url: string }[] };
         const url = ideogramData.data?.[0]?.url;
         if (!url) throw new Error("Ideogram não retornou URL de imagem");
-        return NextResponse.json({ url, provider: "ideogram", aspectRatio: pickedAspectRatio });
+        return respond(200, { url, provider: "ideogram", aspectRatio: pickedAspectRatio }, { provider: "ideogram", assetKey, aspectRatio: pickedAspectRatio });
       }
 
       case "imagen": {
         const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
         if (!apiKey) {
-          return NextResponse.json({ error: "GOOGLE_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { status: 500 });
+          return respond(500, { error: "GOOGLE_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho." }, { provider: "imagen", assetKey });
         }
         const ai = new GoogleGenAI({ apiKey });
         const { positive, negative } = extractNegativePrompt(prompt);
@@ -425,9 +463,10 @@ export async function POST(request: NextRequest) {
 
         const hasRefImages = Array.isArray(referenceImages) && referenceImages.length > 0;
         if (isStrictLogoAsset && !hasRefImages) {
-          return NextResponse.json(
+          return respond(
+            400,
             { error: "Para garantir consistência do logo, esta peça exige uma imagem de referência do logo (gere primeiro o Logo — Fundo Claro ou faça upload em Assets)." },
-            { status: 400 }
+            { provider: "imagen", assetKey }
           );
         }
         const shouldUseGemini = hasRefImages || selectedLower.startsWith("gemini");
@@ -481,7 +520,7 @@ export async function POST(request: NextRequest) {
                   url: `data:${mimeType};base64,${part.inlineData.data}`,
                   provider: "imagen",
                   aspectRatio: pickedAspectRatio,
-                });
+                }, { headers: { "x-request-id": requestId } });
               }
             }
             throw new Error("Gemini não retornou imagem.");
@@ -497,7 +536,7 @@ export async function POST(request: NextRequest) {
               finalPrompt,
               imagenRatio
             );
-            return NextResponse.json({ url, provider: "imagen", aspectRatio: pickedAspectRatio });
+            return respond(200, { url, provider: "imagen", aspectRatio: pickedAspectRatio }, { provider: "imagen", assetKey, aspectRatio: pickedAspectRatio, fallback: true });
           }
         }
 
@@ -509,18 +548,18 @@ export async function POST(request: NextRequest) {
           finalPrompt,
           imagenRatio
         );
-        return NextResponse.json({ url, provider: "imagen", aspectRatio: pickedAspectRatio });
+        return respond(200, { url, provider: "imagen", aspectRatio: pickedAspectRatio }, { provider: "imagen", assetKey, aspectRatio: pickedAspectRatio });
       }
 
       default:
-        return NextResponse.json(
-          { error: "Provider inválido. Use: dalle3 | stability | ideogram | imagen" },
-          { status: 400 }
-        );
+        return respond(400, { error: "Provider inválido. Use: dalle3 | stability | ideogram | imagen" }, { provider, assetKey });
     }
   } catch (error: unknown) {
-    console.error("[generate-image]", error);
+    bbLog("error", "api.generate-image.exception", {
+      requestId,
+      error: serializeError(error),
+    });
     const message = error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return respond(500, { error: message }, { provider: providerName ?? "unknown", assetKey: assetKeyName });
   }
 }

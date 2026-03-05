@@ -11,6 +11,7 @@ interface Props {
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
+  onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
 }
 
 interface CardBriefing {
@@ -37,7 +38,7 @@ function downloadImageDirect(url: string, name: string) {
   document.body.removeChild(a);
 }
 
-export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload }: Props) {
+export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
   const isAdvanced = !!data.keyVisual.iconography;
   const hasFlora = data.keyVisual.flora && data.keyVisual.flora.length > 0;
   const hasFauna = data.keyVisual.fauna && data.keyVisual.fauna.length > 0;
@@ -50,6 +51,40 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
   const [linkInput, setLinkInput] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [sectionGenerating, setSectionGenerating] = useState(false);
+
+  const [editingElement, setEditingElement] = useState<number | null>(null);
+  const [elementDraft, setElementDraft] = useState("");
+  const [editingFloraItem, setEditingFloraItem] = useState<{ list: "flora" | "fauna" | "objects"; idx: number } | null>(null);
+  const [floraItemDraft, setFloraItemDraft] = useState("");
+
+  const updateListItem = useCallback((list: "flora" | "fauna" | "objects", idx: number, value: string) => {
+    if (!onUpdateData) return;
+    onUpdateData((prev) => {
+      const arr = [...(prev.keyVisual[list] ?? [])];
+      arr[idx] = value;
+      return { ...prev, keyVisual: { ...prev.keyVisual, [list]: arr } };
+    });
+  }, [onUpdateData]);
+
+  const deleteListItem = useCallback((list: "flora" | "fauna" | "objects" | "elements", idx: number) => {
+    if (!onUpdateData) return;
+    onUpdateData((prev) => {
+      if (list === "elements") {
+        return { ...prev, keyVisual: { ...prev.keyVisual, elements: prev.keyVisual.elements.filter((_, j) => j !== idx) } };
+      }
+      return { ...prev, keyVisual: { ...prev.keyVisual, [list]: (prev.keyVisual[list] ?? []).filter((_, j: number) => j !== idx) } };
+    });
+  }, [onUpdateData]);
+
+  const addListItem = useCallback((list: "flora" | "fauna" | "objects" | "elements") => {
+    if (!onUpdateData) return;
+    onUpdateData((prev) => {
+      if (list === "elements") {
+        return { ...prev, keyVisual: { ...prev.keyVisual, elements: [...prev.keyVisual.elements, "Novo elemento gráfico"] } };
+      }
+      return { ...prev, keyVisual: { ...prev.keyVisual, [list]: [...(prev.keyVisual[list] ?? []), `Novo item`] } };
+    });
+  }, [onUpdateData]);
 
   useEffect(() => {
     if (!previewImage) return;
@@ -294,12 +329,37 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
           <h3 className="text-base font-bold mb-3">Elementos Gráficos</h3>
           <ul className="space-y-3">
             {data.keyVisual.elements.map((e, i) => (
-              <li key={i} className="flex items-start gap-3">
+              <li key={i} className="flex items-start gap-3 group/el">
                 <span className="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{i + 1}</span>
-                <span className="text-gray-700">{e}</span>
+                {editingElement === i ? (
+                  <div className="no-print flex-1 flex gap-2">
+                    <input type="text" value={elementDraft} onChange={(ev) => setElementDraft(ev.target.value)} placeholder="Elemento gráfico" className="flex-1 bg-gray-50 border rounded-lg px-3 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                    <button type="button" onClick={() => { if (onUpdateData) { onUpdateData((prev) => { const next = [...prev.keyVisual.elements]; next[i] = elementDraft; return { ...prev, keyVisual: { ...prev.keyVisual, elements: next } }; }); } setEditingElement(null); }} className="text-xs font-bold bg-gray-900 text-white px-2.5 py-1 rounded-lg hover:bg-gray-800 transition">OK</button>
+                    <button type="button" onClick={() => setEditingElement(null)} className="text-xs font-bold text-gray-600 border px-2.5 py-1 rounded-lg hover:bg-gray-100 transition">x</button>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-start justify-between gap-2">
+                    <span className="text-gray-700">{e}</span>
+                    {onUpdateData && (
+                      <div className="no-print flex items-center gap-1 shrink-0 opacity-0 group-hover/el:opacity-100 transition">
+                        <button type="button" onClick={() => { setEditingElement(i); setElementDraft(e); }} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition" title="Editar">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button type="button" onClick={() => deleteListItem("elements", i)} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition" title="Excluir">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
+          {onUpdateData && (
+            <button type="button" onClick={() => addListItem("elements")} className="no-print mt-3 w-full border-2 border-dashed border-gray-300 rounded-lg py-2 text-xs font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 hover:bg-gray-50 transition">
+              + Novo Elemento
+            </button>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -331,51 +391,108 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
         </div>
       </div>
 
-      {hasAssetCategories && (
+      {(hasAssetCategories || onUpdateData) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-          {hasFlora && (
+          {(hasFlora || onUpdateData) && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-5">
               <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">
                 <span className="text-lg">🌿</span> Flora
               </h3>
               <ul className="space-y-2">
-                {data.keyVisual.flora!.map((item, i) => (
-                  <li key={i} className="text-sm text-green-800 flex items-start gap-2">
+                {(data.keyVisual.flora ?? []).map((item, i) => (
+                  <li key={i} className="text-sm text-green-800 flex items-start gap-2 group/fi">
                     <span className="text-green-400 shrink-0 mt-0.5">●</span>
-                    <span>{item}</span>
+                    {editingFloraItem?.list === "flora" && editingFloraItem.idx === i ? (
+                      <div className="no-print flex-1 flex gap-1">
+                        <input type="text" value={floraItemDraft} onChange={(ev) => setFloraItemDraft(ev.target.value)} placeholder="Flora" className="flex-1 bg-white border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-400" />
+                        <button type="button" onClick={() => { updateListItem("flora", i, floraItemDraft); setEditingFloraItem(null); }} className="text-[10px] font-bold bg-green-700 text-white px-2 py-0.5 rounded hover:bg-green-800 transition">OK</button>
+                        <button type="button" onClick={() => setEditingFloraItem(null)} className="text-[10px] font-bold text-green-700 px-1 py-0.5 rounded hover:bg-green-100 transition">x</button>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex items-start justify-between gap-1">
+                        <span>{item}</span>
+                        {onUpdateData && (
+                          <div className="no-print flex gap-0.5 shrink-0 opacity-0 group-hover/fi:opacity-100 transition">
+                            <button type="button" onClick={() => { setEditingFloraItem({ list: "flora", idx: i }); setFloraItemDraft(item); }} className="w-4 h-4 flex items-center justify-center rounded text-green-600 hover:bg-green-200 transition" title="Editar"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                            <button type="button" onClick={() => deleteListItem("flora", i)} className="w-4 h-4 flex items-center justify-center rounded text-green-600 hover:text-red-600 hover:bg-red-50 transition" title="Excluir"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
+              {onUpdateData && (
+                <button type="button" onClick={() => addListItem("flora")} className="no-print mt-2 w-full border border-dashed border-green-300 rounded-lg py-1.5 text-[10px] font-medium text-green-600 hover:border-green-500 hover:bg-green-100 transition">+ Adicionar</button>
+              )}
             </div>
           )}
-          {hasFauna && (
+          {(hasFauna || onUpdateData) && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
               <h3 className="font-bold text-amber-800 mb-3 flex items-center gap-2">
                 <span className="text-lg">🦜</span> Fauna
               </h3>
               <ul className="space-y-2">
-                {data.keyVisual.fauna!.map((item, i) => (
-                  <li key={i} className="text-sm text-amber-800 flex items-start gap-2">
+                {(data.keyVisual.fauna ?? []).map((item, i) => (
+                  <li key={i} className="text-sm text-amber-800 flex items-start gap-2 group/fi">
                     <span className="text-amber-400 shrink-0 mt-0.5">●</span>
-                    <span>{item}</span>
+                    {editingFloraItem?.list === "fauna" && editingFloraItem.idx === i ? (
+                      <div className="no-print flex-1 flex gap-1">
+                        <input type="text" value={floraItemDraft} onChange={(ev) => setFloraItemDraft(ev.target.value)} placeholder="Fauna" className="flex-1 bg-white border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-400" />
+                        <button type="button" onClick={() => { updateListItem("fauna", i, floraItemDraft); setEditingFloraItem(null); }} className="text-[10px] font-bold bg-amber-700 text-white px-2 py-0.5 rounded hover:bg-amber-800 transition">OK</button>
+                        <button type="button" onClick={() => setEditingFloraItem(null)} className="text-[10px] font-bold text-amber-700 px-1 py-0.5 rounded hover:bg-amber-100 transition">x</button>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex items-start justify-between gap-1">
+                        <span>{item}</span>
+                        {onUpdateData && (
+                          <div className="no-print flex gap-0.5 shrink-0 opacity-0 group-hover/fi:opacity-100 transition">
+                            <button type="button" onClick={() => { setEditingFloraItem({ list: "fauna", idx: i }); setFloraItemDraft(item); }} className="w-4 h-4 flex items-center justify-center rounded text-amber-600 hover:bg-amber-200 transition" title="Editar"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                            <button type="button" onClick={() => deleteListItem("fauna", i)} className="w-4 h-4 flex items-center justify-center rounded text-amber-600 hover:text-red-600 hover:bg-red-50 transition" title="Excluir"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
+              {onUpdateData && (
+                <button type="button" onClick={() => addListItem("fauna")} className="no-print mt-2 w-full border border-dashed border-amber-300 rounded-lg py-1.5 text-[10px] font-medium text-amber-600 hover:border-amber-500 hover:bg-amber-100 transition">+ Adicionar</button>
+              )}
             </div>
           )}
-          {hasObjects && (
+          {(hasObjects || onUpdateData) && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
               <h3 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
                 <span className="text-lg">🎸</span> Objetos
               </h3>
               <ul className="space-y-2">
-                {data.keyVisual.objects!.map((item, i) => (
-                  <li key={i} className="text-sm text-blue-800 flex items-start gap-2">
+                {(data.keyVisual.objects ?? []).map((item, i) => (
+                  <li key={i} className="text-sm text-blue-800 flex items-start gap-2 group/fi">
                     <span className="text-blue-400 shrink-0 mt-0.5">●</span>
-                    <span>{item}</span>
+                    {editingFloraItem?.list === "objects" && editingFloraItem.idx === i ? (
+                      <div className="no-print flex-1 flex gap-1">
+                        <input type="text" value={floraItemDraft} onChange={(ev) => setFloraItemDraft(ev.target.value)} placeholder="Objeto" className="flex-1 bg-white border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                        <button type="button" onClick={() => { updateListItem("objects", i, floraItemDraft); setEditingFloraItem(null); }} className="text-[10px] font-bold bg-blue-700 text-white px-2 py-0.5 rounded hover:bg-blue-800 transition">OK</button>
+                        <button type="button" onClick={() => setEditingFloraItem(null)} className="text-[10px] font-bold text-blue-700 px-1 py-0.5 rounded hover:bg-blue-100 transition">x</button>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex items-start justify-between gap-1">
+                        <span>{item}</span>
+                        {onUpdateData && (
+                          <div className="no-print flex gap-0.5 shrink-0 opacity-0 group-hover/fi:opacity-100 transition">
+                            <button type="button" onClick={() => { setEditingFloraItem({ list: "objects", idx: i }); setFloraItemDraft(item); }} className="w-4 h-4 flex items-center justify-center rounded text-blue-600 hover:bg-blue-200 transition" title="Editar"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                            <button type="button" onClick={() => deleteListItem("objects", i)} className="w-4 h-4 flex items-center justify-center rounded text-blue-600 hover:text-red-600 hover:bg-red-50 transition" title="Excluir"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
+              {onUpdateData && (
+                <button type="button" onClick={() => addListItem("objects")} className="no-print mt-2 w-full border border-dashed border-blue-300 rounded-lg py-1.5 text-[10px] font-medium text-blue-600 hover:border-blue-500 hover:bg-blue-100 transition">+ Adicionar</button>
+              )}
             </div>
           )}
         </div>

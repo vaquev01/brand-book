@@ -71,6 +71,7 @@ interface Props {
   onAssetGenerated?: (key: string, asset: GeneratedAsset) => void;
   onSaveToAssets?: (asset: UploadedAsset) => void;
   onUpdateColors?: (colors: Colors) => void;
+  onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
 }
 
 export function BrandbookViewer({
@@ -87,6 +88,7 @@ export function BrandbookViewer({
   onAssetGenerated,
   onSaveToAssets,
   onUpdateColors,
+  onUpdateData,
 }: Props) {
   const isAdvanced = !!data.uxPatterns;
   const hasGeneration = !!apiKeys && !!onAssetGenerated;
@@ -156,6 +158,7 @@ export function BrandbookViewer({
           onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
           onSaveToAssets={hasGeneration ? (asset: GeneratedAsset, label: string, key?: AssetKey) => imgGen.saveGeneratedToAssets(asset, label, key) : undefined}
           generatedAssets={generatedAssets}
+          onUpdateData={onUpdateData}
         />
       ),
     },
@@ -200,6 +203,7 @@ export function BrandbookViewer({
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
           onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
+          onUpdateData={onUpdateData}
         />
       ),
     },
@@ -224,6 +228,7 @@ export function BrandbookViewer({
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
           onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
+          onUpdateData={onUpdateData}
         />
       ),
     },
@@ -263,6 +268,7 @@ export function BrandbookViewer({
           onGenerateAllApplications={hasGeneration ? () => imgGen.generateAllApplications() : undefined}
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
+          onUpdateData={onUpdateData}
         />
       ),
     },

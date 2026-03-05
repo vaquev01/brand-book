@@ -1,10 +1,11 @@
-import { type GeneratedAsset, type BrandbookData, type UploadedAsset } from "./types";
+import { type GeneratedAsset, type BrandbookData, type UploadedAsset, type AssetPackFile } from "./types";
 
 const DB_NAME = "brandbook-builder";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_IMAGES = "generated-images";
 const STORE_BRANDBOOKS = "brandbooks";
 const STORE_BRAND_ASSETS = "brand-assets";
+const STORE_ASSET_PACK = "asset-pack";
 
 const LS_ACTIVE_SLUG = "bb_active";
 const LS_DATA_PREFIX = "bb_data::";
@@ -32,6 +33,9 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_BRAND_ASSETS)) {
         db.createObjectStore(STORE_BRAND_ASSETS);
       }
+      if (!db.objectStoreNames.contains(STORE_ASSET_PACK)) {
+        db.createObjectStore(STORE_ASSET_PACK);
+      }
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => {
@@ -40,6 +44,16 @@ function openDB(): Promise<IDBDatabase> {
     };
   });
   return dbPromise;
+}
+
+export async function isIndexedDBAvailable(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    await openDB();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function withDB<T>(fn: (db: IDBDatabase) => Promise<T>): Promise<T> {
@@ -83,12 +97,20 @@ function idbGetAllKeys(store: IDBObjectStore): Promise<IDBValidKey[]> {
 
 export function getActiveSlug(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(LS_ACTIVE_SLUG);
+  try {
+    return localStorage.getItem(LS_ACTIVE_SLUG);
+  } catch {
+    return null;
+  }
 }
 
 export function setActiveSlug(slug: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(LS_ACTIVE_SLUG, slug);
+  try {
+    localStorage.setItem(LS_ACTIVE_SLUG, slug);
+  } catch {
+    // localStorage full/unavailable — ignore
+  }
 }
 
 // ─── Brandbook data (localStorage — small JSON) ────────────────────────────
@@ -204,5 +226,41 @@ export async function loadBrandAssets(slug: string): Promise<UploadedAsset[]> {
     });
   } catch {
     return [];
+  }
+}
+
+// ─── Asset pack (IndexedDB) ───────────────────────────────────────────────
+
+export async function saveAssetPack(slug: string, files: AssetPackFile[]): Promise<void> {
+  try {
+    await withDB(async (db) => {
+      const tx = db.transaction(STORE_ASSET_PACK, "readwrite");
+      await idbPut(tx.objectStore(STORE_ASSET_PACK), files, slug);
+    });
+  } catch {
+    // silent
+  }
+}
+
+export async function loadAssetPack(slug: string): Promise<AssetPackFile[]> {
+  try {
+    return await withDB(async (db) => {
+      const tx = db.transaction(STORE_ASSET_PACK, "readonly");
+      const result = await idbGet<AssetPackFile[]>(tx.objectStore(STORE_ASSET_PACK), slug);
+      return Array.isArray(result) ? result : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function clearAssetPack(slug: string): Promise<void> {
+  try {
+    await withDB(async (db) => {
+      const tx = db.transaction(STORE_ASSET_PACK, "readwrite");
+      await idbDelete(tx.objectStore(STORE_ASSET_PACK), slug);
+    });
+  } catch {
+    // silent
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset, Mascot, BrandPattern } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
+  onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
 }
 
 interface CardBriefing {
@@ -38,7 +39,7 @@ function downloadImageDirect(url: string, name: string) {
   document.body.removeChild(a);
 }
 
-export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload }: Props) {
+export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
   const mascots = useMemo(() => data.keyVisual.mascots ?? [], [data.keyVisual.mascots]);
   const symbols = useMemo(() => data.keyVisual.symbols ?? [], [data.keyVisual.symbols]);
   const patterns = useMemo(() => data.keyVisual.patterns ?? [], [data.keyVisual.patterns]);
@@ -66,6 +67,18 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
   const [linkInput, setLinkInput] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [sectionGenerating, setSectionGenerating] = useState(false);
+
+  const [editingMascot, setEditingMascot] = useState<number | null>(null);
+  const [mascotDraft, setMascotDraft] = useState<Partial<Mascot>>({});
+  const [confirmDeleteMascot, setConfirmDeleteMascot] = useState<number | null>(null);
+
+  const [editingSymbol, setEditingSymbol] = useState<number | null>(null);
+  const [symbolDraft, setSymbolDraft] = useState("");
+  const [confirmDeleteSymbol, setConfirmDeleteSymbol] = useState<number | null>(null);
+
+  const [editingPattern, setEditingPattern] = useState<number | null>(null);
+  const [patternDraft, setPatternDraft] = useState<Partial<BrandPattern> & { simpleText?: string }>({});
+  const [confirmDeletePattern, setConfirmDeletePattern] = useState<number | null>(null);
 
   useEffect(() => {
     if (!previewImage) return;
@@ -169,6 +182,144 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
       setSectionGenerating(false);
     }
   }, [onGenerate, sectionGenerating, mascots, symbols, patterns, structuredPatterns, generatedAssets, uploadedMascots, handleGenerateWithDirection]);
+
+  // --- Mascot CRUD ---
+  const startEditingMascot = useCallback((i: number) => {
+    setEditingMascot(i);
+    setMascotDraft({ ...mascots[i] });
+  }, [mascots]);
+
+  const saveMascot = useCallback(() => {
+    if (editingMascot === null || !onUpdateData) return;
+    const idx = editingMascot;
+    onUpdateData((prev) => {
+      const next = [...(prev.keyVisual.mascots ?? [])];
+      next[idx] = { ...next[idx], ...mascotDraft } as Mascot;
+      return { ...prev, keyVisual: { ...prev.keyVisual, mascots: next } };
+    });
+    setEditingMascot(null);
+    setMascotDraft({});
+  }, [editingMascot, mascotDraft, onUpdateData]);
+
+  const deleteMascot = useCallback((i: number) => {
+    if (!onUpdateData) return;
+    onUpdateData((prev) => ({
+      ...prev,
+      keyVisual: { ...prev.keyVisual, mascots: (prev.keyVisual.mascots ?? []).filter((_, j) => j !== i) },
+    }));
+    setConfirmDeleteMascot(null);
+  }, [onUpdateData]);
+
+  const addMascot = useCallback(() => {
+    if (!onUpdateData) return;
+    const newMascot: Mascot = { name: "Novo Mascote", description: "", personality: "", usageGuidelines: [] };
+    onUpdateData((prev) => ({
+      ...prev,
+      keyVisual: { ...prev.keyVisual, mascots: [...(prev.keyVisual.mascots ?? []), newMascot] },
+    }));
+    setTimeout(() => { setEditingMascot(mascots.length); setMascotDraft(newMascot); }, 50);
+  }, [onUpdateData, mascots.length]);
+
+  // --- Symbol CRUD ---
+  const startEditingSymbol = useCallback((i: number) => {
+    setEditingSymbol(i);
+    setSymbolDraft(symbols[i]);
+  }, [symbols]);
+
+  const saveSymbol = useCallback(() => {
+    if (editingSymbol === null || !onUpdateData) return;
+    const idx = editingSymbol;
+    onUpdateData((prev) => {
+      const next = [...(prev.keyVisual.symbols ?? [])];
+      next[idx] = symbolDraft;
+      return { ...prev, keyVisual: { ...prev.keyVisual, symbols: next } };
+    });
+    setEditingSymbol(null);
+    setSymbolDraft("");
+  }, [editingSymbol, symbolDraft, onUpdateData]);
+
+  const deleteSymbol = useCallback((i: number) => {
+    if (!onUpdateData) return;
+    onUpdateData((prev) => ({
+      ...prev,
+      keyVisual: { ...prev.keyVisual, symbols: (prev.keyVisual.symbols ?? []).filter((_, j) => j !== i) },
+    }));
+    setConfirmDeleteSymbol(null);
+  }, [onUpdateData]);
+
+  const addSymbol = useCallback(() => {
+    if (!onUpdateData) return;
+    const newSym = "Novo Símbolo";
+    onUpdateData((prev) => ({
+      ...prev,
+      keyVisual: { ...prev.keyVisual, symbols: [...(prev.keyVisual.symbols ?? []), newSym] },
+    }));
+    setTimeout(() => { setEditingSymbol(symbols.length); setSymbolDraft(newSym); }, 50);
+  }, [onUpdateData, symbols.length]);
+
+  // --- Pattern CRUD ---
+  const startEditingPattern = useCallback((i: number) => {
+    const isStructured = structuredPatterns.length > 0;
+    setEditingPattern(i);
+    if (isStructured) {
+      setPatternDraft({ ...structuredPatterns[i] });
+    } else {
+      setPatternDraft({ simpleText: patterns[i] });
+    }
+  }, [structuredPatterns, patterns]);
+
+  const savePattern = useCallback(() => {
+    if (editingPattern === null || !onUpdateData) return;
+    const idx = editingPattern;
+    const isStructured = structuredPatterns.length > 0;
+    onUpdateData((prev) => {
+      if (isStructured) {
+        const next = [...(prev.keyVisual.structuredPatterns ?? [])];
+        const { simpleText: _st, ...rest } = patternDraft;
+        next[idx] = { ...next[idx], ...rest } as BrandPattern;
+        return { ...prev, keyVisual: { ...prev.keyVisual, structuredPatterns: next } };
+      } else {
+        const next = [...(prev.keyVisual.patterns ?? [])];
+        next[idx] = patternDraft.simpleText ?? next[idx];
+        return { ...prev, keyVisual: { ...prev.keyVisual, patterns: next } };
+      }
+    });
+    setEditingPattern(null);
+    setPatternDraft({});
+  }, [editingPattern, patternDraft, onUpdateData, structuredPatterns.length]);
+
+  const deletePattern = useCallback((i: number) => {
+    if (!onUpdateData) return;
+    const isStructured = structuredPatterns.length > 0;
+    onUpdateData((prev) => {
+      if (isStructured) {
+        return { ...prev, keyVisual: { ...prev.keyVisual, structuredPatterns: (prev.keyVisual.structuredPatterns ?? []).filter((_, j) => j !== i) } };
+      } else {
+        return { ...prev, keyVisual: { ...prev.keyVisual, patterns: (prev.keyVisual.patterns ?? []).filter((_, j) => j !== i) } };
+      }
+    });
+    setConfirmDeletePattern(null);
+  }, [onUpdateData, structuredPatterns.length]);
+
+  const addPattern = useCallback(() => {
+    if (!onUpdateData) return;
+    const isStructured = structuredPatterns.length > 0;
+    if (isStructured) {
+      const newPat: BrandPattern = { name: "Novo Padrão", description: "", composition: "", usage: "" };
+      onUpdateData((prev) => ({
+        ...prev,
+        keyVisual: { ...prev.keyVisual, structuredPatterns: [...(prev.keyVisual.structuredPatterns ?? []), newPat] },
+      }));
+      setTimeout(() => { setEditingPattern(structuredPatterns.length); setPatternDraft(newPat); }, 50);
+    } else {
+      const newPat = "Novo Padrão";
+      onUpdateData((prev) => ({
+        ...prev,
+        keyVisual: { ...prev.keyVisual, patterns: [...(prev.keyVisual.patterns ?? []), newPat] },
+      }));
+      setTimeout(() => { setEditingPattern(patterns.length); setPatternDraft({ simpleText: newPat }); }, 50);
+    }
+  }, [onUpdateData, structuredPatterns.length, patterns.length]);
 
   function renderBriefingPanel(briefingKey: string, label: string, baseAssetKey?: AssetKey, extraContext?: string) {
     if (!onGenerate) return null;
@@ -321,39 +472,91 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                     </div>
                   )}
                   <div className="p-4">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-lg font-bold">{mascot.name}</h4>
-                      {onGenerate && mascotImage && !isLoadingThis && (
-                        <button type="button" onClick={() => handleGenerateWithDirection("brand_mascot", storageKey, mascotContext)} disabled={loadingKey !== null} className="no-print text-[10px] font-semibold text-gray-500 hover:text-gray-900 transition disabled:opacity-40">
-                          ↺ Regerar
-                        </button>
-                      )}
-                    </div>
-                    <div className="mb-3">
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Descrição Visual</span>
-                      <p className="text-gray-700 text-sm mt-1">{mascot.description}</p>
-                    </div>
-                    <div className="mb-3 bg-gray-50 p-3 rounded-lg border">
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Personalidade</span>
-                      <p className="text-gray-700 text-sm mt-1">{mascot.personality}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Diretrizes de Uso</span>
-                      <ul className="mt-2 space-y-1">
-                        {mascot.usageGuidelines.map((g, j) => (
-                          <li key={j} className="flex items-start gap-2 text-sm text-gray-600">
-                            <span className="text-gray-400 shrink-0">→</span>
-                            <span>{g}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    {renderBriefingPanel(storageKey, mascot.name, "brand_mascot", mascotContext)}
+                    {editingMascot === i ? (
+                      <div className="no-print space-y-2">
+                        <input type="text" value={mascotDraft.name ?? ""} onChange={(e) => setMascotDraft((d) => ({ ...d, name: e.target.value }))} placeholder="Nome do mascote" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                        <textarea value={mascotDraft.description ?? ""} onChange={(e) => setMascotDraft((d) => ({ ...d, description: e.target.value }))} placeholder="Descrição visual" rows={2} className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-y" />
+                        <textarea value={mascotDraft.personality ?? ""} onChange={(e) => setMascotDraft((d) => ({ ...d, personality: e.target.value }))} placeholder="Personalidade" rows={2} className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-y" />
+                        <textarea value={(mascotDraft.usageGuidelines ?? []).join("\n")} onChange={(e) => setMascotDraft((d) => ({ ...d, usageGuidelines: e.target.value.split("\n").filter(Boolean) }))} placeholder="Diretrizes de uso (uma por linha)" rows={3} className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-y" />
+                        <div className="flex gap-2 pt-1">
+                          <button type="button" onClick={saveMascot} className="flex-1 text-xs font-bold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition">Salvar</button>
+                          <button type="button" onClick={() => { setEditingMascot(null); setMascotDraft({}); }} className="flex-1 text-xs font-bold text-gray-600 border px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">Cancelar</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-lg font-bold">{mascot.name}</h4>
+                          <div className="no-print flex items-center gap-1">
+                            {onGenerate && mascotImage && !isLoadingThis && (
+                              <button type="button" onClick={() => handleGenerateWithDirection("brand_mascot", storageKey, mascotContext)} disabled={loadingKey !== null} className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 transition disabled:opacity-40">
+                                ↺ Regerar
+                              </button>
+                            )}
+                            {onUpdateData && (
+                              <>
+                                <button type="button" onClick={() => startEditingMascot(i)} className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition opacity-0 group-hover:opacity-100" title="Editar">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                {confirmDeleteMascot === i ? (
+                                  <div className="flex items-center gap-1">
+                                    <button type="button" onClick={() => deleteMascot(i)} className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded hover:bg-red-100 transition">Sim</button>
+                                    <button type="button" onClick={() => setConfirmDeleteMascot(null)} className="text-[10px] font-bold text-gray-500 px-1 py-0.5 rounded hover:bg-gray-100 transition">Não</button>
+                                  </div>
+                                ) : (
+                                  <button type="button" onClick={() => setConfirmDeleteMascot(i)} className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition opacity-0 group-hover:opacity-100" title="Excluir">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mb-3">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Descrição Visual</span>
+                          <p className="text-gray-700 text-sm mt-1">{mascot.description}</p>
+                        </div>
+                        <div className="mb-3 bg-gray-50 p-3 rounded-lg border">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Personalidade</span>
+                          <p className="text-gray-700 text-sm mt-1">{mascot.personality}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Diretrizes de Uso</span>
+                          <ul className="mt-2 space-y-1">
+                            {mascot.usageGuidelines.map((g, j) => (
+                              <li key={j} className="flex items-start gap-2 text-sm text-gray-600">
+                                <span className="text-gray-400 shrink-0">→</span>
+                                <span>{g}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        {renderBriefingPanel(storageKey, mascot.name, "brand_mascot", mascotContext)}
+                      </>
+                    )}
                   </div>
                 </div>
               );
             })}
+            {onUpdateData && (
+              <button type="button" onClick={addMascot} className="no-print w-full border-2 border-dashed border-gray-300 rounded-xl py-6 text-sm font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex flex-col items-center gap-1">
+                <span className="text-xl leading-none">+</span>
+                <span>Novo Mascote</span>
+              </button>
+            )}
           </div>
+        </div>
+      )}
+
+      {!mascots.length && onUpdateData && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-bold">Mascotes &amp; Personagens</h3>
+          </div>
+          <button type="button" onClick={addMascot} className="no-print w-full border-2 border-dashed border-gray-300 rounded-xl py-8 text-sm font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex flex-col items-center gap-2">
+            <span className="text-2xl leading-none">+</span>
+            <span>Adicionar Mascote</span>
+          </button>
         </div>
       )}
 
@@ -408,21 +611,56 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                     <div className="flex items-start gap-3">
                       <span className="w-7 h-7 bg-gray-900 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">◆</span>
                       <div className="flex-1">
-                        <span className="text-gray-700 text-sm">{sym}</span>
-                        {onGenerate && (
+                        {editingSymbol === i ? (
+                          <div className="no-print space-y-2">
+                            <input type="text" value={symbolDraft} onChange={(e) => setSymbolDraft(e.target.value)} placeholder="Descrição do símbolo" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                            <div className="flex gap-2">
+                              <button type="button" onClick={saveSymbol} className="flex-1 text-xs font-bold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition">Salvar</button>
+                              <button type="button" onClick={() => { setEditingSymbol(null); setSymbolDraft(""); }} className="flex-1 text-xs font-bold text-gray-600 border px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">Cancelar</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-gray-700 text-sm">{sym}</span>
+                            {onUpdateData && (
+                              <div className="no-print flex items-center gap-1 shrink-0">
+                                <button type="button" onClick={() => startEditingSymbol(i)} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition" title="Editar">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                {confirmDeleteSymbol === i ? (
+                                  <div className="flex items-center gap-1">
+                                    <button type="button" onClick={() => deleteSymbol(i)} className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded hover:bg-red-100 transition">Sim</button>
+                                    <button type="button" onClick={() => setConfirmDeleteSymbol(null)} className="text-[10px] font-bold text-gray-500 px-1 py-0.5 rounded hover:bg-gray-100 transition">Não</button>
+                                  </div>
+                                ) : (
+                                  <button type="button" onClick={() => setConfirmDeleteSymbol(i)} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition" title="Excluir">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {onGenerate && editingSymbol !== i && (
                           <div className="no-print mt-2 flex gap-2">
                             <button type="button" onClick={() => handleGenerateWithDirection("brand_pattern", symKey, symContext)} disabled={loadingKey !== null} className="text-[10px] font-bold bg-gray-900 text-white px-2.5 py-1 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
                               {isLoadingSym ? "..." : symImg ? "↺ Regerar" : "✦ Gerar"}
                             </button>
                           </div>
                         )}
-                        {renderBriefingPanel(symKey, sym, "brand_pattern", symContext)}
+                        {editingSymbol !== i && renderBriefingPanel(symKey, sym, "brand_pattern", symContext)}
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+            {onUpdateData && (
+              <button type="button" onClick={addSymbol} className="no-print mt-3 w-full border-2 border-dashed border-gray-300 rounded-xl py-4 text-sm font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                <span className="text-lg leading-none">+</span>
+                <span>Novo Símbolo</span>
+              </button>
+            )}
             {uploadedElements.length > 0 && (
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {uploadedElements.map((asset) => (
@@ -489,27 +727,63 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                         </div>
                       )}
                       <div className="p-4">
-                        <div className="flex items-start gap-3 mb-3">
-                          <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">▦</span>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-bold text-gray-900">{pat.name}</h4>
-                              {onGenerate && patImg && !isLoadingPat && (
-                                <button type="button" onClick={() => handleGenerateWithDirection("brand_pattern", patKey, patContext)} disabled={loadingKey !== null} className="no-print text-[10px] font-semibold text-gray-500 hover:text-gray-900 transition disabled:opacity-40">
-                                  ↺ Regerar
-                                </button>
-                              )}
+                        {editingPattern === i ? (
+                          <div className="no-print space-y-2">
+                            <input type="text" value={patternDraft.name ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, name: e.target.value }))} placeholder="Nome do padrão" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                            <textarea value={patternDraft.description ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, description: e.target.value }))} placeholder="Descrição" rows={2} className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10 resize-y" />
+                            <input type="text" value={patternDraft.composition ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, composition: e.target.value }))} placeholder="Composição" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                            <input type="text" value={patternDraft.usage ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, usage: e.target.value }))} placeholder="Uso" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                            <input type="text" value={patternDraft.density ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, density: e.target.value }))} placeholder="Densidade (opcional)" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                            <input type="text" value={patternDraft.background ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, background: e.target.value }))} placeholder="Fundo (opcional)" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                            <div className="flex gap-2 pt-1">
+                              <button type="button" onClick={savePattern} className="flex-1 text-xs font-bold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition">Salvar</button>
+                              <button type="button" onClick={() => { setEditingPattern(null); setPatternDraft({}); }} className="flex-1 text-xs font-bold text-gray-600 border px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">Cancelar</button>
                             </div>
                           </div>
-                        </div>
-                        <p className="text-gray-600 text-sm mb-3">{pat.description}</p>
-                        <div className="space-y-2 text-xs">
-                          <div><span className="font-semibold text-gray-700">Composição:</span> <span className="text-gray-600">{pat.composition}</span></div>
-                          <div><span className="font-semibold text-gray-700">Uso:</span> <span className="text-gray-600">{pat.usage}</span></div>
-                          {pat.density && <div><span className="font-semibold text-gray-700">Densidade:</span> <span className="text-gray-600">{pat.density}</span></div>}
-                          {pat.background && <div><span className="font-semibold text-gray-700">Fundo:</span> <span className="text-gray-600">{pat.background}</span></div>}
-                        </div>
-                        {renderBriefingPanel(patKey, pat.name, "brand_pattern", patContext)}
+                        ) : (
+                          <>
+                            <div className="flex items-start gap-3 mb-3">
+                              <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">▦</span>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-bold text-gray-900">{pat.name}</h4>
+                                  <div className="no-print flex items-center gap-1">
+                                    {onGenerate && patImg && !isLoadingPat && (
+                                      <button type="button" onClick={() => handleGenerateWithDirection("brand_pattern", patKey, patContext)} disabled={loadingKey !== null} className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 transition disabled:opacity-40">
+                                        ↺ Regerar
+                                      </button>
+                                    )}
+                                    {onUpdateData && (
+                                      <>
+                                        <button type="button" onClick={() => startEditingPattern(i)} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition" title="Editar">
+                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        </button>
+                                        {confirmDeletePattern === i ? (
+                                          <div className="flex items-center gap-1">
+                                            <button type="button" onClick={() => deletePattern(i)} className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded hover:bg-red-100 transition">Sim</button>
+                                            <button type="button" onClick={() => setConfirmDeletePattern(null)} className="text-[10px] font-bold text-gray-500 px-1 py-0.5 rounded hover:bg-gray-100 transition">Não</button>
+                                          </div>
+                                        ) : (
+                                          <button type="button" onClick={() => setConfirmDeletePattern(i)} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition" title="Excluir">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                          </button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-3">{pat.description}</p>
+                            <div className="space-y-2 text-xs">
+                              <div><span className="font-semibold text-gray-700">Composição:</span> <span className="text-gray-600">{pat.composition}</span></div>
+                              <div><span className="font-semibold text-gray-700">Uso:</span> <span className="text-gray-600">{pat.usage}</span></div>
+                              {pat.density && <div><span className="font-semibold text-gray-700">Densidade:</span> <span className="text-gray-600">{pat.density}</span></div>}
+                              {pat.background && <div><span className="font-semibold text-gray-700">Fundo:</span> <span className="text-gray-600">{pat.background}</span></div>}
+                            </div>
+                            {renderBriefingPanel(patKey, pat.name, "brand_pattern", patContext)}
+                          </>
+                        )}
                       </div>
                     </div>
                   );
@@ -545,21 +819,56 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                       <div className="flex items-start gap-3">
                         <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">▦</span>
                         <div className="flex-1">
-                          <span className="text-gray-700 text-sm">{pat}</span>
-                          {onGenerate && (
+                          {editingPattern === i ? (
+                            <div className="no-print space-y-2">
+                              <input type="text" value={patternDraft.simpleText ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, simpleText: e.target.value }))} placeholder="Descrição do padrão" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
+                              <div className="flex gap-2">
+                                <button type="button" onClick={savePattern} className="flex-1 text-xs font-bold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 transition">Salvar</button>
+                                <button type="button" onClick={() => { setEditingPattern(null); setPatternDraft({}); }} className="flex-1 text-xs font-bold text-gray-600 border px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">Cancelar</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-gray-700 text-sm">{pat}</span>
+                              {onUpdateData && (
+                                <div className="no-print flex items-center gap-1 shrink-0">
+                                  <button type="button" onClick={() => startEditingPattern(i)} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition" title="Editar">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                  </button>
+                                  {confirmDeletePattern === i ? (
+                                    <div className="flex items-center gap-1">
+                                      <button type="button" onClick={() => deletePattern(i)} className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded hover:bg-red-100 transition">Sim</button>
+                                      <button type="button" onClick={() => setConfirmDeletePattern(null)} className="text-[10px] font-bold text-gray-500 px-1 py-0.5 rounded hover:bg-gray-100 transition">Não</button>
+                                    </div>
+                                  ) : (
+                                    <button type="button" onClick={() => setConfirmDeletePattern(i)} className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition" title="Excluir">
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {onGenerate && editingPattern !== i && (
                             <div className="no-print mt-2 flex gap-2">
                               <button type="button" onClick={() => handleGenerateWithDirection("brand_pattern", patKey, patContext)} disabled={loadingKey !== null} className="text-[10px] font-bold bg-gray-900 text-white px-2.5 py-1 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
                                 {isLoadingPat ? "..." : patImg ? "↺ Regerar" : "✦ Gerar"}
                               </button>
                             </div>
                           )}
-                          {renderBriefingPanel(patKey, pat, "brand_pattern", patContext)}
+                          {editingPattern !== i && renderBriefingPanel(patKey, pat, "brand_pattern", patContext)}
                         </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+            )}
+            {onUpdateData && (
+              <button type="button" onClick={addPattern} className="no-print mt-3 w-full border-2 border-dashed border-gray-300 rounded-xl py-4 text-sm font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                <span className="text-lg leading-none">+</span>
+                <span>Novo Padrão</span>
+              </button>
             )}
             {uploadedPatterns.length > 0 && (
               <div className="mt-4 grid grid-cols-3 gap-3">

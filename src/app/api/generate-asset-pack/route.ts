@@ -6,6 +6,7 @@ import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
 import type { AssetPackFile, BrandbookData } from "@/lib/types";
+import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
 
 export const runtime = "nodejs";
 
@@ -100,6 +101,29 @@ function safeRelPath(path: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  const memBefore = captureMem();
+
+  function respond(status: number, body: Record<string, unknown>, extra: Record<string, unknown> = {}) {
+    const memAfter = captureMem();
+    const durationMs = Date.now() - startedAt;
+    const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+    bbLog(level, status >= 400 ? "api.generate-asset-pack.error" : "api.generate-asset-pack.ok", {
+      requestId,
+      status,
+      durationMs,
+      memDelta: diffMem(memBefore, memAfter),
+      ...extra,
+    });
+    return NextResponse.json(body, { status, headers: { "x-request-id": requestId } });
+  }
+
+  bbLog("info", "api.generate-asset-pack.start", {
+    requestId,
+    mem: memToJson(memBefore),
+  });
+
   try {
     const body = await request.json() as {
       brandbookData?: unknown;
@@ -110,14 +134,20 @@ export async function POST(request: NextRequest) {
       googleModel?: string;
     };
 
+    bbLog("debug", "api.generate-asset-pack.payload", {
+      requestId,
+      textProvider: body.textProvider,
+      hasBrandbookData: !!body.brandbookData,
+    });
+
     if (!body.brandbookData || !body.textProvider) {
-      return NextResponse.json({ error: "brandbookData e textProvider são obrigatórios." }, { status: 400 });
+      return respond(400, { error: "brandbookData e textProvider são obrigatórios." });
     }
 
     const migrated = migrateBrandbook(body.brandbookData);
     const base = BrandbookSchemaLoose.safeParse(migrated);
     if (!base.success) {
-      return NextResponse.json({ error: "brandbookData inválido." }, { status: 400 });
+      return respond(400, { error: "brandbookData inválido." });
     }
 
     const brandbookData = base.data as unknown as BrandbookData;
@@ -231,7 +261,7 @@ ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVi
 
     if (body.textProvider === "gemini") {
       const apiKey = body.googleKey?.trim() || process.env.GOOGLE_API_KEY;
-      if (!apiKey) return NextResponse.json({ error: "GOOGLE_API_KEY não configurada." }, { status: 500 });
+      if (!apiKey) return respond(500, { error: "GOOGLE_API_KEY não configurada." }, { textProvider: "gemini" });
       const ai = new GoogleGenAI({ apiKey });
       const { value: resp } = await withGoogleTextModelFallback({
         apiKey,
@@ -251,7 +281,7 @@ ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVi
       raw = resp.text ?? "";
     } else {
       const apiKey = body.openaiKey?.trim() || process.env.OPENAI_API_KEY;
-      if (!apiKey) return NextResponse.json({ error: "OPENAI_API_KEY não configurada." }, { status: 500 });
+      if (!apiKey) return respond(500, { error: "OPENAI_API_KEY não configurada." }, { textProvider: "openai" });
       const openai = new OpenAI({ apiKey });
       const completion = await openai.chat.completions.create({
         model: body.openaiModel?.trim() || "gpt-4o",
@@ -270,12 +300,12 @@ ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVi
     try {
       parsed = JSON.parse(raw);
     } catch {
-      return NextResponse.json({ error: "IA retornou JSON inválido." }, { status: 500 });
+      return respond(500, { error: "IA retornou JSON inválido." });
     }
 
     const filesRaw = (parsed as { files?: unknown }).files;
     if (!Array.isArray(filesRaw)) {
-      return NextResponse.json({ error: "IA não retornou files." }, { status: 500 });
+      return respond(500, { error: "IA não retornou files." });
     }
 
     const files: AssetPackFile[] = [];
@@ -294,12 +324,18 @@ ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVi
     }
 
     if (files.length === 0) {
-      return NextResponse.json({ error: "Nenhum arquivo válido foi gerado." }, { status: 500 });
+      return respond(500, { error: "Nenhum arquivo válido foi gerado." });
     }
 
-    return NextResponse.json({ files });
+    return respond(200, { files }, { filesCount: files.length });
   } catch (error: unknown) {
+    bbLog("error", "api.generate-asset-pack.exception", {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      error: serializeError(error),
+      mem: memToJson(captureMem()),
+    });
     const message = error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return respond(500, { error: message });
   }
 }

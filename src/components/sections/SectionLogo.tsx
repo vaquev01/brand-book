@@ -13,6 +13,7 @@ interface Props {
   onDownload?: (url: string, name: string) => void;
   onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
   generatedAssets?: Record<string, GeneratedAsset>;
+  onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
 }
 
 interface CardBriefing {
@@ -170,7 +171,7 @@ function downloadImageDirect(url: string, name: string) {
   document.body.removeChild(a);
 }
 
-export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, loadingKey, onDownload, onSaveToAssets, generatedAssets = {} }: Props) {
+export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, loadingKey, onDownload, onSaveToAssets, generatedAssets = {}, onUpdateData }: Props) {
   const uploadedLogos = useMemo(
     () => uploadedAssets.filter((a) => a.type === "logo"),
     [uploadedAssets]

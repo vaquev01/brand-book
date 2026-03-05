@@ -6,6 +6,7 @@ import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { fetchExternalReferences, formatExternalReferencesForPrompt } from "@/lib/externalReferences";
+import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
 import type { GenerateScope, CreativityLevel } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -108,6 +109,9 @@ function safeParseJson(text: string): unknown | null {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  const memBefore = captureMem();
   const encoder = new TextEncoder();
 
   const body = await request.json() as {
@@ -144,6 +148,18 @@ export async function POST(request: NextRequest) {
     intentionality = false,
   } = body;
 
+  bbLog("info", "api.generate.start", {
+    requestId,
+    mem: memToJson(memBefore),
+    provider,
+    scope,
+    creativityLevel,
+    hasBriefing: !!briefing,
+    externalUrlsCount: Array.isArray(externalUrls) ? externalUrls.length : 0,
+    referenceImagesCount: Array.isArray(referenceImages) ? referenceImages.length : 0,
+    hasLogoImage: typeof logoImage === "string" && logoImage.length > 0,
+  });
+
   const MAX_IMAGE_DATAURL_CHARS = 3_500_000;
   const MAX_REFERENCE_IMAGES = 6;
   const MAX_EXTERNAL_URLS = 4;
@@ -153,9 +169,13 @@ export async function POST(request: NextRequest) {
     : undefined;
 
   if (safeLogoImage && safeLogoImage.length > MAX_IMAGE_DATAURL_CHARS) {
+    bbLog("warn", "api.generate.reject.logo_too_large", {
+      requestId,
+      logoChars: safeLogoImage.length,
+    });
     return new Response(
-      "data: " + JSON.stringify({ type: "error", error: "Logo muito pesado para enviar. Use uma versão menor." }) + "\n\n",
-      { headers: { "Content-Type": "text/event-stream" } }
+      "data: " + JSON.stringify({ type: "error", error: "Logo muito pesado para enviar. Use uma versão menor.", requestId }) + "\n\n",
+      { headers: { "Content-Type": "text/event-stream", "x-request-id": requestId } }
     );
   }
 
@@ -173,9 +193,13 @@ export async function POST(request: NextRequest) {
   if (safeReferenceImages) {
     for (const img of safeReferenceImages) {
       if (img.length > MAX_IMAGE_DATAURL_CHARS) {
+        bbLog("warn", "api.generate.reject.reference_image_too_large", {
+          requestId,
+          imageChars: img.length,
+        });
         return new Response(
-          "data: " + JSON.stringify({ type: "error", error: "Uma das imagens de referência está muito pesada. Tente enviar versões menores." }) + "\n\n",
-          { headers: { "Content-Type": "text/event-stream" } }
+          "data: " + JSON.stringify({ type: "error", error: "Uma das imagens de referência está muito pesada. Tente enviar versões menores.", requestId }) + "\n\n",
+          { headers: { "Content-Type": "text/event-stream", "x-request-id": requestId } }
         );
       }
     }
@@ -184,13 +208,14 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       function send(data: object) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ ...(data as object), requestId })}\n\n`));
       }
 
       try {
         if (!brandName || !industry) {
           send({ type: "error", error: "brandName e industry são obrigatórios." });
           controller.close();
+          bbLog("warn", "api.generate.reject.missing_required", { requestId });
           return;
         }
 
@@ -396,6 +421,13 @@ export async function POST(request: NextRequest) {
           send({ type: "progress", phase: "Brandbook pronto! ✓", pct: 100 });
           send({ type: "complete", data: validated1.data });
           controller.close();
+
+          const memAfter = captureMem();
+          bbLog("info", "api.generate.ok", {
+            requestId,
+            durationMs: Date.now() - startedAt,
+            memDelta: diffMem(memBefore, memAfter),
+          });
           return;
         }
 
@@ -464,8 +496,20 @@ export async function POST(request: NextRequest) {
         send({ type: "progress", phase: "Brandbook pronto! ✓", pct: 100 });
         send({ type: "complete", data: validated2.data });
         controller.close();
+
+        const memAfter = captureMem();
+        bbLog("info", "api.generate.ok", {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          memDelta: diffMem(memBefore, memAfter),
+        });
       } catch (error: unknown) {
-        console.error("Erro na geração:", error);
+        bbLog("error", "api.generate.exception", {
+          requestId,
+          durationMs: Date.now() - startedAt,
+          error: serializeError(error),
+          mem: memToJson(captureMem()),
+        });
         send({ type: "error", error: error instanceof Error ? error.message : "Erro desconhecido" });
         controller.close();
       }
@@ -477,6 +521,7 @@ export async function POST(request: NextRequest) {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       "Connection": "keep-alive",
+      "x-request-id": requestId,
     },
   });
 }
