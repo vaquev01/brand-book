@@ -34,7 +34,7 @@ export function SectionBrandAssets({ num, uploadedAssets }: Props) {
   if (groups.length === 0) return null;
 
   return (
-    <section className="page-break mb-10">
+    <section className="page-break mb-6">
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-3 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Ativos de Marca
       </h2>

@@ -49,7 +49,7 @@ export function SectionTypography({ data, num }: { data: BrandbookData; num: num
   const advancedCols = advancedTypos.length >= 3 ? "md:grid-cols-3" : advancedTypos.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1";
 
   return (
-    <section className="page-break mb-10">
+    <section className="page-break mb-6">
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Tipografia
       </h2>

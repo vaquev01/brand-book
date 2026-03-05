@@ -185,7 +185,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
   }
 
   return (
-    <section className="page-break mb-10">
+    <section className="page-break mb-6">
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Mascotes, Símbolos &amp; Padrões
       </h2>
@@ -207,7 +207,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
               return (
                 <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm group">
                   {mascotImage ? (
-                    <div className="h-40 bg-gray-50 flex items-center justify-center p-4 relative">
+                    <div className="h-28 bg-gray-50 flex items-center justify-center p-3 relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={mascotImage} alt={mascot.name} className="max-h-full object-contain rounded" />
                       {isGenerated && (
@@ -226,7 +226,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                       )}
                     </div>
                   ) : (
-                    <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 relative">
+                    <div className="h-28 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 relative">
                       {isLoadingThis ? (
                         <>
                           <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
@@ -377,7 +377,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                   return (
                     <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm">
                       {patImg ? (
-                        <div className="h-36 bg-gray-50 relative group/patcard">
+                        <div className="h-24 bg-gray-50 relative group/patcard">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={patImg} alt={pat.name} className="w-full h-full object-cover" />
                           <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">IA</span>

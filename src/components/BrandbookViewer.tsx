@@ -489,7 +489,7 @@ export function BrandbookViewer({
 
       {byCategory.map((g) => (
         <div key={g.cat}>
-          <div className="page-break mb-4 mt-10">
+          <div className="page-break mb-4 mt-6">
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
               <h2 className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-gray-500">{g.cat}</h2>
               <a href="#sumario" className="no-print text-sm font-semibold text-gray-600 hover:text-gray-900">

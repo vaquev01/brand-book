@@ -120,7 +120,7 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
   }
 
   return (
-    <section className="page-break mb-10">
+    <section className="page-break mb-6">
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Paleta de Cores
       </h2>
