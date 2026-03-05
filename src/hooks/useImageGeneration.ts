@@ -187,7 +187,7 @@ export function useImageGeneration({
   }
 
   const generate = useCallback(
-    async (assetKey: AssetKey) => {
+    async (assetKey: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => {
       const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
       if (!providerKey) {
         const p = PROVIDERS.find((x) => x.id === provider);
@@ -197,10 +197,14 @@ export function useImageGeneration({
         return;
       }
 
-      setLoadingKey(assetKey);
+      const effectiveKey = options?.storageKey ?? assetKey;
+      setLoadingKey(effectiveKey);
       setError(null);
       try {
-        const basePrompt = buildImagePrompt(assetKey, data, provider);
+        const basePromptRaw = buildImagePrompt(assetKey, data, provider);
+        const basePrompt = options?.customInstruction
+          ? `${basePromptRaw}\n\nADDITIONAL CREATIVE DIRECTION FROM THE USER:\n${options.customInstruction}`
+          : basePromptRaw;
         let prompt = basePrompt;
 
         if (refineBeforeGenerate) {
@@ -238,15 +242,16 @@ export function useImageGeneration({
         const canUseRefImages =
           provider === "imagen" && !!apiKeys.google && useReferenceImages;
 
-        const referenceImagesRaw = canUseRefImages
+        const autoRefs = canUseRefImages
           ? isStrictLogoAsset(assetKey)
             ? pickLogoReferenceImages(2, assetKey)
             : pickReferenceImages(6, assetKey)
-          : undefined;
-        const referenceImages =
-          referenceImagesRaw && referenceImagesRaw.length > 0
-            ? referenceImagesRaw
-            : undefined;
+          : [];
+        const allRefs = [
+          ...(options?.userReferenceImages ?? []),
+          ...autoRefs,
+        ].slice(0, 8);
+        const referenceImages = allRefs.length > 0 ? allRefs : undefined;
 
         if (isStrictLogoAsset(assetKey) && assetKey !== "logo_primary") {
           if (provider !== "imagen") {
@@ -282,8 +287,8 @@ export function useImageGeneration({
         const result = (await res.json()) as { url?: string; error?: string };
         if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
         if (!result.url) throw new Error("API não retornou URL de imagem");
-        onAssetGenerated(assetKey, {
-          key: assetKey,
+        onAssetGenerated(effectiveKey, {
+          key: effectiveKey,
           url: result.url,
           provider,
           prompt,
@@ -489,12 +494,31 @@ export function useImageGeneration({
     }
   }
 
-  function downloadImage(url: string, name: string) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${data.brandName.replace(/\s+/g, "-").toLowerCase()}-${name}.png`;
-    a.target = "_blank";
-    a.click();
+  async function downloadImage(url: string, name: string) {
+    const fileName = `${data.brandName.replace(/\s+/g, "-").toLowerCase()}-${name}.png`;
+    try {
+      let blobUrl: string;
+      if (url.startsWith("data:")) {
+        blobUrl = url;
+      } else {
+        const res = await fetch("/api/image-to-dataurl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const json = (await res.json()) as { dataUrl?: string; error?: string };
+        if (!res.ok || !json.dataUrl) throw new Error(json.error ?? "Erro ao baixar imagem");
+        blobUrl = json.dataUrl;
+      }
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch {
+      window.open(url, "_blank");
+    }
   }
 
   return {

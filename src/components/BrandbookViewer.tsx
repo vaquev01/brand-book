@@ -141,7 +141,7 @@ export function BrandbookViewer({
           num={num}
           generatedImages={generatedImages}
           uploadedAssets={uploadedAssets}
-          onGenerate={hasGeneration ? (key: AssetKey) => imgGen.generate(key) : undefined}
+          onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
           loadingKey={imgGen.loadingKey}
           onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
           onSaveToAssets={hasGeneration ? (asset: GeneratedAsset, label: string, key?: AssetKey) => imgGen.saveGeneratedToAssets(asset, label, key) : undefined}
@@ -186,9 +186,10 @@ export function BrandbookViewer({
           data={data}
           num={num}
           generatedImages={generatedImages}
-          onGenerate={hasGeneration ? (key: AssetKey) => imgGen.generate(key) : undefined}
+          onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
+          onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
         />
       ),
     },
@@ -209,9 +210,10 @@ export function BrandbookViewer({
           num={num}
           uploadedAssets={uploadedAssets}
           generatedImages={generatedImages}
-          onGenerate={hasGeneration ? (key: AssetKey) => imgGen.generate(key) : undefined}
+          onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
+          onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
         />
       ),
     },
