@@ -5,7 +5,9 @@ import {
   BrandImmersiveTheme,
   brandVoiceQuote,
   getImmersiveTheme,
+  rgba,
 } from "./BrandImmersiveTheme";
+import type { ImmersiveTheme } from "./BrandImmersiveTheme";
 
 import { BrandbookData, UploadedAsset, GeneratedAsset, Colors } from "@/lib/types";
 import { SectionCover } from "./sections/SectionCover";
@@ -381,13 +383,25 @@ export function BrandbookViewer({
     ? ({
         ["--bb-primary" as unknown as keyof CSSProperties]: theme.primaryHex,
         ["--bb-accent" as unknown as keyof CSSProperties]: theme.accentHex,
+        ["--bb-tertiary" as unknown as keyof CSSProperties]: theme.tertiaryHex,
         ["--bb-bg" as unknown as keyof CSSProperties]: theme.bg,
         ["--bb-border" as unknown as keyof CSSProperties]: theme.border,
         ["--bb-muted" as unknown as keyof CSSProperties]: theme.muted,
         ["--bb-heading-font" as unknown as keyof CSSProperties]:
           `'${theme.headingFont}', ui-sans-serif, system-ui`,
+        ["--bb-body-font" as unknown as keyof CSSProperties]:
+          `'${theme.bodyFont}', ui-sans-serif, system-ui`,
       } as unknown as CSSProperties)
     : undefined;
+
+  const ColorStrip = () =>
+    immersive && theme.allColors.length > 1 ? (
+      <div className="bb-color-strip" aria-hidden="true">
+        {theme.allColors.map((c, i) => (
+          <span key={i} style={{ background: c }} />
+        ))}
+      </div>
+    ) : null;
 
   return (
     <div
@@ -397,6 +411,7 @@ export function BrandbookViewer({
     >
       <BrandImmersiveTheme
         immersive={immersive}
+        theme={theme}
         patternUrl={immersiveAssets.patternUrl}
         atmosphereUrl={immersiveAssets.atmosphereUrl}
         watermarkUrl={immersiveAssets.watermarkUrl}
@@ -492,17 +507,54 @@ export function BrandbookViewer({
 
       <section className="page-break mb-10" id="sumario">
         <div className={immersive ? "bb-section-shell" : ""}>
-          <div className="mb-4 border-b border-gray-100 pb-2">
-            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">Sumário</h2>
-            <p className="text-gray-500 mt-1 text-sm">
-              Navegue por categorias e vá direto à seção desejada.
-            </p>
-          </div>
+          {/* Sumário header */}
+          {immersive ? (
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-1">
+                <div
+                  style={{
+                    width: 8,
+                    height: 40,
+                    borderRadius: 4,
+                    background: `linear-gradient(180deg, ${theme.primaryHex}, ${theme.accentHex})`,
+                  }}
+                />
+                <div>
+                  <h2
+                    className="text-2xl md:text-3xl font-black tracking-tight"
+                    style={{ color: theme.primaryHex, fontFamily: `'${theme.headingFont}', sans-serif` }}
+                  >
+                    Sumário
+                  </h2>
+                  <p className="text-sm mt-0.5" style={{ color: rgba(theme.primaryHex, 0.5) }}>
+                    Navegue por categorias e vá direto à seção desejada.
+                  </p>
+                </div>
+              </div>
+              <ColorStrip />
+            </div>
+          ) : (
+            <div className="mb-4 border-b border-gray-100 pb-2">
+              <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">Sumário</h2>
+              <p className="text-gray-500 mt-1 text-sm">
+                Navegue por categorias e vá direto à seção desejada.
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
             {byCategory.map((g) => (
-              <div key={g.cat} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                <h3 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-[0.25em] mb-3">
+              <div
+                key={g.cat}
+                className={`rounded-2xl p-5 shadow-sm ${
+                  immersive ? "bb-sumario-card" : "bg-white border border-gray-100"
+                }`}
+              >
+                <h3
+                  className={`text-[11px] font-extrabold uppercase tracking-[0.25em] mb-3 ${
+                    immersive ? "bb-sumario-cat" : "text-gray-500"
+                  }`}
+                >
                   {g.cat}
                 </h3>
                 <div className="space-y-2">
@@ -513,7 +565,11 @@ export function BrandbookViewer({
                       className="block rounded-xl px-3 py-2 hover:bg-gray-50 transition"
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-xs font-bold text-gray-400 mt-0.5 tabular-nums">
+                        <span
+                          className={`text-xs font-bold mt-0.5 tabular-nums ${
+                            immersive ? "bb-num" : "text-gray-400"
+                          }`}
+                        >
                           {String(s.num).padStart(2, "0")}
                         </span>
                         <span className="font-semibold text-gray-900 leading-snug">{s.title}</span>
@@ -524,34 +580,92 @@ export function BrandbookViewer({
               </div>
             ))}
           </div>
+
+          {/* Brand identity watermark in sumário */}
+          {immersive && (
+            <div className="mt-6 flex items-center justify-between" style={{ opacity: 0.4 }}>
+              <div className="flex gap-1.5">
+                {theme.allColors.slice(0, 6).map((c, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      background: c,
+                      border: `1px solid ${rgba(theme.primaryHex, 0.2)}`,
+                    }}
+                  />
+                ))}
+              </div>
+              <span
+                className="text-[10px] font-bold uppercase tracking-[0.3em]"
+                style={{ color: rgba(theme.primaryHex, 0.4), fontFamily: `'${theme.headingFont}', sans-serif` }}
+              >
+                {data.brandName} — Brand System
+              </span>
+            </div>
+          )}
         </div>
       </section>
 
-      {byCategory.map((g) => (
+      {byCategory.map((g, catIdx) => (
         <div key={g.cat}>
-          <div className="page-break mb-4 mt-6">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-              <h2 className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-gray-500">{g.cat}</h2>
-              <a href="#sumario" className="no-print text-sm font-semibold text-gray-600 hover:text-gray-900">
-                Voltar ao sumário
-              </a>
+          {/* Category divider */}
+          {immersive ? (
+            <div className="page-break mb-6 mt-8">
+              <div className="bb-cat-banner">
+                <div className="flex items-center justify-between">
+                  <h2>{g.cat}</h2>
+                  <a
+                    href="#sumario"
+                    className="no-print text-xs font-semibold bb-cat-back transition"
+                  >
+                    Voltar ao sumário
+                  </a>
+                </div>
+              </div>
             </div>
-          </div>
-          {g.items.map((s) => {
+          ) : (
+            <div className="page-break mb-4 mt-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                <h2 className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-gray-500">{g.cat}</h2>
+                <a href="#sumario" className="no-print text-sm font-semibold text-gray-600 hover:text-gray-900">
+                  Voltar ao sumário
+                </a>
+              </div>
+            </div>
+          )}
+          {g.items.map((s, sIdx) => {
             const quote = immersive ? brandVoiceQuote(s.id, data) : null;
             return (
               <div key={s.id} id={s.id} className="scroll-mt-24">
+                {/* Color strip between sections */}
+                {immersive && sIdx > 0 && <ColorStrip />}
                 <div className={immersive ? "bb-section-shell" : ""}>
                   {quote && (
-                    <div className="bb-voice mb-5 px-4 py-3 rounded-xl border">
-                      <div
-                        className="text-xs font-bold uppercase tracking-wider"
-                        style={{ color: "var(--bb-primary)" }}
-                      >
-                        Voz da Marca
+                    <div className="bb-voice mb-5 px-5 py-4 rounded-xl border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: theme.primaryHex,
+                          }}
+                        />
+                        <div
+                          className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                          style={{ color: theme.primaryHex }}
+                        >
+                          Voz da Marca — {data.brandName}
+                        </div>
                       </div>
-                      <div className="text-sm italic text-gray-700 leading-relaxed">
-                        {quote}
+                      <div
+                        className="bb-voice-text text-sm italic leading-relaxed"
+                        style={{ color: rgba(theme.primaryHex, 0.75), fontFamily: `'${theme.headingFont}', sans-serif` }}
+                      >
+                        &ldquo;{quote}&rdquo;
                       </div>
                     </div>
                   )}
@@ -562,6 +676,45 @@ export function BrandbookViewer({
           })}
         </div>
       ))}
+
+      {/* Brand footer in immersive mode */}
+      {immersive && (
+        <div className="bb-brand-footer">
+          <div className="flex items-center justify-between">
+            <div>
+              <div
+                className="text-lg font-black"
+                style={{
+                  color: theme.isDark ? "#fff" : "#111",
+                  fontFamily: `'${theme.headingFont}', sans-serif`,
+                }}
+              >
+                {data.brandName}
+              </div>
+              <div
+                className="text-xs font-medium mt-1"
+                style={{ color: theme.isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)" }}
+              >
+                Manual de Identidade Visual — {new Date().getFullYear()}
+              </div>
+            </div>
+            <div className="flex gap-1.5">
+              {theme.allColors.slice(0, 8).map((c, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    background: c,
+                    border: `2px solid ${theme.isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"}`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
