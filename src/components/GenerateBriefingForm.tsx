@@ -4,32 +4,30 @@ import { useState } from "react";
 import { BriefingImageUpload } from "./BriefingImageUpload";
 import type { GenerateScope, CreativityLevel, UploadedAsset } from "@/lib/types";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
+import {
+  BasicInfoSection,
+  CreativitySection,
+  ExternalUrlsSection,
+  FormErrorMessage,
+  GuidedBriefingSection,
+  IntentionalityToggle,
+  ProjectModeSection,
+  RawBriefingSection,
+  ScopeSection,
+  SubmitButton,
+  ThinBriefingWarning,
+} from "./GenerateBriefingFormSections";
+import {
+  composeBriefing,
+  countFilledGuidedFields,
+  createEmptyGuidedBriefing,
+  parseExternalUrls,
+  type GenerateBriefingData,
+  type GuidedBriefing,
+  type ProjectMode,
+} from "./generateBriefingFormModel";
 
-interface GuidedBriefing {
-  whatItDoes: string;
-  targetAudience: string;
-  positioning: string;
-  references: string;
-  instagramLinks: string;
-  essenceReferences: string;
-  avoidances: string;
-  colorPreferences: string;
-  hasMascot: boolean;
-  mascotDescription: string;
-  extraContext: string;
-}
-
-export interface GenerateBriefingData {
-  brandName: string;
-  industry: string;
-  briefing: string;
-  externalUrls?: string[];
-  scope: GenerateScope;
-  creativityLevel: CreativityLevel;
-  intentionality: boolean;
-  referenceImages: UploadedAsset[];
-  logoImage?: UploadedAsset;
-}
+export type { GenerateBriefingData } from "./generateBriefingFormModel";
 
 interface Props {
   onSubmit: (data: GenerateBriefingData) => void;
@@ -37,87 +35,12 @@ interface Props {
   error: string;
 }
 
-const SCOPE_OPTIONS: { value: GenerateScope; icon: string; label: string; desc: string }[] = [
-  {
-    value: "full",
-    icon: "🌟",
-    label: "Brandbook Completo",
-    desc: "Estratégia + identidade visual + design system + produção — tudo com profundidade máxima",
-  },
-  {
-    value: "logo_identity",
-    icon: "🖼️",
-    label: "Logo & Identidade",
-    desc: "Foco máximo em logo, cores com simbolismo, tipografia, key visual, mascotes e padrões",
-  },
-  {
-    value: "strategy",
-    icon: "🧭",
-    label: "Estratégia & Marca",
-    desc: "Foco em posicionamento, personas detalhadas, identidade verbal e brand concept profundo",
-  },
-  {
-    value: "design_system",
-    icon: "🎨",
-    label: "Design System",
-    desc: "Foco em tokens, componentes com estados, UX patterns, acessibilidade e motion",
-  },
-];
-
-const CREATIVITY_OPTIONS: { value: CreativityLevel; icon: string; label: string; sub: string; color: string }[] = [
-  {
-    value: "conservative",
-    icon: "🏛️",
-    label: "Clássico",
-    sub: "Atemporal, confiável, autoridade",
-    color: "border-slate-400 bg-slate-50 text-slate-800",
-  },
-  {
-    value: "balanced",
-    icon: "⚖️",
-    label: "Equilibrado",
-    sub: "Moderno, memorável, acessível",
-    color: "border-blue-400 bg-blue-50 text-blue-900",
-  },
-  {
-    value: "creative",
-    icon: "🔥",
-    label: "Ousado",
-    sub: "Distinto, emocional, inesquecível",
-    color: "border-orange-400 bg-orange-50 text-orange-900",
-  },
-  {
-    value: "experimental",
-    icon: "🧪",
-    label: "Experimental",
-    sub: "Vanguarda, cult brand potential",
-    color: "border-purple-400 bg-purple-50 text-purple-900",
-  },
-];
-
-function composeBriefing(g: GuidedBriefing, rawBriefing: string): string {
-  const parts: string[] = [];
-  if (g.whatItDoes) parts.push(`══ O QUE A MARCA FAZ ══\n${g.whatItDoes}`);
-  if (g.targetAudience) parts.push(`══ PÚBLICO-ALVO ══\n${g.targetAudience}`);
-  if (g.positioning) parts.push(`══ POSICIONAMENTO DESEJADO ══\n${g.positioning}`);
-  if (g.references) parts.push(`══ REFERÊNCIAS DE MARCAS ══\n${g.references}`);
-  if (g.instagramLinks) parts.push(`══ INSTAGRAM / LINKS OFICIAIS ══\n${g.instagramLinks}`);
-  if (g.essenceReferences) parts.push(`══ ESSÊNCIA DA MARCA (CULTURA, ESTÉTICA, ARQUÉTIPOS) ══\n${g.essenceReferences}`);
-  if (g.avoidances) parts.push(`══ O QUE EVITAR / NÃO TRANSMITIR ══\n${g.avoidances}`);
-  if (g.colorPreferences) parts.push(`══ PREFERÊNCIAS DE CORES ══\n${g.colorPreferences}`);
-  if (g.hasMascot) {
-    parts.push(`══ MASCOTE / PERSONAGEM ══\n${g.mascotDescription || "Sim, criar um personagem único para a marca"}`);
-  }
-  if (g.extraContext) parts.push(`══ CONTEXTO ADICIONAL ══\n${g.extraContext}`);
-  if (rawBriefing.trim()) parts.push(`══ BRIEFING LIVRE ══\n${rawBriefing.trim()}`);
-  return parts.join("\n\n");
-}
-
 export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   const [brandName, setBrandName] = useState("");
   const [industry, setIndustry] = useState("");
   const [rawBriefing, setRawBriefing] = useState("");
   const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
+  const [projectMode, setProjectMode] = useState<ProjectMode>("new_brand");
   const [scope, setScope] = useState<GenerateScope>("full");
   const [creativity, setCreativity] = useState<CreativityLevel>("balanced");
   const [intentionality, setIntentionality] = useState(false);
@@ -126,54 +49,25 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   const [logoImage, setLogoImage] = useState<UploadedAsset | null>(null);
   const [logoUploadError, setLogoUploadError] = useState("");
   const [logoDragActive, setLogoDragActive] = useState(false);
-  const [guided, setGuided] = useState<GuidedBriefing>({
-    whatItDoes: "",
-    targetAudience: "",
-    positioning: "",
-    references: "",
-    instagramLinks: "",
-    essenceReferences: "",
-    avoidances: "",
-    colorPreferences: "",
-    hasMascot: false,
-    mascotDescription: "",
-    extraContext: "",
-  });
+  const [guided, setGuided] = useState<GuidedBriefing>(createEmptyGuidedBriefing());
 
   function updateGuided(field: keyof GuidedBriefing, value: string | boolean) {
     setGuided((prev) => ({ ...prev, [field]: value }));
   }
 
-  const filledGuidedCount = [
-    guided.whatItDoes,
-    guided.targetAudience,
-    guided.positioning,
-    guided.references,
-    guided.instagramLinks,
-    guided.essenceReferences,
-    guided.avoidances,
-    guided.colorPreferences,
-    guided.hasMascot ? "yes" : "",
-    guided.extraContext,
-  ].filter(Boolean).length;
+  const filledGuidedCount = countFilledGuidedFields(guided);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const finalBriefing = composeBriefing(guided, rawBriefing);
-
-    const externalUrls = externalUrlsRaw
-      .split(/[\n,\s]+/g)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((s) => (s.startsWith("@") ? `https://www.instagram.com/${s.slice(1)}/` : s))
-      .map((s) => (s.startsWith("www.") ? `https://${s}` : s))
-      .filter((s) => /^https?:\/\//i.test(s));
+    const externalUrls = parseExternalUrls(externalUrlsRaw);
 
     onSubmit({
       brandName,
       industry,
       briefing: finalBriefing,
       externalUrls: externalUrls.length > 0 ? externalUrls : undefined,
+      projectMode,
       scope,
       creativityLevel: creativity,
       intentionality,
@@ -181,8 +75,6 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
       logoImage: logoImage ?? undefined,
     });
   }
-
-  const selectedCreativity = CREATIVITY_OPTIONS.find((o) => o.value === creativity)!;
 
   const hasAnyBriefingContent = !!rawBriefing.trim() || filledGuidedCount > 0;
   const isBriefingThin = !hasAnyBriefingContent && !logoImage;
@@ -211,6 +103,7 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
         return;
       }
 
+      setProjectMode("rebrand");
       setLogoImage({ id: `logo-${Date.now()}`, name: file.name, dataUrl, type: "logo" });
     } catch {
       setLogoUploadError("Falha ao processar o logo. Tente PNG/JPG.");
@@ -311,303 +204,38 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
       )}
 
       {/* Basic Info */}
-      <div className="space-y-5 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-2 pb-4 border-b border-gray-100">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-building-2 text-gray-400"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
-          <h3 className="font-bold text-gray-900">Informações Básicas</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="brandName" className="block text-sm font-bold text-gray-700 mb-2">
-              Nome da Marca <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="brandName"
-              type="text"
-              required
-              value={brandName}
-              onChange={(e) => setBrandName(e.target.value)}
-              placeholder="Ex: Neon Tokyo, CloudFlow..."
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-base font-medium placeholder:font-normal"
-            />
-          </div>
-          <div>
-            <label htmlFor="industry" className="block text-sm font-bold text-gray-700 mb-2">
-              Indústria / Nicho <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="industry"
-              type="text"
-              required
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-              placeholder="Ex: SaaS B2B, Restaurante..."
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition font-medium placeholder:font-normal"
-            />
-          </div>
-        </div>
-      </div>
+      <BasicInfoSection
+        brandName={brandName}
+        industry={industry}
+        onBrandNameChange={setBrandName}
+        onIndustryChange={setIndustry}
+      />
+
+      {/* Project Mode */}
+      <ProjectModeSection projectMode={projectMode} onChange={setProjectMode} />
 
       {/* Scope */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-crosshair text-gray-400"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
-          <div>
-            <h3 className="font-bold text-gray-900">O que gerar?</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Escolha o foco principal do brandbook</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {SCOPE_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setScope(opt.value)}
-              className={`p-4 rounded-xl border-2 text-left transition-all ${
-                scope === opt.value
-                  ? "border-indigo-600 bg-indigo-50 shadow-sm ring-1 ring-indigo-600/20"
-                  : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm"
-              }`}
-            >
-              <div className="text-2xl mb-2 opacity-90">{opt.icon}</div>
-              <div className={`font-bold text-sm ${scope === opt.value ? "text-indigo-900" : "text-gray-900"}`}>
-                {opt.label}
-              </div>
-              <div className={`text-xs mt-1.5 leading-relaxed ${scope === opt.value ? "text-indigo-700/80" : "text-gray-500"}`}>
-                {opt.desc}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+      <ScopeSection scope={scope} onChange={setScope} />
 
       {/* Creativity Level */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-palette text-gray-400"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
-          <div>
-            <h3 className="font-bold text-gray-900">Nível de criatividade</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Como a IA deve se posicionar criativamente</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {CREATIVITY_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setCreativity(opt.value)}
-              className={`p-3 rounded-xl border-2 text-center transition-all ${
-                creativity === opt.value
-                  ? opt.color + " border-current shadow-sm"
-                  : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
-            >
-              <div className="text-2xl mb-1">{opt.icon}</div>
-              <div className="font-bold text-sm">{opt.label}</div>
-              <div className="text-[11px] mt-0.5 opacity-70 leading-tight">{opt.sub}</div>
-            </button>
-          ))}
-        </div>
-        {creativity !== "balanced" && (
-          <div className={`mt-3 text-xs px-4 py-3 rounded-xl border ${selectedCreativity.color}`}>
-            <strong>{selectedCreativity.icon} {selectedCreativity.label}:</strong>{" "}
-            {creativity === "conservative" && "Paleta de no máximo 3 cores, formas limpas, tipografia com autoridade. Estilo IBM, Rolex, McKinsey."}
-            {creativity === "creative" && "Cores inesperadas mas coesas, tipografia com personalidade forte. Estilo Spotify, Oatly, MailChimp."}
-            {creativity === "experimental" && "Quebra de convenções intencional. Cult brand potential. Estilo Saul Bass, Paula Scher, Stefan Sagmeister."}
-          </div>
-        )}
-      </div>
+      <CreativitySection creativity={creativity} onChange={setCreativity} />
 
       {/* Intentionality Toggle */}
-      <div className="flex items-start gap-4 p-5 bg-amber-50 border border-amber-200 rounded-2xl shadow-sm">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={intentionality}
-          aria-label="Alternar intenção e simbolismo"
-          onClick={() => setIntentionality(!intentionality)}
-          className={`mt-0.5 flex-shrink-0 w-12 h-6 rounded-full transition-colors relative ${
-            intentionality ? "bg-amber-600" : "bg-gray-300"
-          }`}
-        >
-          <span
-            className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${
-              intentionality ? "translate-x-6" : "translate-x-0"
-            }`}
-          />
-        </button>
-        <div>
-          <h4 className="font-bold text-amber-900 text-sm flex items-center gap-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book-open-text"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M6 8h2"/><path d="M6 12h2"/><path d="M16 8h2"/><path d="M16 12h2"/></svg>
-            Justificar simbolismo?
-          </h4>
-          <p className="text-xs text-amber-800/80 mt-1 leading-relaxed">
-            Se ativado, a IA escreverá parágrafos mais longos explicando <strong>por que</strong> escolheu cada cor, tipografia ou elemento, criando narrativas sobre como isso se conecta ao posicionamento. <em>(Aumenta o tempo de geração e o tamanho dos textos)</em>
-          </p>
-        </div>
-      </div>
+      <IntentionalityToggle intentionality={intentionality} onToggle={() => setIntentionality(!intentionality)} />
 
       {/* Guided Briefing */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-        <button
-          type="button"
-          onClick={() => setShowGuided(!showGuided)}
-          className="w-full flex items-center justify-between px-6 py-5 bg-gray-50 hover:bg-indigo-50/50 transition-colors text-left"
-        >
-          <div className="flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clipboard-list text-gray-500"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
-            <span className="font-bold text-gray-900 text-sm">Briefing Guiado</span>
-            <span className="text-xs font-medium text-gray-400 bg-gray-200/50 px-2 py-0.5 rounded-full">
-              {filledGuidedCount > 0
-                ? `${filledGuidedCount} preenchido${filledGuidedCount > 1 ? "s" : ""}`
-                : "Opcional"}
-            </span>
-          </div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 transition-transform duration-200 ${showGuided ? "rotate-180" : ""}`}><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-
-        {showGuided && (
-          <div className="p-5 space-y-4 border-t">
-            <GuidedField
-              label="O que a marca faz?"
-              hint="Descreva o produto/serviço em 1-3 frases"
-              placeholder="Ex: Plataforma de gestão de tarefas para times remotos. Foca em simplicidade e foco, não em features."
-              value={guided.whatItDoes}
-              onChange={(v) => updateGuided("whatItDoes", v)}
-            />
-            <GuidedField
-              label="Quem é o público-alvo?"
-              hint="Contexto de vida, faixa etária, comportamento, valores"
-              placeholder="Ex: Profissionais 28-42 anos, altamente digitais, que valorizam produtividade e detestam burocracia"
-              value={guided.targetAudience}
-              onChange={(v) => updateGuided("targetAudience", v)}
-            />
-            <GuidedField
-              label="Posicionamento desejado"
-              hint="Como a marca deve ser percebida versus a concorrência"
-              placeholder='Ex: A alternativa premium e minimalista ao Trello — menos features, mais foco. "O Notion para quem tem TDAH."'
-              value={guided.positioning}
-              onChange={(v) => updateGuided("positioning", v)}
-            />
-            <GuidedField
-              label="Referências de marcas"
-              hint="Marcas que você admira esteticamente ou estrategicamente (não precisam ser do mesmo setor)"
-              placeholder="Ex: Visualmente: Notion, Linear, Arc Browser. Estrategicamente: Apple, Supreme. Tom de voz: Oatly."
-              value={guided.references}
-              onChange={(v) => updateGuided("references", v)}
-            />
-            <GuidedField
-              label="Instagram / links oficiais"
-              hint="Cole perfis e links que representem a essência (ex: instagram.com/suaMarca)"
-              placeholder="Ex: https://instagram.com/suaMarca\nhttps://site.com\nhttps://linkedin.com/company/suaMarca"
-              value={guided.instagramLinks}
-              onChange={(v) => updateGuided("instagramLinks", v)}
-              rows={3}
-            />
-            <GuidedField
-              label="Essência da marca (referências)"
-              hint="Cultura, estética, vibe, arquétipos, filmes, artistas, lugares, décadas, movimentos"
-              placeholder="Ex: Arquétipo: Rebelde elegante. Estética: brutalismo + luxo discreto. Referências: Blade Runner, Dieter Rams, Tadao Ando."
-              value={guided.essenceReferences}
-              onChange={(v) => updateGuided("essenceReferences", v)}
-              rows={3}
-            />
-            <GuidedField
-              label="O que a marca NÃO deve transmitir"
-              hint="Evite, proibições, o que seria fora do tom"
-              placeholder="Ex: Corporativo demais, genérico, alegre/colorido em excesso, complexo, intimidador"
-              value={guided.avoidances}
-              onChange={(v) => updateGuided("avoidances", v)}
-            />
-            <GuidedField
-              label="Preferências de cores"
-              hint="Restrições, preferências, o que inspira — ou o que evitar"
-              placeholder="Ex: Evitar azul corporativo. Prefiro paleta escura com um acento vibrante. Referência: Figma."
-              value={guided.colorPreferences}
-              onChange={(v) => updateGuided("colorPreferences", v)}
-            />
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={guided.hasMascot}
-                aria-label="Alternar mascote"
-                onClick={() => updateGuided("hasMascot", !guided.hasMascot)}
-                className={`flex-shrink-0 w-10 h-5 rounded-full transition-colors relative ${
-                  guided.hasMascot ? "bg-gray-900" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                    guided.hasMascot ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
-              <span className="text-sm font-medium">A marca deve ter mascote ou personagem?</span>
-            </div>
-
-            {guided.hasMascot && (
-              <GuidedField
-                label="Descreva o mascote"
-                hint="Personalidade, aparência, referências visuais"
-                placeholder="Ex: Um robô rechonchudo e amigável, como o Michelin mas tech. Personalidade: nerd entusiasmado que simplifica o complexo."
-                value={guided.mascotDescription}
-                onChange={(v) => updateGuided("mascotDescription", v)}
-              />
-            )}
-
-            <GuidedField
-              label="Contexto adicional"
-              hint="Qualquer outra informação relevante para a IA"
-              placeholder="Ex: A marca já tem um logo que não pode mudar, mas tudo mais pode evoluir. Budget para produção é alto."
-              value={guided.extraContext}
-              onChange={(v) => updateGuided("extraContext", v)}
-              rows={3}
-            />
-          </div>
-        )}
-      </div>
+      <GuidedBriefingSection
+        showGuided={showGuided}
+        filledGuidedCount={filledGuidedCount}
+        guided={guided}
+        onToggle={() => setShowGuided(!showGuided)}
+        onUpdate={updateGuided}
+      />
 
       {/* Raw Briefing */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-align-left text-gray-400"><line x1="21" x2="3" y1="6" y2="6"/><line x1="15" x2="3" y1="12" y2="12"/><line x1="17" x2="3" y1="18" y2="18"/></svg>
-          <div>
-            <h3 className="font-bold text-gray-900">Briefing Livre</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Complementa o briefing guiado acima</p>
-          </div>
-        </div>
-        <textarea
-          id="rawBriefing"
-          rows={4}
-          value={rawBriefing}
-          onChange={(e) => setRawBriefing(e.target.value)}
-          placeholder="Qualquer detalhe extra, contexto histórico, inspirações, restrições, objetivos de negócio..."
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none placeholder:text-gray-400"
-        />
-      </div>
+      <RawBriefingSection value={rawBriefing} onChange={setRawBriefing} />
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-link-2 text-gray-400"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/></svg>
-          <div>
-            <h3 className="font-bold text-gray-900">Referências Externas (URLs)</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Opcional — o sistema tenta extrair título/descrição/trechos para usar como contexto</p>
-          </div>
-        </div>
-        <textarea
-          id="externalUrls"
-          rows={3}
-          value={externalUrlsRaw}
-          onChange={(e) => setExternalUrlsRaw(e.target.value)}
-          placeholder="Cole links (1 por linha). Ex: https://www.instagram.com/caracabaroficial/\nhttps://site.com"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none placeholder:text-gray-400"
-        />
-        <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-          Alguns sites (ex: Instagram) podem bloquear leitura automática. Se isso acontecer, envie screenshots ou imagens de referência.
-        </p>
-      </div>
+      <ExternalUrlsSection value={externalUrlsRaw} onChange={setExternalUrlsRaw} />
 
       {/* Reference Images */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
@@ -615,83 +243,25 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-images text-gray-400"><path d="M18 22H4a2 2 0 0 1-2-2V6"/><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18"/><circle cx="12" cy="8" r="2"/><rect width="16" height="16" x="6" y="2" rx="2"/></svg>
           <div>
             <h3 className="font-bold text-gray-900">Imagens de Referência</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Opcional — a IA analisa e replica estilo, paleta e composição</p>
+            <p className="text-xs text-gray-500 mt-0.5">Opcional — envie tanto capturas da marca atual quanto imagens aspiracionais para a IA separar equity atual de direção futura</p>
           </div>
         </div>
         <BriefingImageUpload images={referenceImages} onChange={setReferenceImages} />
+        <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+          Dica: para <strong>rebrand</strong>, misture screenshots do Instagram/feed/fachada/embalagens atuais com referências do conceito desejado. A IA deve entender o que já existe hoje e o que deve evoluir.
+        </p>
       </div>
 
       {/* Thin briefing warning */}
       {isBriefingThin && brandName && industry && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-4 flex gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lightbulb text-yellow-600 flex-shrink-0 mt-0.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
-          <div>
-            <p className="text-sm text-yellow-900 font-bold">Dica: quanto mais contexto, melhor o resultado</p>
-            <p className="text-xs text-yellow-800/80 mt-1 leading-relaxed">
-              A IA pode gerar com apenas nome e indústria, mas o brandbook será genérico. Preencha o <strong>briefing guiado</strong>, envie um <strong>logo</strong> ou adicione <strong>imagens de referência</strong> para resultados profissionais.
-            </p>
-          </div>
-        </div>
+        <ThinBriefingWarning />
       )}
 
       {/* Error */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700 text-sm whitespace-pre-line">
-          {error}
-        </div>
-      )}
+      {error && <FormErrorMessage error={error} />}
 
       {/* Submit */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-gray-900 text-white py-4 px-6 rounded-2xl font-bold text-base hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Gerando...
-          </>
-        ) : (
-          <>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wand-2"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
-            Gerar Brandbook
-          </>
-        )}
-      </button>
+      <SubmitButton loading={loading} />
     </form>
-  );
-}
-
-function GuidedField({
-  label,
-  hint,
-  placeholder,
-  value,
-  onChange,
-  rows = 2,
-}: {
-  label: string;
-  hint: string;
-  placeholder: string;
-  value: string;
-  onChange: (v: string) => void;
-  rows?: number;
-}) {
-  return (
-    <div>
-      <div className="flex items-baseline gap-2 mb-1">
-        <span className="text-sm font-medium">{label}</span>
-        <span className="text-xs text-gray-400">{hint}</span>
-      </div>
-      <textarea
-        rows={rows}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition resize-none"
-        aria-label={label}
-      />
-    </div>
   );
 }

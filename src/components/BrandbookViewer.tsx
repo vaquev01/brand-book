@@ -1,42 +1,21 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   BrandImmersiveTheme,
   brandVoiceQuote,
   getImmersiveTheme,
   rgba,
 } from "./BrandImmersiveTheme";
-import type { ImmersiveTheme } from "./BrandImmersiveTheme";
 
-import { BrandbookData, UploadedAsset, GeneratedAsset, Colors } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset, Colors, type AssetPackFile } from "@/lib/types";
 import { SectionCover } from "./sections/SectionCover";
-import { SectionDNA } from "./sections/SectionDNA";
-import { SectionLogo } from "./sections/SectionLogo";
-import { SectionColors } from "./sections/SectionColors";
-import { SectionTypography } from "./sections/SectionTypography";
-import { SectionTokensA11y } from "./sections/SectionTokensA11y";
-import { SectionUxMicrocopyMotion } from "./sections/SectionUxMicrocopyMotion";
-import { SectionKeyVisual } from "./sections/SectionKeyVisual";
-import { SectionMascots } from "./sections/SectionMascots";
-import { SectionApplications } from "./sections/SectionApplications";
-import { SectionPositioning } from "./sections/SectionPositioning";
-import { SectionAudiencePersonas } from "./sections/SectionAudiencePersonas";
-import { SectionVerbalIdentity } from "./sections/SectionVerbalIdentity";
-import { SectionTypographyScale } from "./sections/SectionTypographyScale";
-import { SectionUiGuidelines } from "./sections/SectionUiGuidelines";
-import { SectionProductionGuidelines } from "./sections/SectionProductionGuidelines";
-import { SectionBrandStory } from "./sections/SectionBrandStory";
-import { SectionSocialMedia } from "./sections/SectionSocialMedia";
-import { SectionAssetPack } from "./sections/SectionAssetPack";
-import { SectionBrandAssets } from "./sections/SectionBrandAssets";
-import { SectionGovernance } from "./sections/SectionGovernance";
 import { FontLoader } from "./FontLoader";
-import { useImageGeneration, PROVIDERS, IMMERSIVE_ESSENTIALS } from "@/hooks/useImageGeneration";
+import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
 import { EMPTY_KEYS } from "@/components/ApiKeyConfig";
 import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
-import type { AssetPackFile } from "@/lib/types";
 import type { ApiKeys } from "@/components/ApiKeyConfig";
+import { buildSectionDefs, CATEGORIES } from "./brandbookViewerSections";
 
 const SECTION_HERO_ASSETS: Record<string, string[]> = {
   "dna": ["hero_visual"],
@@ -83,27 +62,6 @@ const CATEGORY_ATMO_ASSETS: Record<string, string[]> = {
   "Design System": ["app_mockup", "presentation_bg"],
   "Aplicações da Marca": ["delivery_packaging", "business_card", "brand_collateral"],
   "Diretrizes de Uso": ["outdoor_billboard", "presentation_bg"],
-};
-
-type Category =
-  | "Essência da Marca"
-  | "Público-Alvo"
-  | "Identidade Verbal"
-  | "Identidade Visual"
-  | "Paleta de Cores"
-  | "Tipografia"
-  | "Sistema Visual"
-  | "Padrões Gráficos"
-  | "Design System"
-  | "Aplicações da Marca"
-  | "Diretrizes de Uso";
-
-type SectionDef = {
-  id: string;
-  title: string;
-  category: Category;
-  when: boolean;
-  render: (num: number) => JSX.Element;
 };
 
 interface Props {
@@ -157,243 +115,27 @@ export function BrandbookViewer({
     textProvider,
   });
 
-  const sectionDefs: SectionDef[] = [
-    {
-      id: "dna",
-      title: "DNA & Estratégia",
-      category: "Essência da Marca",
-      when: true,
-      render: (num) => <SectionDNA data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "brand-story",
-      title: "Brand Story & Manifesto",
-      category: "Essência da Marca",
-      when: !!data.brandStory,
-      render: (num) => <SectionBrandStory data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "positioning",
-      title: "Posicionamento",
-      category: "Essência da Marca",
-      when: !!data.positioning,
-      render: (num) => <SectionPositioning data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "personas",
-      title: "Personas",
-      category: "Público-Alvo",
-      when: !!data.audiencePersonas && data.audiencePersonas.length > 0,
-      render: (num) => <SectionAudiencePersonas data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "verbal-identity",
-      title: "Identidade Verbal",
-      category: "Identidade Verbal",
-      when: !!data.verbalIdentity,
-      render: (num) => <SectionVerbalIdentity data={data} num={num} />,
-    },
-    {
-      id: "logo",
-      title: "Logo & Identidade Visual",
-      category: "Identidade Visual",
-      when: true,
-      render: (num) => (
-        <SectionLogo
-          data={data}
-          num={num}
-          generatedImages={generatedImages}
-          uploadedAssets={uploadedAssets}
-          onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
-          loadingKey={imgGen.loadingKey}
-          onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
-          onSaveToAssets={hasGeneration ? (asset: GeneratedAsset, label: string, key?: AssetKey) => imgGen.saveGeneratedToAssets(asset, label, key) : undefined}
-          generatedAssets={generatedAssets}
-          onUpdateData={onUpdateData}
-        />
-      ),
-    },
-    {
-      id: "colors",
-      title: "Cores",
-      category: "Paleta de Cores",
-      when: true,
-      render: (num) => (
-        <SectionColors
-          data={data}
-          num={num}
-          onUpdateColors={onUpdateColors}
-        />
-      ),
-    },
-    {
-      id: "typography",
-      title: "Tipografia",
-      category: "Tipografia",
-      when: true,
-      render: (num) => <SectionTypography data={data} num={num} />,
-    },
-    {
-      id: "typography-scale",
-      title: "Escala Tipográfica",
-      category: "Tipografia",
-      when: !!data.typographyScale && data.typographyScale.length > 0,
-      render: (num) => <SectionTypographyScale data={data} num={num} />,
-    },
-    {
-      id: "key-visual",
-      title: "Key Visual",
-      category: "Sistema Visual",
-      when: true,
-      render: (num) => (
-        <SectionKeyVisual
-          data={data}
-          num={num}
-          generatedImages={generatedImages}
-          onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
-          loadingKey={imgGen.loadingKey}
-          generatedAssets={generatedAssets}
-          onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
-          onUpdateData={onUpdateData}
-        />
-      ),
-    },
-    {
-      id: "mascots",
-      title: "Mascotes & Símbolos",
-      category: "Padrões Gráficos",
-      when: !!(
-        (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
-        (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
-        (data.keyVisual.patterns && data.keyVisual.patterns.length > 0) ||
-        (data.keyVisual.structuredPatterns && data.keyVisual.structuredPatterns.length > 0) ||
-        uploadedAssets.some((a) => a.type === "mascot" || a.type === "element" || a.type === "pattern")
-      ),
-      render: (num) => (
-        <SectionMascots
-          data={data}
-          num={num}
-          uploadedAssets={uploadedAssets}
-          generatedImages={generatedImages}
-          onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
-          loadingKey={imgGen.loadingKey}
-          generatedAssets={generatedAssets}
-          onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
-          onUpdateData={onUpdateData}
-        />
-      ),
-    },
-    {
-      id: "ui-guidelines",
-      title: "Guidelines de UI",
-      category: "Design System",
-      when: !!data.uiGuidelines,
-      render: (num) => <SectionUiGuidelines data={data} num={num} />,
-    },
-    {
-      id: "tokens-a11y",
-      title: "Design Tokens & Acessibilidade",
-      category: "Design System",
-      when: isAdvanced && !!data.designTokens && !!data.accessibility,
-      render: (num) => <SectionTokensA11y data={data} num={num} />,
-    },
-    {
-      id: "ux-microcopy-motion",
-      title: "UX Patterns, Microcopy & Motion",
-      category: "Design System",
-      when: isAdvanced && !!data.uxPatterns && !!data.microcopy && !!data.motion,
-      render: (num) => <SectionUxMicrocopyMotion data={data} num={num} />,
-    },
-    {
-      id: "applications",
-      title: "Aplicações",
-      category: "Aplicações da Marca",
-      when: true,
-      render: (num) => (
-        <SectionApplications
-          data={data}
-          num={num}
-          generatedImages={generatedImages}
-          onUpdateApplicationImageKey={onUpdateApplicationImageKey}
-          onGenerateApplication={hasGeneration ? (i: number, ar: string, ci?: string, refs?: string[]) => imgGen.generateApplication(i, ar as "1:1" | "16:9" | "9:16" | "4:3" | "21:9", ci, refs) : undefined}
-          onGenerateAllApplications={hasGeneration ? () => imgGen.generateAllApplications() : undefined}
-          loadingKey={imgGen.loadingKey}
-          generatedAssets={generatedAssets}
-          onUpdateData={onUpdateData}
-        />
-      ),
-    },
-    {
-      id: "production-guidelines",
-      title: "Produção & Handoff",
-      category: "Diretrizes de Uso",
-      when: !!data.productionGuidelines,
-      render: (num) => <SectionProductionGuidelines data={data} num={num} />,
-    },
-    {
-      id: "social-media",
-      title: "Guia de Redes Sociais",
-      category: "Aplicações da Marca",
-      when: !!data.socialMediaGuidelines && data.socialMediaGuidelines.platforms.length > 0,
-      render: (num) => <SectionSocialMedia data={data} num={num} />,
-    },
-    {
-      id: "governance",
-      title: "Governança do Design System",
-      category: "Diretrizes de Uso",
-      when: !!data.governance,
-      render: (num) => <SectionGovernance data={data} num={num} />,
-    },
-    {
-      id: "asset-pack",
-      title: "Entrega — Asset Pack",
-      category: "Diretrizes de Uso",
-      when: true,
-      render: (num) => (
-        <SectionAssetPack
-          data={data}
-          num={num}
-          uploadedAssets={uploadedAssets}
-          generatedImages={generatedImages}
-          assetPackFiles={assetPackFiles}
-          generating={assetPackGenerating}
-          onGenerate={onGenerateAssetPack}
-        />
-      ),
-    },
-    {
-      id: "brand-assets",
-      title: "Ativos de Marca",
-      category: "Diretrizes de Uso",
-      when: uploadedAssets.length > 0,
-      render: (num) => (
-        <SectionBrandAssets
-          num={num}
-          uploadedAssets={uploadedAssets}
-        />
-      ),
-    },
-  ];
+  const sectionDefs = buildSectionDefs({
+    assetPackFiles,
+    assetPackGenerating,
+    data,
+    generatedAssets,
+    generatedImages,
+    hasGeneration,
+    imgGen,
+    isAdvanced,
+    onGenerateAssetPack,
+    onUpdateApplicationImageKey,
+    onUpdateColors,
+    onUpdateData,
+    uploadedAssets,
+  });
 
   const sections = sectionDefs
     .filter((s) => s.when)
     .map((s, idx) => ({ ...s, num: idx + 1 }));
 
-  const categories: Category[] = [
-    "Essência da Marca",
-    "Público-Alvo",
-    "Identidade Verbal",
-    "Identidade Visual",
-    "Paleta de Cores",
-    "Tipografia",
-    "Sistema Visual",
-    "Padrões Gráficos",
-    "Design System",
-    "Aplicações da Marca",
-    "Diretrizes de Uso",
-  ];
-
-  const byCategory = categories
+  const byCategory = CATEGORIES
     .map((cat) => ({
       cat,
       items: sections.filter((s) => s.category === cat),
