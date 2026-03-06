@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { BrandbookData, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
+import { EditableField } from "@/components/EditableField";
 
 interface Props {
   data: BrandbookData;
@@ -320,7 +321,13 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
       {data.keyVisual.compositionPhilosophy && (
         <div className="bg-gradient-to-r from-gray-50 to-white border rounded-xl p-4 mb-6">
           <h3 className="font-bold mb-2 text-sm uppercase tracking-wider text-gray-500">Filosofia de Composição</h3>
-          <p className="text-gray-700">{data.keyVisual.compositionPhilosophy}</p>
+          <EditableField
+            value={data.keyVisual.compositionPhilosophy}
+            onSave={(val) => onUpdateData?.(prev => ({ ...prev, keyVisual: { ...prev.keyVisual, compositionPhilosophy: val } }))}
+            className="text-gray-700"
+            readOnly={!onUpdateData}
+            multiline
+          />
         </div>
       )}
 
@@ -365,27 +372,51 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg border">
             <h3 className="font-bold mb-2">Estilo Fotográfico</h3>
-            <p className="text-gray-600 text-sm">{data.keyVisual.photographyStyle}</p>
+            <EditableField
+              value={data.keyVisual.photographyStyle}
+              onSave={(val) => onUpdateData?.(prev => ({ ...prev, keyVisual: { ...prev.keyVisual, photographyStyle: val } }))}
+              className="text-gray-600 text-sm"
+              readOnly={!onUpdateData}
+              multiline
+            />
           </div>
 
           {isAdvanced && data.keyVisual.iconography && (
             <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="font-bold mb-2">Iconografia</h3>
-              <p className="text-gray-600 text-sm">{data.keyVisual.iconography}</p>
+              <EditableField
+                value={data.keyVisual.iconography}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, keyVisual: { ...prev.keyVisual, iconography: val } }))}
+                className="text-gray-600 text-sm"
+                readOnly={!onUpdateData}
+                multiline
+              />
             </div>
           )}
 
           {isAdvanced && data.keyVisual.illustrations && (
             <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="font-bold mb-2">Ilustrações</h3>
-              <p className="text-gray-600 text-sm">{data.keyVisual.illustrations}</p>
+              <EditableField
+                value={data.keyVisual.illustrations}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, keyVisual: { ...prev.keyVisual, illustrations: val } }))}
+                className="text-gray-600 text-sm"
+                readOnly={!onUpdateData}
+                multiline
+              />
             </div>
           )}
 
           {isAdvanced && data.keyVisual.marketingArchitecture && (
             <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="font-bold mb-2">Arquitetura de Marketing</h3>
-              <p className="text-gray-600 text-sm">{data.keyVisual.marketingArchitecture}</p>
+              <EditableField
+                value={data.keyVisual.marketingArchitecture}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, keyVisual: { ...prev.keyVisual, marketingArchitecture: val } }))}
+                className="text-gray-600 text-sm"
+                readOnly={!onUpdateData}
+                multiline
+              />
             </div>
           )}
         </div>

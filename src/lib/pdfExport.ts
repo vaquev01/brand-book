@@ -180,6 +180,8 @@ export async function exportBrandbookPDFMultiPage(
     allowTaint: false,
     backgroundColor: "#ffffff",
     logging: false,
+    windowWidth: element.scrollWidth,
+    windowHeight: element.scrollHeight,
     onclone: (doc) => {
       const el = doc.getElementById(elementId);
       if (!el) return;

@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Falha ao baixar imagem: ${res.status}` }, { status: 400 });
     }
 
-    const contentType = (res.headers.get("content-type") ?? "").toLowerCase();
-    if (!contentType.startsWith("image/")) {
+    const rawContentType = (res.headers.get("content-type") ?? "").toLowerCase();
+    const mimeType = rawContentType.split(";")[0].trim();
+    if (!mimeType.startsWith("image/") && mimeType !== "application/octet-stream") {
       return NextResponse.json({ error: "URL não parece ser uma imagem" }, { status: 400 });
     }
 
@@ -58,10 +59,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Imagem muito grande" }, { status: 400 });
     }
 
+    const safeMime = mimeType.startsWith("image/") ? mimeType : "image/png";
     const b64 = bytesToBase64(new Uint8Array(ab));
-    const dataUrl = `data:${contentType};base64,${b64}`;
+    const dataUrl = `data:${safeMime};base64,${b64}`;
 
-    return NextResponse.json({ dataUrl, contentType });
+    return NextResponse.json({ dataUrl, contentType: safeMime });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erro desconhecido";
     return NextResponse.json({ error: message }, { status: 500 });

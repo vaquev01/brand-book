@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
+import { EditableField } from "@/components/EditableField";
 
 interface Props {
   data: BrandbookData;
@@ -491,25 +492,69 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 items-start">
         <div className="bg-gray-50 p-4 rounded border">
           <h3 className="font-bold mb-1">Clear Space</h3>
-          <p className="text-gray-600 text-sm">{data.logo.clearSpace}</p>
+          <EditableField
+            value={data.logo.clearSpace}
+            onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, clearSpace: val } }))}
+            className="text-gray-600 text-sm"
+            readOnly={!onUpdateData}
+            multiline
+          />
         </div>
         <div className="bg-gray-50 p-4 rounded border">
           <h3 className="font-bold mb-1">Tamanho Mínimo</h3>
-          <p className="text-gray-600 text-sm">{data.logo.minimumSize}</p>
+          <EditableField
+            value={data.logo.minimumSize}
+            onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, minimumSize: val } }))}
+            className="text-gray-600 text-sm"
+            readOnly={!onUpdateData}
+            multiline
+          />
         </div>
         {data.logo.favicon && (
           <div className="bg-gray-50 p-4 rounded border">
             <h3 className="font-bold mb-1">Favicon / App Icon</h3>
-            <p className="text-gray-600 text-sm">{data.logo.favicon}</p>
+            <EditableField
+              value={data.logo.favicon}
+              onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, favicon: val } }))}
+              className="text-gray-600 text-sm"
+              readOnly={!onUpdateData}
+              multiline
+            />
           </div>
         )}
       </div>
 
       {/* Incorrect usages */}
       <div className="bg-red-50 border border-red-100 p-4 rounded-lg">
-        <h3 className="font-bold text-red-800 mb-4">Usos Incorretos</h3>
-        <ul className="list-disc pl-5 text-red-700 space-y-1">
-          {data.logo.incorrectUsages.map((u, i) => <li key={i}>{u}</li>)}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-red-800">Usos Incorretos</h3>
+          {onUpdateData && (
+            <button
+              onClick={() => onUpdateData(prev => ({ ...prev, logo: { ...prev.logo, incorrectUsages: [...prev.logo.incorrectUsages, "Novo uso incorreto"] } }))}
+              className="no-print text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition"
+            >
+              + Adicionar
+            </button>
+          )}
+        </div>
+        <ul className="list-disc pl-5 text-red-700 space-y-2">
+          {data.logo.incorrectUsages.map((u, i) => (
+            <li key={i} className="group/item">
+              <EditableField
+                value={u}
+                onSave={(val) => onUpdateData?.(prev => {
+                  const next = [...prev.logo.incorrectUsages];
+                  next[i] = val;
+                  return { ...prev, logo: { ...prev.logo, incorrectUsages: next } };
+                })}
+                onDelete={onUpdateData ? () => onUpdateData?.(prev => ({
+                  ...prev, logo: { ...prev.logo, incorrectUsages: prev.logo.incorrectUsages.filter((_, idx) => idx !== i) }
+                })) : undefined}
+                className="text-sm"
+                readOnly={!onUpdateData}
+              />
+            </li>
+          ))}
         </ul>
       </div>
 

@@ -548,7 +548,9 @@ export default function Home() {
       a.rel = "noopener";
       const slug = brandbookData.brandName.replace(/\s+/g, "-").toLowerCase();
       a.download = `${slug}-brandbook-pack.zip`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1200);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao exportar pack");
@@ -564,7 +566,9 @@ export default function Home() {
     a.href = url;
     a.rel = "noopener";
     a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1200);
   }
 

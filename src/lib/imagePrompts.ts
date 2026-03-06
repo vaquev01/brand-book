@@ -411,7 +411,9 @@ function providerQuality(provider: ImageProvider, key: AssetKey, archetypeName?:
     Innocent: "bright high-key clarity, morning-light purity, Apple-clean composition, optimistic warmth",
     Creator: "award-winning design craftsmanship, intentional imperfection, visible creative process, Pentagram studio quality",
   };
-  const archQ = archetypeQuality[arch] ?? archetypeQuality.Creator;
+  
+  // NEVER apply photographic archetype qualities to logos
+  const archQ = isLogo ? "award-winning clean corporate graphic design" : (archetypeQuality[arch] ?? archetypeQuality.Creator);
 
   if (provider === "dalle3") {
     if (isLogo) return `professional brand identity mark, precise geometric construction, clean crisp edges, Pentagram/Wolff Olins studio quality, ${archQ}`;
@@ -741,53 +743,333 @@ function structuredPatternDirective(ctx: ReturnType<typeof extractBrandContext>)
   return `STRUCTURED_PATTERNS: ${ctx.structuredPatternDetails}.`;
 }
 
-function logoConstructionDirective(
+// ─── WORLD-CLASS LOGO REFERENCE LIBRARY ──────────────────────────────────────
+// Organized by brand archetype. Each entry provides the geometric/structural
+// analysis — not style copying. The goal is to extract transferable principles.
+const LOGO_STRUCTURAL_REFS: Record<string, { mark: string; structure: string; principle: string }[]> = {
+  Hero: [
+    {
+      mark: "Nike Swoosh",
+      structure: "single open vector stroke with no enclosed form; ascending 15° angle from thin tip to wide base; the stroke implies speed by being heavier where it lands and finer where it lifts off",
+      principle: "open terminals suggest motion beyond the frame — the mark never 'arrives', it is always in motion; design one decisive stroke and commit to it completely",
+    },
+    {
+      mark: "Adidas three-stripe mountain",
+      structure: "three parallel diagonal stripes converging to a peak — the same stripe motif from the apparel system repurposed as a mountain silhouette; one repeated unit creates an entire mark",
+      principle: "repetition of a single element (the stripe) generates rhythm, inevitability and brand system cohesion; the mark is the product is the symbol",
+    },
+    {
+      mark: "Red Bull twin bulls",
+      structure: "two mirrored bull silhouettes charging toward each other with a sun-burst between — bilateral symmetry creates confrontational tension, not calm authority",
+      principle: "symmetry that faces inward creates energy rather than serenity; the negative space between the two forms IS the most charged element",
+    },
+    {
+      mark: "Under Armour UA interlock",
+      structure: "two letterforms (U and A) designed so the U cradles the A — the U's crossbar becomes the A's crossbar; the two letters share a structural element, reading as one unified shield-like glyph",
+      principle: "when two initials share a structural element (a shared stroke, a shared curve), the monogram becomes a single new form rather than two placed letters; the point of intersection is the most important design decision",
+    },
+  ],
+  Creator: [
+    {
+      mark: "Apple logo (Rob Janoff, 1977)",
+      structure: "a circle (apple silhouette) with exactly one strategic bite removed from the upper-right — the subtraction prevents it from being a plain circle and creates instant global recognition through a single void",
+      principle: "design the absence as carefully as the presence; one deliberate void transforms a generic shape into a unique mark; the bite is not decoration, it IS the mark",
+    },
+    {
+      mark: "Adobe 'A' mark",
+      structure: "a bold geometric capital A with the bottom-left serif removed — one stroke excised from a letterform creates a figure-ground exchange that rewards close inspection",
+      principle: "surgical subtraction from a letterform is more powerful than addition; removing the expected element makes the viewer's eye complete it, creating engagement",
+    },
+    {
+      mark: "Braun BR rebus (Dieter Rams era)",
+      structure: "pure geometric letterforms derived from a strict modular grid — every curve, weight and spacing is a direct multiple of a base unit; no element exists outside the system",
+      principle: "when every dimension of a mark is grid-derived, it feels discovered rather than designed; mathematical inevitability reads as confidence",
+    },
+    {
+      mark: "Figma four-circle mark",
+      structure: "four circles arranged in a 2×2 grid, overlapping at precise tangent points — each overlap zone creates a new shape that reads as a fifth element; the four circles encode four product use cases",
+      principle: "overlapping geometric primitives at their tangent points generates new forms in the intersection zones without adding new elements; count these emergent forms — they are free design content derived from pure proportion",
+    },
+  ],
+  Sage: [
+    {
+      mark: "IBM 8-bar rebus (Paul Rand)",
+      structure: "the three letterforms I-B-M are dissected by eight precisely spaced horizontal stripes; the mark simultaneously shows the letters and deconstructs them into horizontal information bands",
+      principle: "applying a system to typography makes the system itself the message; the stripes are not decoration — they encode 'this brand thinks in structured systems'",
+    },
+    {
+      mark: "MIT Media Lab variable mark",
+      structure: "a set of nested right-angle triangles in three primary colors; different arrangements of the same triangles create unique marks for each lab while sharing the same geometric DNA",
+      principle: "a mark that is a rule-generator rather than a fixed shape embodies the brand's belief in intellectual systems; the brand owns the grammar, not a single word",
+    },
+    {
+      mark: "The Economist wordmark",
+      structure: "bold white serif logotype reversed out of a solid red rectangle; the entire color field functions as the mark — the red rectangle is the logo as much as the text",
+      principle: "authority through absolute restraint; when typography and a solid color field operate as a unified system, no symbol is needed — the confidence itself becomes the signal",
+    },
+    {
+      mark: "Wikipedia puzzle globe",
+      structure: "a globe assembled from interlocking puzzle pieces, with gaps visible — the incompleteness is not a flaw; the missing pieces are deliberately placed to signal that the project is never finished",
+      principle: "designing visible incompleteness into a mark communicates a philosophical position; a gap or missing element can be the most eloquent statement the mark makes — decide whether your brand is complete or always becoming",
+    },
+  ],
+  Explorer: [
+    {
+      mark: "National Geographic yellow rectangle",
+      structure: "a solid yellow rectangle — the mark IS the frame; it frames everything the brand touches including its photography, which exists inside the mark",
+      principle: "redefine what a logo can be — the mark does not have to be a symbol inside a frame; the mark CAN be the frame; the rectangle is the brand's philosophical statement about perspective",
+    },
+    {
+      mark: "Patagonia mountain wordmark",
+      structure: "a jagged mountain range silhouette above the wordmark — specifically the Fitz Roy massif outline, simplified to five peaks that read as a single saw-tooth stroke",
+      principle: "specificity (a real place) is more powerful than a generic mountain; the mark has a real-world anchor; geographic specificity gives a mark authenticity that invented symbols cannot achieve",
+    },
+    {
+      mark: "Land Rover oval",
+      structure: "wordmark enclosed in a precise horizontal oval with green-filled background; the oval proportion (2.5:1 width-to-height) implies forward motion without any arrow or directional symbol",
+      principle: "the proportion of a containing form implies direction and movement; a wider-than-tall oval suggests horizontal movement; every proportion decision carries meaning",
+    },
+    {
+      mark: "The North Face Half Dome semicircle",
+      structure: "the bottom half of the Yosemite Half Dome cliff face — a real geographical form reduced to a precise flat-bottomed semicircle; the mark borrows the authority of a specific real place, not an invented mountain",
+      principle: "anchoring an abstract mark to a verifiable real-world form (a specific mountain, a specific river bend, a specific latitude line) gives it geographic authenticity; invented symbols feel designed, real-world reductions feel discovered",
+    },
+  ],
+  Outlaw: [
+    {
+      mark: "Harley-Davidson Bar & Shield",
+      structure: "a vertical shield (containing form) interrupted by a horizontal bar that breaks through both sides — the bar literally disrupts the shield, structurally embodying freedom-within-rules",
+      principle: "the structural tension between a containing form and a breaking element embodies disruption philosophically; the bar does not sit inside the shield — it breaks through it",
+    },
+    {
+      mark: "Virgin wordmark",
+      structure: "hand-drawn signature lettering in red — the deliberate imperfection of a human hand at corporate scale; not set in a font, but drawn as a personal signature",
+      principle: "when every competitor uses designed typography, a signature becomes radical; authentic human imperfection at scale signals that a real person stands behind the brand",
+    },
+    {
+      mark: "Supreme box logo",
+      structure: "Futura Bold condensed white wordmark in a solid red rectangle — radical simplicity executed with total conviction; the anti-logo that becomes the most recognized logo in streetwear",
+      principle: "reduction to absolute minimum combined with unwavering commitment creates iconic status through repetition and consistency rather than complexity; the mark works because it never changes",
+    },
+    {
+      mark: "Punk/metal band typography strategy (Black Flag, Metallica)",
+      structure: "letterforms deconstructed to aggressive geometry — serifs elongated to blades, strokes thickened asymmetrically, vertical axes tilted to imply instability; the type is redesigned to feel physically dangerous",
+      principle: "typography can encode a physical sensation (danger, speed, roughness) when its structural rules are deliberately broken in a consistent, intentional way; every rule you break must be broken the same way every time to become a system",
+    },
+  ],
+  Magician: [
+    {
+      mark: "FedEx hidden arrow (Lindon Leader)",
+      structure: "the negative space between the capital E and lowercase x in the wordmark forms a perfect rightward arrow — visible only when pointed out, creating a permanent perceptual shift",
+      principle: "the hidden element creates a moment of discovery that permanently changes how the viewer sees the mark; once seen it cannot be unseen — the brand engagement is built into the act of looking",
+    },
+    {
+      mark: "Amazon smile+arrow",
+      structure: "a curved arrow from the letter A to the letter Z drawn beneath the wordmark — simultaneously a smile, a directional arrow, and a visual proof of the brand's complete A-to-Z range",
+      principle: "one curved line can carry three simultaneous meanings (emotion + direction + brand claim) when each reading reinforces the others; layers of meaning compress into a single gesture",
+    },
+    {
+      mark: "Disney Walt signature D",
+      structure: "the capital D in the Walt Disney logotype is designed so that its curves simultaneously read as a D letterform and evoke a castle silhouette — dual reading built into a single letterform",
+      principle: "design for the moment of discovery when the viewer sees both readings; the mark contains two worlds simultaneously, which is the brand's entire philosophical promise",
+    },
+    {
+      mark: "Toblerone mountain + hidden bear",
+      structure: "the Matterhorn mountain silhouette serves as the primary mark; inside the mountain's negative-space face, a bear in mid-stride is hidden — the bear is the symbol of Bern, the city of origin, encoded invisibly",
+      principle: "a hidden figure-ground reversal inside a product-derived shape is the most sophisticated form of dual reading; the hidden element carries brand history and rewards loyal, attentive viewers — the casual viewer sees the mountain; the initiated viewer sees the bear",
+    },
+  ],
+  Caregiver: [
+    {
+      mark: "Johnson & Johnson red script",
+      structure: "flowing connected-script wordmark in red — the continuity of the brushstroke implies care that never breaks; each letter flows into the next without lifting the pen",
+      principle: "a continuous connected stroke implies unbroken attention and care; the hand that writes it never leaves the page — this is the brand's promise made structural",
+    },
+    {
+      mark: "Airbnb bélo (DesignStudio)",
+      structure: "a single closed organic form that simultaneously reads as: an A letterform, a location pin, a heart, and a person with arms raised — four meanings unified by one continuous loop",
+      principle: "closed organic forms feel sheltering and enclosing; when every element is derived from the same continuous curve (not assembled from separate icons), the result feels organic rather than designed",
+    },
+    {
+      mark: "UNICEF wordmark + globe",
+      structure: "clean sans-serif wordmark beside a simplified globe held by two hands — geometric reduction to absolute minimum so it functions across all languages and literacy levels",
+      principle: "when your audience is the entire world, universality requires radical restraint; complexity reads as exclusivity; the mark must communicate without language or cultural context",
+    },
+    {
+      mark: "WWF panda (Sir Peter Scott)",
+      structure: "a panda face reduced to the minimum ink necessary for recognition — large black eye patches, black ears, small black nose on white ground; the mark works as an ink stamp, a silhouette, and at 10px",
+      principle: "find the two or three high-contrast marks that define your subject's recognition signature, then make those and ONLY those; the white areas are not background — they are the panda's face; the negative space IS the animal",
+    },
+  ],
+  Lover: [
+    {
+      mark: "Chanel interlocking CC (Coco Chanel)",
+      structure: "two C letterforms interlocked so they share a common negative space — one C faces right, one faces left, and their overlap creates a third form that is neither letter",
+      principle: "the overlap IS the mark; the interlocking creates a tension and a lock simultaneously; the most carefully designed element is the shared negative space between the two letters",
+    },
+    {
+      mark: "Tiffany & Co. wordmark",
+      structure: "refined Florentine-influenced serif wordmark — the typography itself is the symbol; the specific color (Tiffany Blue, Pantone 1837) functions as a second mark inseparable from the letterforms",
+      principle: "when a color becomes so associated with a mark that it cannot be separated from it, the brand owns a sensation rather than a shape; the robin's egg blue is the logo as much as the letters",
+    },
+    {
+      mark: "Dior CD monogram",
+      structure: "C and D letterforms sharing a single vertical stroke as their common spine — the two letters become one form because they touch at their most structural element",
+      principle: "two letters sharing a structural element creates a mark richer than either letter alone; the shared stem is the most precisely designed element — where the two identities become one",
+    },
+    {
+      mark: "Hermès Duc carriage (Alfred de Dreux)",
+      structure: "a highly detailed equestrian illustration (horse, two-wheeled carriage, groom with top hat) used as a logo with total conviction — the extreme detail is the luxury signal; no simplification was made",
+      principle: "in luxury contexts, complexity executed with perfect craftsmanship IS the message; the detail says 'we have nothing to simplify because everything here is intentional'; this rule only works when every single line is flawless",
+    },
+  ],
+  Jester: [
+    {
+      mark: "Mailchimp Freddie mark",
+      structure: "a geometric chimp face reduced to: one rounded forehead shape, one winking eye, one open eye, one smile — four elements create a complete and memorable personality",
+      principle: "personality lives in reduction; three or four precisely chosen geometric features communicate more emotion than a detailed illustration; the wink is the single element that carries all personality",
+    },
+    {
+      mark: "Innocent smoothies halo",
+      structure: "a plain lowercase wordmark with a hand-drawn halo floating above the dot of the letter 'i' — the entire brand personality lives in one tiny substitution (dot replaced by halo)",
+      principle: "place the entire brand personality in one smallest-possible element; the surprise works because everything else is visually neutral — the halo's charm comes from the plainness of its context",
+    },
+    {
+      mark: "M&Ms character mark",
+      structure: "the product form (oval candy) becomes the character's face/body — the logo IS the product given a personality through minimal anatomical additions",
+      principle: "when the product becomes the character, there is zero distance between brand and offer; the oval is simultaneously a candy and a face — this identity cannot be separated from what it sells",
+    },
+    {
+      mark: "Slack hashmark (four rotated pills)",
+      structure: "four pill-shaped rectangles arranged in a rotating 45° cross pattern, each in a different brand color — the form simultaneously reads as a # hash symbol (channels, tagging) and as a pinwheel of collaboration",
+      principle: "rotate or reorient a standard symbol (the hash/pound sign) by 45° to make it newly ownable; the rotation transforms a keyboard character into a distinctive mark while retaining the functional association",
+    },
+  ],
+  Everyman: [
+    {
+      mark: "Target bullseye",
+      structure: "two concentric red circles — one large outer ring, one filled central circle; total element count: two; works perfectly as a 5-pixel favicon and as a 10-meter building sign",
+      principle: "radical geometric reduction to two concentric circles achieves universal legibility at any scale; the mark works because there is nothing that can be removed; this is the Platonic form of a logo",
+    },
+    {
+      mark: "IKEA logotype",
+      structure: "bold geometric sans-serif wordmark in blue on a yellow oval — primary colors (blue+yellow), simple sans-serif, contained in an oval; every element signals accessibility and no-pretension",
+      principle: "deliberate use of primary colors signals democratic accessibility; complexity reads as exclusivity; the mark is honest about what it is, which is the brand's highest value",
+    },
+    {
+      mark: "Muji wordmark",
+      structure: "black Helvetica wordmark on white, no symbol, no color, no framing — absolute refusal of any visual decoration as a philosophical design position",
+      principle: "the absence of design IS the design; when a brand's position is 'no brand', the mark must embody emptiness as an aesthetic statement rather than a lack of ideas",
+    },
+    {
+      mark: "McDonald's Golden Arches (Stanley Meston / Jim Schindler)",
+      structure: "two parabolic golden arches that were the literal cross-section of the first McDonald's building roofline — the architecture became the logo; seen from the road, the two arches read as an M",
+      principle: "derive the mark directly from something intrinsic to the brand (its architecture, its product shape, its founding geography) rather than inventing a symbol; when the mark IS the brand's physical reality, it has an authenticity no invented symbol can achieve",
+    },
+  ],
+  Ruler: [
+    {
+      mark: "Mercedes-Benz tri-star",
+      structure: "a three-pointed star enclosed in a circle — triple symmetry (120° rotational) within a perfect circle; the three points originally encoded land/sea/air mastery",
+      principle: "classical three-fold symmetry creates a sense of completeness and dominion; the circle as container implies mastery of everything within it; encode the brand's territorial claim in the geometry",
+    },
+    {
+      mark: "Rolex crown",
+      structure: "a five-pointed heraldic crown simplified to clean vector geometry — each of the five points encodes a quality claim (quality, waterproofness, precision, self-winding, bracelet) from the brand's history",
+      principle: "classical heraldic forms inherit centuries of authority association; simplify an archetypal symbol of power until only its most geometrically pure version remains — never add, only refine",
+    },
+    {
+      mark: "Louis Vuitton LV monogram (Georges Vuitton)",
+      structure: "interlocking L and V letterforms with quatrefoil and diamond flower motifs — the monogram tiles infinitely, becoming both a logo and an infinitely repeatable surface texture",
+      principle: "when a monogram can tile and become a material culture object (a pattern on a bag), the logo transcends signage; the mark becomes a world the viewer can inhabit",
+    },
+    {
+      mark: "Bulgari BVLGARI roman column lettering",
+      structure: "the brand name spelled with V instead of U (Latin inscription convention), set in a custom serif that references Roman column engravings — the typography IS the claim of 2,000 years of classical authority",
+      principle: "typography that references a specific historical letterform system (Roman inscriptions, Spencerian script, Bauhaus sans) borrows the entire cultural authority of that system; the choice of typographic tradition IS a statement of where the brand places itself in history",
+    },
+  ],
+  Innocent: [
+    {
+      mark: "Glossier G mark",
+      structure: "a capital G in a perfect circle — one letter, one circle, sans-serif, centered with equal internal spacing; the G is custom-drawn so its curves match the circle's curvature exactly",
+      principle: "extreme reduction of a single letterform into a circle achieves timeless currency; when the letterform is drawn to mathematically relate to its container, the mark feels inevitable",
+    },
+    {
+      mark: "Apple (first era): simple form reading",
+      structure: "a bitten apple — the world's most universally recognized fruit, made singular through the strategic bite; the silhouette works at 1 pixel because it matches a shape everyone already has in memory",
+      principle: "leverage pre-existing cultural memory; when a form exists in every human's mental library, you need only make it distinctive enough to own — the bite is that single degree of distinction",
+    },
+    {
+      mark: "Airbnb bélo (structural reading)",
+      structure: "a single-stroke closed loop with internal circular counter-form — the mark has no clear start or end point, suggesting continuity and belonging",
+      principle: "a closed organic loop implies wholeness and belonging with no beginning and no end; the internal circle is a window, not a hole — the form shelters its interior",
+    },
+    {
+      mark: "Hello Kitty face (Yuko Shimizu)",
+      structure: "a cat face with eyes, ears, nose, whiskers — but deliberately NO mouth; the absence of the mouth makes the character infinitely expressive because the viewer projects their own emotion onto the blank face",
+      principle: "strategic omission of an expected feature can make a mark universally resonant; when the viewer must complete the mark emotionally, they become co-authors of its meaning; decide what single expected element to withhold",
+    },
+  ],
+};
+
+// ─── DIFFUSION-NATIVE LOGO PROMPT ENGINE ──────────────────────────────────────
+// Image models (Ideogram, Midjourney, Stable Diffusion) are bag-of-words pattern matchers.
+// They fail when given abstract instructions ("design the absence") or real brand names ("Nike").
+// This engine translates structural design intent into visual tokens the model understands.
+
+function getShapePsychology(archetype: string): string {
+  const t = archetype.toLowerCase();
+  if (/(caregiver|innocent|lover|everyman|jester)/.test(t)) {
+    return "circular and curved shapes (conveying humanity, warmth, protection, and community)";
+  }
+  if (/(ruler|sage|creator)/.test(t)) {
+    return "square and rectangular shapes (conveying stability, trust, order, and professionalism)";
+  }
+  return "triangular and dynamic shapes (conveying innovation, power, movement, and growth)";
+}
+
+function buildDiffusionLogoPrompt(
   ctx: ReturnType<typeof extractBrandContext>,
   data: BrandbookData,
+  provider: ImageProvider,
   variant: "light" | "dark"
 ): string {
-  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+  const isIdeogram = provider === "ideogram";
+  const archetype = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+  const coreValue = ctx.values.split(",")[0]?.trim() ?? ctx.personality.split(",")[0]?.trim();
+  
+  const symbolConcept = (data.logo.symbol && !data.logo.symbol.toLowerCase().startsWith("abstract symbol for"))
+    ? data.logo.symbol
+    : coreValue;
 
-  const archetypeMarkStyle: Record<string, string> = {
-    Hero: "bold, upward-thrusting geometry — strong diagonals, monumental proportions, decisive stroke weights",
-    Creator: "asymmetric balance, visible construction logic — the mark looks hand-crafted yet precise, process visible in geometry",
-    Sage: "grid-perfect alignment, mathematical proportions (golden ratio preferred), information-dense yet breathing negative space",
-    Explorer: "open forms with implied direction — the mark suggests movement and horizon-seeking through open counter-spaces",
-    Outlaw: "unexpected angles, deliberate rule-breaking in one element — tension between order and disruption within the mark",
-    Magician: "hidden geometry reveals itself on inspection — the mark has an inner secret, dual readings or emergent shapes",
-    Caregiver: "soft joins, enclosed forms, rounded terminals — the mark feels sheltering and protective without being childish",
-    Lover: "refined contrast in stroke weight, elegant proportions, intimate spacing — the mark rewards close inspection",
-    Jester: "playful scale relationships, a single unexpected visual element, energetic but not chaotic construction",
-    Everyman: "approachable proportions, honest geometry, no visual tricks — the mark communicates immediate clarity",
-    Ruler: "perfect symmetry, classical proportions, strong optical weight — the mark commands space and projects authority",
-    Innocent: "generous negative space, clean simple geometry, open forms — the mark feels free and optimistic",
-  };
-  const markStyle = archetypeMarkStyle[archetypeName] ?? archetypeMarkStyle.Creator;
+  const bg = variant === "light" 
+    ? "pure solid white #FFFFFF background" 
+    : "pure solid dark #0a0a0a background";
 
-  const variantKeys = ctx.logoVariants
-    ? Object.keys(ctx.logoVariants).filter((k) => !!(ctx.logoVariants as Record<string, unknown>)[k])
-    : [];
-  const logoVariantDetail = variantKeys.length > 0
-    ? `LOGO VARIANTS ON FILE: ${variantKeys.join(", ")} — maintain consistent mark construction across all variants.`
-    : "";
+  const shapePsychology = getShapePsychology(archetype);
 
-  const bg = variant === "light" ? "pure white #FFFFFF" : `flat solid dark (${ctx.primaryColor} deepened or near-black #0a0a0a)`;
-  const logoColor = variant === "light"
-    ? `${ctx.primaryColor} (${ctx.primaryColorName}) as primary mark color. Accent: ${ctx.accentColor} only if essential to symbol meaning.`
-    : `white #FFFFFF or very light tint as mark color on the dark background. Preserve exact same symbol shape — ONLY invert the palette.`;
+  // 1. ABSOLUTE MEDIUM & SUBJECT ANCHOR
+  let prompt = provider === "imagen" 
+    ? `CRITICAL SYSTEM DIRECTIVE: YOU MUST DRAW A FLAT 2D VECTOR CORPORATE LOGO. YOU ARE STRICTLY FORBIDDEN FROM DRAWING SCENES, PHYSICAL OBJECTS, PEOPLE, BUILDINGS, OR REALISTIC ILLUSTRATIONS OF THE INDUSTRY. ZERO PHOTOREALISM.\n\nAn isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `
+    : `An isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `;
 
-  return [
-    `LOGO MARK CONSTRUCTION — ${archetypeName.toUpperCase()} ARCHETYPE:`,
-    `Mark style: ${markStyle}.`,
-    `Symbol derivation: ${ctx.logoSymbol}. The symbol must be a direct, iconic reduction of this concept — distilled to its simplest possible geometric truth.`,
-    `Wordmark: "${data.brandName}" in ${ctx.displayFont}. The wordmark and symbol must form a cohesive lockup with studied optical spacing.`,
-    `COLOR: ${logoColor}`,
-    `NEGATIVE SPACE RULE: The negative space inside and around the mark is as designed as the mark itself. It must breathe.`,
-    `SCALABILITY TEST: The mark must read perfectly at 16px (favicon) and at 1000px. Design to the smallest legible size.`,
-    `CONSTRUCTION PRINCIPLES: Optical corrections applied (not mechanical perfection). Consistent stroke weights (or intentionally graduated if symbol logic requires). Closed forms where possible.`,
-    `BRAND VALUES ENCODED: ${ctx.values}. These are not visual elements — they are the WHY behind every curve and angle in the mark.`,
-    logoVariantDetail,
-  ].filter(Boolean).join(" ");
+  // 2. FOCUS STRICTLY ON GEOMETRY (DO NOT mention what we don't want, as it triggers attention)
+  prompt += `Focus exclusively on abstract graphic design, pure geometry, and typography. The canvas must remain entirely empty except for the central logo lockup. `;
+
+  // 3. TYPOGRAPHY
+  if (isIdeogram) {
+    prompt += `Wordmark: The logo must feature the exact text "${data.brandName}" rendered perfectly in ${ctx.displayFont} style typography with excellent optical kerning. `;
+  }
+
+  // 4. SHAPE & CONCEPT
+  prompt += `Symbol Concept: A highly abstracted, geometric mark representing "${symbolConcept}". Use predominantly ${shapePsychology}. Focus on clean, simple, unforced geometric shapes. `;
+  
+  // 5. COLORS & STYLE
+  prompt += `Colors: ${ctx.primaryColor} and ${ctx.accentColor}. `;
+  prompt += `Visual Style: Paul Rand inspired, timeless, 2D flat design, crisp edges, SVG style. Follow golden ratio proportions.`;
+
+  return prompt;
 }
 
 export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: ImageProvider): string {
@@ -814,43 +1096,19 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
   switch (key) {
 
     case "logo_primary": {
-      const ideogramWord = provider === "ideogram"
-        ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography.` : "";
-      const logoDir = logoConstructionDirective(ctx, data, "light");
+      const basePrompt = buildDiffusionLogoPrompt(ctx, data, provider, "light");
       return parts(
-        prefix,
-        `Professional brand identity mark (logomark + wordmark lockup) for ${B}, a ${data.industry} brand.`,
-        ideogramWord,
-        logoDir,
-        `LOGO CONCEPT: ${ctx.logoStyle}.`,
-        `PHILOSOPHICAL INTENT: The mark distills the brand's entire worldview into a single visual gesture. It should feel inevitable — as if no other symbol could represent this brand.`,
-        `PERSONALITY IN THE MARK (not in a scene): ${ctx.personality}. These traits must be readable in the geometry and spacing of the mark itself, not in a surrounding environment.`,
-        tree,
-        `TECHNICAL — OUTPUT SPEC: Isolated logomark + wordmark lockup only. Exported flat graphic file appearance.`,
-        `Background: FLAT solid #FFFFFF. Absolutely no noise, texture, vignette, scene, paper, wood, or any surface.`,
-        `2D flat vector mark. Consistent (or intentionally varied) stroke weights. Sharp anti-aliased edges. No gradients, no 3D, no perspective, no shadows, no glow, no bevel/emboss, no reflections.`,
-        `Centered in frame with generous and equal margin on all four sides.`,
-        sTags, q, neg(ctx, provider, "photography, photorealistic, scene, environment, background texture, table, wood, paper, fabric, bokeh, lighting, shadows, 3D rendering, perspective, gradient fill, bevel, emboss, glow, halo, watermark, multiple logo variations"),
+        basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
+        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, perspective distortion, background texture, table, wood, paper, drop shadow, glow, gradient, bevel, emboss, halo, outer glow, multiple logos, decorative frame, badge border, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns"),
       );
     }
 
     case "logo_dark_bg": {
-      const ideogramWord = provider === "ideogram"
-        ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography, white/light version.` : "";
-      const logoDir = logoConstructionDirective(ctx, data, "dark");
+      const basePrompt = buildDiffusionLogoPrompt(ctx, data, provider, "dark");
       return parts(
-        prefix,
-        `Brand identity mark — dark background (reversed/negative) version for ${B} (${data.industry}).`,
-        ideogramWord,
-        logoDir,
-        `CRITICAL: This is the SAME logomark as the primary light version — IDENTICAL symbol shape, IDENTICAL wordmark letterforms, IDENTICAL proportions and lockup layout.`,
-        `ONLY CHANGE: palette inversion for dark background. Do NOT redesign any part of the logo. Do NOT introduce new shapes, alternative symbols, or modified typography.`,
-        tree,
-        `USE CASES THIS MUST WORK FOR: dark websites, video intros, event backdrops, dark-mode UI, investor decks, nighttime OOH signage.`,
-        `TECHNICAL — OUTPUT SPEC: Isolated logo lockup only. Exported flat graphic file appearance.`,
-        `Background: FLAT solid dark (#0a0a0a or ${ctx.primaryColor} deeply darkened). No noise, texture, scene, environment, glow, halo, or any surface material.`,
-        `2D flat mark, sharp edges, no gradients, no 3D, no perspective, no shadows, no bevel/emboss. Centered with generous equal margin.`,
-        sTags, q, neg(ctx, provider, "photography, photorealistic, scene, environment, background texture, bokeh, lighting effects, shadows, 3D rendering, perspective, gradient fill, bevel, emboss, glow, halo, redesigned logo, different symbol, different proportions"),
+        basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
+        `CRITICAL: Exactly the same mark as primary, just reversed palette.`,
+        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, bokeh, gradient background, lighting effects, glow, 3D, perspective, bevel, emboss, halo, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns"),
       );
     }
 

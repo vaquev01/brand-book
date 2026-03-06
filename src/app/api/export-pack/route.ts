@@ -246,7 +246,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const out = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+    const outBuffer = await zip.generateAsync({ type: "arraybuffer", compression: "DEFLATE" });
+    const out = Buffer.from(outBuffer);
 
     const memAfter = captureMem();
     bbLog("info", "api.export-pack.ok", {
@@ -254,7 +255,7 @@ export async function POST(request: NextRequest) {
       status: 200,
       durationMs: Date.now() - startedAt,
       memDelta: diffMem(memBefore, memAfter),
-      zipSize: typeof (out as unknown as { size?: unknown }).size === "number" ? (out as unknown as { size: number }).size : undefined,
+      zipSize: out.byteLength,
       assetsCount: assets.length,
       uploadedAssetsCount: uploadedAssets.length,
       assetPackFilesCount: assetPackFiles.length,
@@ -263,7 +264,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(out, {
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename=\"${slug}-brandbook-pack.zip\"`,
+        "Content-Disposition": `attachment; filename="${slug}-brandbook-pack.zip"`,
         "x-request-id": requestId,
       },
     });
