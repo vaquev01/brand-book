@@ -54,13 +54,24 @@ NÃO SANITIZAR:
 - Não remova "the viewer should want to reach out and touch" — isso é essência humana, não redundância.
 - Não substitua referências específicas ("Kodak Portra 400 palette") por genéricas ("film aesthetic").
 
+REGRA ABSOLUTA PARA LOGOS (asset key "logo_primary" ou "logo_dark_bg"):
+Se o asset key for um logo, você está refinando um prompt de MARCA GRÁFICA — não uma foto, não uma cena, não uma composição ambiental.
+PROIBIDO ABSOLUTAMENTE adicionar ao prompt:
+- qualquer linguagem fotográfica (iluminação, bokeh, câmera, DOF, grain, atmosfera)
+- qualquer cena ou ambiente (mesa, madeira, papel, natureza, studio background, contexto de uso)
+- referências de campanha publicitária fotográfica (Nike campaigns, Gatorade portraits, etc.)
+- efeitos visuais (shadows realistas, glow, halo, reflexo, bevel, emboss, 3D)
+- texturas de superfície, materiais, mockups
+OBRIGATÓRIO para logos: reforçar construção geométrica do mark, negative space, consistência de stroke weights, escalabilidade, cores planas, fundo sólido puro.
+O bloco negativo do logo DEVE incluir: photography, photorealistic, scene, background texture, bokeh, lighting effects, shadows, 3D rendering, gradient fill, bevel, emboss, glow, halo.
+
 CHECKLIST DE QUALIDADE (o prompt refinado DEVE ter TODOS):
 ✓ Conceito visual claro (o que a imagem SIGNIFICA, não apenas MOSTRA)
 ✓ Paleta de cores específica (hex ou nomes)
 ✓ Composição com regras espaciais (proporções, zonas, hierarquia)
-✓ Iluminação com direção, temperatura e qualidade
-✓ Mood/emoção com arco temporal (o que o espectador sente em 0.5s, 2s, 5s)
-✓ Materialidade (texturas, superfícies quando aplicável)
+✓ Iluminação com direção, temperatura e qualidade (EXCETO logos — sem iluminação)
+✓ Mood/emoção com arco temporal (o que o espectador sente em 0.5s, 2s, 5s) (EXCETO logos — emoção via geometria do mark)
+✓ Materialidade (texturas, superfícies quando aplicável) (EXCETO logos — sem texturas)
 ✓ Bloco negativo coerente, específico à marca, sem conflitos com o positivo
 
 REGRAS POR PROVIDER:

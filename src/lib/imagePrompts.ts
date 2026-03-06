@@ -741,6 +741,55 @@ function structuredPatternDirective(ctx: ReturnType<typeof extractBrandContext>)
   return `STRUCTURED_PATTERNS: ${ctx.structuredPatternDetails}.`;
 }
 
+function logoConstructionDirective(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData,
+  variant: "light" | "dark"
+): string {
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+
+  const archetypeMarkStyle: Record<string, string> = {
+    Hero: "bold, upward-thrusting geometry — strong diagonals, monumental proportions, decisive stroke weights",
+    Creator: "asymmetric balance, visible construction logic — the mark looks hand-crafted yet precise, process visible in geometry",
+    Sage: "grid-perfect alignment, mathematical proportions (golden ratio preferred), information-dense yet breathing negative space",
+    Explorer: "open forms with implied direction — the mark suggests movement and horizon-seeking through open counter-spaces",
+    Outlaw: "unexpected angles, deliberate rule-breaking in one element — tension between order and disruption within the mark",
+    Magician: "hidden geometry reveals itself on inspection — the mark has an inner secret, dual readings or emergent shapes",
+    Caregiver: "soft joins, enclosed forms, rounded terminals — the mark feels sheltering and protective without being childish",
+    Lover: "refined contrast in stroke weight, elegant proportions, intimate spacing — the mark rewards close inspection",
+    Jester: "playful scale relationships, a single unexpected visual element, energetic but not chaotic construction",
+    Everyman: "approachable proportions, honest geometry, no visual tricks — the mark communicates immediate clarity",
+    Ruler: "perfect symmetry, classical proportions, strong optical weight — the mark commands space and projects authority",
+    Innocent: "generous negative space, clean simple geometry, open forms — the mark feels free and optimistic",
+  };
+  const markStyle = archetypeMarkStyle[archetypeName] ?? archetypeMarkStyle.Creator;
+
+  const variantKeys = ctx.logoVariants
+    ? Object.keys(ctx.logoVariants).filter((k) => !!(ctx.logoVariants as Record<string, unknown>)[k])
+    : [];
+  const logoVariantDetail = variantKeys.length > 0
+    ? `LOGO VARIANTS ON FILE: ${variantKeys.join(", ")} — maintain consistent mark construction across all variants.`
+    : "";
+
+  const bg = variant === "light" ? "pure white #FFFFFF" : `flat solid dark (${ctx.primaryColor} deepened or near-black #0a0a0a)`;
+  const logoColor = variant === "light"
+    ? `${ctx.primaryColor} (${ctx.primaryColorName}) as primary mark color. Accent: ${ctx.accentColor} only if essential to symbol meaning.`
+    : `white #FFFFFF or very light tint as mark color on the dark background. Preserve exact same symbol shape — ONLY invert the palette.`;
+
+  return [
+    `LOGO MARK CONSTRUCTION — ${archetypeName.toUpperCase()} ARCHETYPE:`,
+    `Mark style: ${markStyle}.`,
+    `Symbol derivation: ${ctx.logoSymbol}. The symbol must be a direct, iconic reduction of this concept — distilled to its simplest possible geometric truth.`,
+    `Wordmark: "${data.brandName}" in ${ctx.displayFont}. The wordmark and symbol must form a cohesive lockup with studied optical spacing.`,
+    `COLOR: ${logoColor}`,
+    `NEGATIVE SPACE RULE: The negative space inside and around the mark is as designed as the mark itself. It must breathe.`,
+    `SCALABILITY TEST: The mark must read perfectly at 16px (favicon) and at 1000px. Design to the smallest legible size.`,
+    `CONSTRUCTION PRINCIPLES: Optical corrections applied (not mechanical perfection). Consistent stroke weights (or intentionally graduated if symbol logic requires). Closed forms where possible.`,
+    `BRAND VALUES ENCODED: ${ctx.values}. These are not visual elements — they are the WHY behind every curve and angle in the mark.`,
+    logoVariantDetail,
+  ].filter(Boolean).join(" ");
+}
+
 export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: ImageProvider): string {
   const ctx = extractBrandContext(data);
   const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
@@ -767,48 +816,41 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
     case "logo_primary": {
       const ideogramWord = provider === "ideogram"
         ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography.` : "";
+      const logoDir = logoConstructionDirective(ctx, data, "light");
       return parts(
         prefix,
-        `Professional brand identity mark for ${B}, a ${data.industry} company.`,
+        `Professional brand identity mark (logomark + wordmark lockup) for ${B}, a ${data.industry} brand.`,
         ideogramWord,
-        soul,
-        `BRAND PURPOSE: ${ctx.purpose}.`,
-        tree,
-        `LOGO CONCEPT: ${ctx.logoStyle}. Symbol: ${ctx.logoSymbol} — this shape must embody ${ctx.moodWords} at a glance.`,
+        logoDir,
+        `LOGO CONCEPT: ${ctx.logoStyle}.`,
         `PHILOSOPHICAL INTENT: The mark distills the brand's entire worldview into a single visual gesture. It should feel inevitable — as if no other symbol could represent this brand.`,
-        `COLOR: ${ctx.primaryColor} (${ctx.primaryColorName}) on pure white (#FFFFFF). Accent: ${ctx.accentColor} (use sparingly or not at all).`,
-        `TYPOGRAPHY: ${ctx.displayFont} wordmark paired with the symbol. PERSONALITY: ${ctx.personality}. VALUES: ${ctx.values}.`,
-        `${ctx.competitiveAngle}`,
-        humanLayer,
-        `TECHNICAL: Output ONLY the isolated logomark + wordmark lockup (like an exported flat design file).`,
-        `Background: FLAT solid #FFFFFF. No noise, no texture, no vignette, no scene, no paper, no wood.`,
-        `Flat 2D mark, consistent line weights, sharp clean edges, scalable construction,`,
-        `no gradients, no 3D effects, no mockups, no perspective, no lighting, no reflections,`,
-        `no drop shadows, no bevel/emboss, centered composition with generous margin.`,
-        sTags, q, neg(ctx, provider, "photography, photorealistic, mockup, scene, table, bowls, plates, wood, paper texture, fabric, perspective, gradients, bevel, emboss, realistic lighting, shadows, 3D rendering"),
+        `PERSONALITY IN THE MARK (not in a scene): ${ctx.personality}. These traits must be readable in the geometry and spacing of the mark itself, not in a surrounding environment.`,
+        tree,
+        `TECHNICAL — OUTPUT SPEC: Isolated logomark + wordmark lockup only. Exported flat graphic file appearance.`,
+        `Background: FLAT solid #FFFFFF. Absolutely no noise, texture, vignette, scene, paper, wood, or any surface.`,
+        `2D flat vector mark. Consistent (or intentionally varied) stroke weights. Sharp anti-aliased edges. No gradients, no 3D, no perspective, no shadows, no glow, no bevel/emboss, no reflections.`,
+        `Centered in frame with generous and equal margin on all four sides.`,
+        sTags, q, neg(ctx, provider, "photography, photorealistic, scene, environment, background texture, table, wood, paper, fabric, bokeh, lighting, shadows, 3D rendering, perspective, gradient fill, bevel, emboss, glow, halo, watermark, multiple logo variations"),
       );
     }
 
     case "logo_dark_bg": {
       const ideogramWord = provider === "ideogram"
         ? `Wordmark text "${data.brandName}" precisely lettered in ${ctx.displayFont} typography, white/light version.` : "";
+      const logoDir = logoConstructionDirective(ctx, data, "dark");
       return parts(
         prefix,
-        `Brand identity mark — dark background version for ${B} (${data.industry}).`,
+        `Brand identity mark — dark background (reversed/negative) version for ${B} (${data.industry}).`,
         ideogramWord,
-        soul,
-        `BRAND PURPOSE: ${ctx.purpose}.`,
+        logoDir,
+        `CRITICAL: This is the SAME logomark as the primary light version — IDENTICAL symbol shape, IDENTICAL wordmark letterforms, IDENTICAL proportions and lockup layout.`,
+        `ONLY CHANGE: palette inversion for dark background. Do NOT redesign any part of the logo. Do NOT introduce new shapes, alternative symbols, or modified typography.`,
         tree,
-        `LOGO: EXACT SAME logo lockup as the primary version (same symbol + same wordmark + same proportions + same layout).`,
-        `Only change: invert/reverse colors for dark background. Do NOT redesign any part of the logo.`,
-        `COLOR: White or near-white (#FFFFFF) logo on FLAT solid deep dark background (${ctx.primaryColor} darkened or near-black #0a0a0a).`,
-        `PERSONALITY: ${ctx.personality}. Tone: ${ctx.toneOfVoice}.`,
-        `USE CASES: Dark websites, video intros, event backdrops, dark mode UI, investor decks, nighttime signage.`,
-        humanLayer,
-        `TECHNICAL: Output ONLY the isolated logo (export-like). Flat 2D mark, clean edges.`,
-        `Background: FLAT solid dark color. No noise, no texture, no scene, no materials, no glow, no halo.`,
-        `No gradients, no 3D, no mockups, centered with generous margin all around.`,
-        sTags, q, neg(ctx, provider, "photography, photorealistic, mockup, scene, table, paper texture, fabric, perspective, gradients, glow, bevel, emboss, realistic lighting, shadows"),
+        `USE CASES THIS MUST WORK FOR: dark websites, video intros, event backdrops, dark-mode UI, investor decks, nighttime OOH signage.`,
+        `TECHNICAL — OUTPUT SPEC: Isolated logo lockup only. Exported flat graphic file appearance.`,
+        `Background: FLAT solid dark (#0a0a0a or ${ctx.primaryColor} deeply darkened). No noise, texture, scene, environment, glow, halo, or any surface material.`,
+        `2D flat mark, sharp edges, no gradients, no 3D, no perspective, no shadows, no bevel/emboss. Centered with generous equal margin.`,
+        sTags, q, neg(ctx, provider, "photography, photorealistic, scene, environment, background texture, bokeh, lighting effects, shadows, 3D rendering, perspective, gradient fill, bevel, emboss, glow, halo, redesigned logo, different symbol, different proportions"),
       );
     }
 
