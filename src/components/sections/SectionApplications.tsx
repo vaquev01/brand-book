@@ -1,6 +1,7 @@
 "use client";
 import { BrandbookData, GeneratedAsset, Application } from "@/lib/types";
 import { ASSET_CATALOG, detectSizeVariants, type AssetKey } from "@/lib/imagePrompts";
+import { downloadImageUrl } from "@/lib/imageTransport";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Props {
@@ -58,37 +59,9 @@ function findImage(
 }
 
 function downloadImage(url: string, name: string) {
-  const fileName = `${name.replace(/\s+/g, "-").toLowerCase()}.png`;
-  if (url.startsWith("data:")) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } else {
-    fetch("/api/image-to-dataurl", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    })
-      .then((res) => res.json())
-      .then((json: { dataUrl?: string }) => {
-        if (json.dataUrl) {
-          const a = document.createElement("a");
-          a.href = json.dataUrl;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        } else {
-          window.open(url, "_blank");
-        }
-      })
-      .catch(() => {
-        window.open(url, "_blank");
-      });
-  }
+  downloadImageUrl(url, name).catch(() => {
+    window.open(url, "_blank");
+  });
 }
 
 function fileToDataUrl(file: File): Promise<string> {

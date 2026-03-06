@@ -1,4 +1,5 @@
 import type { BrandbookData } from "./types";
+import { fetchImageDataUrl } from "./imageTransport";
 
 function cssUrlToRawUrl(v: string): string | null {
   const s = (v ?? "").trim();
@@ -32,31 +33,8 @@ function replaceCssUrls(v: string, map: Map<string, string>): string {
   });
 }
 
-async function readJsonResponse<T>(res: Response): Promise<T> {
-  const raw = await res.text();
-  if (!raw) return {} as T;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    const trimmed = raw.trim().toLowerCase();
-    if (trimmed.startsWith("<") || trimmed.startsWith("<?xml")) {
-      throw new Error("/api/image-to-dataurl retornou XML/HTML em vez de JSON");
-    }
-    throw new Error("/api/image-to-dataurl retornou resposta inválida");
-  }
-}
-
 async function toDataUrlViaProxy(url: string): Promise<string> {
-  const res = await fetch("/api/image-to-dataurl", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
-  const json = await readJsonResponse<{ dataUrl?: string; error?: string }>(res);
-  if (!res.ok || !json.dataUrl) {
-    throw new Error(json.error ?? "Falha ao converter imagem para data URL");
-  }
-  return json.dataUrl;
+  return fetchImageDataUrl(url);
 }
 
 export async function exportBrandbookPDF(

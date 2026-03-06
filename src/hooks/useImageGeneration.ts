@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import {
   ASSET_CATALOG,
@@ -10,8 +11,9 @@ import {
   AssetKey,
   AspectRatioOption,
 } from "@/lib/imagePrompts";
-import { ApiKeys } from "@/components/ApiKeyConfig";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
+import { downloadImageUrl, fetchImageDataUrl } from "@/lib/imageTransport";
+import { readJsonResponse } from "@/lib/http";
 
 const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
   dalle3: "openai",
@@ -97,26 +99,6 @@ function defaultUploadedTypeFromAssetKey(
   if (assetKey === "brand_pattern" || assetKey === "presentation_bg")
     return "pattern";
   return "reference";
-}
-
-async function readJsonResponse<T>(
-  res: Response,
-  endpointLabel: string
-): Promise<T> {
-  const raw = await res.text();
-  if (!raw) return {} as T;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    const trimmed = raw.trim().toLowerCase();
-    const looksMarkup = trimmed.startsWith("<") || trimmed.startsWith("<?xml");
-    if (looksMarkup) {
-      throw new Error(
-        `${endpointLabel} retornou XML/HTML em vez de JSON. Verifique a chave da API e o provider selecionado.`
-      );
-    }
-    throw new Error(`${endpointLabel} retornou uma resposta inválida.`);
-  }
 }
 
 export interface UseImageGenerationProps {
@@ -527,18 +509,7 @@ export function useImageGeneration({
     try {
       let dataUrl = asset.url;
       if (!dataUrl.startsWith("data:")) {
-        const res = await fetch("/api/image-to-dataurl", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: asset.url }),
-        });
-        const json = await readJsonResponse<{
-          dataUrl?: string;
-          error?: string;
-        }>(res, "/api/image-to-dataurl");
-        if (!res.ok || !json.dataUrl)
-          throw new Error(json.error ?? "Erro ao baixar imagem");
-        dataUrl = json.dataUrl;
+        dataUrl = await fetchImageDataUrl(asset.url);
       }
       onSaveToAssets({
         id: `asset_${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -555,30 +526,8 @@ export function useImageGeneration({
   }
 
   async function downloadImage(url: string, name: string) {
-    const fileName = `${data.brandName.replace(/\s+/g, "-").toLowerCase()}-${name}.png`;
     try {
-      let blobUrl: string;
-      if (url.startsWith("data:")) {
-        blobUrl = url;
-      } else {
-        const res = await fetch("/api/image-to-dataurl", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
-        });
-        const json = await readJsonResponse<{ dataUrl?: string; error?: string }>(
-          res,
-          "/api/image-to-dataurl"
-        );
-        if (!res.ok || !json.dataUrl) throw new Error(json.error ?? "Erro ao baixar imagem");
-        blobUrl = json.dataUrl;
-      }
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadImageUrl(url, data.brandName, name);
     } catch {
       window.open(url, "_blank");
     }

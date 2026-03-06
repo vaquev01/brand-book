@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { BrandbookData, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { EditableField } from "@/components/EditableField";
+import { downloadImageUrl } from "@/lib/imageTransport";
 
 interface Props {
   data: BrandbookData;
@@ -31,12 +32,9 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 function downloadImageDirect(url: string, name: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${name.replace(/\s+/g, "-").toLowerCase()}.png`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  downloadImageUrl(url, name).catch(() => {
+    window.open(url, "_blank");
+  });
 }
 
 export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
@@ -150,13 +148,12 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
     try {
       const tasks: AssetKey[] = ["hero_visual", "hero_lifestyle"];
       for (const k of tasks) {
-        if (generatedAssets[k]) continue;
         await handleGenerateWithDirection(k);
       }
     } finally {
       setSectionGenerating(false);
     }
-  }, [onGenerate, sectionGenerating, generatedAssets, handleGenerateWithDirection]);
+  }, [onGenerate, sectionGenerating, handleGenerateWithDirection]);
 
   function renderBriefingPanel(assetKey: AssetKey, label: string) {
     if (!onGenerate) return null;
@@ -228,6 +225,8 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
     );
   }
 
+  const hasGeneratedSectionAssets = !!generatedAssets["hero_visual"] || !!generatedAssets["hero_lifestyle"];
+
   return (
     <section className="page-break mb-6">
       <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
@@ -242,21 +241,21 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
               disabled={loadingKey !== null || sectionGenerating}
               className="text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              {sectionGenerating ? "Gerando..." : "✦ Gerar seção"}
+              {sectionGenerating ? "Gerando..." : hasGeneratedSectionAssets ? "↻ Regenerar seção" : "✦ Gerar seção"}
             </button>
             <button
               onClick={() => handleGenerateWithDirection("hero_visual")}
               disabled={loadingKey !== null}
               className="text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              {loadingKey === "hero_visual" ? "Gerando..." : generatedAssets["hero_visual"] ? "\u21ba Hero" : "\u2726 Gerar Hero"}
+              {loadingKey === "hero_visual" ? "Gerando..." : generatedAssets["hero_visual"] ? "↻ Regenerar Hero" : "✦ Gerar Hero"}
             </button>
             <button
               onClick={() => handleGenerateWithDirection("hero_lifestyle")}
               disabled={loadingKey !== null}
               className="text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              {loadingKey === "hero_lifestyle" ? "Gerando..." : generatedAssets["hero_lifestyle"] ? "\u21ba Lifestyle" : "\u2726 Lifestyle"}
+              {loadingKey === "hero_lifestyle" ? "Gerando..." : generatedAssets["hero_lifestyle"] ? "↻ Regenerar Lifestyle" : "✦ Gerar Lifestyle"}
             </button>
           </div>
         )}

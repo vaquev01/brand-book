@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import { ASSET_CATALOG, buildImagePrompt, buildApplicationPrompt, detectSizeVariants, AssetKey, AspectRatioOption } from "@/lib/imagePrompts";
-import { ApiKeys } from "@/components/ApiKeyConfig";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
+import { downloadImageUrl, fetchImageDataUrl } from "@/lib/imageTransport";
+import { readJsonResponse } from "@/lib/http";
 
 interface Props {
   data: BrandbookData;
@@ -232,7 +234,10 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
               googleModel: apiKeys.googleTextModel || undefined,
             }),
           });
-          const refineJson = await refineRes.json() as { prompt?: string; error?: string };
+          const refineJson = await readJsonResponse<{ prompt?: string; error?: string }>(
+            refineRes,
+            "/api/refine-image-prompt"
+          );
           if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
         }
       }
@@ -257,7 +262,10 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           googleImageModel: apiKeys.googleImageModel || undefined,
         }),
       });
-      const result = await res.json() as { url?: string; error?: string };
+      const result = await readJsonResponse<{ url?: string; error?: string }>(
+        res,
+        "/api/generate-image"
+      );
       if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
       if (!result.url) throw new Error("API não retornou URL de imagem");
       setActiveAppVariant((prev) => ({ ...prev, [appIndex]: aspectRatio }));
@@ -307,7 +315,10 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
               googleModel: apiKeys.googleTextModel || undefined,
             }),
           });
-          const refineJson = await refineRes.json() as { prompt?: string; error?: string };
+          const refineJson = await readJsonResponse<{ prompt?: string; error?: string }>(
+            refineRes,
+            "/api/refine-image-prompt"
+          );
           if (refineRes.ok && refineJson.prompt) {
             prompt = refineJson.prompt;
           }
@@ -351,7 +362,10 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           googleImageModel: apiKeys.googleImageModel || undefined,
         }),
       });
-      const result = await res.json() as { url?: string; error?: string };
+      const result = await readJsonResponse<{ url?: string; error?: string }>(
+        res,
+        "/api/generate-image"
+      );
       if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
       if (!result.url) throw new Error("API não retornou URL de imagem");
       onAssetGenerated(assetKey, {
@@ -369,11 +383,9 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   }
 
   function downloadImage(url: string, name: string) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${data.brandName.replace(/\s+/g, "-").toLowerCase()}-${name}.png`;
-    a.target = "_blank";
-    a.click();
+    downloadImageUrl(url, data.brandName, name).catch(() => {
+      window.open(url, "_blank");
+    });
   }
 
   async function saveGeneratedToAssets(asset: GeneratedAsset, label: string, assetKey?: AssetKey) {
@@ -381,14 +393,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
     try {
       let dataUrl = asset.url;
       if (!dataUrl.startsWith("data:")) {
-        const res = await fetch("/api/image-to-dataurl", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: asset.url }),
-        });
-        const json = await res.json() as { dataUrl?: string; error?: string };
-        if (!res.ok || !json.dataUrl) throw new Error(json.error ?? "Erro ao baixar imagem");
-        dataUrl = json.dataUrl;
+        dataUrl = await fetchImageDataUrl(asset.url);
       }
       onSaveToAssets({
         id: `asset_${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -444,7 +449,10 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           googleModel: apiKeys.googleTextModel || undefined,
         }),
       });
-      const composeJson = await composeRes.json() as { prompt?: string; error?: string };
+      const composeJson = await readJsonResponse<{ prompt?: string; error?: string }>(
+        composeRes,
+        "/api/compose-image-prompt"
+      );
       if (!composeRes.ok || !composeJson.prompt) {
         throw new Error(composeJson.error ?? "Erro ao compor prompt");
       }
@@ -484,7 +492,10 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           googleImageModel: apiKeys.googleImageModel || undefined,
         }),
       });
-      const result = await res.json() as { url?: string; error?: string };
+      const result = await readJsonResponse<{ url?: string; error?: string }>(
+        res,
+        "/api/generate-image"
+      );
       if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
       if (!result.url) throw new Error("API não retornou URL de imagem");
 
@@ -764,13 +775,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                       <div className="flex gap-2 pt-2 border-t">
                         <button
                           type="button"
-                          onClick={() => {
-                            const a = document.createElement("a");
-                            a.href = activeGenerated.url;
-                            a.download = `${data.brandName.replace(/\s+/g, "-").toLowerCase()}-${app.type.replace(/\s+/g, "-").toLowerCase()}-${activeVariant}.png`;
-                            a.target = "_blank";
-                            a.click();
-                          }}
+                          onClick={() => downloadImage(activeGenerated.url, `${app.type}-${activeVariant}`)}
                           className="bg-gray-100 text-gray-700 text-xs py-1.5 px-3 rounded-lg font-medium hover:bg-gray-200 transition"
                         >
                           ↓ Download

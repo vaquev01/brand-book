@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { AssetPackFile, BrandbookData, UploadedAsset } from "@/lib/types";
+import { downloadTextFile } from "@/lib/browserDownload";
 
 interface Props {
   data: BrandbookData;
@@ -19,16 +20,6 @@ function mimeFromPath(path: string): string {
   if (p.endsWith(".json")) return "application/json";
   if (p.endsWith(".txt")) return "text/plain";
   return "application/octet-stream";
-}
-
-function downloadTextFile(filename: string, content: string, mime: string) {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 function sanitizeSvg(svg: string) {
@@ -244,7 +235,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
                   type="button"
                   className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold hover:bg-gray-700 transition"
                   onClick={() => {
-                    downloadTextFile(fileBasename(previewFile.path), previewFile.content, mimeFromPath(previewFile.path));
+                    downloadTextFile(previewFile.content, fileBasename(previewFile.path), mimeFromPath(previewFile.path));
                     setPreviewFile(null);
                   }}
                 >

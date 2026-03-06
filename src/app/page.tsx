@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
+import { ExampleCard } from "@/components/ExampleCard";
+import { JsonBySectionPanel } from "@/components/JsonBySectionPanel";
 import { useImageGeneration } from "@/hooks/useImageGeneration";
 import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookEditor } from "@/components/BrandbookEditor";
@@ -19,13 +21,21 @@ import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/
 import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { decompressBrandbook } from "@/lib/shareUtils";
 import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
+import { downloadBlob, downloadJsonFile } from "@/lib/browserDownload";
+import {
+  clearBrandbookGeneratedAssetSession,
+  loadBrandbookSessionAssets,
+  migrateLegacyLocalStorageToIndexedDB,
+  slugifyForStorage,
+} from "@/lib/brandbookLocalSession";
+import { readJsonResponse } from "@/lib/http";
+import { fetchImageDataUrl } from "@/lib/imageTransport";
 import {
   getActiveSlug, setActiveSlug,
   saveBrandbookData, loadBrandbookData,
-  saveGeneratedImage, loadGeneratedImages, clearGeneratedImages,
-  saveBrandAssets, loadBrandAssets,
-  isIndexedDBAvailable,
-  saveAssetPack, loadAssetPack,
+  saveGeneratedImage,
+  saveBrandAssets,
+  saveAssetPack,
 } from "@/lib/imageStorage";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
@@ -35,144 +45,6 @@ import {
 
 type Tab = "generate" | "examples" | "viewer";
 type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
-
-async function readJsonResponse<T>(res: Response): Promise<T> {
-  const raw = await res.text();
-  if (!raw) return {} as T;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    const trimmed = raw.trim().toLowerCase();
-    if (trimmed.startsWith("<") || trimmed.startsWith("<?xml")) {
-      throw new Error("A API retornou XML/HTML em vez de JSON.");
-    }
-    throw new Error("A API retornou JSON inválido.");
-  }
-}
-
-const GENERATED_ASSETS_LS_PREFIX = "bb_generated_assets::";
-const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
-const ASSET_PACK_LS_PREFIX = "bb_asset_pack::";
-
-function slugifyForStorage(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-");
-}
-
-function loadCachedGeneratedAssets(slug: string): Record<string, GeneratedAsset> {
-  if (typeof window === "undefined") return {};
-  if (!slug) return {};
-  try {
-    const raw = localStorage.getItem(GENERATED_ASSETS_LS_PREFIX + slug);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return {};
-    return parsed as Record<string, GeneratedAsset>;
-  } catch {
-    return {};
-  }
-}
-
-function clearCachedGeneratedAssets(slug: string) {
-  if (typeof window === "undefined") return;
-  if (!slug) return;
-  localStorage.removeItem(GENERATED_ASSETS_LS_PREFIX + slug);
-}
-
-function loadCachedBrandAssets(slug: string): UploadedAsset[] {
-  if (typeof window === "undefined") return [];
-  if (!slug) return [];
-  try {
-    const raw = localStorage.getItem(BRAND_ASSETS_LS_PREFIX + slug);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed as UploadedAsset[];
-  } catch {
-    return [];
-  }
-}
-
-function loadCachedAssetPack(slug: string): AssetPackFile[] {
-  if (typeof window === "undefined") return [];
-  if (!slug) return [];
-  try {
-    const raw = localStorage.getItem(ASSET_PACK_LS_PREFIX + slug);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed as AssetPackFile[];
-  } catch {
-    return [];
-  }
-}
-
-async function migrateLegacyLocalStorageToIndexedDB(): Promise<void> {
-  if (typeof window === "undefined") return;
-  const ok = await isIndexedDBAvailable();
-  if (!ok) return;
-
-  const slugs = new Set<string>();
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k) continue;
-      if (k.startsWith(GENERATED_ASSETS_LS_PREFIX)) slugs.add(k.slice(GENERATED_ASSETS_LS_PREFIX.length));
-      else if (k.startsWith(BRAND_ASSETS_LS_PREFIX)) slugs.add(k.slice(BRAND_ASSETS_LS_PREFIX.length));
-      else if (k.startsWith(ASSET_PACK_LS_PREFIX)) slugs.add(k.slice(ASSET_PACK_LS_PREFIX.length));
-    }
-  } catch {
-    return;
-  }
-
-  for (const slug of slugs) {
-    try {
-      const rawGen = localStorage.getItem(GENERATED_ASSETS_LS_PREFIX + slug);
-      if (rawGen) {
-        const parsed = JSON.parse(rawGen) as unknown;
-        if (parsed && typeof parsed === "object") {
-          const rec = parsed as Record<string, GeneratedAsset>;
-          for (const [key, asset] of Object.entries(rec)) {
-            await saveGeneratedImage(slug, key, asset);
-          }
-          localStorage.removeItem(GENERATED_ASSETS_LS_PREFIX + slug);
-        }
-      }
-    } catch {
-      // keep legacy cache if parsing fails
-    }
-
-    try {
-      const rawBrand = localStorage.getItem(BRAND_ASSETS_LS_PREFIX + slug);
-      if (rawBrand) {
-        const parsed = JSON.parse(rawBrand) as unknown;
-        if (Array.isArray(parsed)) {
-          await saveBrandAssets(slug, parsed as UploadedAsset[]);
-          localStorage.removeItem(BRAND_ASSETS_LS_PREFIX + slug);
-        }
-      }
-    } catch {
-      // keep legacy cache if parsing fails
-    }
-
-    try {
-      const rawPack = localStorage.getItem(ASSET_PACK_LS_PREFIX + slug);
-      if (rawPack) {
-        const parsed = JSON.parse(rawPack) as unknown;
-        if (Array.isArray(parsed)) {
-          await saveAssetPack(slug, parsed as AssetPackFile[]);
-          localStorage.removeItem(ASSET_PACK_LS_PREFIX + slug);
-        }
-      }
-    } catch {
-      // keep legacy cache if parsing fails
-    }
-  }
-}
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>("examples");
@@ -237,6 +109,22 @@ export default function Home() {
     });
   }
 
+  const restoreBrandbookSession = useCallback(async (
+    nextBrandbook: BrandbookData,
+    options: { nextTab?: Tab; nextViewerTab?: ViewerTab } = {}
+  ) => {
+    resetHistory();
+    setBrandbookData(nextBrandbook);
+    const slug = slugifyForStorage(nextBrandbook.brandName);
+    const session = await loadBrandbookSessionAssets(slug);
+    setGeneratedAssets(session.generatedAssets);
+    setUploadedBrandAssets(session.uploadedBrandAssets);
+    setAssetPackFiles(session.assetPackFiles);
+    if (options.nextViewerTab) setViewerTab(options.nextViewerTab);
+    if (options.nextTab) setTab(options.nextTab);
+    setError("");
+  }, []);
+
   async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, tp: "openai" | "gemini") {
     const providerKeyMap: Record<ImageProvider, keyof ApiKeys> = {
       dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google",
@@ -247,9 +135,16 @@ export default function Home() {
 
     const logoKeys: AssetKey[] = ["logo_primary", "logo_dark_bg"];
     const slug = slugifyForStorage(bbData.brandName);
-    const cached = await loadGeneratedImages(slug).catch(() => ({})) as Record<string, GeneratedAsset>;
-    const legacy = Object.keys(cached).length > 0 ? {} : loadCachedGeneratedAssets(slug);
-    const merged = { ...legacy, ...cached };
+    const session = await loadBrandbookSessionAssets(slug).catch((): {
+      assetPackFiles: AssetPackFile[];
+      generatedAssets: Record<string, GeneratedAsset>;
+      uploadedBrandAssets: UploadedAsset[];
+    } => ({
+      assetPackFiles: [],
+      generatedAssets: {},
+      uploadedBrandAssets: [],
+    }));
+    const merged = session.generatedAssets;
     const toGenerate = logoKeys.filter((k) => !merged[k]);
     if (toGenerate.length === 0) return;
 
@@ -283,7 +178,10 @@ export default function Home() {
                 googleModel: keys.googleTextModel || undefined,
               }),
             });
-            const refineJson = await refineRes.json() as { prompt?: string };
+            const refineJson = await readJsonResponse<{ prompt?: string }>(
+              refineRes,
+              "/api/refine-image-prompt"
+            );
             if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
           } catch { /* use base prompt */ }
         }
@@ -305,7 +203,10 @@ export default function Home() {
             googleImageModel: keys.googleImageModel || undefined,
           }),
         });
-        const result = await res.json() as { url?: string; error?: string };
+        const result = await readJsonResponse<{ url?: string; error?: string }>(
+          res,
+          "/api/generate-image"
+        );
         if (res.ok && result.url) {
           const asset: GeneratedAsset = {
             key: assetKey,
@@ -340,23 +241,15 @@ export default function Home() {
         setTab("viewer");
         setViewerTab("preview");
         decompressBrandbook(bbParam)
-          .then((raw) => {
+          .then(async (raw) => {
             if (!raw) throw new Error("Link inválido");
             const migrated = migrateBrandbook(raw);
             const validated = BrandbookSchemaLoose.safeParse(migrated);
             if (!validated.success) throw new Error("Link inválido");
-            resetHistory();
-            setBrandbookData(migrated as BrandbookData);
-            const slug = slugifyForStorage((migrated as BrandbookData).brandName);
-            loadGeneratedImages(slug)
-              .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
-              .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
-            loadBrandAssets(slug)
-              .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
-              .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-            loadAssetPack(slug)
-              .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
-              .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
+            await restoreBrandbookSession(migrated as BrandbookData, {
+              nextTab: "viewer",
+              nextViewerTab: "preview",
+            });
             window.history.replaceState({}, "", window.location.pathname);
           })
           .catch(() => {
@@ -376,25 +269,14 @@ export default function Home() {
         if (savedData) {
           try {
             const migrated = migrateBrandbook(savedData);
-            resetHistory();
-            setBrandbookData(migrated as BrandbookData);
-            setTab("viewer");
-            loadGeneratedImages(activeSlug)
-              .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(activeSlug)))
-              .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(activeSlug)));
-            loadBrandAssets(activeSlug)
-              .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(activeSlug)))
-              .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(activeSlug)));
-            loadAssetPack(activeSlug)
-              .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(activeSlug)))
-              .catch(() => setAssetPackFiles(loadCachedAssetPack(activeSlug)));
+            void restoreBrandbookSession(migrated as BrandbookData, { nextTab: "viewer" });
           } catch {
             // Corrupt saved data — ignore and show default screen
           }
         }
       }
     })();
-  }, []);
+  }, [restoreBrandbookSession]);
 
 
   async function handleGenerate(formData: GenerateBriefingData) {
@@ -462,19 +344,7 @@ export default function Home() {
               const migrated = migrateBrandbook(event.data);
               const strict = BrandbookSchemaV2.safeParse(migrated);
               const nextBrandbook = (strict.success ? strict.data : migrated) as unknown as BrandbookData;
-              const slug = slugifyForStorage(nextBrandbook.brandName);
-              resetHistory();
-              setBrandbookData(nextBrandbook);
-              loadGeneratedImages(slug)
-                .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
-                .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
-              loadBrandAssets(slug)
-                .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
-                .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-              loadAssetPack(slug)
-                .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
-                .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
-              setTab("viewer");
+              await restoreBrandbookSession(nextBrandbook, { nextTab: "viewer" });
 
               // Auto-generate logo images
               const currentKeys = loadApiKeys();
@@ -502,24 +372,14 @@ export default function Home() {
   function handleLoadExample(example: BrandbookData) {
     try {
       const migrated = migrateBrandbook(example);
-      resetHistory();
-      setBrandbookData(migrated);
-      const slug = slugifyForStorage(migrated.brandName);
-      loadGeneratedImages(slug)
-        .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
-        .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
-      loadBrandAssets(slug)
-        .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
-        .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-      loadAssetPack(slug)
-        .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
-        .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
+      void restoreBrandbookSession(migrated, {
+        nextTab: "viewer",
+        nextViewerTab: "preview",
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao carregar exemplo");
       return;
     }
-    setViewerTab("preview");
-    setTab("viewer");
   }
 
   async function handleExportPack() {
@@ -538,20 +398,12 @@ export default function Home() {
         }),
       });
       if (!res.ok) {
-        const j = await readJsonResponse<{ error?: string }>(res).catch(() => ({}));
+        const j = await readJsonResponse<{ error?: string }>(res, "/api/export-pack").catch(() => ({}));
         throw new Error((j as { error?: string }).error ?? "Erro ao exportar pack");
       }
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.rel = "noopener";
-      const slug = brandbookData.brandName.replace(/\s+/g, "-").toLowerCase();
-      a.download = `${slug}-brandbook-pack.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1200);
+      const slug = slugifyForStorage(brandbookData.brandName);
+      downloadBlob(blob, `${slug}-brandbook-pack.zip`, { rel: "noopener" });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao exportar pack");
     } finally {
@@ -559,33 +411,20 @@ export default function Home() {
     }
   }
 
-  function downloadJson(data: unknown, filename: string) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.rel = "noopener";
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1200);
-  }
-
   function handleExportBrandbook() {
     if (!brandbookData) return;
-    const slug = brandbookData.brandName.replace(/\s+/g, "-").toLowerCase();
-    downloadJson(brandbookData, `${slug}-brandbook.json`);
+    const slug = slugifyForStorage(brandbookData.brandName);
+    downloadJsonFile(brandbookData, `${slug}-brandbook.json`);
   }
 
   function handleExportProduction() {
     if (!brandbookData) return;
     const manifest = generateProductionManifest(brandbookData);
-    const slug = brandbookData.brandName.replace(/\s+/g, "-").toLowerCase();
-    downloadJson(manifest, `${slug}-production-manifest.json`);
+    const slug = slugifyForStorage(brandbookData.brandName);
+    downloadJsonFile(manifest, `${slug}-production-manifest.json`);
   }
 
-  function handleImportJson() {
+  async function handleImportJson() {
     try {
       const parsed = JSON.parse(jsonText);
       const migrated = migrateBrandbook(parsed);
@@ -594,20 +433,10 @@ export default function Home() {
         setError("JSON inválido:\n" + formatZodIssues(base.error.issues));
         return;
       }
-      resetHistory();
-      setBrandbookData(migrated);
-      const slug = slugifyForStorage(migrated.brandName);
-      loadGeneratedImages(slug)
-        .then((imgs) => setGeneratedAssets(Object.keys(imgs).length > 0 ? imgs : loadCachedGeneratedAssets(slug)))
-        .catch(() => setGeneratedAssets(loadCachedGeneratedAssets(slug)));
-      loadBrandAssets(slug)
-        .then((assets) => setUploadedBrandAssets(assets.length > 0 ? assets : loadCachedBrandAssets(slug)))
-        .catch(() => setUploadedBrandAssets(loadCachedBrandAssets(slug)));
-      loadAssetPack(slug)
-        .then((files) => setAssetPackFiles(files.length > 0 ? files : loadCachedAssetPack(slug)))
-        .catch(() => setAssetPackFiles(loadCachedAssetPack(slug)));
-      setTab("viewer");
-      setError("");
+      await restoreBrandbookSession(migrated, {
+        nextTab: "viewer",
+        nextViewerTab: "preview",
+      });
     } catch {
       setError("JSON inválido. Verifique a formatação.");
     }
@@ -637,7 +466,10 @@ export default function Home() {
           googleModel: apiKeys.googleTextModel || undefined,
         }),
       });
-      const j = await res.json().catch(() => ({})) as { files?: AssetPackFile[]; error?: string };
+      const j = await readJsonResponse<{ files?: AssetPackFile[]; error?: string }>(
+        res,
+        "/api/generate-asset-pack"
+      ).catch((): { files?: AssetPackFile[]; error?: string } => ({}));
       if (!res.ok) throw new Error(j.error ?? "Erro ao gerar Asset Pack");
       if (!j.files || !Array.isArray(j.files)) throw new Error("Resposta inválida ao gerar Asset Pack");
       setAssetPackFiles(j.files);
@@ -683,8 +515,7 @@ export default function Home() {
     const slug = slugifyForStorage(brandbookData.brandName);
     const ok = window.confirm("Remover imagens geradas salvas (cache) para este brandbook?");
     if (!ok) return;
-    clearCachedGeneratedAssets(slug);
-    clearGeneratedImages(slug).catch(() => {});
+    void clearBrandbookGeneratedAssetSession(slug);
     setGeneratedAssets({});
   }
 
@@ -695,15 +526,9 @@ export default function Home() {
     if (asset.url.startsWith("https://")) {
       storedAsset = { ...asset, originalUrl: asset.url };
       setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
-      fetch("/api/image-to-dataurl", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: asset.url }),
-      })
-        .then((r) => r.json())
-        .then((j: { dataUrl?: string }) => {
-          if (!j.dataUrl) return;
-          const permanent = { ...storedAsset, url: j.dataUrl };
+      fetchImageDataUrl(asset.url)
+        .then((dataUrl) => {
+          const permanent = { ...storedAsset, url: dataUrl };
           setGeneratedAssets((prev) => ({ ...prev, [key]: permanent }));
           const current = brandbookRef.current;
           if (current) {
@@ -1163,7 +988,7 @@ export default function Home() {
                 <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
                   <JsonBySectionPanel
                     data={brandbookData}
-                    onDownload={downloadJson}
+                    onDownload={downloadJsonFile}
                   />
                 </div>
               </div>
@@ -1171,284 +996,6 @@ export default function Home() {
           </div>
         )}
       </main>
-    </div>
-  );
-}
-
-function ExampleCard({
-  title,
-  subtitle,
-  description,
-  badge,
-  color,
-  onClick,
-}: {
-  title: string;
-  subtitle: string;
-  description: string;
-  badge?: string;
-  color: "blue" | "pink" | "red" | "amber";
-  onClick: () => void;
-}) {
-  const colorMap = {
-    blue: "from-blue-600 to-blue-900",
-    pink: "from-pink-500 to-purple-900",
-    red: "from-red-800 to-red-950",
-    amber: "from-amber-700 to-green-900",
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className="text-left bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group"
-    >
-      <div className={`h-32 bg-gradient-to-br ${colorMap[color]} flex items-center justify-center relative`}>
-        <span className="text-white text-3xl font-extrabold tracking-tight opacity-80 group-hover:opacity-100 transition-opacity">
-          {title}
-        </span>
-        {badge && (
-          <span className="absolute top-3 right-3 bg-white/20 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full backdrop-blur-sm">
-            {badge}
-          </span>
-        )}
-      </div>
-      <div className="p-5">
-        <h3 className="font-bold text-lg">{title}</h3>
-        <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">{subtitle}</p>
-        <p className="text-gray-600 text-sm">{description}</p>
-      </div>
-    </button>
-  );
-}
-
-function JsonBySectionPanel({
-  data,
-  onDownload,
-}: {
-  data: BrandbookData;
-  onDownload: (data: unknown, filename: string) => void;
-}) {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [copied, setCopied] = useState<Record<string, boolean>>({});
-
-  const slug = data.brandName.replace(/\s+/g, "-").toLowerCase();
-
-  const sections: { id: string; icon: string; title: string; description: string; data: unknown }[] = [
-    {
-      id: "identity",
-      icon: "🪪",
-      title: "Identidade (Base)",
-      description: "brandName, industry, brandConcept",
-      data: {
-        brandName: data.brandName,
-        industry: data.industry,
-        brandConcept: data.brandConcept,
-      },
-    },
-
-    ...(data.positioning ? [{
-      id: "positioning",
-      icon: "🧭",
-      title: "Posicionamento",
-      description: "positioning — categoria, statement, diferenciais, concorrentes, RTBs",
-      data: { positioning: data.positioning },
-    }] : []),
-
-    ...(data.audiencePersonas ? [{
-      id: "audience",
-      icon: "🧑‍💼",
-      title: "Público-alvo (Personas)",
-      description: "audiencePersonas — objetivos, dores, objeções, canais",
-      data: { audiencePersonas: data.audiencePersonas },
-    }] : []),
-
-    ...(data.verbalIdentity ? [{
-      id: "verbal",
-      icon: "🗣️",
-      title: "Identidade Verbal & Mensagens",
-      description: "verbalIdentity — tagline, pillars, do/don't, vocabulário, CTAs",
-      data: { verbalIdentity: data.verbalIdentity },
-    }] : []),
-    {
-      id: "logo",
-      icon: "🖼️",
-      title: "Logo & Identidade Visual",
-      description: "logo — primary, secondary, favicon, clearSpace, minSize, incorrectUsages",
-      data: { logo: data.logo },
-    },
-
-    ...(data.logoVariants ? [{
-      id: "logoVariants",
-      icon: "🧩",
-      title: "Variações de Logo",
-      description: "logoVariants — horizontal, stacked, mono, negative, mark/word",
-      data: { logoVariants: data.logoVariants },
-    }] : []),
-    {
-      id: "colors",
-      icon: "🎨",
-      title: "Sistema de Cores",
-      description: "colors — primary, secondary, semantic, dataViz",
-      data: { colors: data.colors },
-    },
-    {
-      id: "typography",
-      icon: "🔤",
-      title: "Tipografia",
-      description: "typography — marketing/primary, ui/secondary, monospace",
-      data: { typography: data.typography },
-    },
-
-    ...(data.typographyScale ? [{
-      id: "typographyScale",
-      icon: "📏",
-      title: "Escala Tipográfica",
-      description: "typographyScale — estilos H1/H2/body/caption etc",
-      data: { typographyScale: data.typographyScale },
-    }] : []),
-
-    ...(data.uiGuidelines ? [{
-      id: "uiGuidelines",
-      icon: "🧱",
-      title: "Guidelines de UI",
-      description: "uiGuidelines — grid, densidade, componentes, estados, a11y",
-      data: { uiGuidelines: data.uiGuidelines },
-    }] : []),
-    {
-      id: "keyvisual",
-      icon: "🔮",
-      title: "Key Visual & Linguagem Gráfica",
-      description: "keyVisual — elements, photographyStyle, iconography, illustrations, marketingArchitecture",
-      data: { keyVisual: data.keyVisual },
-    },
-    ...(data.designTokens || data.accessibility ? [{
-      id: "tokens",
-      icon: "📐",
-      title: "Design Tokens & Acessibilidade",
-      description: "designTokens, accessibility — spacing, radii, shadows, WCAG rules",
-      data: {
-        ...(data.designTokens && { designTokens: data.designTokens }),
-        ...(data.accessibility && { accessibility: data.accessibility }),
-      },
-    }] : []),
-    ...(data.uxPatterns || data.microcopy || data.motion ? [{
-      id: "ux",
-      icon: "💬",
-      title: "UX Patterns, Microcopy & Motion",
-      description: "uxPatterns, microcopy, motion — onboarding, empty states, transitions",
-      data: {
-        ...(data.uxPatterns && { uxPatterns: data.uxPatterns }),
-        ...(data.microcopy && { microcopy: data.microcopy }),
-        ...(data.motion && { motion: data.motion }),
-      },
-    }] : []),
-    {
-      id: "applications",
-      icon: "🖨️",
-      title: "Aplicações de Marca",
-      description: "applications — type, description, imagePlaceholder para cada peça",
-      data: { applications: data.applications },
-    },
-
-    ...(data.productionGuidelines ? [{
-      id: "production",
-      icon: "📦",
-      title: "Produção & Handoff",
-      description: "productionGuidelines — specs de impressão/digital, checklist, entregáveis",
-      data: { productionGuidelines: data.productionGuidelines },
-    }] : []),
-    ...(data.imageGenerationBriefing ? [{
-      id: "imagegen",
-      icon: "🤖",
-      title: "Briefing de Geração de Imagens",
-      description: "imageGenerationBriefing — prompts para DALL-E 3, Stability AI, Ideogram",
-      data: { imageGenerationBriefing: data.imageGenerationBriefing },
-    }] : []),
-  ];
-
-  function toggleExpand(id: string) {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-  }
-
-  async function copySection(id: string, sectionData: unknown) {
-    await navigator.clipboard.writeText(JSON.stringify(sectionData, null, 2));
-    setCopied((prev) => ({ ...prev, [id]: true }));
-    setTimeout(() => setCopied((prev) => ({ ...prev, [id]: false })), 2000);
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="bg-gray-50 border rounded-xl px-5 py-4 flex items-start justify-between gap-4">
-        <div>
-          <h3 className="font-bold text-gray-900 mb-1">JSON por Seção</h3>
-          <p className="text-sm text-gray-500">
-            Exporte ou copie cada bloco do brandbook individualmente — identidade, cores, tipografia, tokens, UX e aplicações.
-          </p>
-        </div>
-        <button
-          onClick={() => onDownload(data, `${slug}-brandbook-completo.json`)}
-          className="shrink-0 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800 transition"
-        >
-          ↓ Tudo em JSON
-        </button>
-      </div>
-
-      {sections.map((section) => {
-        const isOpen = expanded[section.id];
-        const isCopied = copied[section.id];
-        const jsonStr = JSON.stringify(section.data, null, 2);
-
-        return (
-          <div key={section.id} className="bg-white border rounded-xl overflow-hidden">
-            <button
-              onClick={() => toggleExpand(section.id)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition text-left"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl leading-none">{section.icon}</span>
-                <div>
-                  <div className="font-semibold text-sm text-gray-900">{section.title}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{section.description}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 ml-4">
-                <span
-                  onClick={(e) => { e.stopPropagation(); copySection(section.id, section.data); }}
-                  className="cursor-pointer text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg font-medium transition"
-                >
-                  {isCopied ? "✓ Copiado" : "Copiar"}
-                </span>
-                <span
-                  onClick={(e) => { e.stopPropagation(); onDownload(section.data, `${slug}-${section.id}.json`); }}
-                  className="cursor-pointer text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 rounded-lg font-medium transition"
-                >
-                  ↓ JSON
-                </span>
-                <span className={`text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>▼</span>
-              </div>
-            </button>
-
-            {isOpen && (
-              <div className="border-t">
-                <div className="bg-gray-900 p-4 overflow-auto max-h-96">
-                  <pre className="text-xs text-gray-200 leading-relaxed whitespace-pre-wrap">{jsonStr}</pre>
-                </div>
-                <div className="px-5 py-3 bg-gray-50 flex items-center justify-between border-t">
-                  <span className="text-xs text-gray-400">
-                    {jsonStr.split("\n").length} linhas · {Math.round(jsonStr.length / 1024 * 10) / 10} KB
-                  </span>
-                  <button
-                    onClick={() => copySection(section.id, section.data)}
-                    className="text-xs bg-gray-900 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-gray-700 transition"
-                  >
-                    {isCopied ? "✓ Copiado!" : "Copiar JSON"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }

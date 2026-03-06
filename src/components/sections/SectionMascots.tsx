@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset, Mascot, BrandPattern } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
+import { downloadImageUrl } from "@/lib/imageTransport";
 
 interface Props {
   data: BrandbookData;
@@ -31,12 +32,9 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 function downloadImageDirect(url: string, name: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${name.replace(/\s+/g, "-").toLowerCase()}.png`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  downloadImageUrl(url, name).catch(() => {
+    window.open(url, "_blank");
+  });
 }
 
 export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
@@ -147,7 +145,6 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
 
       for (let i = 0; i < mascots.length; i++) {
         const storageKey = `mascot_${i}`;
-        if (generatedAssets[storageKey]) continue;
         if (uploadedMascots[i]) continue;
         const mascot = mascots[i];
         const mascotContext = `Generate mascot "${mascot.name}". Visual description: ${mascot.description}. Personality: ${mascot.personality}. Usage: ${mascot.usageGuidelines.join("; ")}`;
@@ -156,7 +153,6 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
 
       for (let i = 0; i < symbols.length; i++) {
         const symKey = `symbol_${i}`;
-        if (generatedAssets[symKey]) continue;
         const sym = symbols[i];
         const symContext = `Generate a visual symbol/icon for: "${sym}". This is a brand identity symbol — render as a standalone graphic element.`;
         tasks.push(() => handleGenerateWithDirection("brand_pattern", symKey, symContext));
@@ -165,7 +161,6 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
       const patternsToUse = structuredPatterns && structuredPatterns.length > 0 ? structuredPatterns : patterns;
       for (let i = 0; i < patternsToUse.length; i++) {
         const patKey = `pattern_${i}`;
-        if (generatedAssets[patKey]) continue;
 
         const pat = patternsToUse[i] as (typeof structuredPatterns)[number] | (typeof patterns)[number];
         const patContext = typeof pat === "string"
@@ -181,12 +176,11 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
     } finally {
       setSectionGenerating(false);
     }
-  }, [onGenerate, sectionGenerating, mascots, symbols, patterns, structuredPatterns, generatedAssets, uploadedMascots, handleGenerateWithDirection]);
+  }, [onGenerate, sectionGenerating, mascots, symbols, patterns, structuredPatterns, uploadedMascots, handleGenerateWithDirection]);
 
-  // --- Mascot CRUD ---
   const startEditingMascot = useCallback((i: number) => {
     setEditingMascot(i);
-    setMascotDraft({ ...mascots[i] });
+    setMascotDraft(mascots[i]);
   }, [mascots]);
 
   const saveMascot = useCallback(() => {
@@ -219,6 +213,15 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
     }));
     setTimeout(() => { setEditingMascot(mascots.length); setMascotDraft(newMascot); }, 50);
   }, [onUpdateData, mascots.length]);
+
+  const hasGeneratedSectionAssets = Object.keys(generatedAssets).some(
+    (key) =>
+      key === "brand_mascot" ||
+      key === "brand_pattern" ||
+      key.startsWith("mascot_") ||
+      key.startsWith("symbol_") ||
+      key.startsWith("pattern_")
+  );
 
   // --- Symbol CRUD ---
   const startEditingSymbol = useCallback((i: number) => {
@@ -409,9 +412,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
             {sectionGenerating ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <span>✦</span>
+              <span>{hasGeneratedSectionAssets ? "↻" : "✦"}</span>
             )}
-            Gerar seção
+            {hasGeneratedSectionAssets ? "Regenerar seção" : "Gerar seção"}
           </button>
         )}
       </div>

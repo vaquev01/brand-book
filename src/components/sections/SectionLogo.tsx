@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { EditableField } from "@/components/EditableField";
+import { downloadImageUrl } from "@/lib/imageTransport";
 
 interface Props {
   data: BrandbookData;
@@ -163,13 +164,9 @@ function textOrNull(s: string | undefined): string | null {
 }
 
 function downloadImageDirect(url: string, name: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${name.replace(/\s+/g, "-").toLowerCase()}.png`;
-  a.target = "_blank";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  downloadImageUrl(url, name).catch(() => {
+    window.open(url, "_blank");
+  });
 }
 
 export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, loadingKey, onDownload, onSaveToAssets, generatedAssets = {}, onUpdateData }: Props) {
@@ -250,20 +247,21 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
       const hasUploadedPrimary = !!uploadedLogos[0];
       const hasUploadedDark = !!uploadedLogos[1];
 
-      if (!hasUploadedPrimary && !generatedAssets["logo_primary"]) {
+      if (!hasUploadedPrimary) {
         await handleGenerateWithDirection("logo_primary");
       }
 
-      if (!hasUploadedDark && !generatedAssets["logo_dark_bg"]) {
+      if (!hasUploadedDark) {
         await handleGenerateWithDirection("logo_dark_bg");
       }
     } finally {
       setSectionGenerating(false);
     }
-  }, [onGenerate, sectionGenerating, uploadedLogos, generatedAssets, handleGenerateWithDirection]);
+  }, [onGenerate, sectionGenerating, uploadedLogos, handleGenerateWithDirection]);
 
   const logoPrimary = generatedImages["logo_primary"] || uploadedLogos[0]?.dataUrl || null;
   const logoDarkBg = generatedImages["logo_dark_bg"] || uploadedLogos[1]?.dataUrl || null;
+  const hasGeneratedLogoAssets = !!generatedAssets["logo_primary"] || !!generatedAssets["logo_dark_bg"];
 
   const secondaryText = textOrNull(data.logo.secondary);
   const symbolText = textOrNull(data.logo.symbol);
@@ -406,9 +404,9 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
             {sectionGenerating ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <span>✦</span>
+              <span>{hasGeneratedLogoAssets ? "↻" : "✦"}</span>
             )}
-            Gerar seção
+            {hasGeneratedLogoAssets ? "Regenerar seção" : "Gerar seção"}
           </button>
         )}
       </div>

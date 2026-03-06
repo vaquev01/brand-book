@@ -1,4 +1,5 @@
 import type { BrandbookData } from "./types";
+import { downloadTextFile as downloadTextFileShared } from "./browserDownload";
 
 export function exportCSSTokens(data: BrandbookData): string {
   const slug = data.brandName.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
@@ -219,14 +220,5 @@ export function exportTailwindConfig(data: BrandbookData): string {
 }
 
 export function downloadTextFile(content: string, filename: string, mimeType = "text/plain") {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.rel = "noopener";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1200);
+  downloadTextFileShared(content, filename, mimeType);
 }
