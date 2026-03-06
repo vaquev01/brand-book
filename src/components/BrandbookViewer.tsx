@@ -15,6 +15,14 @@ import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
 import { EMPTY_KEYS } from "@/components/ApiKeyConfig";
 import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
 import type { ApiKeys } from "@/components/ApiKeyConfig";
+import {
+  buildAvailableAssets,
+  chunkAvailableAssets,
+  createAssetLookup,
+  pickMappedAssetUrl,
+  pickSectionHeroUrl,
+  resolveImmersiveAssets,
+} from "./brandbookViewerAssetSelectors";
 import { buildSectionDefs, CATEGORIES } from "./brandbookViewerSections";
 
 const SECTION_HERO_ASSETS: Record<string, string[]> = {
@@ -144,98 +152,49 @@ export function BrandbookViewer({
 
   const theme = useMemo(() => getImmersiveTheme(data), [data]);
 
-  const getAssetUrl = useMemo(() => {
-    return (key: string): string | null =>
-      generatedAssets?.[key]?.url ?? generatedImages?.[key] ?? null;
-  }, [generatedAssets, generatedImages]);
+  const getAssetUrl = useMemo(
+    () => createAssetLookup(generatedAssets, generatedImages),
+    [generatedAssets, generatedImages]
+  );
 
-  const immersiveAssets = useMemo(() => {
-    const genUrl = (k: string) => generatedAssets?.[k]?.url ?? null;
-    const legacyUrl = (k: string) => generatedImages?.[k] ?? null;
-    const firstUploaded = (types: UploadedAsset["type"][]) =>
-      uploadedAssets.find((a) => types.includes(a.type))?.dataUrl ?? null;
-
-    const patternUrl =
-      genUrl("brand_pattern") ??
-      legacyUrl("brand_pattern") ??
-      genUrl("pattern_0") ??
-      firstUploaded(["pattern"]);
-    const atmosphereUrl =
-      genUrl("presentation_bg") ??
-      legacyUrl("presentation_bg") ??
-      genUrl("hero_visual") ??
-      legacyUrl("hero_visual") ??
-      null;
-    const watermarkUrl =
-      genUrl("brand_mascot") ??
-      legacyUrl("brand_mascot") ??
-      genUrl("mascot_0") ??
-      firstUploaded(["mascot", "element"]);
-
-    return { patternUrl, atmosphereUrl, watermarkUrl };
-  }, [generatedAssets, generatedImages, uploadedAssets]);
+  const immersiveAssets = useMemo(
+    () =>
+      resolveImmersiveAssets({
+        generatedAssets,
+        generatedImages,
+        uploadedAssets,
+      }),
+    [generatedAssets, generatedImages, uploadedAssets]
+  );
 
   // Track used hero URLs to avoid showing the same image in consecutive sections
   const usedHeroUrlsRef = useRef(new Set<string>());
 
   const getSectionHeroUrl = (sectionId: string, dedup = true): string | null => {
-    const keys = SECTION_HERO_ASSETS[sectionId];
-    if (!keys) return null;
-    for (const k of keys) {
-      const url = getAssetUrl(k);
-      if (url) {
-        if (dedup && usedHeroUrlsRef.current.has(url)) continue;
-        usedHeroUrlsRef.current.add(url);
-        return url;
-      }
-    }
-    // Fallback: allow reuse if no unique found
-    for (const k of keys) {
-      const url = getAssetUrl(k);
-      if (url) return url;
-    }
-    return null;
+    return pickSectionHeroUrl(
+      sectionId,
+      SECTION_HERO_ASSETS,
+      getAssetUrl,
+      usedHeroUrlsRef.current,
+      dedup
+    );
   };
 
   const getSectionAccentUrl = (sectionId: string): string | null => {
-    const keys = SECTION_ACCENT_ASSETS[sectionId];
-    if (!keys) return null;
-    for (const k of keys) {
-      const url = getAssetUrl(k);
-      if (url) return url;
-    }
-    return null;
+    return pickMappedAssetUrl(sectionId, SECTION_ACCENT_ASSETS, getAssetUrl);
   };
 
   const getCategoryAtmoUrl = (cat: string): string | null => {
-    const keys = CATEGORY_ATMO_ASSETS[cat];
-    if (!keys) return null;
-    for (const k of keys) {
-      const url = getAssetUrl(k);
-      if (url) return url;
-    }
-    return immersiveAssets.atmosphereUrl;
+    return pickMappedAssetUrl(cat, CATEGORY_ATMO_ASSETS, getAssetUrl) ?? immersiveAssets.atmosphereUrl;
   };
 
   const getAvailableAssets = (): { url: string; label: string }[] => {
-    const result: { url: string; label: string }[] = [];
-    for (const asset of ASSET_CATALOG) {
-      const url = getAssetUrl(asset.key);
-      if (url) result.push({ url, label: asset.label });
-    }
-    return result;
+    return buildAvailableAssets(ASSET_CATALOG, getAssetUrl);
   };
 
   /** Split available assets into N roughly-equal chunks for distributed display */
   const getAssetChunks = (n: number): { url: string; label: string }[][] => {
-    const all = getAvailableAssets();
-    if (all.length < 2) return [];
-    const chunks: { url: string; label: string }[][] = [];
-    const size = Math.max(2, Math.ceil(all.length / n));
-    for (let i = 0; i < all.length; i += size) {
-      chunks.push(all.slice(i, i + size));
-    }
-    return chunks;
+    return chunkAvailableAssets(getAvailableAssets(), n);
   };
 
   const immersiveStyle: CSSProperties | undefined = immersive
