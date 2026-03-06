@@ -97,20 +97,20 @@ const CREATIVITY_OPTIONS: { value: CreativityLevel; icon: string; label: string;
 
 function composeBriefing(g: GuidedBriefing, rawBriefing: string): string {
   const parts: string[] = [];
-  if (g.whatItDoes) parts.push(`O que faz: ${g.whatItDoes}`);
-  if (g.targetAudience) parts.push(`Público-alvo: ${g.targetAudience}`);
-  if (g.positioning) parts.push(`Posicionamento desejado: ${g.positioning}`);
-  if (g.references) parts.push(`Referências de marcas admiradas: ${g.references}`);
-  if (g.instagramLinks) parts.push(`Instagram / links oficiais (para capturar essência): ${g.instagramLinks}`);
-  if (g.essenceReferences) parts.push(`Referências de essência (tom, cultura, estética, arquétipos): ${g.essenceReferences}`);
-  if (g.avoidances) parts.push(`O que evitar / não transmitir: ${g.avoidances}`);
-  if (g.colorPreferences) parts.push(`Preferências de cores: ${g.colorPreferences}`);
+  if (g.whatItDoes) parts.push(`══ O QUE A MARCA FAZ ══\n${g.whatItDoes}`);
+  if (g.targetAudience) parts.push(`══ PÚBLICO-ALVO ══\n${g.targetAudience}`);
+  if (g.positioning) parts.push(`══ POSICIONAMENTO DESEJADO ══\n${g.positioning}`);
+  if (g.references) parts.push(`══ REFERÊNCIAS DE MARCAS ══\n${g.references}`);
+  if (g.instagramLinks) parts.push(`══ INSTAGRAM / LINKS OFICIAIS ══\n${g.instagramLinks}`);
+  if (g.essenceReferences) parts.push(`══ ESSÊNCIA DA MARCA (CULTURA, ESTÉTICA, ARQUÉTIPOS) ══\n${g.essenceReferences}`);
+  if (g.avoidances) parts.push(`══ O QUE EVITAR / NÃO TRANSMITIR ══\n${g.avoidances}`);
+  if (g.colorPreferences) parts.push(`══ PREFERÊNCIAS DE CORES ══\n${g.colorPreferences}`);
   if (g.hasMascot) {
-    parts.push(`Mascote/personagem: ${g.mascotDescription || "Sim, criar um personagem único para a marca"}`);
+    parts.push(`══ MASCOTE / PERSONAGEM ══\n${g.mascotDescription || "Sim, criar um personagem único para a marca"}`);
   }
-  if (g.extraContext) parts.push(`Contexto adicional: ${g.extraContext}`);
-  if (rawBriefing.trim()) parts.push(`Briefing livre: ${rawBriefing.trim()}`);
-  return parts.join("\n");
+  if (g.extraContext) parts.push(`══ CONTEXTO ADICIONAL ══\n${g.extraContext}`);
+  if (rawBriefing.trim()) parts.push(`══ BRIEFING LIVRE ══\n${rawBriefing.trim()}`);
+  return parts.join("\n\n");
 }
 
 export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
@@ -183,6 +183,9 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   }
 
   const selectedCreativity = CREATIVITY_OPTIONS.find((o) => o.value === creativity)!;
+
+  const hasAnyBriefingContent = !!rawBriefing.trim() || filledGuidedCount > 0;
+  const isBriefingThin = !hasAnyBriefingContent && !logoImage;
 
   async function setLogoFromFile(file: File) {
     setLogoUploadError("");
@@ -617,6 +620,19 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
         </div>
         <BriefingImageUpload images={referenceImages} onChange={setReferenceImages} />
       </div>
+
+      {/* Thin briefing warning */}
+      {isBriefingThin && brandName && industry && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-4 flex gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lightbulb text-yellow-600 flex-shrink-0 mt-0.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+          <div>
+            <p className="text-sm text-yellow-900 font-bold">Dica: quanto mais contexto, melhor o resultado</p>
+            <p className="text-xs text-yellow-800/80 mt-1 leading-relaxed">
+              A IA pode gerar com apenas nome e indústria, mas o brandbook será genérico. Preencha o <strong>briefing guiado</strong>, envie um <strong>logo</strong> ou adicione <strong>imagens de referência</strong> para resultados profissionais.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (

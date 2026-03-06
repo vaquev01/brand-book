@@ -39,32 +39,49 @@ import type { AssetPackFile } from "@/lib/types";
 import type { ApiKeys } from "@/components/ApiKeyConfig";
 
 const SECTION_HERO_ASSETS: Record<string, string[]> = {
-  "dna": ["hero_visual", "presentation_bg"],
-  "brand-story": ["hero_lifestyle", "hero_visual"],
-  "positioning": ["presentation_bg", "hero_visual"],
-  "personas": ["hero_lifestyle"],
-  "verbal-identity": ["presentation_bg"],
+  "dna": ["hero_visual"],
+  "brand-story": ["hero_lifestyle"],
+  "positioning": ["presentation_bg"],
+  "personas": ["hero_lifestyle", "hero_visual"],
+  "verbal-identity": ["materials_board", "presentation_bg"],
   "logo": ["logo_primary", "brand_collateral"],
   "colors": ["materials_board", "brand_pattern"],
-  "typography": ["presentation_bg"],
+  "typography": ["presentation_bg", "hero_visual"],
   "key-visual": ["hero_visual", "hero_lifestyle"],
-  "mascots": ["brand_mascot", "brand_pattern"],
-  "applications": ["business_card", "brand_collateral"],
+  "mascots": ["brand_mascot"],
+  "applications": ["business_card", "brand_collateral", "delivery_packaging"],
   "social-media": ["social_post_square", "instagram_story", "social_cover"],
-  "governance": ["presentation_bg"],
+  "governance": ["presentation_bg", "brand_collateral"],
+};
+
+/** Assets used as small side/inline accent images per section */
+const SECTION_ACCENT_ASSETS: Record<string, string[]> = {
+  "dna": ["brand_pattern", "materials_board"],
+  "brand-story": ["brand_mascot", "hero_visual"],
+  "positioning": ["hero_lifestyle", "brand_mascot"],
+  "personas": ["brand_mascot"],
+  "verbal-identity": ["brand_pattern"],
+  "logo": ["brand_pattern"],
+  "colors": ["hero_visual"],
+  "typography": ["brand_pattern", "materials_board"],
+  "key-visual": ["brand_pattern", "brand_mascot"],
+  "mascots": ["brand_pattern"],
+  "applications": ["brand_pattern", "hero_visual"],
+  "social-media": ["brand_pattern"],
+  "governance": ["brand_mascot", "brand_pattern"],
 };
 
 const CATEGORY_ATMO_ASSETS: Record<string, string[]> = {
-  "Essência da Marca": ["hero_visual", "presentation_bg"],
-  "Público-Alvo": ["hero_lifestyle"],
-  "Identidade Verbal": ["presentation_bg", "hero_visual"],
-  "Identidade Visual": ["logo_primary", "brand_collateral"],
+  "Essência da Marca": ["hero_visual"],
+  "Público-Alvo": ["hero_lifestyle", "hero_visual"],
+  "Identidade Verbal": ["presentation_bg"],
+  "Identidade Visual": ["brand_collateral", "logo_primary"],
   "Paleta de Cores": ["materials_board", "brand_pattern"],
-  "Tipografia": ["presentation_bg"],
+  "Tipografia": ["presentation_bg", "materials_board"],
   "Sistema Visual": ["hero_visual", "hero_lifestyle"],
   "Padrões Gráficos": ["brand_pattern", "brand_mascot"],
   "Design System": ["app_mockup", "presentation_bg"],
-  "Aplicações da Marca": ["business_card", "brand_collateral", "delivery_packaging"],
+  "Aplicações da Marca": ["delivery_packaging", "business_card", "brand_collateral"],
   "Diretrizes de Uso": ["outdoor_billboard", "presentation_bg"],
 };
 
@@ -416,8 +433,30 @@ export function BrandbookViewer({
     return { patternUrl, atmosphereUrl, watermarkUrl };
   }, [generatedAssets, generatedImages, uploadedAssets]);
 
-  const getSectionHeroUrl = (sectionId: string): string | null => {
+  // Track used hero URLs to avoid showing the same image in consecutive sections
+  const usedHeroUrlsRef = useRef(new Set<string>());
+
+  const getSectionHeroUrl = (sectionId: string, dedup = true): string | null => {
     const keys = SECTION_HERO_ASSETS[sectionId];
+    if (!keys) return null;
+    for (const k of keys) {
+      const url = getAssetUrl(k);
+      if (url) {
+        if (dedup && usedHeroUrlsRef.current.has(url)) continue;
+        usedHeroUrlsRef.current.add(url);
+        return url;
+      }
+    }
+    // Fallback: allow reuse if no unique found
+    for (const k of keys) {
+      const url = getAssetUrl(k);
+      if (url) return url;
+    }
+    return null;
+  };
+
+  const getSectionAccentUrl = (sectionId: string): string | null => {
+    const keys = SECTION_ACCENT_ASSETS[sectionId];
     if (!keys) return null;
     for (const k of keys) {
       const url = getAssetUrl(k);
@@ -443,6 +482,18 @@ export function BrandbookViewer({
       if (url) result.push({ url, label: asset.label });
     }
     return result;
+  };
+
+  /** Split available assets into N roughly-equal chunks for distributed display */
+  const getAssetChunks = (n: number): { url: string; label: string }[][] => {
+    const all = getAvailableAssets();
+    if (all.length < 2) return [];
+    const chunks: { url: string; label: string }[][] = [];
+    const size = Math.max(2, Math.ceil(all.length / n));
+    for (let i = 0; i < all.length; i += size) {
+      chunks.push(all.slice(i, i + size));
+    }
+    return chunks;
   };
 
   const immersiveStyle: CSSProperties | undefined = immersive
@@ -478,6 +529,7 @@ export function BrandbookViewer({
       <BrandImmersiveTheme
         immersive={immersive}
         theme={theme}
+        brandName={data.brandName}
         patternUrl={immersiveAssets.patternUrl}
         atmosphereUrl={immersiveAssets.atmosphereUrl}
         watermarkUrl={immersiveAssets.watermarkUrl}
@@ -724,11 +776,33 @@ export function BrandbookViewer({
         </div>
       </section>
 
-      {byCategory.map((g, catIdx) => (
+      {/* Reset hero dedup tracker on each render */}
+      {(() => { usedHeroUrlsRef.current = new Set<string>(); return null; })()}
+
+      {byCategory.map((g, catIdx) => {
+        const assetChunks = immersive ? getAssetChunks(Math.max(3, byCategory.length)) : [];
+        return (
         <div key={g.cat}>
           {/* Category divider */}
           {immersive ? (
             <>
+              {/* Mini asset strip between categories — distributed chunks */}
+              {catIdx > 0 && catIdx % 2 === 0 && (() => {
+                const chunkIdx = Math.floor(catIdx / 2) - 1;
+                const chunk = assetChunks[chunkIdx % assetChunks.length];
+                if (!chunk || chunk.length < 2) return null;
+                return (
+                  <div className="bb-asset-strip bb-mini-strip">
+                    {chunk.map((a, i) => (
+                      <div key={i} className="bb-strip-item">
+                        <img src={a.url} alt={a.label} />
+                        <div className="bb-strip-label">{a.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {/* Atmosphere divider between categories — uses category-specific or fallback image */}
               {catIdx > 0 && (() => {
                 const dividerUrl = getCategoryAtmoUrl(g.cat);
@@ -774,13 +848,27 @@ export function BrandbookViewer({
           )}
           {g.items.map((s, sIdx) => {
             const quote = immersive ? brandVoiceQuote(s.id, data) : null;
+            const showPatternBand = immersive && sIdx > 0 && sIdx % 2 === 0;
+            const accentUrl = immersive ? getSectionAccentUrl(s.id) : null;
+            const showAccent = immersive && !showPatternBand && sIdx > 0 && accentUrl;
             return (
               <div key={s.id} id={s.id} className="scroll-mt-24">
                 {/* Color strip between sections */}
-                {immersive && sIdx > 0 && <ColorStrip />}
+                {immersive && sIdx > 0 && !showPatternBand && <ColorStrip />}
+
+                {/* Pattern band between every 2nd section within category */}
+                {showPatternBand && (
+                  <div className="bb-pattern-band" aria-hidden="true">
+                    <div className="bb-band-pattern" />
+                    <div className="bb-band-mascot" />
+                    <div className="bb-band-name">{data.brandName}</div>
+                  </div>
+                )}
+
                 <div className={immersive ? "bb-section-shell" : ""}>
                   {immersive && <div className="bb-section-mascot" aria-hidden="true" />}
-                  {/* Section hero image — shows relevant generated asset */}
+
+                  {/* Section hero image — shows relevant generated asset (deduped) */}
                   {immersive && (() => {
                     const heroUrl = getSectionHeroUrl(s.id);
                     if (!heroUrl) return null;
@@ -792,6 +880,14 @@ export function BrandbookViewer({
                       </div>
                     );
                   })()}
+
+                  {/* Side accent image — small floating decoration for sections without hero repetition */}
+                  {showAccent && (
+                    <div className={`bb-side-accent ${sIdx % 2 === 1 ? "bb-accent-left" : "bb-accent-right"}`} aria-hidden="true">
+                      <img src={accentUrl} alt="" />
+                    </div>
+                  )}
+
                   {quote && (
                     <div className="bb-voice mb-5 px-5 py-4 rounded-xl border">
                       <div className="flex items-center gap-2 mb-2">
@@ -823,8 +919,26 @@ export function BrandbookViewer({
               </div>
             );
           })}
+
+          {/* Odd categories: mini asset strip after last section */}
+          {immersive && catIdx % 2 === 1 && (() => {
+            const chunkIdx = Math.floor(catIdx / 2);
+            const chunk = assetChunks[chunkIdx % assetChunks.length];
+            if (!chunk || chunk.length < 2) return null;
+            return (
+              <div className="bb-asset-strip bb-mini-strip">
+                {chunk.map((a, i) => (
+                  <div key={i} className="bb-strip-item">
+                    <img src={a.url} alt={a.label} />
+                    <div className="bb-strip-label">{a.label}</div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
-      ))}
+        );
+      })}
 
       {/* Pattern band before footer */}
       {immersive && immersiveAssets.patternUrl && (
@@ -835,7 +949,7 @@ export function BrandbookViewer({
         </div>
       )}
 
-      {/* Asset gallery strip — shows all generated brand assets */}
+      {/* Final asset gallery strip — all generated brand assets */}
       {immersive && (() => {
         const assets = getAvailableAssets();
         if (assets.length < 3) return null;

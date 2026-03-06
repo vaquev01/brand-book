@@ -15,7 +15,7 @@ const CREATIVITY_TEMPERATURE: Record<CreativityLevel, number> = {
   conservative: 0.45,
   balanced: 0.72,
   creative: 0.92,
-  experimental: 1.0,
+  experimental: 0.95,
 };
 
 const PROGRESS_PHASES: [number, number, string][] = [
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
         const hasImages = Array.isArray(safeReferenceImages) && safeReferenceImages.length > 0;
         const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
         const useGemini = provider === "gemini";
-        const ESTIMATED_CHARS = 13000;
+        const ESTIMATED_CHARS = 25000;
 
         const firstPhase = hasLogoImage
           ? "Analisando logo da marca..."
@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
                     systemInstruction: systemPrompt,
                     responseMimeType: "application/json",
                     temperature,
-                    maxOutputTokens: 8192,
+                    maxOutputTokens: 32768,
                   },
                 }),
             });
@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
                     systemInstruction: systemPrompt,
                     responseMimeType: "application/json",
                     temperature,
-                    maxOutputTokens: 8192,
+                    maxOutputTokens: 32768,
                   },
                 }),
             });
@@ -338,7 +338,7 @@ export async function POST(request: NextRequest) {
             model: resolvedModel,
             stream: true,
             temperature,
-            max_tokens: 8192,
+            max_tokens: 16384,
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: systemPrompt },
@@ -386,7 +386,7 @@ export async function POST(request: NextRequest) {
                     systemInstruction: systemPrompt,
                     responseMimeType: "application/json",
                     temperature: 0.2,
-                    maxOutputTokens: 8192,
+                    maxOutputTokens: 32768,
                   },
                 }),
             });
@@ -397,7 +397,7 @@ export async function POST(request: NextRequest) {
             const completion = await openai.chat.completions.create({
               model: openaiModel?.trim() || "gpt-4o",
               temperature: 0.2,
-              max_tokens: 8192,
+              max_tokens: 16384,
               response_format: { type: "json_object" },
               messages: [
                 { role: "system", content: systemPrompt },
@@ -456,7 +456,7 @@ export async function POST(request: NextRequest) {
                   systemInstruction: buildSystemPrompt(scope, creativityLevel, intentionality),
                   responseMimeType: "application/json",
                   temperature: 0.2,
-                  maxOutputTokens: 8192,
+                  maxOutputTokens: 32768,
                 },
               }),
           });
@@ -467,7 +467,7 @@ export async function POST(request: NextRequest) {
           const completion = await openai.chat.completions.create({
             model: openaiModel?.trim() || "gpt-4o",
             temperature: 0.2,
-            max_tokens: 8192,
+            max_tokens: 16384,
             response_format: { type: "json_object" },
             messages: [
               { role: "system", content: buildSystemPrompt(scope, creativityLevel, intentionality) },

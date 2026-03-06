@@ -18,10 +18,15 @@ export type ImmersiveTheme = {
 type ImmersiveThemeProps = {
   immersive: boolean;
   theme: ImmersiveTheme;
+  brandName?: string;
   patternUrl?: string | null;
   atmosphereUrl?: string | null;
   watermarkUrl?: string | null;
 };
+
+function svgToDataUrl(svg: string): string {
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const m = hex.replace("#", "").match(/^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
@@ -59,9 +64,11 @@ export function getImmersiveTheme(data: BrandbookData): ImmersiveTheme {
     ...(data.colors?.secondary?.map((c) => c.hex) ?? []),
   ].filter(Boolean).slice(0, 10);
 
-  const bg = `linear-gradient(160deg, ${rgba(primaryHex, 0.12)} 0%, ${rgba(accentHex, 0.08)} 30%, rgba(255,255,255,0.95) 60%, ${rgba(tertiaryHex, 0.06)} 100%)`;
-  const border = rgba(primaryHex, 0.22);
-  const muted = rgba(primaryHex, 0.06);
+  const bg = isDark
+    ? `radial-gradient(circle at 8% 10%, ${rgba(accentHex, 0.30)} 0%, transparent 36%), radial-gradient(circle at 92% 14%, ${rgba(tertiaryHex, 0.26)} 0%, transparent 42%), linear-gradient(145deg, ${rgba(primaryHex, 0.75)} 0%, ${rgba(primaryHex, 0.92)} 46%, #0b0f16 100%)`
+    : `radial-gradient(circle at 10% 8%, ${rgba(primaryHex, 0.22)} 0%, transparent 35%), radial-gradient(circle at 92% 12%, ${rgba(accentHex, 0.18)} 0%, transparent 40%), linear-gradient(154deg, #faf7f2 0%, ${rgba(primaryHex, 0.08)} 45%, ${rgba(tertiaryHex, 0.14)} 100%)`;
+  const border = rgba(primaryHex, isDark ? 0.36 : 0.24);
+  const muted = rgba(primaryHex, isDark ? 0.14 : 0.08);
 
   return { primaryHex, accentHex, tertiaryHex, bg, border, muted, headingFont, bodyFont, isDark, allColors };
 }
@@ -111,6 +118,7 @@ export function brandVoiceQuote(sectionId: string, data: BrandbookData): string 
 export function BrandImmersiveTheme({
   immersive,
   theme,
+  brandName,
   patternUrl,
   atmosphereUrl,
   watermarkUrl,
@@ -123,6 +131,31 @@ export function BrandImmersiveTheme({
   const dk = theme.isDark;
   const bannerText = dk ? "#fff" : "#111";
   const bannerSub = dk ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.5)";
+  const surface = dk ? "rgba(14,19,28,0.80)" : "rgba(255,255,255,0.85)";
+  const surfaceStrong = dk ? "rgba(17,24,34,0.92)" : "rgba(255,255,255,0.95)";
+  const rootText = dk ? "rgba(240,246,255,0.92)" : "rgba(24,29,36,0.90)";
+
+  const safeBrand = (brandName || "Brand").replace(/[<>&"']/g, "");
+  const initials = safeBrand
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() || "")
+    .join("") || "BR";
+
+  const fallbackPatternUrl = svgToDataUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'><rect width='280' height='280' fill='${rgba(P, dk ? 0.10 : 0.08)}'/><circle cx='70' cy='70' r='34' fill='${rgba(A, dk ? 0.22 : 0.16)}'/><circle cx='210' cy='210' r='34' fill='${rgba(T, dk ? 0.20 : 0.14)}'/><path d='M0 140H280M140 0V280' stroke='${rgba(P, dk ? 0.26 : 0.18)}' stroke-width='1.4' stroke-dasharray='6 8'/></svg>`);
+  const fallbackWatermarkUrl = svgToDataUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'><rect width='360' height='360' fill='none'/><text x='50%' y='56%' dominant-baseline='middle' text-anchor='middle' font-size='138' font-weight='900' letter-spacing='4' fill='${rgba(P, dk ? 0.32 : 0.20)}' font-family='Arial, Helvetica, sans-serif'>${initials}</text></svg>`);
+
+  const patternLayer = patternUrl ? `url(${JSON.stringify(patternUrl)})` : fallbackPatternUrl;
+  const atmosphereLayer = atmosphereUrl
+    ? `url(${JSON.stringify(atmosphereUrl)})`
+    : `radial-gradient(circle at 12% 18%, ${rgba(P, dk ? 0.36 : 0.20)} 0%, transparent 42%), radial-gradient(circle at 84% 16%, ${rgba(A, dk ? 0.30 : 0.18)} 0%, transparent 44%), linear-gradient(140deg, ${rgba(P, dk ? 0.72 : 0.20)} 0%, ${rgba(T, dk ? 0.40 : 0.14)} 48%, transparent 100%)`;
+  const watermarkLayer = watermarkUrl ? `url(${JSON.stringify(watermarkUrl)})` : fallbackWatermarkUrl;
+  const atmoOpacity = atmosphereUrl ? 0.22 : 0.62;
+  const patternOpacity = patternUrl ? 0.12 : 0.26;
+  const ornamentOpacityA = watermarkUrl ? 0.09 : 0.14;
+  const ornamentOpacityB = watermarkUrl ? 0.06 : 0.1;
+  const ornamentOpacityC = watermarkUrl ? 0.05 : 0.08;
 
   return (
     <>
@@ -133,11 +166,11 @@ export function BrandImmersiveTheme({
       <style>{`
         /* ═══════ IMMERSIVE BASE ═══════ */
         #brandbook-content.bb-immersive {
-          --bb-pattern-url: ${patternUrl ? `url(${JSON.stringify(patternUrl)})` : "none"};
-          --bb-atmosphere-url: ${atmosphereUrl ? `url(${JSON.stringify(atmosphereUrl)})` : "none"};
-          --bb-watermark-url: ${watermarkUrl ? `url(${JSON.stringify(watermarkUrl)})` : "none"};
-          --bb-surface: rgba(255, 255, 255, 0.88);
-          --bb-surface-strong: rgba(255, 255, 255, 0.94);
+          --bb-pattern-url: ${patternLayer};
+          --bb-atmosphere-url: ${atmosphereLayer};
+          --bb-watermark-url: ${watermarkLayer};
+          --bb-surface: ${surface};
+          --bb-surface-strong: ${surfaceStrong};
           --bb-shadow: 0 24px 64px ${rgba(P, 0.14)}, 0 4px 16px rgba(0,0,0,0.07);
           --bb-glow: ${rgba(P, 0.18)};
 
@@ -145,6 +178,7 @@ export function BrandImmersiveTheme({
           isolation: isolate;
           overflow: hidden;
           background: var(--bb-bg);
+          color: ${rootText};
           border-radius: 28px;
           padding-top: 1px;
           box-shadow:
@@ -161,9 +195,9 @@ export function BrandImmersiveTheme({
           background-image: var(--bb-atmosphere-url);
           background-size: cover;
           background-position: center;
-          opacity: 0.22;
+          opacity: ${atmoOpacity};
           transform: scale(1.08);
-          filter: saturate(1.3) contrast(1.08) blur(3px);
+          filter: saturate(1.35) contrast(1.1) blur(3px);
           pointer-events: none;
           z-index: 0;
         }
@@ -176,7 +210,7 @@ export function BrandImmersiveTheme({
           background-image: var(--bb-pattern-url);
           background-repeat: repeat;
           background-size: 420px 420px;
-          opacity: 0.12;
+          opacity: ${patternOpacity};
           mix-blend-mode: multiply;
           pointer-events: none;
           z-index: 1;
@@ -215,7 +249,9 @@ export function BrandImmersiveTheme({
         #brandbook-content.bb-immersive[data-exporting="1"] .bb-atmo-hero,
         #brandbook-content.bb-immersive[data-exporting="1"] .bb-section-mascot,
         #brandbook-content.bb-immersive[data-exporting="1"] .bb-cat-banner::before,
-        #brandbook-content.bb-immersive[data-exporting="1"] .bb-cat-banner::after {
+        #brandbook-content.bb-immersive[data-exporting="1"] .bb-cat-banner::after,
+        #brandbook-content.bb-immersive[data-exporting="1"] .bb-side-accent,
+        #brandbook-content.bb-immersive[data-exporting="1"] .bb-mini-strip {
           display: none !important;
         }
 
@@ -234,22 +270,49 @@ export function BrandImmersiveTheme({
         #brandbook-content.bb-immersive .bb-ornament-a {
           width: 700px; height: 700px;
           top: -80px; right: -80px;
-          opacity: 0.09;
+          opacity: ${ornamentOpacityA};
           transform: rotate(12deg);
         }
 
         #brandbook-content.bb-immersive .bb-ornament-b {
           width: 550px; height: 550px;
           top: 35%; left: -140px;
-          opacity: 0.06;
+          opacity: ${ornamentOpacityB};
           transform: rotate(-18deg) scale(0.85);
         }
 
         #brandbook-content.bb-immersive .bb-ornament-c {
           width: 480px; height: 480px;
           bottom: 8%; right: -60px;
-          opacity: 0.05;
+          opacity: ${ornamentOpacityC};
           transform: rotate(6deg) scale(0.75);
+        }
+
+        @media (max-width: 768px) {
+          #brandbook-content.bb-immersive {
+            border-radius: 18px;
+          }
+
+          #brandbook-content.bb-immersive .bb-ornament-a {
+            width: 420px;
+            height: 420px;
+            top: -80px;
+            right: -120px;
+          }
+
+          #brandbook-content.bb-immersive .bb-ornament-b,
+          #brandbook-content.bb-immersive .bb-ornament-c {
+            width: 280px;
+            height: 280px;
+          }
+
+          #brandbook-content.bb-immersive .bb-cat-banner {
+            padding: 24px 20px;
+          }
+
+          #brandbook-content.bb-immersive .bb-section-shell {
+            padding: 22px 18px 22px 16px;
+          }
         }
 
         /* ═══════ SECTION SHELLS ═══════ */
@@ -852,6 +915,54 @@ export function BrandImmersiveTheme({
           color: #fff;
           text-transform: uppercase;
           letter-spacing: 0.1em;
+        }
+
+        /* ═══════ SIDE ACCENT IMAGE ═══════ */
+        #brandbook-content.bb-immersive .bb-side-accent {
+          position: absolute;
+          z-index: 0;
+          pointer-events: none;
+          overflow: hidden;
+          border-radius: 16px;
+          opacity: 0.10;
+          mix-blend-mode: multiply;
+          filter: saturate(1.2) contrast(1.05);
+        }
+
+        #brandbook-content.bb-immersive .bb-side-accent img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        #brandbook-content.bb-immersive .bb-side-accent.bb-accent-right {
+          top: 20px; right: -10px;
+          width: 180px; height: 180px;
+          transform: rotate(4deg);
+        }
+
+        #brandbook-content.bb-immersive .bb-side-accent.bb-accent-left {
+          bottom: 20px; left: -10px;
+          width: 160px; height: 160px;
+          transform: rotate(-4deg);
+        }
+
+        @media (max-width: 768px) {
+          #brandbook-content.bb-immersive .bb-side-accent {
+            display: none;
+          }
+        }
+
+        /* ═══════ MINI ASSET STRIP (distributed between categories) ═══════ */
+        #brandbook-content.bb-immersive .bb-mini-strip {
+          margin: 28px 0;
+          padding: 6px 0 12px;
+        }
+
+        #brandbook-content.bb-immersive .bb-mini-strip .bb-strip-item img {
+          height: 120px;
+          min-width: 120px;
         }
 
         /* ═══════ FULL-WIDTH ATMOSPHERE DIVIDER ═══════ */
