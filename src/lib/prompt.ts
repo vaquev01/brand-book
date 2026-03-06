@@ -44,18 +44,20 @@ As seções de brand concept e estratégia podem ser mais concisas, focadas em d
 };
 
 const INTENTIONALITY_LAYER = `
-CAMADA DE INTENÇÃO & SIMBOLISMO (ATIVADA):
-Cada decisão criativa DEVE ter uma justificativa simbólica, psicológica ou estratégica explicitada diretamente nos campos de texto. Não gere escolhas genéricas — cada elemento deve ser uma afirmação intencional sobre a marca.
+CAMADA DE INTENÇÃO & MATRIZ SEMIÓTICA (ATIVADA):
+Cada decisão criativa DEVE ser fundamentada na Matriz Analítica de 5 Pilares. Não gere escolhas estéticas vazias — decodifique a engenharia visual, psicológica e semiótica da marca:
 
-REGRAS DE INTENÇÃO:
-• Cores → O "name" deve revelar o simbolismo completo. Ex: "Índigo Crepúsculo — evoca confiança intelectual, introspecção e expertise técnica; frequência de luz associada ao pensamento analítico e à inovação tecnológica"
-• Logo → clearSpace deve descrever o conceito filosófico do símbolo, o que ele representa na cosmovisão da marca e por que essa forma foi escolhida
-• keyVisual.elements → Cada item deve ser uma frase completa explicando o elemento E seu significado simbólico. Ex: "Linha diagonal ascendente a 23° — representa progresso sem pressa; a inclinação específica remete à rampa de acesso, inclusão e movimento sustentável"
-• typography → O "usage" deve explicar POR QUE esta fonte expressa a personalidade da marca, não apenas onde ela é usada. Ex: "Space Grotesk para UI — sua construção geométrica com imperfeições humanistas intencionais espelha a dualidade da marca: precisão técnica com calor humano"
-• brandConcept.values → Cada valor deve ter uma conexão explícita com uma escolha visual que o expressa
-• mascots → A descrição visual deve conectar cada traço físico a um aspecto da personalidade ou valor da marca
-• imageGenerationBriefing.artisticReferences → Cada referência deve explicar POR QUE foi escolhida para esta marca específica
+1. ANÁLISE SEMIÓTICA (Peirce/Barthes): O símbolo é um Ícone (literal), Índice (causa/efeito) ou Símbolo (abstrato)? Qual a Denotação (forma) vs Conotação (mito/ideologia)?
+2. PSICOLOGIA DA GEOMETRIA (Efeito Bouba-Kiki): Por que esta forma base? (Círculos = acolhimento/comunidade; Quadrados = ordem/segurança; Triângulos = inovação/poder; Orgânicas = criatividade/humano).
+3. INTERSECÇÃO COR & TIPOGRAFIA (Anti-Blanding): Como a cor altera a percepção da forma? A tipografia combate o "blanding" (mesmice genérica) injetando herança, contraste ou personalidade humana?
+4. METÁFORAS & ESPAÇO NEGATIVO: Como o espaço em branco é desenhado? Existe algum "quebra-cabeças" visual oculto que recompensa o observador?
+5. ESTÁGIO EVOLUTIVO: A marca nasce em fase descritiva (necessita explicação visual) ou fase icônica (pura abstração confiante)?
 
+REGRAS DE APLICAÇÃO DA MATRIZ:
+• Logo → O campo "clearSpace" deve detalhar a geometria emocional (Pilar 2) e o uso do espaço negativo/metáfora (Pilar 4).
+• Typography → O "usage" deve explicar como a fonte combate o blanding e qual sua carga semiótica (Pilar 3).
+• Colors → O "name" deve revelar a conotação (Pilar 1) e o impacto psicológico. Ex: "Índigo Crepúsculo — conota profundidade intelectual; geometria associada a quadrados passará extrema segurança".
+• KeyVisual.elements → Detalhar a relação de significante/significado (Pilar 1). Ex: "Linha diagonal 23° (significante) — conota progresso contínuo sem exaustão (significado)".
 `;
 
 export function buildSystemPrompt(

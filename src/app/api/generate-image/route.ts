@@ -481,10 +481,13 @@ export async function POST(request: NextRequest) {
             "21:9": "ultra-wide cinematic 21:9 aspect ratio",
           };
           const isMascotAsset = assetKey === "brand_mascot";
+          const isLogoAsset = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
           const refAnchor = hasRefImages
             ? [
-              "REFERENCE IMAGES PROVIDED (STRICT):",
-              "- Treat all attached images as hard style anchors (brand system, motifs, line weights, textures, lighting).",
+              "REFERENCE IMAGES PROVIDED:",
+              isLogoAsset 
+                ? "- You are generating a corporate LOGO. Treat the attached images ONLY as structural or geometric inspiration. IGNORE their photographic or illustrative style completely. Force the output to be a flat 2D vector graphic."
+                : "- Treat all attached images as hard style anchors (brand system, motifs, line weights, textures, lighting).",
               "- If any attached image contains a logo/wordmark/symbol, do NOT redesign it. Replicate the same logo exactly.",
               isMascotAsset
                 ? "- You ARE generating a mascot. Derive the mascot style from the references and the STYLE_TREE. Do not introduce unrelated motifs."

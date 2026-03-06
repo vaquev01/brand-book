@@ -39,6 +39,15 @@ const LogoSchema = z.object({
   clearSpace: NonEmptyString,
   minimumSize: NonEmptyString,
   incorrectUsages: z.array(NonEmptyString).min(3),
+  // 5-Pillar Semiotic Analysis
+  semioticAnalysis: z.object({
+    natureOfSymbol: z.enum(["Icon", "Index", "Symbol"]),
+    denotation: NonEmptyString,
+    connotation: NonEmptyString,
+  }).optional(),
+  shapePsychology: z.string().optional(),
+  negativeSpaceMetaphor: z.string().optional(),
+  evolutionaryStage: z.enum(["Descriptive", "Transitional", "Iconic"]).optional(),
 });
 
 const LogoVariantsSchema = z.object({
@@ -71,6 +80,7 @@ const TypographySchema = z.object({
   fallbackFont: z.string().optional(),
   textTransform: z.string().optional(),
   category: z.string().optional(),
+  antiBlandingRationale: z.string().optional(),
 });
 
 const TypographySetSchema = z.object({
