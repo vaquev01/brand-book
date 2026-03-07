@@ -13,8 +13,8 @@ export function SectionUiGuidelines({ data, num, onUpdateData }: { data: Brandbo
         {String(num).padStart(2, "0")}. Guidelines de UI
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-start">
-        <div className="lg:col-span-1 space-y-4">
+      <div className="space-y-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
           <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Layout / Grid</div>
             <EditableField value={ui.layoutGrid} onSave={(val) => onUpdateData?.(prev => prev.uiGuidelines ? { ...prev, uiGuidelines: { ...prev.uiGuidelines, layoutGrid: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
@@ -37,7 +37,7 @@ export function SectionUiGuidelines({ data, num, onUpdateData }: { data: Brandbo
           </div>
         </div>
 
-        <div className="lg:col-span-2">
+        <div>
           <div className="bg-white border rounded-xl overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between gap-3">
               <div>

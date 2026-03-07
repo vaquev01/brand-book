@@ -3,11 +3,12 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
-import { validateLooseBrandbook } from "@/lib/brandbookValidation";
+import { BrandbookValidationError, validateLooseBrandbook } from "@/lib/brandbookValidation";
 import {
   AssetPackGenerationError,
   buildAssetPackRepairPrompt,
   buildExpectedAssetPackPaths,
+  type NormalizedAssetPackResult,
   normalizeAssetPackFiles,
   parseAssetPackModelResponse,
 } from "@/lib/services/generateAssetPack";
@@ -148,7 +149,6 @@ export async function POST(request: NextRequest) {
     }) as BrandbookData;
 
     const bb = brandbookData;
-
     const primaryColor = bb.colors?.primary?.[0]?.hex ?? "#000000";
     const secondaryColor = bb.colors?.secondary?.[0]?.hex ?? "#666666";
     const accentColor = bb.colors?.primary?.[1]?.hex ?? bb.colors?.secondary?.[1]?.hex ?? "#999999";
@@ -298,7 +298,7 @@ ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVi
     }
 
     const firstRaw = await generateRaw(userPrompt);
-    let normalized;
+    let normalized: NormalizedAssetPackResult;
     let repairAttempted = false;
 
     try {
@@ -360,6 +360,9 @@ ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVi
       }
     );
   } catch (error: unknown) {
+    if (error instanceof BrandbookValidationError) {
+      return respond(400, { error: error.message });
+    }
     bbLog("error", "api.generate-asset-pack.exception", {
       requestId,
       durationMs: Date.now() - startedAt,

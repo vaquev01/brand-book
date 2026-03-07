@@ -6,18 +6,34 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
   if (!data.verbalIdentity) return null;
 
   const v = data.verbalIdentity;
+  const editorialLine = v.oneLiner || v.tagline || v.messagingPillars[0]?.description;
 
   return (
     <section className="page-break mb-6">
-      <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
-        {String(num).padStart(2, "0")}. Identidade Verbal &amp; Mensagens
-      </h2>
+      <div className="mb-6 rounded-[1.75rem] border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50/80 px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] md:px-7 md:py-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400">Assinatura verbal</div>
+            <h2 className="text-[1.7rem] md:text-[2.15rem] font-extrabold tracking-tight text-gray-950">
+              {String(num).padStart(2, "0")}. Identidade Verbal &amp; Mensagens
+            </h2>
+            {editorialLine && (
+              <p className="mt-2 text-sm leading-7 text-gray-600 md:text-[15px]">
+                {editorialLine}
+              </p>
+            )}
+          </div>
+          <div className="rounded-full border border-gray-200 bg-white/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-gray-500 shadow-sm">
+            Voz, ritmo e memorabilidade
+          </div>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-start">
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-gray-900 text-white rounded-xl p-5">
-            <div className="text-xs uppercase tracking-widest text-gray-300 font-bold mb-2">Tagline</div>
-            <div className="text-3xl font-extrabold leading-tight">
+      <div className="space-y-6 mb-6">
+        <div className="space-y-4">
+          <div className="rounded-[1.8rem] border border-gray-900 bg-gray-950 px-6 py-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-300">Tagline</div>
+            <div className="text-[2rem] font-extrabold leading-[1.08] md:text-[2.45rem]">
               <EditableField
                 value={v.tagline}
                 onSave={(val) => onUpdateData?.(prev => prev.verbalIdentity ? { ...prev, verbalIdentity: { ...prev.verbalIdentity, tagline: val } } : prev)}
@@ -25,8 +41,8 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                 multiline
               />
             </div>
-            <div className="mt-4 text-xs uppercase tracking-widest text-gray-300 font-bold mb-1">One-liner</div>
-            <div className="text-lg text-gray-100">
+            <div className="mb-1 mt-5 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-300">One-liner</div>
+            <div className="max-w-3xl text-[1.02rem] leading-7 text-gray-100 md:text-[1.08rem]">
               <EditableField
                 value={v.oneLiner}
                 onSave={(val) => onUpdateData?.(prev => prev.verbalIdentity ? { ...prev, verbalIdentity: { ...prev.verbalIdentity, oneLiner: val } } : prev)}
@@ -36,11 +52,16 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
             </div>
           </div>
 
-          <div className="bg-white border rounded-xl p-4">
-            <h3 className="font-bold mb-3">Pilares de Mensagem</h3>
+          <div className="rounded-[1.55rem] border border-gray-200 bg-gradient-to-br from-white to-gray-50 px-5 py-5 shadow-[0_16px_44px_rgba(15,23,42,0.05)]">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base font-bold text-gray-950">Pilares de Mensagem</h3>
+                <p className="mt-1 text-sm text-gray-500">Base verbal para narrativa, prova e aplicação de copy.</p>
+              </div>
+            </div>
             <div className="space-y-3">
               {v.messagingPillars.map((p, i) => (
-                <div key={i} className="bg-gray-50 border rounded-lg p-4 group/pillar relative">
+                <div key={i} className="group/pillar relative rounded-[1.35rem] border border-gray-200 bg-white/90 p-5 shadow-[0_14px_36px_rgba(15,23,42,0.04)]">
                   {onUpdateData && (
                     <button
                       onClick={() => onUpdateData(prev => {
@@ -61,8 +82,8 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                   )}
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">Pilar {i + 1}</div>
-                      <div className="text-lg font-bold mt-1">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400">Pilar {i + 1}</div>
+                      <div className="mt-1 text-[1.15rem] font-bold text-gray-950">
                         <EditableField
                           value={p.title}
                           onSave={(val) => onUpdateData?.(prev => {
@@ -74,7 +95,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                           readOnly={!onUpdateData}
                         />
                       </div>
-                      <div className="text-gray-700 text-sm mt-2">
+                      <div className="mt-2 text-sm leading-7 text-gray-700">
                         <EditableField
                           value={p.description}
                           onSave={(val) => onUpdateData?.(prev => {
@@ -92,7 +113,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
 
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Proof Points</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em]">Proof Points</div>
                       {onUpdateData && (
                         <button
                           onClick={() => onUpdateData(prev => {
@@ -107,7 +128,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                         </button>
                       )}
                     </div>
-                    <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+                    <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1.5 leading-7">
                       {(p.proofPoints || []).map((pp, j) => (
                         <li key={j} className="group/item">
                           <EditableField
@@ -136,7 +157,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
 
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Exemplos de Copy</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em]">Exemplos de Copy</div>
                       {onUpdateData && (
                         <button
                           onClick={() => onUpdateData(prev => {
@@ -153,7 +174,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                     </div>
                     <ul className="space-y-2">
                       {(p.exampleCopy || []).map((c, j) => (
-                        <li key={j} className="text-sm bg-white border rounded p-3 text-gray-700 group/item">
+                        <li key={j} className="group/item rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-3 text-sm text-gray-700">
                           <EditableField
                             value={c}
                             onSave={(val) => onUpdateData?.(prev => {
@@ -200,12 +221,12 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="bg-white border rounded-xl p-4">
-            <h3 className="font-bold mb-3">Traços de Voz</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <div className="rounded-[1.45rem] border border-gray-200 bg-gradient-to-br from-white to-gray-50 px-5 py-5 shadow-[0_16px_44px_rgba(15,23,42,0.05)]">
+            <h3 className="mb-3 text-base font-bold text-gray-950">Traços de Voz</h3>
             <div className="flex flex-wrap gap-2">
               {v.brandVoiceTraits.map((t, i) => (
-                <span key={i} className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full font-medium">
+                <span key={i} className="rounded-full bg-gray-900 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm">
                   <EditableField
                     value={t}
                     onSave={(val) => onUpdateData?.(prev => prev.verbalIdentity ? { ...prev, verbalIdentity: { ...prev.verbalIdentity, brandVoiceTraits: [...prev.verbalIdentity.brandVoiceTraits.slice(0, i), val, ...prev.verbalIdentity.brandVoiceTraits.slice(i + 1)] } } : prev)}

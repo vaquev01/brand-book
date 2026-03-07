@@ -13,8 +13,9 @@ export function SectionProductionGuidelines({ data, num, onUpdateData }: { data:
         {String(num).padStart(2, "0")}. Produção &amp; Handoff
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-1 space-y-4">
+      <div className="space-y-6 mb-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-6 items-start">
+          <div className="space-y-4">
           <div className="bg-gray-50 border rounded-xl p-4">
             <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Naming Convention</div>
             <EditableField value={p.fileNamingConvention} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, fileNamingConvention: val } } : prev)} className="text-sm text-gray-700 font-mono break-words" readOnly={!onUpdateData} multiline />
@@ -41,7 +42,6 @@ export function SectionProductionGuidelines({ data, num, onUpdateData }: { data:
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white border rounded-xl p-4">
               <h3 className="font-bold mb-3">Specs de Impressão</h3>
@@ -66,36 +66,36 @@ export function SectionProductionGuidelines({ data, num, onUpdateData }: { data:
               <EditableField value={p.digitalSpecs.notes} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, digitalSpecs: { ...prev.productionGuidelines.digitalSpecs, notes: val } } } : prev)} className="text-xs text-gray-500 mt-2" readOnly={!onUpdateData} multiline />
             </div>
           </div>
+        </div>
 
-          <div className="bg-white border rounded-xl overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between gap-3">
-              <div>
-                <h3 className="font-bold">Entregáveis</h3>
-                <p className="text-xs text-gray-500 mt-1">Pacote recomendado para agência, marketing e dev</p>
+        <div className="bg-white border rounded-xl overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold">Entregáveis</h3>
+              <p className="text-xs text-gray-500 mt-1">Pacote recomendado para agência, marketing e dev</p>
+            </div>
+            {onUpdateData && (
+              <button
+                type="button"
+                onClick={() => onUpdateData(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: [...prev.productionGuidelines.deliverables, { asset: "Novo entregável", formats: ["PDF"], specs: "Descreva as specs" }] } } : prev)}
+                className="no-print text-[10px] font-bold text-gray-500 bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded transition"
+              >
+                + Adicionar
+              </button>
+            )}
+          </div>
+          <div className="divide-y">
+            {p.deliverables.map((d, i) => (
+              <div key={i} className="px-5 py-4 relative group/deliverable">
+                {onUpdateData && (
+                  <button type="button" onClick={() => onUpdateData(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.filter((_, idx) => idx !== i) } } : prev)} className="absolute top-4 right-4 no-print w-6 h-6 bg-white border rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover/deliverable:opacity-100 transition flex items-center justify-center" title="Excluir entregável"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                )}
+                <div className="font-semibold"><EditableField value={d.asset} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, asset: val } : item) } } : prev)} readOnly={!onUpdateData} /></div>
+                <div className="text-xs text-gray-500 mt-1">Formatos: {d.formats.map((format, j) => <span key={j} className="inline-block mr-2"><EditableField value={format} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, formats: item.formats.map((entry, entryIdx) => entryIdx === j ? val : entry) } : item) } } : prev)} onDelete={onUpdateData ? () => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, formats: item.formats.filter((_, entryIdx) => entryIdx !== j) } : item) } } : prev) : undefined} readOnly={!onUpdateData} /></span>)}</div>
+                {onUpdateData && <button type="button" onClick={() => onUpdateData(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, formats: [...item.formats, "PDF"] } : item) } } : prev)} className="no-print mt-2 text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition">+ Formato</button>}
+                <EditableField value={d.specs} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, specs: val } : item) } } : prev)} className="text-sm text-gray-700 mt-2" readOnly={!onUpdateData} multiline />
               </div>
-              {onUpdateData && (
-                <button
-                  type="button"
-                  onClick={() => onUpdateData(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: [...prev.productionGuidelines.deliverables, { asset: "Novo entregável", formats: ["PDF"], specs: "Descreva as specs" }] } } : prev)}
-                  className="no-print text-[10px] font-bold text-gray-500 bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded transition"
-                >
-                  + Adicionar
-                </button>
-              )}
-            </div>
-            <div className="divide-y">
-              {p.deliverables.map((d, i) => (
-                <div key={i} className="px-5 py-4 relative group/deliverable">
-                  {onUpdateData && (
-                    <button type="button" onClick={() => onUpdateData(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.filter((_, idx) => idx !== i) } } : prev)} className="absolute top-4 right-4 no-print w-6 h-6 bg-white border rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover/deliverable:opacity-100 transition flex items-center justify-center" title="Excluir entregável"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-                  )}
-                  <div className="font-semibold"><EditableField value={d.asset} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, asset: val } : item) } } : prev)} readOnly={!onUpdateData} /></div>
-                  <div className="text-xs text-gray-500 mt-1">Formatos: {d.formats.map((format, j) => <span key={j} className="inline-block mr-2"><EditableField value={format} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, formats: item.formats.map((entry, entryIdx) => entryIdx === j ? val : entry) } : item) } } : prev)} onDelete={onUpdateData ? () => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, formats: item.formats.filter((_, entryIdx) => entryIdx !== j) } : item) } } : prev) : undefined} readOnly={!onUpdateData} /></span>)}</div>
-                  {onUpdateData && <button type="button" onClick={() => onUpdateData(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, formats: [...item.formats, "PDF"] } : item) } } : prev)} className="no-print mt-2 text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition">+ Formato</button>}
-                  <EditableField value={d.specs} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, deliverables: prev.productionGuidelines.deliverables.map((item, idx) => idx === i ? { ...item, specs: val } : item) } } : prev)} className="text-sm text-gray-700 mt-2" readOnly={!onUpdateData} multiline />
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>

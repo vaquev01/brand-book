@@ -6,36 +6,37 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
   if (!data.brandStory) return null;
 
   const s = data.brandStory;
+  const editorialLine = s.brandPromise || s.originStory || s.manifesto;
 
   return (
     <section className="page-break mb-6">
-      <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
-        {String(num).padStart(2, "0")}. Brand Story &amp; Manifesto
-      </h2>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-5">
-          <div>
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Manifesto</h3>
-            <div className="bg-gray-900 text-white rounded-2xl p-5">
-              <div className="text-lg leading-relaxed text-gray-100 whitespace-pre-line">
-                <EditableField
-                  value={s.manifesto}
-                  onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, manifesto: val } } : prev)}
-                  readOnly={!onUpdateData}
-                  multiline
-                />
-              </div>
-            </div>
+      <div className="mb-6 rounded-[1.75rem] border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50/80 px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] md:px-7 md:py-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400">Narrativa central</div>
+            <h2 className="text-[1.7rem] md:text-[2.15rem] font-extrabold tracking-tight text-gray-950">
+              {String(num).padStart(2, "0")}. Brand Story &amp; Manifesto
+            </h2>
+            {editorialLine && (
+              <p className="mt-2 text-sm leading-7 text-gray-600 md:text-[15px]">
+                {editorialLine}
+              </p>
+            )}
           </div>
+          <div className="rounded-full border border-gray-200 bg-white/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-gray-500 shadow-sm">
+            Narrativa com assinatura
+          </div>
+        </div>
+      </div>
 
-          <div>
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">História de Origem</h3>
-            <div className="bg-gray-50 border rounded-xl p-4">
+      <div className="space-y-6">
+        <div>
+          <h3 className="mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Manifesto</h3>
+          <div className="rounded-[1.8rem] border border-gray-900 bg-gray-950 px-6 py-6 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
+            <div className="text-[1.06rem] leading-8 text-gray-100 whitespace-pre-line">
               <EditableField
-                value={s.originStory}
-                onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, originStory: val } } : prev)}
-                className="text-gray-700 leading-relaxed"
+                value={s.manifesto}
+                onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, manifesto: val } } : prev)}
                 readOnly={!onUpdateData}
                 multiline
               />
@@ -43,10 +44,21 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="bg-white border-2 border-gray-900 rounded-2xl p-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Promessa da Marca</h3>
-            <div className="text-gray-900 font-semibold text-lg leading-snug flex items-start gap-1">
+        <div className="rounded-[1.45rem] border border-gray-200 bg-gradient-to-br from-white to-gray-50 px-5 py-5 shadow-[0_16px_44px_rgba(15,23,42,0.05)]">
+          <h3 className="mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">História de Origem</h3>
+          <EditableField
+            value={s.originStory}
+            onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, originStory: val } } : prev)}
+            className="text-gray-700 leading-8"
+            readOnly={!onUpdateData}
+            multiline
+          />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-4 items-start">
+          <div className="rounded-[1.6rem] border border-gray-900 bg-gradient-to-br from-white to-gray-50 px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
+            <h3 className="mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Promessa da Marca</h3>
+            <div className="flex items-start gap-1 text-[1.18rem] font-semibold leading-8 text-gray-900">
               <span>&ldquo;</span>
               <EditableField
                 value={s.brandPromise}
@@ -60,9 +72,9 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
           </div>
 
           {s.brandBeliefs && (
-            <div className="bg-white border rounded-xl p-4">
+            <div className="rounded-[1.45rem] border border-gray-200 bg-gradient-to-br from-white to-gray-50 px-5 py-5 shadow-[0_16px_44px_rgba(15,23,42,0.05)]">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">O que Acreditamos</h3>
+                <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">O que Acreditamos</h3>
                 {onUpdateData && (
                   <button
                     onClick={() => onUpdateData(prev => {
@@ -84,7 +96,7 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
               <ul className="space-y-3">
                 {s.brandBeliefs.map((belief, i) => (
                   <li key={i} className="flex items-start gap-3 group/item">
-                    <span className="w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
+                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white shadow-sm">{i + 1}</span>
                     <EditableField
                       value={belief}
                       onSave={(val) => onUpdateData?.(prev => {
@@ -103,7 +115,7 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
                           }
                         };
                       }) : undefined}
-                      className="text-gray-700 text-sm flex-1"
+                      className="flex-1 text-sm leading-7 text-gray-700"
                       readOnly={!onUpdateData}
                       multiline
                     />

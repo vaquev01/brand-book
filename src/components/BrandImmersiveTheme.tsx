@@ -171,7 +171,7 @@ export function BrandImmersiveTheme({
           --bb-watermark-url: ${watermarkLayer};
           --bb-surface: ${surface};
           --bb-surface-strong: ${surfaceStrong};
-          --bb-shadow: 0 24px 64px ${rgba(P, 0.14)}, 0 4px 16px rgba(0,0,0,0.07);
+          --bb-shadow: 0 30px 80px ${rgba(P, 0.16)}, 0 8px 24px rgba(0,0,0,0.08);
           --bb-glow: ${rgba(P, 0.18)};
 
           position: relative;
@@ -317,14 +317,14 @@ export function BrandImmersiveTheme({
 
         /* ═══════ SECTION SHELLS ═══════ */
         #brandbook-content.bb-immersive .bb-section-shell {
-          background: var(--bb-surface);
-          border: 1px solid ${rgba(P, 0.13)};
+          background: linear-gradient(180deg, var(--bb-surface-strong) 0%, var(--bb-surface) 100%);
+          border: 1px solid ${rgba(P, 0.14)};
           border-left: 5px solid ${P};
-          border-radius: 22px;
-          box-shadow: var(--bb-shadow);
-          padding: 32px 32px 32px 28px;
+          border-radius: 24px;
+          box-shadow: var(--bb-shadow), inset 0 1px 0 ${rgba("#ffffff", 0.24)};
+          padding: 36px 34px 34px 30px;
           margin-bottom: 0;
-          backdrop-filter: blur(20px) saturate(1.2);
+          backdrop-filter: blur(22px) saturate(1.22);
           position: relative;
           overflow: hidden;
         }
@@ -333,9 +333,9 @@ export function BrandImmersiveTheme({
         #brandbook-content.bb-immersive .bb-section-shell::before {
           content: "";
           position: absolute;
-          top: -40px; right: -40px;
-          width: 280px; height: 280px;
-          background: radial-gradient(circle at center, ${rgba(P, 0.08)}, transparent 65%);
+          top: -54px; right: -48px;
+          width: 320px; height: 320px;
+          background: radial-gradient(circle at center, ${rgba(P, 0.10)}, transparent 68%);
           pointer-events: none;
           z-index: 0;
         }
@@ -497,17 +497,18 @@ export function BrandImmersiveTheme({
 
         /* ═══════ CATEGORY BANNER ═══════ */
         #brandbook-content.bb-immersive .bb-cat-banner {
-          background: linear-gradient(135deg, ${P} 0%, ${rgba(A, 0.92)} 100%);
-          border-radius: 22px;
+          background: linear-gradient(135deg, ${rgba(P, 0.98)} 0%, ${rgba(A, 0.94)} 58%, ${rgba(T, 0.86)} 100%);
+          border-radius: 24px;
           padding: 36px 40px;
           margin-bottom: 24px;
           margin-top: 32px;
           position: relative;
           overflow: hidden;
+          border: 1px solid ${rgba("#ffffff", dk ? 0.10 : 0.16)};
           box-shadow:
-            0 20px 56px ${rgba(P, 0.28)},
+            0 26px 72px ${rgba(P, 0.28)},
             0 4px 14px rgba(0,0,0,0.10),
-            inset 0 1px 0 ${rgba("#ffffff", 0.15)};
+            inset 0 1px 0 ${rgba("#ffffff", 0.18)};
         }
 
         #brandbook-content.bb-immersive .bb-cat-banner::before {
@@ -544,10 +545,10 @@ export function BrandImmersiveTheme({
 
         #brandbook-content.bb-immersive .bb-cat-banner h2 {
           color: ${bannerText} !important;
-          font-size: 1.6rem;
+          font-size: 1.72rem;
           font-weight: 900;
           text-transform: uppercase;
-          letter-spacing: 0.15em;
+          letter-spacing: 0.16em;
           margin: 0;
         }
 
@@ -569,10 +570,10 @@ export function BrandImmersiveTheme({
         #brandbook-content.bb-immersive .bb-cat-banner .bb-cat-brand {
           color: ${bannerSub};
           font-family: var(--bb-heading-font);
-          font-size: 0.7rem;
+          font-size: 0.72rem;
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.2em;
+          letter-spacing: 0.24em;
         }
 
         /* ═══════ VOICE QUOTE ═══════ */
@@ -652,16 +653,18 @@ export function BrandImmersiveTheme({
         #brandbook-content.bb-immersive #sumario .bb-sumario-card {
           position: relative;
           overflow: hidden;
-          border: 1px solid ${rgba(P, 0.12)};
+          border: 1px solid ${rgba(P, 0.14)};
           border-top: 4px solid ${P};
-          background: var(--bb-surface);
-          backdrop-filter: blur(12px) saturate(1.1);
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          background: linear-gradient(180deg, var(--bb-surface-strong) 0%, var(--bb-surface) 100%);
+          backdrop-filter: blur(14px) saturate(1.12);
+          box-shadow: 0 18px 48px ${rgba(P, 0.10)};
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
 
         #brandbook-content.bb-immersive #sumario .bb-sumario-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 16px 40px ${rgba(P, 0.18)};
+          transform: translateY(-4px);
+          box-shadow: 0 22px 56px ${rgba(P, 0.18)};
+          border-color: ${rgba(P, 0.2)};
         }
 
         #brandbook-content.bb-immersive #sumario .bb-sumario-card::before {
