@@ -1,2 +1,5 @@
 [variables]
-NODE_VERSION = "20.19.0"
+NODE_VERSION = "20"
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm-10_x", "openssl"]
