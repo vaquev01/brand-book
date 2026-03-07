@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
 import { ExampleCard } from "@/components/ExampleCard";
 import { JsonBySectionPanel } from "@/components/JsonBySectionPanel";
-import { useImageGeneration } from "@/hooks/useImageGeneration";
 import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookEditor } from "@/components/BrandbookEditor";
 import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
@@ -14,7 +13,7 @@ import { RefinePanel } from "@/components/RefinePanel";
 import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
-import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AssetPackFile } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackFile } from "@/lib/types";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
@@ -42,9 +41,41 @@ import {
   Image as ImageIcon, Wand2, ShieldCheck, Download,
   Trash2, UploadCloud, FileJson, Hexagon, Undo2, Redo2,
 } from "lucide-react";
+import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
+import { getProtectedExportGuard } from "@/lib/brandbookQualityGate";
 
 type Tab = "generate" | "examples" | "viewer";
 type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
+
+const STRATEGY_PROVIDER_LS = "bb_strategy_provider";
+const PROMPT_OPS_PROVIDER_LS = "bb_prompt_ops_provider";
+
+function isAiTextProvider(value: string | null | undefined): value is AiTextProvider {
+  return value === "openai" || value === "gemini";
+}
+
+function hasTextProviderKey(provider: AiTextProvider, keys: ApiKeys): boolean {
+  return provider === "openai" ? !!keys.openai : !!keys.google;
+}
+
+function pickDefaultTextProvider(keys: ApiKeys): AiTextProvider {
+  if (keys.openai) return "openai";
+  if (keys.google) return "gemini";
+  return "openai";
+}
+
+function resolveTextProviderPreference(rawValue: string | null | undefined, keys: ApiKeys): AiTextProvider {
+  const fallback = pickDefaultTextProvider(keys);
+  if (!isAiTextProvider(rawValue)) return fallback;
+  if (hasTextProviderKey(rawValue, keys) || (!keys.openai && !keys.google)) return rawValue;
+  return fallback;
+}
+
+function getTextProviderModel(provider: AiTextProvider, keys: ApiKeys): string {
+  return provider === "openai"
+    ? keys.openaiTextModel || "GPT-4o"
+    : keys.googleTextModel || "Gemini 1.5";
+}
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>("examples");
@@ -62,7 +93,8 @@ export default function Home() {
   const [assetPackFiles, setAssetPackFiles] = useState<AssetPackFile[]>([]);
   const [assetPackGenerating, setAssetPackGenerating] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
-  const [textProvider, setTextProvider] = useState<"openai" | "gemini">("openai");
+  const [strategyProvider, setStrategyProvider] = useState<AiTextProvider>("openai");
+  const [promptOpsProvider, setPromptOpsProvider] = useState<AiTextProvider>("openai");
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [exportingPack, setExportingPack] = useState(false);
   const [undoStack, setUndoStack] = useState<BrandbookData[]>([]);
@@ -125,7 +157,7 @@ export default function Home() {
     setError("");
   }, []);
 
-  async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, tp: "openai" | "gemini") {
+  async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, promptProvider: AiTextProvider) {
     const providerKeyMap: Record<ImageProvider, keyof ApiKeys> = {
       dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google",
     };
@@ -161,7 +193,7 @@ export default function Home() {
         const basePrompt = buildImagePrompt(assetKey, bbData, provider);
         let prompt = basePrompt;
 
-        const hasTextKey = (tp === "openai" && !!keys.openai) || (tp === "gemini" && !!keys.google);
+        const hasTextKey = hasTextProviderKey(promptProvider, keys);
         if (hasTextKey) {
           try {
             const refineRes = await fetch("/api/refine-image-prompt", {
@@ -171,11 +203,11 @@ export default function Home() {
                 basePrompt,
                 imageProvider: provider,
                 assetKey,
-                textProvider: tp,
+                textProvider: promptProvider,
                 openaiKey: keys.openai || undefined,
                 googleKey: keys.google || undefined,
-                openaiModel: keys.openaiTextModel || undefined,
-                googleModel: keys.googleTextModel || undefined,
+                openaiModel: promptProvider === "openai" ? keys.openaiTextModel || undefined : undefined,
+                googleModel: promptProvider === "gemini" ? keys.googleTextModel || undefined : undefined,
               }),
             });
             const refineJson = await readJsonResponse<{ prompt?: string }>(
@@ -227,8 +259,14 @@ export default function Home() {
   useEffect(() => {
     const keys = loadApiKeys();
     setApiKeys(keys);
-    if (!keys.openai && keys.google) setTextProvider("gemini");
-    else if (keys.openai) setTextProvider("openai");
+    if (typeof window !== "undefined") {
+      setStrategyProvider(resolveTextProviderPreference(localStorage.getItem(STRATEGY_PROVIDER_LS), keys));
+      setPromptOpsProvider(resolveTextProviderPreference(localStorage.getItem(PROMPT_OPS_PROVIDER_LS), keys));
+    } else {
+      const fallback = pickDefaultTextProvider(keys);
+      setStrategyProvider(fallback);
+      setPromptOpsProvider(fallback);
+    }
 
     void (async () => {
       await migrateLegacyLocalStorageToIndexedDB().catch(() => {});
@@ -278,6 +316,20 @@ export default function Home() {
     })();
   }, [restoreBrandbookSession]);
 
+  useEffect(() => {
+    setStrategyProvider((prev) => resolveTextProviderPreference(prev, apiKeys));
+    setPromptOpsProvider((prev) => resolveTextProviderPreference(prev, apiKeys));
+  }, [apiKeys]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(STRATEGY_PROVIDER_LS, strategyProvider);
+  }, [strategyProvider]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(PROMPT_OPS_PROVIDER_LS, promptOpsProvider);
+  }, [promptOpsProvider]);
 
   async function handleGenerate(formData: GenerateBriefingData) {
     setLoading(true);
@@ -296,11 +348,12 @@ export default function Home() {
           industry: formData.industry,
           briefing: formData.briefing,
           externalUrls: formData.externalUrls,
-          provider: textProvider,
+          projectMode: formData.projectMode,
+          provider: strategyProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
-          openaiModel: apiKeys.openaiTextModel || undefined,
-          googleModel: apiKeys.googleTextModel || undefined,
+          openaiModel: strategyProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+          googleModel: strategyProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
           referenceImages: formData.referenceImages.length > 0
             ? formData.referenceImages.map((img) => img.dataUrl)
             : undefined,
@@ -348,8 +401,7 @@ export default function Home() {
 
               // Auto-generate logo images
               const currentKeys = loadApiKeys();
-              const tp = (!currentKeys.openai && currentKeys.google) ? "gemini" : "openai";
-              autoGenerateLogos(nextBrandbook, currentKeys, tp).catch(() => {});
+              autoGenerateLogos(nextBrandbook, currentKeys, promptOpsProvider).catch(() => {});
             } else if (event.type === "error") {
               throw new Error(event.error ?? "Erro desconhecido");
             }
@@ -387,6 +439,10 @@ export default function Home() {
     setExportingPack(true);
     setError("");
     try {
+      const lintReport = await fetchBrandbookLintReport(brandbookData);
+      const guard = getProtectedExportGuard("pack", lintReport);
+      if (!guard.allowed) throw new Error(guard.reason ?? "Pack bloqueado pelo quality gate.");
+
       const res = await fetch("/api/export-pack", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -417,11 +473,20 @@ export default function Home() {
     downloadJsonFile(brandbookData, `${slug}-brandbook.json`);
   }
 
-  function handleExportProduction() {
+  async function handleExportProduction() {
     if (!brandbookData) return;
-    const manifest = generateProductionManifest(brandbookData);
-    const slug = slugifyForStorage(brandbookData.brandName);
-    downloadJsonFile(manifest, `${slug}-production-manifest.json`);
+    setError("");
+    try {
+      const lintReport = await fetchBrandbookLintReport(brandbookData);
+      const guard = getProtectedExportGuard("production_manifest", lintReport);
+      if (!guard.allowed) throw new Error(guard.reason ?? "Manifesto de produção bloqueado pelo quality gate.");
+
+      const manifest = generateProductionManifest(brandbookData);
+      const slug = slugifyForStorage(brandbookData.brandName);
+      downloadJsonFile(manifest, `${slug}-production-manifest.json`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro ao exportar manifesto de produção");
+    }
   }
 
   async function handleImportJson() {
@@ -445,7 +510,7 @@ export default function Home() {
   async function handleGenerateAssetPack() {
     if (!brandbookData) return;
 
-    const hasKey = (textProvider === "openai" && !!apiKeys.openai) || (textProvider === "gemini" && !!apiKeys.google);
+    const hasKey = hasTextProviderKey(promptOpsProvider, apiKeys);
     if (!hasKey) {
       setError("Configure uma chave de IA (OpenAI ou Google) para gerar o Asset Pack.");
       return;
@@ -459,11 +524,11 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandbookData,
-          textProvider,
+          textProvider: promptOpsProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
-          openaiModel: apiKeys.openaiTextModel || undefined,
-          googleModel: apiKeys.googleTextModel || undefined,
+          openaiModel: promptOpsProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+          googleModel: promptOpsProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
         }),
       });
       const j = await readJsonResponse<{ files?: AssetPackFile[]; error?: string }>(
@@ -541,6 +606,9 @@ export default function Home() {
     }
     setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
   }
+
+  const strategyProviderHasKey = hasTextProviderKey(strategyProvider, apiKeys);
+  const promptOpsProviderHasKey = hasTextProviderKey(promptOpsProvider, apiKeys);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -692,42 +760,95 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* API Provider selector */}
-              <div className="mt-6 mb-8 p-1.5 bg-gray-100 rounded-xl inline-flex w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setTextProvider("openai")}
-                  className={`flex-1 sm:flex-none flex flex-col items-center justify-center px-6 py-2 rounded-lg transition-all ${
-                    textProvider === "openai"
-                      ? "bg-white shadow-sm text-gray-900 ring-1 ring-gray-200"
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                  }`}
-                >
-                  <span className="font-bold text-sm">{apiKeys.openaiTextModel || "GPT-4o"}</span>
-                  <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.openai ? "text-green-600" : "text-red-500"}`}>
-                    {apiKeys.openai ? "OpenAI" : "Sem Chave"}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTextProvider("gemini")}
-                  className={`flex-1 sm:flex-none flex flex-col items-center justify-center px-6 py-2 rounded-lg transition-all ${
-                    textProvider === "gemini"
-                      ? "bg-white shadow-sm text-blue-700 ring-1 ring-blue-200"
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                  }`}
-                >
-                  <span className="font-bold text-sm">{apiKeys.googleTextModel || "Gemini 1.5"}</span>
-                  <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.google ? "text-blue-600" : "text-red-500"}`}>
-                    {apiKeys.google ? "Google" : "Sem Chave"}
-                  </span>
-                </button>
+              <div className="mt-6 mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50/70">
+                  <div className="mb-3">
+                    <h3 className="text-sm font-extrabold tracking-tight text-gray-900">Curador de Estratégia</h3>
+                    <p className="text-xs text-gray-500 mt-1">Usado para gerar o brandbook, refinar conteúdo, regenerar seções e auditar consistência.</p>
+                  </div>
+                  <div className="p-1.5 bg-gray-100 rounded-xl inline-flex w-full">
+                    <button
+                      type="button"
+                      onClick={() => setStrategyProvider("openai")}
+                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
+                        strategyProvider === "openai"
+                          ? "bg-white shadow-sm text-gray-900 ring-1 ring-gray-200"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                      }`}
+                    >
+                      <span className="font-bold text-sm">{getTextProviderModel("openai", apiKeys)}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.openai ? "text-green-600" : "text-red-500"}`}>
+                        {apiKeys.openai ? "OpenAI" : "Sem Chave"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStrategyProvider("gemini")}
+                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
+                        strategyProvider === "gemini"
+                          ? "bg-white shadow-sm text-blue-700 ring-1 ring-blue-200"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                      }`}
+                    >
+                      <span className="font-bold text-sm">{getTextProviderModel("gemini", apiKeys)}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.google ? "text-blue-600" : "text-red-500"}`}>
+                        {apiKeys.google ? "Google" : "Sem Chave"}
+                      </span>
+                    </button>
+                  </div>
+                  {!strategyProviderHasKey && (
+                    <p className="mt-3 text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 flex items-center gap-2">
+                      <Settings className="w-4 h-4" /> Configure a chave do provider estratégico nas configurações.
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50/70">
+                  <div className="mb-3">
+                    <h3 className="text-sm font-extrabold tracking-tight text-gray-900">Prompts & Arquivos</h3>
+                    <p className="text-xs text-gray-500 mt-1">Usado para refinar prompts de imagem, gerar logos automáticos e montar arquivos do asset pack.</p>
+                  </div>
+                  <div className="p-1.5 bg-gray-100 rounded-xl inline-flex w-full">
+                    <button
+                      type="button"
+                      onClick={() => setPromptOpsProvider("openai")}
+                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
+                        promptOpsProvider === "openai"
+                          ? "bg-white shadow-sm text-gray-900 ring-1 ring-gray-200"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                      }`}
+                    >
+                      <span className="font-bold text-sm">{getTextProviderModel("openai", apiKeys)}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.openai ? "text-green-600" : "text-red-500"}`}>
+                        {apiKeys.openai ? "OpenAI" : "Sem Chave"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPromptOpsProvider("gemini")}
+                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
+                        promptOpsProvider === "gemini"
+                          ? "bg-white shadow-sm text-blue-700 ring-1 ring-blue-200"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                      }`}
+                    >
+                      <span className="font-bold text-sm">{getTextProviderModel("gemini", apiKeys)}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.google ? "text-blue-600" : "text-red-500"}`}>
+                        {apiKeys.google ? "Google" : "Sem Chave"}
+                      </span>
+                    </button>
+                  </div>
+                  {!promptOpsProviderHasKey && (
+                    <p className="mt-3 text-xs text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-100 flex items-center gap-2">
+                      <Settings className="w-4 h-4" /> Sem este provider, o app não conseguirá refinar prompts nem gerar arquivos assistidos por IA.
+                    </p>
+                  )}
+                </div>
               </div>
-              {((textProvider === "openai" && !apiKeys.openai) || (textProvider === "gemini" && !apiKeys.google)) && (
-                <p className="mb-6 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 flex items-center gap-2">
-                  <Settings className="w-4 h-4" /> Configure a chave de API nas configurações antes de gerar.
-                </p>
-              )}
+
+              <div className="mb-6 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                Imagens & assets continuam com provider próprio dentro do viewer, no painel de geração visual.
+              </div>
 
               {loading && generationPhase ? (
                 <GenerationProgress phase={generationPhase} pct={generationPct} />
@@ -823,7 +944,7 @@ export default function Home() {
                 onGenerateAssetPack={handleGenerateAssetPack}
                 generatedAssets={generatedAssets}
                 apiKeys={apiKeys}
-                textProvider={textProvider}
+                promptProvider={promptOpsProvider}
                 onAssetGenerated={handleAssetGenerated}
                 onSaveToAssets={(asset) =>
                   setUploadedBrandAssets((prev) => [...prev, asset])
@@ -893,7 +1014,7 @@ export default function Home() {
                   <RefinePanel
                     brandbook={brandbookData}
                     apiKeys={apiKeys}
-                    textProvider={textProvider}
+                    strategyProvider={strategyProvider}
                     onRefined={(updated) => {
                       updateBrandbook(() => updated);
                       setViewerTab("preview");
@@ -904,7 +1025,7 @@ export default function Home() {
                   <RegenerateSectionsPanel
                     brandbook={brandbookData}
                     apiKeys={apiKeys}
-                    textProvider={textProvider}
+                    strategyProvider={strategyProvider}
                     onUpdated={(updated) => updateBrandbook(() => updated)}
                   />
                 </div>
@@ -917,7 +1038,7 @@ export default function Home() {
                 <ConsistencyPanel
                   brandbook={brandbookData}
                   apiKeys={apiKeys}
-                  textProvider={textProvider}
+                  strategyProvider={strategyProvider}
                 />
               </div>
             )}

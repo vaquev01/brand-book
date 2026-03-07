@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import {
   generateBrandbook,
   GenerateInputError,
+  type GenerateRequestPayload,
   parseGenerateInput,
 } from "@/lib/services/generate";
 import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
@@ -13,27 +14,19 @@ export async function POST(request: NextRequest) {
   const startedAt = Date.now();
   const memBefore = captureMem();
   const encoder = new TextEncoder();
-  const body = await request.json();
-  const preview = body as {
-    provider?: string;
-    scope?: string;
-    creativityLevel?: string;
-    briefing?: string;
-    externalUrls?: string[];
-    referenceImages?: string[];
-    logoImage?: string;
-  };
+  const body = await request.json() as GenerateRequestPayload;
 
   bbLog("info", "api.generate.start", {
     requestId,
     mem: memToJson(memBefore),
-    provider: preview.provider ?? "openai",
-    scope: preview.scope ?? "full",
-    creativityLevel: preview.creativityLevel ?? "balanced",
-    hasBriefing: !!preview.briefing,
-    externalUrlsCount: Array.isArray(preview.externalUrls) ? preview.externalUrls.length : 0,
-    referenceImagesCount: Array.isArray(preview.referenceImages) ? preview.referenceImages.length : 0,
-    hasLogoImage: typeof preview.logoImage === "string" && preview.logoImage.length > 0,
+    provider: body.provider ?? "openai",
+    scope: body.scope ?? "full",
+    creativityLevel: body.creativityLevel ?? "balanced",
+    hasBriefing: !!body.briefing,
+    externalUrlsCount: Array.isArray(body.externalUrls) ? body.externalUrls.length : 0,
+    referenceImagesCount: Array.isArray(body.referenceImages) ? body.referenceImages.length : 0,
+    hasLogoImage: typeof body.logoImage === "string" && body.logoImage.length > 0,
+    projectMode: body.projectMode ?? "new_brand",
   });
 
   const stream = new ReadableStream({

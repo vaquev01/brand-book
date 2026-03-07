@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { saasExample } from "@/lib/examples";
-import { decodeDataUrl, parseExportPackInput, safeRelPath } from "./exportPack";
+import { decodeDataUrl, ExportPackInputError, parseExportPackInput, safeRelPath } from "./exportPack";
 
 describe("exportPack service", () => {
   it("normalizes only safe relative paths", () => {
@@ -27,5 +27,16 @@ describe("exportPack service", () => {
     expect(payload.generatedAssets).toEqual([]);
     expect(payload.uploadedAssets).toEqual([]);
     expect(payload.assetPackFiles).toEqual([]);
+  });
+
+  it("blocks pack export when the brandbook fails the professional quality gate", () => {
+    expect(() =>
+      parseExportPackInput({
+        brandbookData: {
+          ...saasExample,
+          productionGuidelines: undefined,
+        },
+      })
+    ).toThrow(ExportPackInputError);
   });
 });

@@ -128,7 +128,7 @@ export function buildSectionDefs({
       title: "Identidade Verbal",
       category: "Identidade Verbal",
       when: !!data.verbalIdentity,
-      render: (num) => <SectionVerbalIdentity data={data} num={num} />,
+      render: (num) => <SectionVerbalIdentity data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "logo",
@@ -162,14 +162,14 @@ export function buildSectionDefs({
       title: "Tipografia",
       category: "Tipografia",
       when: true,
-      render: (num) => <SectionTypography data={data} num={num} />,
+      render: (num) => <SectionTypography data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "typography-scale",
       title: "Escala Tipográfica",
       category: "Tipografia",
       when: !!data.typographyScale && data.typographyScale.length > 0,
-      render: (num) => <SectionTypographyScale data={data} num={num} />,
+      render: (num) => <SectionTypographyScale data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "key-visual",
@@ -219,21 +219,21 @@ export function buildSectionDefs({
       title: "Guidelines de UI",
       category: "Design System",
       when: !!data.uiGuidelines,
-      render: (num) => <SectionUiGuidelines data={data} num={num} />,
+      render: (num) => <SectionUiGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "tokens-a11y",
       title: "Design Tokens & Acessibilidade",
       category: "Design System",
       when: isAdvanced && !!data.designTokens && !!data.accessibility,
-      render: (num) => <SectionTokensA11y data={data} num={num} />,
+      render: (num) => <SectionTokensA11y data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "ux-microcopy-motion",
       title: "UX Patterns, Microcopy & Motion",
       category: "Design System",
       when: isAdvanced && !!data.uxPatterns && !!data.microcopy && !!data.motion,
-      render: (num) => <SectionUxMicrocopyMotion data={data} num={num} />,
+      render: (num) => <SectionUxMicrocopyMotion data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "applications",
@@ -259,7 +259,7 @@ export function buildSectionDefs({
       title: "Produção & Handoff",
       category: "Diretrizes de Uso",
       when: !!data.productionGuidelines,
-      render: (num) => <SectionProductionGuidelines data={data} num={num} />,
+      render: (num) => <SectionProductionGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "social-media",
@@ -273,7 +273,7 @@ export function buildSectionDefs({
       title: "Governança do Design System",
       category: "Diretrizes de Uso",
       when: !!data.governance,
-      render: (num) => <SectionGovernance data={data} num={num} />,
+      render: (num) => <SectionGovernance data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "asset-pack",

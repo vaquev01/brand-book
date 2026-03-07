@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { BrandbookData } from "@/lib/types";
+import type { AiTextProvider, BrandbookData } from "@/lib/types";
 import type { ApiKeys } from "./ApiKeyConfig";
 import { RefreshCw, ChevronDown, ChevronUp, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface Props {
   brandbook: BrandbookData;
   apiKeys: ApiKeys;
-  textProvider: "openai" | "gemini";
+  strategyProvider: AiTextProvider;
   onUpdated: (updated: BrandbookData) => void;
 }
 
@@ -37,7 +37,7 @@ const SECTIONS: SectionConfig[] = [
   { key: "imageGenerationBriefing", label: "Briefing de Imagens", icon: "🖼️", description: "Diretrizes para geração de imagens IA" },
 ];
 
-export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUpdated }: Props) {
+export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, onUpdated }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [instruction, setInstruction] = useState("");
   const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
@@ -67,11 +67,11 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, textProvider, onUp
           sectionKey,
           instruction: instruction.trim() || undefined,
           externalUrls: externalUrls.length > 0 ? externalUrls : undefined,
-          provider: textProvider,
+          provider: strategyProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
-          openaiModel: apiKeys.openaiTextModel || undefined,
-          googleModel: apiKeys.googleTextModel || undefined,
+          openaiModel: strategyProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+          googleModel: strategyProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
         }),
       });
 

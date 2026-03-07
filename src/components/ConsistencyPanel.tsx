@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { BrandbookData } from "@/lib/types";
+import type { AiTextProvider, BrandbookData } from "@/lib/types";
 import type { ApiKeys } from "./ApiKeyConfig";
 import type { ConsistencyReport, ConsistencyIssue } from "@/app/api/check-consistency/route";
 import type { SystemHealthReport, Issue as SystemIssue } from "@/app/api/system-health/route";
+import type { BrandbookLintIssue, BrandbookLintReport } from "@/lib/brandbookLinter";
+import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
+import { buildBrandbookQualityOverview } from "@/lib/brandbookQualityOverview";
 import { ScanSearch, CheckCircle2, AlertTriangle, Info, ShieldCheck, ShieldAlert } from "lucide-react";
 
 interface Props {
   brandbook: BrandbookData;
   apiKeys: ApiKeys;
-  textProvider: "openai" | "gemini";
+  strategyProvider: AiTextProvider;
 }
 
 const SEVERITY_CONFIG = {
@@ -19,7 +22,7 @@ const SEVERITY_CONFIG = {
   suggestion: { label: "Sugestão", color: "bg-blue-50 border-blue-200 text-blue-800", dot: "bg-blue-400", Icon: Info },
 };
 
-function ScoreRing({ score }: { score: number }) {
+function ScoreRing({ score, label = "coerência da marca" }: { score: number; label?: string }) {
   const color = score >= 80 ? "#22c55e" : score >= 60 ? "#f59e0b" : "#ef4444";
   const r = 36;
   const circ = 2 * Math.PI * r;
@@ -40,7 +43,7 @@ function ScoreRing({ score }: { score: number }) {
           {score}
         </text>
       </svg>
-      <span className="text-xs text-gray-500 mt-1">coerência da marca</span>
+      <span className="text-xs text-gray-500 mt-1">{label}</span>
     </div>
   );
 }
@@ -75,15 +78,69 @@ function IssueCard({ issue }: { issue: ConsistencyIssue }) {
   );
 }
 
-export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
+function LintIssueRow({ issue }: { issue: BrandbookLintIssue }) {
+  const cfg = SEVERITY_CONFIG[issue.severity];
+  return (
+    <div className={`border rounded-xl p-4 ${cfg.color}`}>
+      <div className="flex items-start gap-3">
+        <cfg.Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-bold uppercase tracking-wider opacity-70">{issue.area}</div>
+          <div className="text-sm mt-1">{issue.issue}</div>
+          <div className="text-xs mt-2 opacity-80"><span className="font-semibold">Fix:</span> {issue.fix}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SystemIssueRow({ issue }: { issue: SystemIssue }) {
+  const color = issue.severity === "critical"
+    ? "bg-red-50 border-red-200 text-red-800"
+    : issue.severity === "warning"
+      ? "bg-amber-50 border-amber-200 text-amber-800"
+      : "bg-blue-50 border-blue-200 text-blue-800";
+  const IssueIcon = issue.severity === "critical" ? AlertTriangle : Info;
+  return (
+    <div className={`border rounded-xl p-4 ${color}`}>
+      <div className="flex items-start gap-3">
+        <IssueIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-bold uppercase tracking-wider opacity-70">{issue.area}</div>
+          <div className="text-sm mt-1">{issue.issue}</div>
+          <div className="text-xs mt-2 opacity-80"><span className="font-semibold">Fix:</span> {issue.fix}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [report, setReport] = useState<ConsistencyReport | null>(null);
   const [filter, setFilter] = useState<"all" | "critical" | "warning" | "suggestion">("all");
 
+  const [lintLoading, setLintLoading] = useState(false);
+  const [lintError, setLintError] = useState("");
+  const [lintReport, setLintReport] = useState<BrandbookLintReport | null>(null);
+
   const [systemLoading, setSystemLoading] = useState(false);
   const [systemError, setSystemError] = useState("");
   const [systemReport, setSystemReport] = useState<SystemHealthReport | null>(null);
+
+  async function handleLint() {
+    setLintLoading(true);
+    setLintError("");
+    try {
+      const nextReport = await fetchBrandbookLintReport(brandbook);
+      setLintReport(nextReport);
+    } catch (e: unknown) {
+      setLintError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setLintLoading(false);
+    }
+  }
 
   async function handleSystemHealth() {
     setSystemLoading(true);
@@ -100,27 +157,6 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
     }
   }
 
-  function SystemIssueRow({ issue }: { issue: SystemIssue }) {
-    const color = issue.severity === "critical"
-      ? "bg-red-50 border-red-200 text-red-800"
-      : issue.severity === "warning"
-        ? "bg-amber-50 border-amber-200 text-amber-800"
-        : "bg-blue-50 border-blue-200 text-blue-800";
-    const IssueIcon = issue.severity === "critical" ? AlertTriangle : Info;
-    return (
-      <div className={`border rounded-xl p-4 ${color}`}>
-        <div className="flex items-start gap-3">
-          <IssueIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold uppercase tracking-wider opacity-70">{issue.area}</div>
-            <div className="text-sm mt-1">{issue.issue}</div>
-            <div className="text-xs mt-2 opacity-80"><span className="font-semibold">Fix:</span> {issue.fix}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   async function handleCheck() {
     setLoading(true);
     setError("");
@@ -132,11 +168,11 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandbook,
-          provider: textProvider,
+          provider: strategyProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
-          openaiModel: apiKeys.openaiTextModel || undefined,
-          googleModel: apiKeys.googleTextModel || undefined,
+          openaiModel: strategyProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+          googleModel: strategyProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
         }),
       });
 
@@ -160,6 +196,20 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
     suggestion: report.issues.filter((i) => i.severity === "suggestion").length,
   } : null;
 
+  const qualityOverview = buildBrandbookQualityOverview({
+    aiReport: report ? { score: report.score, issues: report.issues } : null,
+    lintReport,
+    systemReport,
+  });
+
+  const qualityToneClass = qualityOverview.tone === "red"
+    ? "bg-red-50 border-red-200 text-red-800"
+    : qualityOverview.tone === "green"
+      ? "bg-green-50 border-green-200 text-green-800"
+      : qualityOverview.tone === "amber"
+        ? "bg-amber-50 border-amber-200 text-amber-800"
+        : "bg-gray-50 border-gray-200 text-gray-700";
+
   return (
     <div className="space-y-6">
       <div>
@@ -167,6 +217,88 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
         <p className="text-sm text-gray-500">
           A IA analisa o brandbook e identifica inconsistências, oportunidades e pontos fortes.
         </p>
+      </div>
+
+      <div className={`border rounded-xl p-4 ${qualityToneClass}`}>
+        <div className="flex items-start gap-4">
+          {qualityOverview.score !== null ? (
+            <ScoreRing score={qualityOverview.score} label="qualidade geral" />
+          ) : (
+            <div className="w-24 h-24 rounded-full border-2 border-dashed border-current/30 flex items-center justify-center text-xs font-semibold opacity-70 flex-shrink-0">
+              sem score
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-sm">{qualityOverview.title}</div>
+            <div className="text-sm mt-1">{qualityOverview.summary}</div>
+            <div className="flex gap-2 mt-3 flex-wrap text-xs">
+              <span className={`px-2 py-1 rounded-full font-medium ${qualityOverview.coverage.ai ? "bg-white/80 border border-current/10" : "bg-black/5 text-current/60"}`}>
+                IA {qualityOverview.coverage.ai ? "ok" : "pendente"}
+              </span>
+              <span className={`px-2 py-1 rounded-full font-medium ${qualityOverview.coverage.lint ? "bg-white/80 border border-current/10" : "bg-black/5 text-current/60"}`}>
+                Lint {qualityOverview.coverage.lint ? "ok" : "pendente"}
+              </span>
+              <span className={`px-2 py-1 rounded-full font-medium ${qualityOverview.coverage.system ? "bg-white/80 border border-current/10" : "bg-black/5 text-current/60"}`}>
+                Sistema {qualityOverview.coverage.system ? "ok" : "pendente"}
+              </span>
+              {qualityOverview.totals.critical > 0 && <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">{qualityOverview.totals.critical} crítico(s)</span>}
+              {qualityOverview.totals.warning > 0 && <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">{qualityOverview.totals.warning} aviso(s)</span>}
+              {qualityOverview.totals.suggestion > 0 && <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">{qualityOverview.totals.suggestion} sugestão(ões)</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-xl p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h4 className="font-bold text-sm">Lint determinístico do Brandbook</h4>
+            <p className="text-xs text-gray-500 mt-1">
+              Verifica regras objetivas de handoff, cross-section, produção e prontidão operacional.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLint}
+            disabled={lintLoading}
+            className="text-xs bg-gray-900 text-white px-3 py-2 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {lintLoading ? "Analisando..." : "Rodar lint"}
+          </button>
+        </div>
+
+        {lintError && (
+          <div className="mt-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-700 text-sm">
+            {lintError}
+          </div>
+        )}
+
+        {lintReport && (
+          <div className="mt-4 space-y-4">
+            <div className={`border rounded-xl p-4 flex items-start gap-4 ${lintReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
+              <ScoreRing score={lintReport.score} />
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-sm">
+                  {lintReport.ok ? "Lint aprovado" : "Lint com pontos a corrigir"}
+                </div>
+                <div className="text-sm mt-1">{lintReport.summary}</div>
+                <div className="flex gap-2 mt-3 flex-wrap text-xs">
+                  {lintReport.stats.critical > 0 && <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">{lintReport.stats.critical} crítico(s)</span>}
+                  {lintReport.stats.warning > 0 && <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">{lintReport.stats.warning} atenção</span>}
+                  {lintReport.stats.suggestion > 0 && <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">{lintReport.stats.suggestion} sugestão(ões)</span>}
+                </div>
+              </div>
+            </div>
+
+            {lintReport.issues.length > 0 && (
+              <div className="space-y-2">
+                {lintReport.issues.map((issue, idx) => (
+                  <LintIssueRow key={idx} issue={issue} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="bg-white border rounded-xl p-4">
@@ -201,13 +333,13 @@ export function ConsistencyPanel({ brandbook, apiKeys, textProvider }: Props) {
                 : <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
               }
               <div>
-              <div className="font-semibold text-sm">
-                {systemReport.ok ? "Sistema OK" : "Sistema com inconsistências"}
-              </div>
-              <div className="text-xs mt-1 opacity-80">{systemReport.summary}</div>
-              <div className="text-[10px] font-mono mt-2 opacity-70">
-                assets={systemReport.stats.assets} · categories={JSON.stringify(systemReport.stats.categories)} · ratios={JSON.stringify(systemReport.stats.aspectRatios)}
-              </div>
+                <div className="font-semibold text-sm">
+                  {systemReport.ok ? "Sistema OK" : "Sistema com inconsistências"}
+                </div>
+                <div className="text-xs mt-1 opacity-80">{systemReport.summary}</div>
+                <div className="text-[10px] font-mono mt-2 opacity-70">
+                  assets={systemReport.stats.assets} · categories={JSON.stringify(systemReport.stats.categories)} · ratios={JSON.stringify(systemReport.stats.aspectRatios)}
+                </div>
               </div>
             </div>
 

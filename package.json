@@ -8,8 +8,10 @@
     "start": "node --max-old-space-size=${MAX_OLD_SPACE_SIZE:-12288} ./node_modules/next/dist/bin/next start -p ${PORT:-3005}",
     "lint": "next lint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "sync": "node scripts/git-sync.mjs"
+    "typecheck": "tsc --noEmit --incremental false",
+    "sync": "node scripts/git-sync.mjs",
+    "sync:fast": "node scripts/git-sync.mjs --skip-checks",
+    "release": "node scripts/git-sync.mjs"
   },
   "dependencies": {
     "@google/genai": "^0.7.0",

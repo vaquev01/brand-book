@@ -73,6 +73,11 @@ function compactBrandContext(brandbook: BrandbookData): string {
 
   const logoStyleGuide = igb?.logoStyleGuide ?? "";
   const patternStyle = igb?.patternStyle ?? "";
+  const compositionPhilosophy = brandbook.keyVisual?.compositionPhilosophy ?? "";
+  const rebrandCriticalMode = "Treat this as brand-direction work, not surface styling. Preserve proprietary memory before novelty. Evolve only through clarity, hierarchy, scalability, controlled synthesis, and stronger recognition.";
+  const scorecard = "Internally score 0-5 on recognition, emotional fidelity, system coherence, real-world plausibility, and distinctiveness. Do not finalize below 20/25. If the result feels generic, colder, more corporate, or weakens proprietary brand memory, it fails.";
+  const creativePlan = "Before styling, define one thesis, one hero decision, one dominant hierarchy, one first-impression target, and one success condition.";
+  const consciousCreationMode = "Every element must have a job for recognition, hierarchy, emotional truth, or system coherence. Remove anything decorative, generic, or functionless.";
 
   const logoSymbol = brandbook.logo?.symbol ?? "";
   const symbols = (brandbook.keyVisual?.symbols ?? []).slice(0, 6).join(" | ");
@@ -115,7 +120,13 @@ function compactBrandContext(brandbook: BrandbookData): string {
     displayFont || bodyFont ? `Typography: display=${displayFont || "-"}; body=${bodyFont || "-"}` : "",
     primaryColors ? `Primary colors: ${primaryColors}` : "",
     secondaryColors ? `Secondary colors: ${secondaryColors}` : "",
+    primaryColors || flora || fauna || objects ? `Recognition anchors: ${[primaryColors, flora, fauna, objects].filter(Boolean).join(" · ")}` : "",
+    `REBRAND_CRITICAL_MODE: ${rebrandCriticalMode}`,
+    `BRAND_COHERENCE_SCORECARD: ${scorecard}`,
+    `CREATIVE_PLAN: ${creativePlan}`,
+    `CONSCIOUS_CREATION_MODE: ${consciousCreationMode}`,
     tree ? tree : "",
+    compositionPhilosophy ? `Signature composition: ${compositionPhilosophy}` : "",
     elements ? `Key visual elements: ${elements}` : "",
     flora ? `Flora: ${flora}` : "",
     fauna ? `Fauna: ${fauna}` : "",
@@ -206,6 +217,32 @@ COMO PENSAR (antes de escrever o prompt):
 3. MATERIALIDADE → Quais texturas, superfícies e materiais traduzem a alma da marca?
 4. EXECUÇÃO → Como a câmera, a luz e a composição servem ao conceito?
 
+PRINCÍPIO DE COERÊNCIA:
+- Preserve a memória proprietária da marca antes de buscar novidade.
+- Se uma decisão visual deixar o resultado mais genérico, mais frio, mais corporativo ou menos específico da marca, rejeite essa decisão.
+- Reconhecimento da marca vem antes de sofisticação genérica.
+
+REBRAND_CRITICAL_MODE (sempre ativo):
+- Trate qualquer geração como decisão de direção de marca, não só de styling.
+- Preserve explicitamente recognition anchors, ativos de memória, assinatura compositiva, lógica simbólica e temperatura humana da marca.
+- Evolua apenas por clareza, hierarquia, escalabilidade, control synthesis e production-readiness.
+- Nunca sacrifique especificidade cultural, calor humano, energia verbal, paleta proprietária ou caráter da marca em troca de uma estética mais genérica.
+
+SCORECARD DE COERÊNCIA (obrigatório, interno):
+- Antes de devolver o prompt final, faça uma auditoria silenciosa 0-5 em recognition, emotional fidelity, system coherence, real-world plausibility e distinctiveness.
+- Não finalize prompts que tenderiam a ficar abaixo de 20/25.
+- Se qualquer hard fail aparecer — genérico, frio demais, corporativo demais, template demais, sem memória própria da marca — reescreva antes de responder.
+- Não exponha score nem raciocínio; apenas devolva o melhor prompt final.
+
+PLANEJAMENTO CRIATIVO (obrigatório, interno):
+- Antes de escrever o prompt final, defina silenciosamente a tese central, a hero decision, a hierarquia dominante e o que o espectador precisa reconhecer no primeiro impacto.
+- Planeje a ordem da construção visual antes da descrição estética.
+
+CONSCIÊNCIA DE CRIAÇÃO (obrigatório, interno):
+- Nenhum elemento pode entrar só porque é bonito; cada escolha precisa ter função para reconhecimento, coerência, emoção ou uso real da marca.
+- Se um elemento não tem trabalho claro, remova ou substitua.
+- Trate remoção, síntese e silêncio visual como decisões tão inteligentes quanto adição.
+
 Controle de criatividade (CREATIVITY_MODE):
 - consistent: máxima fidelidade ao briefing e ao brandbook. Sem improvisação.
 - balanced: equilíbrio entre precisão e refinamento estético. Pequenas surpresas visuais bem-vindas.
@@ -222,10 +259,16 @@ ${rebrandModeRules}
 ALMA & INTENCIONALIDADE (OBRIGATÓRIO):
 - SEMPRE inclua: ARCHETYPE (arquétipo com tradução visual), EMOTIONAL_CORE (o que o espectador SENTE), VIEWER_JOURNEY (timing adaptado ao medium).
 - Se o brandbook tem STYLE_TREE, replique literalmente.
+- Preserve explicitamente recognition anchors, signature composition e qualquer pista verbal/nomeada que seja estrutural para a marca.
 - Se há flora/fauna/objects, use-os como elementos visuais com protagonismo proporcional à importância na marca (marcas com identidade forte em flora/fauna → elementos PROEMINENTES, não sutis).
 - Se há structuredPatterns, referencie nome, composição e densidade.
 - Se há manifesto/brandPromise, deixe a essência emocional permear a direção de arte.
 - Se há sensoryProfile/textureLanguage, traduza em instruções visuais concretas (materiais, superfícies, temperatura tátil).
+
+PARA LOGOS OU MARCAS GRÁFICAS:
+- Trate essência verbal e reconhecimento como prioridade estrutural.
+- Simplifique apenas quando warmth, specificity, recognition e emotional charge permanecerem intactos.
+- Não empurre a solução para neutralidade corporativa fria se a marca pede gesto humano, energia coloquial, calor, brasilidade ou materialidade viva.
 
 ESSÊNCIA HUMANA:
 - O prompt deve soar como se um diretor de arte sênior o tivesse escrito à mão — não como um template.

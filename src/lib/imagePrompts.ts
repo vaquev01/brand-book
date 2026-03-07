@@ -413,10 +413,12 @@ function providerQuality(provider: ImageProvider, key: AssetKey, archetypeName?:
   };
   
   // NEVER apply photographic archetype qualities to logos
-  const archQ = isLogo ? "award-winning clean corporate graphic design" : (archetypeQuality[arch] ?? archetypeQuality.Creator);
+  const archQ = isLogo
+    ? "award-winning brand identity craftsmanship, distinctive silhouette, strategic clarity, emotional resonance, scalable system quality"
+    : (archetypeQuality[arch] ?? archetypeQuality.Creator);
 
   if (provider === "dalle3") {
-    if (isLogo) return `professional brand identity mark, precise geometric construction, clean crisp edges, Pentagram/Wolff Olins studio quality, ${archQ}`;
+    if (isLogo) return `professional brand identity mark, strategically distinctive, clean crisp edges, concept-led construction, world-class identity studio quality, ${archQ}`;
     if (isMockup) return `hyperrealistic commercial product photography, ultra-sharp material textures, medium-format sensor quality, studio-grade three-point lighting, ${archQ}`;
     if (isPattern) return `precise geometric illustration, mathematically perfect seamless tile, professional brand pattern system, ${archQ}`;
     if (isSocial) return `social media design excellence, thumb-stopping visual hierarchy, mobile-optimized composition, ${archQ}`;
@@ -425,17 +427,17 @@ function providerQuality(provider: ImageProvider, key: AssetKey, archetypeName?:
   }
   if (provider === "stability") {
     if (isMockup) return `hyperrealistic product photography, 8K UHD, professional studio lighting, photorealistic material texture, ${archQ}`;
-    if (isLogo || isPattern) return `precise clean graphic illustration, sharp geometric edges, professional brand identity quality, ${archQ}`;
+    if (isLogo || isPattern) return `precise clean graphic illustration, sharp edges, concept-led brand identity quality, ${archQ}`;
     if (isMascot) return `professional character illustration, clean linework, expressive simple shapes, ${archQ}`;
     return `8K UHD editorial photography, sharp focus, highly detailed, professional color grading, ${archQ}`;
   }
   if (provider === "imagen") {
     if (isMockup) return `photorealistic commercial photography, professional studio lighting, sharp material details, ${archQ}`;
-    if (isLogo || isPattern) return `clean precise graphic design, sharp edges, professional illustration quality, ${archQ}`;
+    if (isLogo || isPattern) return `clean precise graphic design, sharp edges, strategically distinctive illustration quality, ${archQ}`;
     if (isMascot) return `professional character illustration, clean 2D design, crisp edges, ${archQ}`;
     return `high-fidelity photorealistic image, professional photography quality, rich color, ${archQ}`;
   }
-  if (isLogo) return `professional logo design, precise linework, clean scalable identity mark, ${archQ}`;
+  if (isLogo) return `professional logo design, precise linework, concept-led scalable identity mark, ${archQ}`;
   if (isSocial) return `bold graphic design, high contrast, clear visual hierarchy, ${archQ}`;
   if (isMascot) return `professional character design, clean illustration, crisp linework, ${archQ}`;
   return `professional graphic design, crisp edges, bold visual impact, ${archQ}`;
@@ -525,6 +527,196 @@ function assetHierarchy(key: AssetKey): string {
   return "1) one focal subject, 2) supporting brand motifs/pattern, 3) balanced negative space.";
 }
 
+function brandCoherenceDirective(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData,
+  key: AssetKey
+): string {
+  const recognitionAnchors = [
+    data.colors.primary[0] ? `${data.colors.primary[0].name} (${data.colors.primary[0].hex})` : "",
+    data.colors.primary[1] ? `${data.colors.primary[1].name} (${data.colors.primary[1].hex})` : "",
+    ctx.identityAssets,
+  ].filter(Boolean).join(" · ");
+
+  const lines = [
+    `BRAND_COHERENCE: Preserve the brand's proprietary memory before adding novelty.`,
+    `ESSENCE FIRST: ${ctx.purpose}`,
+    recognitionAnchors ? `RECOGNITION ANCHORS: ${recognitionAnchors}.` : "",
+    ctx.compositionPhilosophy ? `SIGNATURE COMPOSITION: ${ctx.compositionPhilosophy}.` : "",
+    `REJECTION TEST: If a visual choice makes the result feel more generic, colder, more corporate, or less specific to "${data.brandName}", reject that choice.`,
+  ];
+
+  if (key === "logo_primary" || key === "logo_dark_bg") {
+    lines.push(`LOGO JUDGMENT: Simplify only when recognition, warmth, and conceptual specificity remain intact. Distinctive verbal cues may be integrated only if they feel inevitable, never gimmicky.`);
+  } else if (key === "brand_pattern" || key === "presentation_bg") {
+    lines.push(`SYSTEM JUDGMENT: The pattern must feel like the brand's native visual grammar, not decorative filler. Keep support at the edges and preserve readability in the center when relevant.`);
+  } else {
+    lines.push(`APPLICATION JUDGMENT: The output must feel like the brand in real life and in operation, not like a generic moodboard or template. Use identity assets as controlled support, never as clutter.`);
+  }
+
+  return lines.filter(Boolean).join(" ");
+}
+
+function rebrandCriticalModeDirective(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData,
+  key: AssetKey
+): string {
+  const isLogo = key === "logo_primary" || key === "logo_dark_bg";
+  const isSystemAsset = [
+    "brand_pattern",
+    "presentation_bg",
+    "brand_mascot",
+    "business_card",
+    "brand_collateral",
+    "delivery_packaging",
+    "takeaway_bag",
+    "food_container",
+    "uniform_tshirt",
+    "uniform_apron",
+    "outdoor_billboard",
+  ].includes(key);
+  const primaryRecognitionColors = data.colors.primary
+    .slice(0, 2)
+    .map((color) => `${color.name} (${color.hex})`)
+    .join(" + ");
+  const warmthSignals = `${ctx.purpose} ${ctx.toneOfVoice} ${ctx.personality} ${ctx.logoStyle} ${ctx.visualStyle} ${ctx.textureLanguage} ${ctx.sensoryProfile}`.toLowerCase();
+  const needsWarmthProtection = /(warm|human|coloquial|signature|gest|manual|organic|calor|brasil|boteco|tropical|material|sensorial|popular|craft)/.test(warmthSignals);
+  const level = isLogo ? "HIGH" : isSystemAsset ? "MEDIUM" : "ACTIVE";
+  const preserve = [
+    ctx.purpose ? `brand essence (${ctx.purpose})` : "",
+    primaryRecognitionColors ? `recognition colors (${primaryRecognitionColors})` : "",
+    ctx.logoSymbol ? `core symbol logic (${ctx.logoSymbol})` : "",
+    ctx.compositionPhilosophy ? `signature composition (${ctx.compositionPhilosophy})` : "",
+    ctx.identityAssets ? `identity assets (${ctx.identityAssets})` : "",
+    needsWarmthProtection ? `human temperature (${ctx.toneOfVoice})` : "",
+  ].filter(Boolean).join("; ");
+  const evolveOnlyThrough = [
+    "clarity",
+    "hierarchy",
+    "scalability",
+    "controlled synthesis",
+    "production readiness",
+    "stronger recognition",
+  ].join(", ");
+  const doNotSacrifice = [
+    needsWarmthProtection ? "warmth, spontaneity, and colloquial humanity" : "brand-specific emotional charge",
+    primaryRecognitionColors ? "proprietary palette memory" : "recognition anchors",
+    ctx.identityAssets ? "local/cultural specificity" : "brand specificity",
+    isLogo ? "distinctive verbal/name cues in favor of a colder generic corporate mark" : "brand character in favor of template aesthetics",
+  ].join(", ");
+
+  return [
+    `REBRAND_CRITICAL_MODE: ${level}. Treat this as brand-direction work, not surface styling.`,
+    preserve ? `PRESERVE: ${preserve}.` : "",
+    `EVOLVE ONLY THROUGH: ${evolveOnlyThrough}.`,
+    `DO NOT SACRIFICE: ${doNotSacrifice}.`,
+  ].filter(Boolean).join(" ");
+}
+
+function brandCoherenceScorecardDirective(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData,
+  key: AssetKey
+): string {
+  const isLogo = key === "logo_primary" || key === "logo_dark_bg";
+  const isPattern = key === "brand_pattern" || key === "presentation_bg";
+  const warmthSignals = `${ctx.purpose} ${ctx.toneOfVoice} ${ctx.personality} ${ctx.logoStyle} ${ctx.visualStyle} ${ctx.textureLanguage} ${ctx.sensoryProfile}`.toLowerCase();
+  const needsWarmthProtection = /(warm|human|coloquial|signature|gest|manual|organic|calor|brasil|boteco|tropical|material|sensorial|popular|craft)/.test(warmthSignals);
+  const criteria = isLogo
+    ? [
+      "recognition and memorability",
+      "essence-to-form translation",
+      needsWarmthProtection ? "warmth and human charge" : "emotional specificity",
+      "symbol and wordmark coherence",
+      "scalability and reduction quality",
+    ]
+    : isPattern
+      ? [
+        "recognition anchors",
+        "system-native visual grammar",
+        "signature composition fidelity",
+        "center readability when relevant",
+        "distinctiveness versus decorative filler",
+      ]
+      : [
+        "brand recognition at first glance",
+        needsWarmthProtection ? "warmth and human truth" : "emotional fidelity",
+        "system consistency",
+        "real-world brand plausibility",
+        "distinctiveness versus generic templates",
+      ];
+  const passScore = isLogo ? "22/25" : isPattern ? "21/25" : "20/25";
+  const hardFail = isLogo
+    ? `If the result feels more generic, colder, more corporate, less ownable, or less specific to "${data.brandName}", it fails.`
+    : isPattern
+      ? `If the result reads as decorative filler, ignores the composition philosophy, or could belong to any other brand, it fails.`
+      : `If the result feels like a template, moodboard, stock aesthetic, or weakens proprietary brand memory, it fails.`;
+
+  return [
+    `BRAND_COHERENCE_SCORECARD: Internally score 0-5 on ${criteria.join("; ")}.`,
+    `MINIMUM PASS: ${passScore}. Do not finalize directions likely to score below this threshold.`,
+    `HARD FAIL CONDITIONS: ${hardFail}`,
+  ].join(" ");
+}
+
+function creativePlanningDirective(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData,
+  key: AssetKey
+): string {
+  const isLogo = key === "logo_primary" || key === "logo_dark_bg";
+  const isPattern = key === "brand_pattern" || key === "presentation_bg";
+  const firstImpressionTarget = isLogo
+    ? `Immediate recognition of "${data.brandName}" through one ownable mark and one clear verbal signal.`
+    : isPattern
+      ? `Immediate recognition of the brand's native rhythm through logo-derived motifs and signature composition.`
+      : `Immediate recognition of "${data.brandName}" as a lived brand world, not a generic aesthetic exercise.`;
+  const heroDecision = isLogo
+    ? "Choose one central symbolic thesis and let all form decisions serve that thesis."
+    : isPattern
+      ? "Choose one repeat logic and one density strategy before styling the pattern."
+      : "Choose one dominant focal move and make all supporting decisions reinforce it.";
+  const executionOrder = isLogo
+    ? "recognition anchor -> core thesis -> hierarchy between symbol and wordmark -> palette memory -> reduction/scalability check"
+    : isPattern
+      ? "root motif -> repeat structure -> edge/center behavior -> density control -> system repeatability"
+      : "recognition anchor -> emotional outcome -> dominant hierarchy -> brand assets support -> production realism";
+
+  return [
+    `CREATIVE_PLAN: Before styling, silently define one thesis, one hero decision, one dominant hierarchy, and one success condition for this asset.`,
+    `FIRST_IMPRESSION_TARGET: ${firstImpressionTarget}`,
+    `HERO_DECISION: ${heroDecision}`,
+    `PLAN_ORDER: ${executionOrder}.`,
+  ].join(" ");
+}
+
+function consciousCreationDirective(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData,
+  key: AssetKey
+): string {
+  const isLogo = key === "logo_primary" || key === "logo_dark_bg";
+  const isPattern = key === "brand_pattern" || key === "presentation_bg";
+  const decisionFocus = isLogo
+    ? "Every proportion, terminal, counterspace, and relation between symbol and wordmark must earn its place."
+    : isPattern
+      ? "Every motif, interval, density shift, and empty area must help the system breathe and stay ownable."
+      : "Every object, crop, texture, accent, and compositional move must serve recognition, hierarchy, or emotional truth.";
+  const removalTest = isLogo
+    ? `If removing a detail improves clarity without reducing recognition or warmth for "${data.brandName}", remove it.`
+    : isPattern
+      ? `If a motif or density choice does not strengthen the brand grammar, remove it.`
+      : `If an element feels decorative, template-like, or unjustified in real brand use, remove it.`;
+
+  return [
+    `CONSCIOUS_CREATION_MODE: Create with awareness of what each decision is doing for the brand, not just how it looks.`,
+    `ELEMENT_ACCOUNTABILITY: ${decisionFocus}`,
+    `DECISION_TEST: Ask of each choice what job it performs, what brand memory it protects, and what would be lost if it disappeared.`,
+    `REMOVAL_TEST: ${removalTest}`,
+  ].join(" ");
+}
+
 function styleAnchorTree(ctx: ReturnType<typeof extractBrandContext>, data: BrandbookData): string {
   const symbols = (data.keyVisual.symbols ?? []).slice(0, 4).join(", ");
   const patterns = (data.keyVisual.patterns ?? []).slice(0, 4).join(", ");
@@ -567,6 +759,11 @@ function consistencyPrefix(
     `PALETTE (strict): ${ctx.allColors}.`,
     `MOTIFS: derived from logo symbol: ${ctx.logoSymbol}.`,
     `STYLE: ${ctx.visualStyle}. Photography/art direction: ${ctx.photoStyle}.`,
+    brandCoherenceDirective(ctx, data, key),
+    rebrandCriticalModeDirective(ctx, data, key),
+    brandCoherenceScorecardDirective(ctx, data, key),
+    creativePlanningDirective(ctx, data, key),
+    consciousCreationDirective(ctx, data, key),
     logoRule,
     `HIERARCHY: ${assetHierarchy(key)}`,
   ].join(" ");
@@ -1029,6 +1226,40 @@ function getShapePsychology(archetype: string): string {
   return "triangular and dynamic shapes (conveying innovation, power, movement, and growth)";
 }
 
+function deriveLogoExecutionProfile(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData
+): "gestural" | "hybrid" | "geometric" | "balanced" {
+  const marketing = data.typography.marketing;
+  const category = (marketing?.category ?? "").toLowerCase();
+  const usage = `${marketing?.usage ?? ""} ${ctx.logoStyle} ${ctx.toneOfVoice} ${ctx.personality}`.toLowerCase();
+  const wantsGesture = /(script|signature|gest|caligr|cursive|manual|brush|human|warm|coloquial|organic|expressive)/.test(`${category} ${usage}`);
+  const wantsGeometry = /(geometric|grid|modular|precise|minimal|clean|structured|system|vector)/.test(`${ctx.logoStyle} ${ctx.visualStyle}`.toLowerCase());
+
+  if (wantsGesture && wantsGeometry) return "hybrid";
+  if (wantsGesture) return "gestural";
+  if (wantsGeometry) return "geometric";
+  return "balanced";
+}
+
+function logoExecutionDirective(
+  ctx: ReturnType<typeof extractBrandContext>,
+  data: BrandbookData
+): string {
+  const profile = deriveLogoExecutionProfile(ctx, data);
+
+  if (profile === "gestural") {
+    return "EXECUTION PROFILE: human and expressive mark-making. Prefer organic curves, signature energy, natural stroke logic, and visible warmth. Avoid sterile corporate geometry or tech-startup neutrality.";
+  }
+  if (profile === "hybrid") {
+    return "EXECUTION PROFILE: disciplined geometry fused with human warmth. The system should feel scalable and precise, but never cold; use expressive curve tension and personality-preserving form decisions.";
+  }
+  if (profile === "geometric") {
+    return "EXECUTION PROFILE: geometric clarity and structural rigor. Use precise proportions, strong silhouette, and system-ready form, while still preserving the brand's emotional character.";
+  }
+  return "EXECUTION PROFILE: timeless brand identity balance. Use clear structure, confident silhouette, and emotional intelligibility without drifting into sterility or ornamental excess.";
+}
+
 function buildDiffusionLogoPrompt(
   ctx: ReturnType<typeof extractBrandContext>,
   data: BrandbookData,
@@ -1042,12 +1273,29 @@ function buildDiffusionLogoPrompt(
   const symbolConcept = (data.logo.symbol && !data.logo.symbol.toLowerCase().startsWith("abstract symbol for"))
     ? data.logo.symbol
     : coreValue;
+  const palette = [ctx.primaryColor, ctx.secondaryColor, ctx.accentColor]
+    .filter((color, index, arr) => arr.indexOf(color) === index)
+    .slice(0, 3);
+  const paletteDirective = palette.join(", ");
+  const primaryRecognitionColors = data.colors.primary
+    .slice(0, 2)
+    .map((color) => `${color.name} (${color.hex})`)
+    .join(" + ");
+  const coherence = brandCoherenceDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
+  const rebrandCritical = rebrandCriticalModeDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
+  const scorecard = brandCoherenceScorecardDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
+  const planning = creativePlanningDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
+  const consciousness = consciousCreationDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
+  const execution = logoExecutionDirective(ctx, data);
 
   const bg = variant === "light" 
     ? "pure solid white #FFFFFF background" 
     : "pure solid dark #0a0a0a background";
 
-  const shapePsychology = getShapePsychology(archetype);
+  // Use LLM generated psychology if available, fallback to hardcoded archetype logic
+  const shapePsychology = (data.logo as any).shapePsychology 
+    ? (data.logo as any).shapePsychology 
+    : getShapePsychology(archetype);
 
   // 1. ABSOLUTE MEDIUM & SUBJECT ANCHOR
   let prompt = provider === "imagen" 
@@ -1056,18 +1304,29 @@ function buildDiffusionLogoPrompt(
 
   // 2. FOCUS STRICTLY ON GEOMETRY (DO NOT mention what we don't want, as it triggers attention)
   prompt += `Focus exclusively on abstract graphic design, pure geometry, and typography. The canvas must remain entirely empty except for the central logo lockup. `;
+  prompt += `Strategic Core: the logo must be the visual consequence of the brand concept, not an isolated decorative idea. Translate the brand's purpose (${ctx.purpose}), unique value (${ctx.uniqueValue}), differentiators (${ctx.differentiators}), personality (${ctx.personality}), and tone of voice (${ctx.toneOfVoice}) into one coherent identity decision. ${coherence} ${rebrandCritical} ${scorecard} ${planning} ${consciousness} ${execution} `;
 
   // 3. TYPOGRAPHY
   if (isIdeogram) {
-    prompt += `Wordmark: The logo must feature the exact text "${data.brandName}" rendered perfectly in ${ctx.displayFont} style typography with excellent optical kerning. `;
+    const typographyRationale = (data.typography.marketing as any)?.antiBlandingRationale ?? "excellent optical kerning";
+    prompt += `Wordmark: The logo must feature the exact text "${data.brandName}" rendered perfectly in ${ctx.displayFont} style typography. Typographic direction: ${typographyRationale}. `;
   }
+  prompt += `Visual hierarchy: the main wordmark must be the primary verbal signal. Any descriptor, second line, category label, or supporting text must be visibly subordinate in size and emphasis. Typography must reinforce the same conceptual thesis as the symbol and feel strategically connected to the verbal identity. Symbol and wordmark must feel like one coherent identity system, not disconnected stacked parts. If the brand's strength lives in warmth, spontaneity, signature energy, or colloquial humanity, preserve that in the letterform behavior instead of neutralizing it. `;
 
   // 4. SHAPE & CONCEPT
-  prompt += `Symbol Concept: A highly abstracted, geometric mark representing "${symbolConcept}". Use predominantly ${shapePsychology}. Focus on clean, simple, unforced geometric shapes. `;
+  prompt += `Symbol Concept: A highly abstracted, geometric mark representing "${symbolConcept}". Build the mark around one central symbolic thesis only, with immediate recognition and no competing metaphors. The chosen formal idea must clearly derive from the brand concept and verbal identity rather than from a random visual gimmick. Shape Psychology: ${shapePsychology}. `;
+  prompt += `If a distinctive verbal or naming cue exists — such as punctuation, initials, a ligature, an accent mark, or a signature character — you may integrate it into the symbol only when it emerges naturally from the strategy, strengthens recognition, remains instantly legible, and can be implemented consistently across the identity system. Do not predefine or force this move. When simplifying, preserve what is emotionally or semantically core to the brand instead of flattening it into a generic mark. `;
+  
+  const negativeSpaceMetaphor = (data.logo as any).negativeSpaceMetaphor;
+  if (negativeSpaceMetaphor) {
+    prompt += `OPTIONAL CREATIVE DIRECTION: If it fits naturally, you may use negative space intelligently to hide a visual metaphor (${negativeSpaceMetaphor}), but prioritize clean geometry over forced metaphors. `;
+  } else {
+    prompt += `Focus on clean, simple, unforced geometric shapes. `;
+  }
   
   // 5. COLORS & STYLE
-  prompt += `Colors: ${ctx.primaryColor} and ${ctx.accentColor}. `;
-  prompt += `Visual Style: Paul Rand inspired, timeless, 2D flat design, crisp edges, SVG style. Follow golden ratio proportions.`;
+  prompt += `Color System: Use a disciplined palette of 2 or 3 principal colors drawn from ${ctx.allColors}. Prioritize ${primaryRecognitionColors || paletteDirective} as the main identity recognition colors, and use ${paletteDirective} as the full working set when needed. The mark must stay coherent on both light and dark backgrounds without relying on gradients, lighting effects, or decorative texture. `;
+  prompt += `Visual Style: timeless 2D flat design, crisp edges, SVG-ready finish, balanced proportions, strong small-size legibility, memorable silhouette, strategically distinctive, premium but never ornamental, never generic.`;
 
   return prompt;
 }
@@ -1099,7 +1358,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       const basePrompt = buildDiffusionLogoPrompt(ctx, data, provider, "light");
       return parts(
         basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
-        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, perspective distortion, background texture, table, wood, paper, drop shadow, glow, gradient, bevel, emboss, halo, outer glow, multiple logos, decorative frame, badge border, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns"),
+        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, perspective distortion, background texture, table, wood, paper, drop shadow, glow, gradient, bevel, emboss, halo, outer glow, multiple logos, decorative frame, badge border, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept"),
       );
     }
 
@@ -1108,7 +1367,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       return parts(
         basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
         `CRITICAL: Exactly the same mark as primary, just reversed palette.`,
-        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, bokeh, gradient background, lighting effects, glow, 3D, perspective, bevel, emboss, halo, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns"),
+        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, bokeh, gradient background, lighting effects, glow, 3D, perspective, bevel, emboss, halo, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept"),
       );
     }
 

@@ -348,6 +348,13 @@ export interface BrandbookData {
   governance?: Governance;
 }
 
+export type AiTextProvider = "openai" | "gemini";
+
+export interface WorkflowProviders {
+  strategy: AiTextProvider;
+  promptOps: AiTextProvider;
+}
+
 export type ImageProvider = "dalle3" | "stability" | "ideogram" | "imagen";
 
 export interface GeneratedAsset {

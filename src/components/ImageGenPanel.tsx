@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ApiKeys } from "@/components/ApiKeyConfig";
-import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset } from "@/lib/types";
+import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset, type AiTextProvider } from "@/lib/types";
 import { ASSET_CATALOG, buildImagePrompt, buildApplicationPrompt, detectSizeVariants, AssetKey, AspectRatioOption } from "@/lib/imagePrompts";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
 import { downloadImageUrl, fetchImageDataUrl } from "@/lib/imageTransport";
@@ -15,7 +15,7 @@ interface Props {
   onSaveToAssets?: (asset: UploadedAsset) => void;
   apiKeys: ApiKeys;
   uploadedAssets?: UploadedAsset[];
-  textProvider: "openai" | "gemini";
+  promptProvider: AiTextProvider;
 }
 
 const PROVIDERS: { id: ImageProvider; name: string; desc: string; envKey: string; color: string }[] = [
@@ -102,7 +102,7 @@ function pickDefaultProvider(keys: ApiKeys): ImageProvider {
   return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "dalle3";
 }
 
-export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveToAssets, apiKeys, uploadedAssets = [], textProvider }: Props) {
+export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveToAssets, apiKeys, uploadedAssets = [], promptProvider }: Props) {
   const [provider, setProvider] = useState<ImageProvider>(() => pickDefaultProvider(apiKeys));
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -218,7 +218,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const basePrompt = buildApplicationPrompt(app, data, provider, aspectRatio);
       let prompt = basePrompt;
       if (refineBeforeGenerate) {
-        const hasTextKey = (textProvider === "openai" && !!apiKeys.openai) || (textProvider === "gemini" && !!apiKeys.google);
+        const hasTextKey = (promptProvider === "openai" && !!apiKeys.openai) || (promptProvider === "gemini" && !!apiKeys.google);
         if (hasTextKey) {
           const refineRes = await fetch("/api/refine-image-prompt", {
             method: "POST",
@@ -227,11 +227,11 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
               basePrompt,
               imageProvider: provider,
               assetKey: "brand_collateral",
-              textProvider,
+              textProvider: promptProvider,
               openaiKey: apiKeys.openai || undefined,
               googleKey: apiKeys.google || undefined,
-              openaiModel: apiKeys.openaiTextModel || undefined,
-              googleModel: apiKeys.googleTextModel || undefined,
+              openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+              googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
             }),
           });
           const refineJson = await readJsonResponse<{ prompt?: string; error?: string }>(
@@ -299,7 +299,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
 
       if (refineBeforeGenerate) {
         const canRefine = !isStrictLogoAsset(assetKey) && ((provider !== "stability") || prompt.includes(" --neg "));
-        const hasTextKey = (textProvider === "openai" && !!apiKeys.openai) || (textProvider === "gemini" && !!apiKeys.google);
+        const hasTextKey = (promptProvider === "openai" && !!apiKeys.openai) || (promptProvider === "gemini" && !!apiKeys.google);
         if (canRefine && hasTextKey) {
           const refineRes = await fetch("/api/refine-image-prompt", {
             method: "POST",
@@ -308,11 +308,11 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
               basePrompt,
               imageProvider: provider,
               assetKey,
-              textProvider,
+              textProvider: promptProvider,
               openaiKey: apiKeys.openai || undefined,
               googleKey: apiKeys.google || undefined,
-              openaiModel: apiKeys.openaiTextModel || undefined,
-              googleModel: apiKeys.googleTextModel || undefined,
+              openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+              googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
             }),
           });
           const refineJson = await readJsonResponse<{ prompt?: string; error?: string }>(
@@ -442,11 +442,11 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           creativity: customCreativity,
           referenceImageDataUrl: customPieceDataUrl || undefined,
           referenceImageMode: customPieceDataUrl ? customPieceMode : undefined,
-          textProvider,
+          textProvider: promptProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
-          openaiModel: apiKeys.openaiTextModel || undefined,
-          googleModel: apiKeys.googleTextModel || undefined,
+          openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+          googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
         }),
       });
       const composeJson = await readJsonResponse<{ prompt?: string; error?: string }>(
@@ -539,7 +539,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
             <span>
               <span className="font-semibold">Refinar prompt antes de gerar</span>
               <span className="block text-[10px] text-gray-500 mt-0.5">
-                Usa {textProvider === "openai" ? (apiKeys.openaiTextModel || "GPT") : (apiKeys.googleTextModel || "Gemini")} para reformatar o prompt no estilo ideal do provider.
+                Usa {promptProvider === "openai" ? (apiKeys.openaiTextModel || "GPT") : (apiKeys.googleTextModel || "Gemini")} para reformatar o prompt no estilo ideal do provider.
               </span>
             </span>
           </label>

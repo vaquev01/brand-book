@@ -456,7 +456,13 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
                 <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
                 <h4 className="font-bold text-gray-900">Logo Secundário</h4>
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed">{secondaryText}</p>
+              <EditableField
+                value={secondaryText}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, secondary: val } }))}
+                className="text-gray-600 text-sm leading-relaxed"
+                readOnly={!onUpdateData}
+                multiline
+              />
             </div>
           )}
           {symbolText && (
@@ -465,7 +471,13 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
                 <span className="w-7 h-7 bg-gray-800 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">◆</span>
                 <h4 className="font-bold text-gray-900">Símbolo / Ícone</h4>
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed">{symbolText}</p>
+              <EditableField
+                value={symbolText}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, symbol: val } }))}
+                className="text-gray-600 text-sm leading-relaxed"
+                readOnly={!onUpdateData}
+                multiline
+              />
             </div>
           )}
         </div>
@@ -479,7 +491,19 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
             {variantEntries.map((v) => (
               <div key={v.key} className="bg-white border rounded-xl p-4 shadow-sm">
                 <h4 className="font-bold text-sm text-gray-900 mb-2">{v.label}</h4>
-                <p className="text-gray-500 text-xs leading-relaxed">{v.desc}</p>
+                <EditableField
+                  value={v.desc || ""}
+                  onSave={(val) => onUpdateData?.(prev => ({
+                    ...prev,
+                    logoVariants: {
+                      ...prev.logoVariants,
+                      [v.key]: val,
+                    }
+                  }))}
+                  className="text-gray-500 text-xs leading-relaxed"
+                  readOnly={!onUpdateData}
+                  multiline
+                />
               </div>
             ))}
           </div>

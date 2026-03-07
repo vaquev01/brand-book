@@ -6,445 +6,626 @@ import { BrandbookData } from "./types";
 export const caracaBarExample = {
   "schemaVersion": "2.0",
   "brandName": "Caraca! Bar",
-  "industry": "Bar & Gastronomia — Boteco Tropical Premium",
+  "industry": "Bar & Gastronomia — Boteco Tropical de Encontro",
   "brandConcept": {
-    "purpose": "Celebrar a biodiversidade brasileira através da gastronomia de boteco, transformando ingredientes nativos em experiências sensoriais que reconectam as pessoas com a riqueza da terra.",
-    "mission": "Oferecer sabores brasileiros autênticos em um ambiente que une a boemia acolhedora do boteco com a exuberância visual da Mata Atlântica e da Amazônia.",
-    "vision": "Ser a marca que define o novo boteco brasileiro — onde a rusticidade do papel kraft abraça a explosão de cores da natureza tropical.",
-    "uniqueValueProposition": "Caraca! Bar não é mais um boteco — é um ecossistema sensorial onde a estética de empório tropical rústico transforma a experiência de beber e comer em uma imersão na brasilidade botânica e boêmia.",
+    "purpose": "Transformar a mesa de bar em um ponto de encontro brasileiro cheio de humor, sabor e identidade viva — um lugar onde as pessoas comem bem, brindam melhor e saem dizendo 'caraca!'.",
+    "mission": "Servir porções, drinks, lanches e pratos em um ambiente caloroso que mistura brasilidade, irreverência e presença visual memorável sem perder a alma popular do bar.",
+    "vision": "Ser a marca de bar mais reconhecível e querida de Londrina quando alguém quiser reunir amigos, comer bem e viver uma experiência brasileira sem pose, mas com assinatura.",
+    "uniqueValueProposition": "Caraca! Bar combina atmosfera real de encontro, linguagem popular brasileira, identidade verde-amarela imediatamente reconhecível e um repertório visual tropical mais autoral — fazendo a marca parecer viva no feed, na fachada, no balcão e na memória.",
     "reasonsToBelieve": [
-      "Ingredientes exclusivamente brasileiros com rastreabilidade de origem",
-      "Identidade visual baseada em gravura botânica autoral",
-      "Sistema de 4 patterns escalável que garante reconhecimento instantâneo",
-      "Pranchetas de madeira de demolição e papel kraft reciclado"
+      "Perfil @caracabaroficial com 22,4 mil seguidores, 347 posts e linguagem visual consistente nas peças públicas observadas",
+      "Sistema atual já reconhecível em verde profundo + amarelo dourado, lettering gestual e ícones circulares nos highlights",
+      "Mistura recorrente de gente real, ambiente, pratos, porções, burgers e drinks — a marca vive em operação, não só em conceito",
+      "Endereço, fachada e bio reforçam ancoragem local e sensação de ponto de encontro de bairro com força de marca"
     ],
-    "userPsychographics": "Jovens adultos (25-40 anos) urbanos que valorizam autenticidade sobre ostentação. Buscam experiências gastronômicas com identidade cultural forte. Preferem o artesanal ao industrial, o local ao importado.",
+    "userPsychographics": "Adultos jovens e grupos de amigos que valorizam lugar com cara própria, comida boa sem afetação, humor brasileiro e ambiente em que dá vontade de voltar. Gostam de postar o que é genuíno, não o que parece montado demais.",
     "values": [
-      "Brasilidade Autêntica — celebrar o que é nosso sem clichê",
-      "Abundância Natural — a biodiversidade como inspiração constante",
-      "Calor Humano — a descontração da mesa de bar como patrimônio",
-      "Sustentabilidade Rústica — kraft, madeira de demolição, cerâmica artesanal",
-      "Exuberância Controlada — explosão de cores com elegância"
+      "Calor Humano — a mesa como lugar de encontro, conversa e repetição de visita",
+      "Brasilidade Cotidiana — falar e servir como quem conhece o gosto do público brasileiro de verdade",
+      "Generosidade de Boteco — fartura percebida, acolhimento e informalidade bem resolvida",
+      "Humor sem Afetação — comunicação divertida, popular e memorável sem virar caricatura",
+      "Sistema com Assinatura — evoluir a identidade atual para algo mais coerente, reconhecível e aplicável"
     ],
     "personality": [
-      "Acolhedor como um boteco de esquina",
-      "Vibrante como a flora tropical",
-      "Rústico sem ser descuidado",
-      "Autêntico sem ser forçado",
-      "Entusiasmado — o ponto de exclamação é parte da alma"
+      "Caloroso e sociável",
+      "Solar e brasileiro",
+      "Popular bem resolvido",
+      "Irreverente sem deboche",
+      "Entusiasmado de forma genuína"
     ],
-    "toneOfVoice": "Caloroso e convidativo, como um amigo que te chama para experimentar algo incrível. Usa expressões brasileiras coloquiais sem ser vulgar. O tom é de entusiasmo genuíno — o nome 'Caraca!' já diz tudo. Exemplo: 'Caraca, que caipirinha!' é mais a cara da marca do que 'Desfrute de nossa seleção exclusiva de caipirinhas'."
+    "toneOfVoice": "Direto, caloroso e coloquial. Fala como quem convida para sentar, pedir uma porção e ficar mais um pouco. Usa humor brasileiro, frases promocionais com energia e entusiasmo real. Deve soar como marca viva de bar, não como restaurante formal nem como pub importado.",
+    "brandArchetype": "Cara Comum + Criador — recebe todo mundo sem pose, mas transforma esse encontro em uma marca com assinatura visual própria, humor e repertório reconhecível."
   },
   "brandStory": {
-    "manifesto": "A gente acredita que o melhor bar do mundo não precisa importar nada.\n\nTudo que a mesa brasileira precisa já nasce aqui — no cacau da Bahia, no caju do Nordeste, nas folhas que pintam de verde cada canto desse país absurdo. A gente só precisou abrir os olhos, as mãos e o coração pra ver que a riqueza sempre esteve debaixo do nosso nariz.\n\nCaraca! não é só uma exclamação. É o espanto de quem descobre que um tucano pode ser tão bonito quanto um cocktail bem feito. Que o kraft de um papel pode ser tão elegante quanto o mármore de um restaurante caro. Que a boemia e a botânica podem se encontrar na mesma mesa.",
-    "originStory": "Nasceu da frustração de ver botecos incríveis com identidades visuais genéricas — e restaurantes bonitos com comida sem alma. O primeiro cardápio foi impresso em papel kraft, com ilustrações botânicas feitas à mão. Quando os clientes começaram a pedir para levar o cardápio pra casa, soubemos que tínhamos encontrado algo.",
-    "brandPromise": "Todo sabor tem uma história brasileira. A gente conta ela com cores, texturas e um 'Caraca!' na ponta da língua.",
+    "manifesto": "Há bares que servem bebida. Há bares que servem comida. E há bares que servem aquele tipo de noite que você quer repetir. O Caraca! nasceu para ser isso: um ponto de encontro com cara própria, clima brasileiro e energia de quem gosta de ver a mesa cheia, a conversa rendendo e o copo voltando gelado.\n\nA gente acredita em brasilidade sem fantasia, em humor sem afetação e em design que aproxima em vez de afastar. O verde e o amarelo aqui não são enfeite: são presença. A comida não entra como cenário. O cliente não entra como figurante. Tudo existe para fazer o lugar viver de verdade — no bar, na rua e no feed.",
+    "originStory": "O Caraca! consolidou sua força local combinando logo memorável, linguagem calorosa, fotos de produto e gente real, além de uma presença digital que faz o público reconhecer o bar antes mesmo de ler a legenda. Agora a evolução da marca parte dessa força já construída: manter a energia popular e o reconhecimento visual, mas organizar melhor o sistema para crescer com mais coerência.",
+    "brandPromise": "Você vai sair do Caraca! com a sensação de que valeu a mesa, valeu a companhia e valeu voltar. Tudo deve reforçar isso — do primeiro story à última porção.",
     "brandBeliefs": [
-      "Acreditamos que o Brasil é o país mais rico do mundo em sabores",
-      "Acreditamos que a rusticidade é uma forma de elegância quando tratada com intenção",
-      "Acreditamos que o melhor bar é aquele onde você quer voltar, não onde você precisa postar",
-      "Acreditamos que a natureza é o melhor designer — a gente só traduz",
-      "Acreditamos que o ponto de exclamação não é exagero, é entusiasmo genuíno"
+      "Acreditamos que bar bom é o que vira ponto de encontro",
+      "Acreditamos que comida boa e identidade forte podem coexistir sem frescura",
+      "Acreditamos que o humor brasileiro aproxima mais do que qualquer texto sofisticado",
+      "Acreditamos que uma marca de bar precisa aparecer viva em gente, produto e ambiente ao mesmo tempo",
+      "Acreditamos que o 'Caraca!' é menos um truque gráfico e mais um estado emocional da marca"
     ]
   },
   "positioning": {
-    "category": "Boteco Tropical Premium — Gastronomia de Bar com Identidade Botânica",
-    "targetMarket": "Jovens profissionais urbanos (25-40 anos) em cidades brasileiras que buscam experiências gastronômicas autênticas com forte identidade cultural e visual.",
-    "positioningStatement": "Para o brasileiro que ama a cultura de bar mas se cansou da falta de personalidade, Caraca! Bar é o empório tropical que transforma cada petisco e drink em uma celebração visual e sensorial da biodiversidade brasileira.",
+    "category": "Boteco Tropical Urbano de Encontro",
+    "targetMarket": "Adultos de 23 a 40 anos, especialmente em Londrina e entorno, que escolhem bares por clima, companhia, variedade de consumo e personalidade visual — sem abrir mão de preço percebido justo e atmosfera real.",
+    "positioningStatement": "Para quem procura um bar com comida boa, drinks marcantes, ambiente vivo e identidade própria, Caraca! Bar é o boteco tropical urbano que transforma encontro em marca — com humor brasileiro, presença visual reconhecível e sensação de lugar que já faz parte da rotina boa da cidade.",
     "primaryDifferentiators": [
-      "Identidade visual de gravura botânica autoral — nenhum concorrente tem esse nível de detalhamento ilustrativo",
-      "Sistema de 4 patterns escaláveis (Selva, Geométrico, Azulejo, Minimalista)",
-      "Cardápio em kraft com prancheta de madeira de demolição — o cardápio é uma peça de arte",
-      "Fusão estética inédita: botânica tropical + boemia de boteco + azulejaria colonial"
+      "Equity visual já existente em verde profundo, amarelo dourado, lettering gestual e ícones circulares nos destaques",
+      "Conteúdo mistura clientes, pratos, porções, lanches, drinks e ambiente real — a marca parece vivida e não montada",
+      "Tom promocional popular, caloroso e memorável, com frases que soam de bar brasileiro de verdade",
+      "Potencial de evolução forte: transformar os códigos atuais em um sistema mais governado, tropical e autoral sem perder reconhecimento"
     ],
     "competitiveAlternatives": [
-      "Bares de cerveja artesanal com estética industrial/hipster",
-      "Botecos tradicionais sem identidade visual forte",
-      "Restaurantes tropicais com estética genérica de palmeiras"
+      "Bares genéricos com comunicação promocional sem assinatura",
+      "Pubs e gastrobares de estética importada ou industrial",
+      "Restaurantes visualmente bonitos, mas sem calor humano e sem linguagem de boteco"
     ],
     "reasonsToBelieve": [
-      "19K+ seguidores orgânicos no Instagram (@caracabaroficial)",
-      "Cardápios colecionáveis — clientes pedem para levar pra casa",
-      "Sistema de embalagens reconhecível instantaneamente na rua"
+      "22,4 mil seguidores e 347 posts no perfil observado, com recorrência clara de produto, clientes e ambiente",
+      "Bio e endereço público reforçam ancoragem local: Rua Caracas, 166 — Londrina",
+      "Highlights já organizam a marca em pilares concretos: Drinks, Clientes, Lanches, Pratos, Porções e Nosso bar"
     ]
   },
   "audiencePersonas": [
     {
-      "name": "Marina — A Curadora de Experiências",
-      "role": "Designer de interiores, 31 anos, São Paulo",
-      "context": "Frequenta bares 2-3x por semana. Escolhe pelo ambiente e estética tanto quanto pela comida. Posta stories quando o lugar é autêntico.",
+      "name": "Ana Paula — A Organizadora do Rolê",
+      "role": "Analista de marketing, 29 anos, Londrina",
+      "context": "É quem escolhe o bar do grupo, compara ambiente, cardápio e clima antes de decidir. Gosta de lugar que renda stories, mas só volta quando a experiência é leve e gostosa de verdade.",
       "goals": [
-        "Encontrar bares que surpreendam visualmente sem parecer forçado",
-        "Descobrir drinks com ingredientes brasileiros",
-        "Ter experiências instagramáveis genuínas"
+        "Acertar um lugar que funcione para todo mundo",
+        "Encontrar drinks e porções com boa apresentação",
+        "Ter um bar com cara própria para repetir com frequência"
       ],
       "painPoints": [
-        "Bares hipster com estética industrial genérica",
-        "Cardápios digitais sem personalidade",
-        "Embalagens de delivery genéricas"
+        "Bares sem identidade visual e sem personalidade",
+        "Lugares bonitos mas pouco acolhedores",
+        "Comunicação de promoções confusa ou genérica"
       ],
       "objections": [
-        "Será que não é mais um bar tropical com decoração de Havaianas?",
-        "Se é bonito, deve ser caro demais"
+        "Será que é só mais um bar instagramável?",
+        "A marca promete mais do que entrega na mesa?"
       ],
       "channels": [
-        "Instagram (diário)",
+        "Instagram",
         "Google Maps",
-        "Stories de amigos",
-        "TikTok (food content)"
+        "WhatsApp",
+        "TikTok"
       ]
     },
     {
-      "name": "Rodrigo — O Boêmio Raiz com Gosto Apurado",
-      "role": "Jornalista cultural, 37 anos, Belo Horizonte",
-      "context": "Conhece todos os botecos da cidade. Tem opinião forte sobre caipirinha e petisco. Valoriza a cultura de bar como patrimônio.",
+      "name": "Felipe — O Cliente de Repetição",
+      "role": "Representante comercial, 34 anos, Londrina",
+      "context": "Usa o bar como lugar de encontro no meio da semana e no fim de semana. Valoriza fartura, agilidade, clima informal e um cardápio que agrade o grupo inteiro.",
       "goals": [
-        "Encontrar bares que respeitem a cultura de boteco",
-        "Provar releituras de clássicos com ingredientes de qualidade",
-        "Recomendar com orgulho"
+        "Ter um ponto de encontro confiável",
+        "Comer bem sem cerimônia",
+        "Levar amigos para um lugar com personalidade e bom astral"
       ],
       "painPoints": [
-        "Bares gourmet com porções pequenas em pratos brancos",
-        "Perda da identidade do boteco em favor de estéticas importadas"
+        "Bares com atendimento frio",
+        "Porções pequenas demais para o preço",
+        "Ambientes sem energia social"
       ],
       "objections": [
-        "Se tem muito design, será que não perdeu a alma de boteco?",
-        "Identidade visual elaborada pode afastar quem só quer beber"
+        "Se for moderno demais, pode ter perdido a alma do bar",
+        "Se a comunicação for exagerada, talvez a entrega não acompanhe"
       ],
       "channels": [
-        "Instagram (curadoria)",
+        "Instagram",
         "Boca a boca",
-        "Blogs gastronômicos",
-        "WhatsApp (grupos)"
+        "WhatsApp",
+        "Google Maps"
+      ]
+    },
+    {
+      "name": "Luiza — A Criadora Local de Conteúdo",
+      "role": "Estudante e microinfluenciadora, 24 anos, Londrina",
+      "context": "Procura lugares visualmente reconhecíveis, com fotos boas de produto, humor na comunicação e ambiente que gere conteúdo orgânico sem parecer forçado.",
+      "goals": [
+        "Encontrar marca com linguagem própria",
+        "Postar conteúdo de comida e drinks com cara de descoberta",
+        "Associar sua imagem a lugares que pareçam vivos e atuais"
+      ],
+      "painPoints": [
+        "Feed poluído demais",
+        "Estética copiada de outros bares",
+        "Artes promocionais sem assinatura"
+      ],
+      "objections": [
+        "Se tudo for só promoção, a marca perde charme",
+        "Se faltar consistência visual, o conteúdo não rende memória"
+      ],
+      "channels": [
+        "Instagram",
+        "TikTok",
+        "Reels",
+        "Stories"
       ]
     }
   ],
   "verbalIdentity": {
-    "tagline": "sabores brasileiros",
-    "oneLiner": "O empório tropical onde a boemia encontra a botânica — cada sabor conta a história de um Brasil que você ainda não provou.",
+    "tagline": "há bares que vêm pro bem.",
+    "oneLiner": "Caraca! Bar é o boteco tropical urbano onde porção, drink, humor e encontro ganham uma marca que o público reconhece de longe e lembra depois.",
     "brandVoiceTraits": [
-      "Entusiasmado",
-      "Acolhedor",
-      "Brasileiro de verdade",
-      "Sensorial",
-      "Irreverente mas respeitoso"
+      "Caloroso",
+      "Popular bem resolvido",
+      "Bem-humorado",
+      "Promocional com personalidade",
+      "Brasileiro"
     ],
     "messagingPillars": [
       {
-        "title": "Brasilidade Autêntica",
-        "description": "Celebrar o que é nosso — ingredientes, cultura, cores e sabores — sem filtro de importação.",
+        "title": "Bar que vive na rotina boa da cidade",
+        "description": "O Caraca! se posiciona como lugar de encontro recorrente, não como experiência rara ou elitizada.",
         "proofPoints": [
-          "Ingredientes rastreados até o produtor local",
-          "Ilustrações baseadas em espécies reais",
-          "Nenhum produto importado no cardápio de drinks"
+          "Fachada reconhecível",
+          "Bio com endereço explícito",
+          "Conteúdo recorrente de clientes e ambiente"
         ],
         "exampleCopy": [
-          "O cacau veio da Bahia. A caipirinha nasceu aqui. A experiência? Só no Caraca!",
-          "Cada folha da nossa ilustração existe de verdade na floresta."
+          "Tem lugar que você visita. O Caraca! é lugar que entra no teu roteiro.",
+          "Chama a turma. O resto a gente põe na mesa."
         ]
       },
       {
-        "title": "A Estética do Sabor",
-        "description": "A identidade visual não é decoração — é extensão do sabor. O kraft evoca a terra, as cores evocam os ingredientes.",
+        "title": "Comida e drink com energia de verdade",
+        "description": "A marca precisa parecer saborosa, generosa e viva. Produto nunca entra como detalhe secundário.",
         "proofPoints": [
-          "Cardápio em kraft com prancheta de madeira",
-          "4 padrões visuais exclusivos",
-          "Embalagens colecionáveis"
+          "Posts de pratos, lanches, porções e drinks aparecem como protagonistas",
+          "Close real de comida",
+          "Combinação de oferta e desejo nas artes promocionais"
         ],
         "exampleCopy": [
-          "Bonito de comer, bonito de ver, bonito de levar pra casa.",
-          "A selva não cabe numa moldura. Por isso ela invade as bordas de tudo que a gente faz."
+          "Rodízio de espetos e porções pra resolver tua noite sem enrolação.",
+          "Essa caipirinha não pede legenda grande. Pede replay."
         ]
       },
       {
-        "title": "Boemia com Alma",
-        "description": "Boteco não é só um lugar — é uma cultura brasileira. O Caraca! honra essa tradição com violão, Costela-de-Adão e a melhor caipirinha.",
+        "title": "Humor brasileiro sem caricatura",
+        "description": "A comunicação pode brincar, exagerar com afeto e usar expressões populares, desde que continue parecendo marca real de bar.",
         "proofPoints": [
-          "Ambiente de boteco com acabamento artesanal premium",
-          "Trilha de MPB e samba",
-          "Violão como elemento gráfico central"
+          "Nome exclamativo já carrega energia",
+          "Chamadas promocionais observadas usam humor curto e direto",
+          "A linguagem não depende de formalidade para parecer profissional"
         ],
         "exampleCopy": [
-          "O melhor boteco do mundo não precisa importar nada.",
-          "Mesa de bar é patrimônio nacional. A gente trata como tal."
+          "Bom pra cacildsii.",
+          "Caraca, olha isso aqui e me diz se tu não vinha."
         ]
       }
     ],
     "vocabulary": {
       "preferred": [
-        "sabores brasileiros",
-        "brasilidade",
-        "botânica",
-        "caraca!",
-        "de origem",
-        "autêntico",
-        "artesanal",
-        "exuberante",
-        "da terra",
-        "boemia",
-        "celebrar",
-        "tropical"
+        "caraca",
+        "porções",
+        "drinks",
+        "lanches",
+        "pratos",
+        "nosso bar",
+        "vem pro bem",
+        "bora",
+        "mesa",
+        "rolê",
+        "gelado",
+        "fartura"
       ],
       "avoid": [
         "gourmet",
-        "premium",
-        "exclusivo",
-        "sofisticado",
-        "experiência gastronômica",
-        "seleção curada",
-        "drinks assinados",
-        "fine dining",
-        "molecular",
-        "fusion",
+        "sofisticação autoral",
+        "alta gastronomia",
+        "mixologia exclusiva",
+        "experiência premium",
         "craft",
-        "happy hour"
+        "fine dining",
+        "signature drinks"
       ]
     },
     "doDont": {
       "do": [
-        "Usar entusiasmo genuíno — 'Caraca, que caipirinha!'",
-        "Falar dos ingredientes como se apresentasse um amigo",
-        "Usar expressões brasileiras coloquiais",
-        "Manter tom acolhedor como quem recebe em casa"
+        "Usar frases curtas e convidativas",
+        "Parecer gente chamando gente",
+        "Nomear produtos e momentos com clareza",
+        "Usar humor como tempero, não como muleta"
       ],
       "dont": [
-        "Nunca usar linguagem corporativa formal",
-        "Nunca traduzir para inglês",
-        "Nunca se referir à comida como 'produto'",
-        "Nunca usar 'happy hour' — preferir 'hora boa' ou 'sextou'"
+        "Não soar corporativo",
+        "Não escrever como pub importado",
+        "Não exagerar em adjetivos vazios",
+        "Não transformar toda peça em panfleto gritante"
       ]
     },
     "sampleHeadlines": [
-      "Caraca, que caipirinha!",
-      "A selva invadiu o bar. E ficou.",
-      "Sabores que o Brasil esqueceu — a gente lembrou.",
-      "O cacau veio da Bahia. A vibe veio de casa.",
-      "Boteco não é lugar. É estado de espírito."
+      "Há bares que vêm pro bem.",
+      "Caraca, olha esse drink.",
+      "Teu novo ponto de encontro já tem endereço.",
+      "Porção na mesa. Conversa rendendo. Do jeito que tem que ser.",
+      "Drinks, clientes, lanches, pratos e vontade de voltar."
     ],
     "sampleCTAs": [
-      "Vem provar",
-      "Descobre o cardápio",
-      "Reserva tua mesa",
-      "Pede pelo delivery",
-      "Segue a gente"
+      "Chama a turma",
+      "Ver cardápio",
+      "Reservar mesa",
+      "Pedir agora",
+      "Ver nosso bar"
     ],
     "tonePerChannel": [
       {
         "channel": "Instagram",
-        "tone": "Visual-first, caloroso e entusiasmado. Legendas curtas com emoção.",
-        "example": "Caraca, olha esse tucano dividindo espaço com a caipirinha de caju! A selva tá on. #caracabar #saboresbrasileiros"
+        "tone": "Visual, direto e caloroso. O texto complementa a imagem sem disputar com ela.",
+        "example": "Caraca, essa aqui é daquelas que resolve o fim do dia em dois goles e uma mesa cheia. #caracabar #vemprobem"
       },
       {
         "channel": "WhatsApp",
-        "tone": "Direto e informal, como um amigo avisando.",
-        "example": "E aí! Sexta tem live de samba e a caipirinha de cacau voltou pro cardápio. Bora? Reserva aqui: [link]"
+        "tone": "Próximo, rápido e resolutivo. Parece mensagem de quem está te esperando no bar.",
+        "example": "Oi! Hoje tem rodízio e mesa boa te esperando. Quer que eu já confirme tua reserva?"
       },
       {
         "channel": "Site",
-        "tone": "Acolhedor mas informativo. Sedutor e funcional.",
-        "example": "O cardápio muda com as estações. Porque a natureza não se repete — e a gente também não."
+        "tone": "Informativo com clima. Explica o essencial sem perder o calor da marca.",
+        "example": "Rua Caracas, 166. Vem pelo drink, fica pelo encontro e volta porque o clima pede."
       },
       {
         "channel": "Atendimento",
-        "tone": "Caloroso, resolutivo e humano. Nunca robótico.",
-        "example": "Caraca, que pena que aconteceu isso! Vamos resolver agora. Me manda teu pedido que a gente cuida."
+        "tone": "Humano, educado e sem script engessado.",
+        "example": "Poxa, valeu por avisar. Vamos resolver isso agora pra tua experiência ficar redonda."
       },
       {
-        "channel": "Email",
-        "tone": "Semi-informal e pessoal. Assuntos criativos.",
-        "example": "Assunto: O cacau voltou (e trouxe amigos). Fala! Essa semana o cardápio ganhou 3 novos drinks com cacau da Bahia..."
+        "channel": "TikTok",
+        "tone": "Espontâneo, divertido e mais cru que o Instagram. Mostra bastidor, reação e comida sem polimento excessivo.",
+        "example": "POV: tu pediu só uma porção e saiu montando mesa pra noite inteira."
       }
     ]
   },
   "logo": {
-    "primary": "https://placehold.co/800x300/CBA37B/1E3A2F?text=Caraca!+Bar",
-    "secondary": "https://placehold.co/400x200/1E3A2F/CBA37B?text=Caraca!+Bar",
-    "symbol": "https://placehold.co/400x400/CBA37B/1E3A2F?text=C!",
-    "favicon": "Letra 'C' com ponto de exclamação integrado, Verde Noturno sobre Kraft/Areia. Legível em 16x16px.",
-    "clearSpace": "Logotipo em lettering script cursivo fluido — escrita manual com pincel. Letras conectadas, inclinação leve. O ponto de exclamação é parte integrante. Espaçamento mínimo: altura do ponto de exclamação em todas as direções.",
-    "minimumSize": "Digital: 120px. Impresso: 30mm. Bordado: 5cm mínimo.",
+    "primary": "https://placehold.co/800x300/006B60/D5A41D?text=Caraca!+Bar",
+    "secondary": "https://placehold.co/400x200/D5A41D/006B60?text=Caraca!+Bar",
+    "symbol": "https://placehold.co/400x400/006B60/D5A41D?text=C!",
+    "favicon": "Selo circular verde com assinatura gestual amarela. Em microescala, usar a curva inicial do lettering com ponto de exclamação simplificado.",
+    "clearSpace": "A forma-base do sistema é um selo circular/oval com assinatura caligráfica viva dentro dele. O respiro mínimo deve equivaler à altura do 'B' de 'Bar' ao redor do conjunto. O ponto de exclamação continua parte do nome, mas não precisa virar símbolo autônomo em toda peça; ele entra quando reforça energia e reconhecimento.",
+    "minimumSize": "Digital: 96px de largura para wordmark completo. Impresso: 24mm. Ícone circular: 16px em digital e 8mm em impressão.",
     "incorrectUsages": [
-      "Nunca remover o ponto de exclamação",
-      "Nunca usar sem fundo Kraft ou sem caixa de proteção sobre backgrounds complexos",
-      "Nunca alterar proporções entre 'Caraca!' e 'Bar'",
-      "Nunca separar o slogan 'sabores brasileiros' do logotipo quando houver espaço",
-      "Nunca usar cores fora da paleta oficial",
-      "Nunca rotacionar — a inclinação original é intencional",
-      "Nunca aplicar sombra, brilho, gradiente ou 3D"
-    ]
+      "Nunca trocar a relação verde + amarelo por combinações aleatórias",
+      "Nunca distorcer o lettering para parecer fonte digitada comum",
+      "Nunca forçar o ponto de exclamação como ícone isolado se isso prejudicar legibilidade",
+      "Nunca remover o contorno/área de proteção do selo quando o fundo for fotográfico complexo",
+      "Nunca aplicar sombras, brilhos, bevel, neon ou efeitos 3D",
+      "Nunca usar o logo como se fosse marca de pub inglês ou beer house importado"
+    ],
+    "semioticAnalysis": {
+      "natureOfSymbol": "Index",
+      "denotation": "Assinatura gestual amarela acomodada dentro de um campo circular verde",
+      "connotation": "Sinal de presença, espontaneidade e encontro. Parece marca que já está viva na rua, no copo e no feed — não marca conceitual distante do público"
+    },
+    "shapePsychology": "O círculo do selo comunica encontro, mesa, comunidade e recorrência. O gesto caligráfico injeta calor humano, informalidade e energia popular brasileira.",
+    "negativeSpaceMetaphor": "O vazio dentro do selo funciona como palco para o gesto do nome. O campo verde concentra atenção e transforma o lettering em assinatura instantânea.",
+    "evolutionaryStage": "Transitional"
   },
   "logoVariants": {
-    "horizontal": "https://placehold.co/800x200/CBA37B/1E3A2F?text=Caraca!+Bar+sabores+brasileiros",
-    "stacked": "https://placehold.co/400x400/CBA37B/1E3A2F?text=Caraca!%0ABar",
-    "mono": "https://placehold.co/600x200/FFFFFF/1E3A2F?text=Caraca!+Bar",
-    "negative": "https://placehold.co/600x200/1E3A2F/CBA37B?text=Caraca!+Bar",
-    "markOnly": "https://placehold.co/300x300/CBA37B/1E3A2F?text=C!",
-    "wordmarkOnly": "https://placehold.co/600x150/CBA37B/1E3A2F?text=sabores+brasileiros"
+    "horizontal": "https://placehold.co/900x240/006B60/D5A41D?text=Caraca!+Bar",
+    "stacked": "https://placehold.co/400x400/006B60/D5A41D?text=Caraca!%0ABar",
+    "mono": "https://placehold.co/700x220/FFFFFF/0E4038?text=Caraca!+Bar",
+    "negative": "https://placehold.co/700x220/0E4038/F4E6A7?text=Caraca!+Bar",
+    "markOnly": "https://placehold.co/300x300/006B60/D5A41D?text=C!",
+    "wordmarkOnly": "https://placehold.co/700x180/F4EFE3/006B60?text=Caraca!+Bar"
   },
   "colors": {
     "primary": [
       {
-        "name": "Kraft / Areia — base rústica que evoca papel artesanal e terra seca",
-        "hex": "#CBA37B",
-        "rgb": "203, 163, 123",
-        "cmyk": "15, 30, 50, 0",
-        "pantone": "Pantone 7508 C",
-        "usage": "Fundo principal de todos os materiais — cardápios, embalagens, posts. Simula papel kraft real."
+        "name": "Verde Caraca — presença principal do selo e da fachada",
+        "hex": "#006B60",
+        "rgb": "0, 107, 96",
+        "cmyk": "100, 28, 56, 21",
+        "pantone": "Pantone (verificar com Pantone Color Bridge)",
+        "usage": "Cor estrutural do logo, fundos institucionais, destaques de sinalização e base dos ícones circulares.",
+        "tonalScale": [
+          {
+            "shade": "50",
+            "hex": "#E6F3F1"
+          },
+          {
+            "shade": "100",
+            "hex": "#C0E2DD"
+          },
+          {
+            "shade": "200",
+            "hex": "#99D1C9"
+          },
+          {
+            "shade": "300",
+            "hex": "#66B8AE"
+          },
+          {
+            "shade": "500",
+            "hex": "#006B60"
+          },
+          {
+            "shade": "700",
+            "hex": "#005349"
+          },
+          {
+            "shade": "900",
+            "hex": "#0E4038"
+          }
+        ]
       },
       {
-        "name": "Verde Noturno — profundidade da mata à noite",
-        "hex": "#1E3A2F",
-        "rgb": "30, 58, 47",
-        "cmyk": "80, 40, 70, 60",
-        "pantone": "Pantone 5535 C",
-        "usage": "Logotipo, textos, blocos sólidos e uniformes (camisetas)."
+        "name": "Amarelo Surpresa — energia solar do lettering",
+        "hex": "#D5A41D",
+        "rgb": "213, 164, 29",
+        "cmyk": "10, 34, 96, 7",
+        "pantone": "Pantone (verificar com Pantone Color Bridge)",
+        "usage": "Lettering, ícones de destaque, chamadas promocionais e pontos de calor sobre fundos verdes ou escuros.",
+        "tonalScale": [
+          {
+            "shade": "50",
+            "hex": "#FBF4DD"
+          },
+          {
+            "shade": "100",
+            "hex": "#F5E9B8"
+          },
+          {
+            "shade": "200",
+            "hex": "#F0DF93"
+          },
+          {
+            "shade": "300",
+            "hex": "#E8CD5E"
+          },
+          {
+            "shade": "500",
+            "hex": "#D5A41D"
+          },
+          {
+            "shade": "700",
+            "hex": "#A37C10"
+          },
+          {
+            "shade": "900",
+            "hex": "#6F540A"
+          }
+        ]
       }
     ],
     "secondary": [
       {
-        "name": "Verde Costela-de-Adão — verde principal das folhagens",
-        "hex": "#3A6342",
-        "rgb": "58, 99, 66",
-        "cmyk": "75, 30, 80, 40",
-        "pantone": "Pantone 7742 C",
-        "usage": "Ilustrações de folhagem. Nunca para texto."
+        "name": "Areia de Guardanapo — base clara para respiro e papelaria",
+        "hex": "#E8D5B5",
+        "rgb": "232, 213, 181",
+        "cmyk": "8, 13, 27, 0",
+        "pantone": "Pantone (verificar com Pantone Color Bridge)",
+        "usage": "Fundos claros, caixas de texto, cardápio, materiais impressos e áreas de respiro do sistema.",
+        "tonalScale": [
+          {
+            "shade": "50",
+            "hex": "#FAF6EE"
+          },
+          {
+            "shade": "100",
+            "hex": "#F5EEDF"
+          },
+          {
+            "shade": "200",
+            "hex": "#EFE4CE"
+          },
+          {
+            "shade": "300",
+            "hex": "#E8D5B5"
+          },
+          {
+            "shade": "500",
+            "hex": "#D9BD8E"
+          },
+          {
+            "shade": "700",
+            "hex": "#B28E58"
+          },
+          {
+            "shade": "900",
+            "hex": "#7C6036"
+          }
+        ]
       },
       {
-        "name": "Laranja Tucano — bico vibrante que aquece qualquer composição",
-        "hex": "#E66C37",
-        "rgb": "230, 108, 55",
-        "cmyk": "5, 70, 90, 0",
-        "pantone": "Pantone 1585 C",
-        "usage": "Destaques, CTAs, preços em cardápios e bicos de aves."
+        "name": "Terracota Petisco — calor de fritura, brick e madeira",
+        "hex": "#A85A31",
+        "rgb": "168, 90, 49",
+        "cmyk": "20, 66, 83, 10",
+        "pantone": "Pantone (verificar com Pantone Color Bridge)",
+        "usage": "Acentos quentes em promoções, preços, detalhes gastronômicos e apoio cromático em fotos.",
+        "tonalScale": [
+          {
+            "shade": "50",
+            "hex": "#F6E8E0"
+          },
+          {
+            "shade": "100",
+            "hex": "#EBCDBE"
+          },
+          {
+            "shade": "200",
+            "hex": "#E0B19C"
+          },
+          {
+            "shade": "300",
+            "hex": "#C98260"
+          },
+          {
+            "shade": "500",
+            "hex": "#A85A31"
+          },
+          {
+            "shade": "700",
+            "hex": "#7F3F20"
+          },
+          {
+            "shade": "900",
+            "hex": "#572914"
+          }
+        ]
       },
       {
-        "name": "Amarelo Caju — luz do sol tropical",
-        "hex": "#F4B41A",
-        "rgb": "244, 180, 26",
-        "cmyk": "5, 30, 95, 0",
-        "pantone": "Pantone 7549 C",
-        "usage": "Luzes, padronagens, bordado em uniformes e detalhes quentes."
-      },
-      {
-        "name": "Azul Azulejo — herança colonial portuguesa",
-        "hex": "#2C4C6B",
-        "rgb": "44, 76, 107",
-        "cmyk": "90, 60, 30, 20",
-        "pantone": "Pantone 2168 C",
-        "usage": "Padrão Azulejo Colonial, grid geométrico e fundos alternativos."
-      },
-      {
-        "name": "Vermelho Helicônia — contraste máximo das flores tropicais",
-        "hex": "#BE3B45",
-        "rgb": "190, 59, 69",
-        "cmyk": "15, 90, 70, 10",
-        "pantone": "Pantone 7621 C",
-        "usage": "Flores tropicais nas ilustrações. Uso controlado — nunca como fundo."
+        "name": "Folha de Varanda — verde vivo para apoio tropical",
+        "hex": "#2F8A72",
+        "rgb": "47, 138, 114",
+        "cmyk": "82, 23, 57, 7",
+        "pantone": "Pantone (verificar com Pantone Color Bridge)",
+        "usage": "Folhagens, cantos botânicos, ilustrações e sobreposições de natureza controlada.",
+        "tonalScale": [
+          {
+            "shade": "50",
+            "hex": "#E9F5F1"
+          },
+          {
+            "shade": "100",
+            "hex": "#C9E8DE"
+          },
+          {
+            "shade": "200",
+            "hex": "#A8DACB"
+          },
+          {
+            "shade": "300",
+            "hex": "#78C2AE"
+          },
+          {
+            "shade": "500",
+            "hex": "#2F8A72"
+          },
+          {
+            "shade": "700",
+            "hex": "#216A56"
+          },
+          {
+            "shade": "900",
+            "hex": "#164A3D"
+          }
+        ]
       }
     ],
     "semantic": {
       "success": {
-        "name": "Verde Broto",
-        "hex": "#4A7C59",
-        "rgb": "74, 124, 89",
-        "cmyk": "65, 20, 70, 20"
+        "name": "Verde Confirmação",
+        "hex": "#2D8F63",
+        "rgb": "45, 143, 99",
+        "cmyk": "81, 18, 67, 5"
       },
       "error": {
-        "name": "Vermelho Pimenta",
-        "hex": "#C0392B",
-        "rgb": "192, 57, 43",
-        "cmyk": "10, 90, 85, 5"
+        "name": "Vermelho Chapa",
+        "hex": "#B44632",
+        "rgb": "180, 70, 50",
+        "cmyk": "17, 81, 81, 6"
       },
       "warning": {
-        "name": "Amarelo Maracujá",
-        "hex": "#D4A017",
-        "rgb": "212, 160, 23",
-        "cmyk": "10, 35, 95, 5"
+        "name": "Amarelo Rodízio",
+        "hex": "#E0B11E",
+        "rgb": "224, 177, 30",
+        "cmyk": "8, 30, 97, 3"
       },
       "info": {
-        "name": "Azul Céu Tropical",
-        "hex": "#3498DB",
-        "rgb": "52, 152, 219",
-        "cmyk": "70, 25, 0, 0"
+        "name": "Verde Informação",
+        "hex": "#2B7F73",
+        "rgb": "43, 127, 115",
+        "cmyk": "88, 28, 54, 11"
       }
     },
     "dataViz": [
       {
-        "name": "Caju",
-        "hex": "#F4B41A",
-        "rgb": "244, 180, 26",
-        "cmyk": "5, 30, 95, 0"
+        "name": "Caraca Verde",
+        "hex": "#006B60",
+        "rgb": "0, 107, 96",
+        "cmyk": "100, 28, 56, 21"
       },
       {
-        "name": "Tucano",
-        "hex": "#E66C37",
-        "rgb": "230, 108, 55",
-        "cmyk": "5, 70, 90, 0"
+        "name": "Surpresa Amarela",
+        "hex": "#D5A41D",
+        "rgb": "213, 164, 29",
+        "cmyk": "10, 34, 96, 7"
       },
       {
-        "name": "Costela",
-        "hex": "#3A6342",
-        "rgb": "58, 99, 66",
-        "cmyk": "75, 30, 80, 40"
+        "name": "Petisco Terracota",
+        "hex": "#A85A31",
+        "rgb": "168, 90, 49",
+        "cmyk": "20, 66, 83, 10"
       },
       {
-        "name": "Azulejo",
-        "hex": "#2C4C6B",
-        "rgb": "44, 76, 107",
-        "cmyk": "90, 60, 30, 20"
+        "name": "Areia de Guardanapo",
+        "hex": "#E8D5B5",
+        "rgb": "232, 213, 181",
+        "cmyk": "8, 13, 27, 0"
       },
       {
-        "name": "Helicônia",
-        "hex": "#BE3B45",
-        "rgb": "190, 59, 69",
-        "cmyk": "15, 90, 70, 10"
+        "name": "Folha de Varanda",
+        "hex": "#2F8A72",
+        "rgb": "47, 138, 114",
+        "cmyk": "82, 23, 57, 7"
       }
     ]
   },
   "typography": {
     "marketing": {
       "name": "Yellowtail",
-      "usage": "Logotipo e destaques expressivos — reproduz o lettering cursivo/script fluido da marca.",
+      "usage": "Assinatura de marca, gestos visuais e chamadas que pedem calor humano e reconhecimento imediato do nome.",
       "weights": [
         "Regular"
       ],
       "fallbackFont": "Grand Hotel",
       "textTransform": "none",
-      "category": "Script"
+      "category": "Script",
+      "antiBlandingRationale": "Impede que o Caraca! vire mais um bar com tipografia neutra. O gesto caligráfico dá rosto humano à marca."
     },
     "ui": {
       "name": "Montserrat",
-      "usage": "Slogan 'sabores brasileiros', textos de interface e descrições de cardápio.",
+      "usage": "Textos de cardápio, rede social, sinalização complementar e UI do brandbook. É limpa, popular e direta.",
       "weights": [
         "Regular",
         "Medium",
         "SemiBold",
         "Bold"
       ],
-      "fallbackFont": "Open Sans",
-      "textTransform": "lowercase",
-      "category": "Sans-Serif"
+      "fallbackFont": "Inter",
+      "textTransform": "none",
+      "category": "Sans-Serif",
+      "antiBlandingRationale": "Mantém legibilidade e praticidade sem esfriar a marca. Funciona bem em promoções, preços e informação objetiva."
+    },
+    "monospace": {
+      "name": "IBM Plex Mono",
+      "usage": "Horários, códigos internos, price strips, notas técnicas e overlays utilitários em peças digitais.",
+      "weights": [
+        "Regular",
+        "Medium"
+      ],
+      "fallbackFont": "Roboto Mono",
+      "category": "Monospace",
+      "antiBlandingRationale": "Cria contraste funcional com o lettering manual e ajuda a organizar informação sem parecer burocrático."
     },
     "primary": {
-      "name": "Bebas Neue",
-      "usage": "Títulos de categorias em cardápios e banners — PETISCOS, CAIPIRINHAS. Sempre em caixa alta.",
+      "name": "Barlow Condensed",
+      "usage": "Chamadas promocionais, combos, títulos de destaque e artes de oferta com energia de rua e leitura rápida.",
       "weights": [
-        "Regular"
+        "Bold",
+        "ExtraBold"
       ],
       "fallbackFont": "Oswald",
       "textTransform": "uppercase",
-      "category": "Display"
+      "category": "Display",
+      "antiBlandingRationale": "Dá impacto popular e ajuda a marca a gritar promoções com personalidade, sem recorrer a soluções genéricas de panfleto."
     },
     "secondary": {
-      "name": "Open Sans",
-      "usage": "Textos longos, descrições de ingredientes — alta legibilidade em escalas menores.",
+      "name": "Inter",
+      "usage": "Corpo de texto mais neutro, regras, descrições curtas e microcopy de apoio.",
       "weights": [
         "Regular",
+        "Medium",
         "SemiBold"
       ],
-      "fallbackFont": "Inter",
+      "fallbackFont": "Open Sans",
       "textTransform": "none",
-      "category": "Sans-Serif"
+      "category": "Sans-Serif",
+      "antiBlandingRationale": "Equilibra o sistema e garante leitura confortável nas partes menos expressivas."
     }
   },
   "typographyScale": [
@@ -452,51 +633,51 @@ export const caracaBarExample = {
       "name": "Display",
       "fontRole": "marketing",
       "size": "64px",
-      "lineHeight": "72px",
+      "lineHeight": "70px",
       "fontWeight": "400",
-      "usage": "Nome 'Caraca! Bar' em fachadas, murais e capas de cardápio"
+      "usage": "Assinatura Caraca! Bar em fachada, capa e hero pieces"
     },
     {
       "name": "H1",
       "fontRole": "primary",
-      "size": "48px",
-      "lineHeight": "52px",
-      "fontWeight": "400",
-      "letterSpacing": "0.05em",
-      "usage": "Categorias — PETISCOS, CAIPIRINHAS — em cardápios e banners"
+      "size": "46px",
+      "lineHeight": "50px",
+      "fontWeight": "800",
+      "letterSpacing": "0.01em",
+      "usage": "Grandes chamadas promocionais e nomes de campanha"
     },
     {
       "name": "H2",
       "fontRole": "primary",
-      "size": "36px",
-      "lineHeight": "40px",
-      "fontWeight": "400",
-      "letterSpacing": "0.04em",
-      "usage": "Subcategorias e divisões temáticas"
+      "size": "34px",
+      "lineHeight": "38px",
+      "fontWeight": "800",
+      "letterSpacing": "0.02em",
+      "usage": "Categorias como DRINKS, LANCHES, PRATOS e PORÇÕES"
     },
     {
       "name": "H3",
       "fontRole": "ui",
       "size": "24px",
-      "lineHeight": "32px",
+      "lineHeight": "30px",
       "fontWeight": "700",
-      "usage": "Nomes de pratos e drinks — Montserrat Bold, Verde Noturno"
+      "usage": "Nomes de pratos, burgers e drinks"
     },
     {
       "name": "H4",
       "fontRole": "ui",
       "size": "18px",
-      "lineHeight": "26px",
+      "lineHeight": "24px",
       "fontWeight": "600",
-      "usage": "Subtítulos e destaques em redes sociais"
+      "usage": "Subtítulos, caixas de informação e chamadas de cardápio"
     },
     {
       "name": "Body Large",
       "fontRole": "secondary",
       "size": "16px",
-      "lineHeight": "26px",
+      "lineHeight": "24px",
       "fontWeight": "400",
-      "usage": "Descrições de ingredientes no cardápio"
+      "usage": "Descrições curtas e textos de apoio no cardápio"
     },
     {
       "name": "Body",
@@ -504,7 +685,7 @@ export const caracaBarExample = {
       "size": "14px",
       "lineHeight": "22px",
       "fontWeight": "400",
-      "usage": "Textos corridos — Open Sans, cinza-escuro"
+      "usage": "Textos corridos, legendas e explicações institucionais"
     },
     {
       "name": "Body Small",
@@ -512,7 +693,7 @@ export const caracaBarExample = {
       "size": "12px",
       "lineHeight": "18px",
       "fontWeight": "400",
-      "usage": "Notas de rodapé e informações de alérgenos"
+      "usage": "Informações utilitárias, observações e rodapés"
     },
     {
       "name": "Caption",
@@ -520,24 +701,24 @@ export const caracaBarExample = {
       "size": "11px",
       "lineHeight": "16px",
       "fontWeight": "500",
-      "usage": "Rótulos e etiquetas"
+      "usage": "Etiquetas, chips, labels de destaque e categorias auxiliares"
     },
     {
       "name": "Overline",
-      "fontRole": "ui",
+      "fontRole": "monospace",
       "size": "10px",
       "lineHeight": "14px",
-      "fontWeight": "600",
-      "letterSpacing": "0.15em",
-      "usage": "Seções de apoio em UPPERCASE"
+      "fontWeight": "500",
+      "letterSpacing": "0.14em",
+      "usage": "Códigos, horários, IDs de peça e pequenos marcadores"
     },
     {
       "name": "Preço",
-      "fontRole": "ui",
-      "size": "20px",
+      "fontRole": "primary",
+      "size": "22px",
       "lineHeight": "24px",
-      "fontWeight": "700",
-      "usage": "Preços — Montserrat Bold, Laranja Tucano"
+      "fontWeight": "800",
+      "usage": "Preços e chamadas curtas em Amarelo Surpresa ou Terracota Petisco"
     }
   ],
   "designTokens": {
@@ -577,173 +758,170 @@ export const caracaBarExample = {
   },
   "keyVisual": {
     "elements": [
-      "Costela-de-Adão (Monstera) — elemento obrigatório. Folhas grandes, recortadas, variação de tons de verde.",
-      "Helicônias e Bromélias — verticalidade e tons de Rosa/Vermelho Helicônia.",
-      "Fruto do Cacau — aberto e fechado, reforçando 'sabores brasileiros'.",
-      "Tucano — mascote não-oficial. Perfil, bico em destaque (Laranja/Amarelo).",
-      "Violão Acústico de Madeira — substituto do pandeiro. Boemia, MPB, samba.",
-      "Onça-Pintada — espreitando entre folhas. Toque selvagem e sofisticado.",
-      "Beija-flor — leveza e dinamismo nas composições de folhagem.",
-      "Limões e Cocos — elementos minimalistas para composições de menor escala."
+      "Selo circular verde com lettering amarelo como ativo principal de reconhecimento",
+      "Cantos tropicais controlados com folhas largas e recortes orgânicos",
+      "Blocos promocionais com headline condensada e fundo sólido forte",
+      "Tucano simplificado como personagem de apoio, nunca protagonista absoluto",
+      "Azulejo, madeira, metal e textura de bar urbano como base material",
+      "Produto e gente real como parte da identidade, não apenas fotografia funcional"
     ],
-    "photographyStyle": "Fotografia sobre mesas de madeira rústica, iluminação quente (golden hour). Folhas de Costela-de-Adão invadindo as quinas da foto. Referências: Tadeu Brunelli, estética editorial food photography brasileira.",
-    "iconography": "Ícones em estilo gravura botânica simplificada — traço 2px, preenchimento sólido nas cores da paleta. Base: flora e ingredientes.",
-    "illustrations": "Estilo gravura botânica colorida com texturas de pintura à mão. Traços como xilogravura artesanal. Paleta restrita às 7 cores oficiais. Referência: Ernst Haeckel encontra arte popular brasileira.",
-    "marketingArchitecture": "1) Nome atrai atenção emocional (Script grande, centro), 2) 'sabores brasileiros' ancora oferta racional (Sans-Serif, abaixo), 3) Ilustrações botânicas preenchem bordas, 4) Espaço negativo central em Kraft garante legibilidade.",
-    "compositionPhilosophy": "ABUNDÂNCIA nas bordas, RESPIRO no centro. Folhas invadem a tela pelas margens, centro limpo em Kraft para logotipo e texto. Nunca minimalismo total, nunca caos total. A tensão entre exuberância e respiro é a assinatura compositiva.",
+    "photographyStyle": "Fotografia de bar em operação: copos gelados, comida servida, mãos, brindes, gente real e pontos do ambiente. A luz é quente, urbana e convidativa — entre fim de tarde e noite viva. Priorizar close de produto e cenas espontâneas em vez de produção excessivamente editorial.",
+    "iconography": "Ícones outline 2px em linguagem simples e amigável, frequentemente dentro de círculos ou medalhões. Funcionam bem para highlights, stories e sinalizações rápidas.",
+    "illustrations": "Ilustração tropical simplificada com traço limpo e leitura popular. Menos gravura densa, mais linguagem gráfica aplicável a posts, adesivos, destaques e murais. O tucano e as folhas entram como apoio, com economia.",
+    "marketingArchitecture": "1) selo/assinatura da marca; 2) headline curta em Barlow Condensed; 3) produto ou momento social como protagonista; 4) apoio visual por cantos botânicos, ícones circulares ou blocos de cor. A comunicação deve parecer viva e direta.",
+    "compositionPhilosophy": "CENTRO CLARO, APOIO NAS BORDAS. O sistema abandona excesso ornamental contínuo e adota presença focal: logo, produto ou frase no centro; folhas, ícones e textura como moldura de apoio. A marca deve parecer organizada, não sufocada.",
     "mascots": [
       {
-        "name": "Tucano — O Mascote Não-Oficial",
-        "description": "Tucano-Toco ilustrado em gravura botânica colorida. Perfil, bico proeminente em Laranja/Amarelo. Corpo Verde Noturno com detalhes brancos no peito. Bico 30% maior que real para impacto visual.",
-        "personality": "Curioso, acolhedor e entusiasmado — como a própria marca. Convida o espectador, nunca agressivo ou estático.",
+        "name": "Tucano de Apoio",
+        "description": "Tucano simplificado em traço gráfico, usado como acento promocional e elemento simpático em peças específicas.",
+        "personality": "Curioso, caloroso e ligeiramente irreverente. Ajuda a marca a sorrir sem virar infantil.",
         "usageGuidelines": [
-          "Usar de perfil — nunca de frente",
-          "Bico sempre em destaque, nunca cortado",
-          "Pousado em galho ou Monstera em composições com flora",
-          "Nunca humanizar (sem roupas ou acessórios)"
+          "Usar em promoções, destaques, sinalização e peças sociais específicas",
+          "Preferir enquadramento de perfil ou 3/4 com leitura imediata",
+          "Nunca competir com o logo principal",
+          "Evitar excesso de detalhe ou tratamento hiper-realista"
         ]
       }
     ],
     "symbols": [
-      "Ponto de exclamação do 'Caraca!' como símbolo independente",
-      "Folha de Costela-de-Adão isolada — marcador de seção",
-      "Fruto do Cacau cortado — ícone de qualidade e procedência"
+      "Selo circular da marca",
+      "Ponto de exclamação como energia verbal, não fetiche gráfico",
+      "Ícone de copo ou brinde como metáfora de encontro"
     ],
     "patterns": [
-      "Padrão Selva — composição densa para peças premium",
-      "Padrão Geométrico Boêmio — grid de blocos com ilustrações",
-      "Padrão Azulejo Colonial — mandala portuguesa com elementos tropicais",
-      "Padrão Ícones Minimalistas — elementos espaçados para peças menores"
+      "Padrão Canto Tropical",
+      "Padrão Azulejo de Boteco",
+      "Padrão Medalhões de Highlights",
+      "Padrão Grade de Oferta"
     ],
     "structuredPatterns": [
       {
-        "name": "Padrão Selva",
-        "description": "Emaranhado denso de flora, fauna e violão acústico. O padrão mais icônico.",
-        "composition": "Costela-de-Adão como base, Helicônias verticais, Tucano e Onça entre folhas, violão sutil, cacau e cocos como detalhes.",
-        "usage": "Embalagens premium, capas de cardápio, murais instagramáveis, sacolas de delivery.",
-        "density": "denso",
-        "background": "Kraft / Areia (#CBA37B)"
-      },
-      {
-        "name": "Padrão Geométrico Boêmio",
-        "description": "Grid quadriculado misturando blocos sólidos e blocos com ilustrações. Visual pop e estruturado.",
-        "composition": "Grade regular alternando: Azul Azulejo, Verde Noturno, Tucano sobre Kraft, Helicônia sobre Kraft, Violão sobre Kraft.",
-        "usage": "Embalagens médias, posts promocionais, aventais, ecobags e eventos.",
+        "name": "Padrão Canto Tropical",
+        "description": "Folhas e recortes orgânicos aplicados apenas nas margens.",
+        "composition": "Elementos botânicos amplos em 2 ou 3 cantos, preservando centro limpo para headline ou produto.",
+        "usage": "Posts institucionais, cardápio, stories e peças de ambientação.",
         "density": "moderado",
-        "background": "Misto — blocos sólidos alternados com Kraft"
+        "background": "Areia de Guardanapo (#E8D5B5) ou Verde Caraca (#006B60)"
       },
       {
-        "name": "Padrão Azulejo Colonial",
-        "description": "Azulejaria portuguesa com elementos tropicais em miniatura dentro das mandalas.",
-        "composition": "Mandalas em Azul Azulejo sobre fundo claro. Micro-tucanos, cacaus e limões substituem motivos florais tradicionais.",
-        "usage": "Posts institucionais, cerâmicas, revestimento decorativo, sinalização.",
+        "name": "Padrão Azulejo de Boteco",
+        "description": "Geometria inspirada em balcão, revestimento e ritmo urbano brasileiro.",
+        "composition": "Módulos simples e repetíveis com base ortogonal, sem excessos coloniais decorativos.",
+        "usage": "Cardápios, paredes, embalagens secundárias e social backgrounds.",
         "density": "moderado",
-        "background": "Kraft claro ou branco com Azul Azulejo"
+        "background": "Verde Caraca (#006B60) com Areia de Guardanapo (#E8D5B5)"
       },
       {
-        "name": "Padrão Ícones Minimalistas",
-        "description": "Desenhos pequenos e espaçados — coqueiros, cocos, limões.",
-        "composition": "Ícones vetorizados em grid solto (espaçamento 3x tamanho do ícone). Monocromáticos em Verde Noturno.",
-        "usage": "Miolo de cardápios, guardanapos, potes pequenos, fundos de slides.",
+        "name": "Padrão Medalhões de Highlights",
+        "description": "Sistema de círculos e anéis para categorias como Drinks, Clientes, Lanches, Pratos e Porções.",
+        "composition": "Anéis, ícones e rótulos curtos com ritmo uniforme.",
+        "usage": "Highlights, destaques do Instagram, cards rápidos e menus digitais.",
         "density": "espaçado",
-        "background": "Kraft / Areia (#CBA37B)"
+        "background": "Verde Caraca (#006B60) ou Amarelo Surpresa (#D5A41D)"
+      },
+      {
+        "name": "Padrão Grade de Oferta",
+        "description": "Blocos de oferta com headlines condensadas e áreas dedicadas a preço ou benefício.",
+        "composition": "Grid simples de 2 a 4 módulos com headline, apoio e produto.",
+        "usage": "Promoções, combos, rodízio, banners e posts de campanha.",
+        "density": "moderado",
+        "background": "Misto entre Verde Caraca, Areia de Guardanapo e Terracota Petisco"
       }
     ],
     "flora": [
-      "Costela-de-Adão (Monstera deliciosa)",
-      "Helicônia (Heliconia rostrata)",
-      "Bromélia (Aechmea)",
-      "Cacau (Theobroma cacao)",
-      "Coqueiro e coco",
-      "Limão-taiti"
+      "Costela-de-Adão",
+      "Folhas largas de varanda",
+      "Limão",
+      "Pimenta",
+      "Ramos simplificados de apoio"
     ],
     "fauna": [
-      "Tucano-Toco — mascote, sempre de perfil",
-      "Onça-Pintada — composições premium",
-      "Beija-flor — leveza e dinamismo"
+      "Tucano simplificado como apoio"
     ],
     "objects": [
-      "Violão acústico de madeira — boemia, MPB e samba",
-      "Copo Lagoinha (Americano) — cultura de boteco"
+      "Copo Lagoinha",
+      "Espeto",
+      "Hambúrguer/lanche como produto-herói",
+      "Azulejo de balcão",
+      "Mesa compartilhada"
     ]
   },
   "applications": [
     {
-      "type": "Cardápio Físico (Menu)",
-      "description": "Capa com Padrão Selva, miolo limpo com Padrão Ícones Minimalistas. Prancheta de madeira de demolição com garra metálica envelhecida.",
-      "imagePlaceholder": "https://placehold.co/800x600/CBA37B/1E3A2F?text=Cardápio+Caraca!",
+      "type": "Cardápio Físico",
+      "description": "Cardápio em base areia com selo verde-amarelo, categorias fortes e apoio tropical nas bordas.",
+      "imagePlaceholder": "https://placehold.co/800x600/E8D5B5/006B60?text=Cardapio+Caraca",
       "imageKey": "brand_collateral",
-      "dimensions": "A4 (210×297mm) — formato fechado. Prancheta: 230×310mm.",
-      "materialSpecs": "Papel Kraft 250g ou Reciclato com textura rústica. Prancheta de madeira de demolição com garra metálica bronze/cobre.",
-      "layoutGuidelines": "Capa: Padrão Selva nas bordas, espaço negativo central em Kraft para logotipo. Miolo: respiro visual com Padrão Ícones Minimalistas nas margens como divisores de categorias.",
-      "typographyHierarchy": "Categorias em Bebas Neue uppercase Verde Noturno, nomes de pratos em Montserrat Bold Verde Noturno, descrições em Open Sans Regular cinza-escuro, preços em Montserrat Bold Laranja Tucano alinhados à direita.",
-      "artDirection": "Composição de abundância nas bordas, limpo no centro. Ilustrações botânicas invadem as margens da capa. Interior minimalista para não competir com os itens à venda.",
+      "dimensions": "A4 ou 210×297mm com versões de mesa e prancheta",
+      "materialSpecs": "Papel offset encorpado ou reciclato premium 240g. Possível capa em kraft claro ou cartão fosco.",
+      "layoutGuidelines": "Logo no topo, categorias em blocos claros, preços com contraste alto. Usar apoio tropical nos cantos e áreas de respiro bem definidas.",
+      "typographyHierarchy": "Logo em Yellowtail, categorias em Barlow Condensed, itens em Montserrat, descrições em Inter e preços em Barlow Condensed/Terracota Petisco.",
+      "artDirection": "Menos floresta total, mais sistema limpo com calor de bar urbano.",
       "substrates": [
-        "Papel Kraft reciclado 250g",
-        "Madeira de demolição (prancheta)",
-        "Garra metálica envelhecida bronze"
+        "Papel offset 240g",
+        "Reciclato premium",
+        "Kraft claro opcional"
       ]
     },
     {
-      "type": "Embalagem Delivery — Balde Premium",
-      "description": "Balde grande com Padrão Selva completo — a peça mais icônica da marca, reconhecível instantaneamente na rua.",
-      "imagePlaceholder": "https://placehold.co/800x600/CBA37B/1E3A2F?text=Balde+Premium",
-      "imageKey": "food_container",
-      "dimensions": "Balde circular Ø180mm × 120mm altura. Área de impressão: 565×120mm (planificado).",
-      "materialSpecs": "Papel cartão kraft 300g com laminação fosca interna (food-safe). Impressão flexográfica 7 cores + branco.",
-      "layoutGuidelines": "Padrão Selva envolvendo todo o cilindro. Logotipo centralizado na frente com espaço negativo Kraft. 'sabores brasileiros' abaixo.",
-      "typographyHierarchy": "Logotipo em Yellowtail, slogan em Montserrat lowercase. Informações legais em Open Sans 8px.",
-      "artDirection": "Flora e fauna emergindo de todos os lados, criando 360° de selva botânica. O Tucano aparece em posição de destaque na frente.",
-      "substrates": [
-        "Papel cartão kraft 300g",
-        "Laminação fosca food-safe"
-      ]
-    },
-    {
-      "type": "Uniformes (Camiseta + Avental)",
-      "description": "Camisetas Verde Noturno com logotipo bordado Amarelo Caju no peito. Aventais Kraft/Areia em sarja com 'sabores brasileiros' nas costas.",
-      "imagePlaceholder": "https://placehold.co/800x600/1E3A2F/F4B41A?text=Uniforme+Caraca!",
-      "imageKey": "uniform_tshirt",
-      "dimensions": "Camiseta: P ao GG. Avental: 70×90cm com alça ajustável.",
-      "materialSpecs": "Camiseta: malha 100% algodão penteado 30.1 fio, tintura reativa Verde Noturno. Avental: sarja 100% algodão 240g/m² na cor areia natural.",
-      "layoutGuidelines": "Logo bordado lado esquerdo do peito (8cm largura). 'sabores brasileiros' serigrafado nas costas centralizado.",
-      "typographyHierarchy": "Logotipo em bordado — fio Amarelo Caju. Slogan em serigrafia — Verde Noturno sobre avental areia.",
-      "artDirection": "Simplicidade intencional — o uniforme é monocromático para contrastar com a exuberância visual do ambiente e das embalagens.",
-      "substrates": [
-        "Malha algodão penteado 30.1",
-        "Sarja algodão 240g/m²",
-        "Linha de bordado poliéster Amarelo Caju"
-      ]
-    },
-    {
-      "type": "Instagram Feed — Post Fotográfico de Produto",
-      "description": "Foto de drink/prato sobre mesa de madeira rústica com folhas de Monstera invadindo as quinas. Iluminação golden hour.",
-      "imagePlaceholder": "https://placehold.co/1080x1080/CBA37B/1E3A2F?text=Post+Instagram",
+      "type": "Instagram Feed — Produto & Promo",
+      "description": "Sistema que alterna close de produto, clientes, ambiente e promoções curtas com identidade reconhecível.",
+      "imagePlaceholder": "https://placehold.co/1080x1080/006B60/D5A41D?text=Feed+Caraca",
       "imageKey": "social_post_square",
-      "dimensions": "1080×1080px (feed quadrado) / 1080×1350px (feed vertical) / 1080×1920px (stories/reels)",
-      "materialSpecs": "Digital — exportar em sRGB, JPG qualidade 90% para feed, PNG para stories com elementos gráficos sobrepostos.",
-      "layoutGuidelines": "Foto central do produto. Elementos gráficos da Flora Tropical invadindo 2-3 quinas da imagem (nunca as 4). Espaço para legenda na parte inferior.",
-      "typographyHierarchy": "Sem texto sobre a foto na maioria dos casos. Se necessário, usar Montserrat Bold sobre caixa Kraft semitransparente.",
-      "artDirection": "Mesa de madeira rústica, iluminação quente lateral. Folhas de Costela-de-Adão e o Violão podem ser inseridos graficamente nas bordas, como se o espectador espiasse o prato através da selva.",
+      "dimensions": "1080×1080px, 1080×1350px e 1080×1920px",
+      "materialSpecs": "Digital em sRGB, JPG 85-90% para feed e PNG quando houver sobreposição gráfica.",
+      "layoutGuidelines": "Intercalar 60% produto/ambiente real, 25% clientes e 15% promoções. Nas promos, usar headline curta, preço/benefício claro e selo da marca visível.",
+      "typographyHierarchy": "Headline em Barlow Condensed, apoio em Montserrat, assinatura em Yellowtail quando houver necessidade de reforço de marca.",
+      "artDirection": "Produto ou momento humano sempre em foco. Cantos tropicais e medalhões só entram como apoio.",
       "substrates": [
         "Digital — sRGB"
       ]
     },
     {
-      "type": "Sinalização do Espaço (Fachada + Mural)",
-      "description": "Letreiro principal em relevo na fachada. Parede instagramável interna forrada com Padrão Selva em grande escala e letreiro neon central.",
-      "imagePlaceholder": "https://placehold.co/800x600/1E3A2F/CBA37B?text=Fachada+Caraca!",
-      "imageKey": "outdoor_billboard",
-      "dimensions": "Letreiro fachada: 2000×500mm. Mural instagramável: 3000×2500mm parede completa.",
-      "materialSpecs": "Letreiro: letras em acrílico 15mm Verde Noturno com iluminação LED frontal. Mural: impressão em adesivo vinílico laminado fosco sobre parede lisa.",
-      "layoutGuidelines": "Fachada: logotipo centralizado com 'sabores brasileiros' abaixo. Mural: Padrão Selva em escala 400%, logotipo central em neon Amarelo Caju.",
-      "typographyHierarchy": "Fachada: Yellowtail em relevo acrílico. Slogan em Montserrat recortado em acrílico menor.",
-      "artDirection": "A fachada é sóbria (Verde Noturno sólido com letreiro). O contraste vem no interior com o mural explosivo da Selva — o visitante entra e leva o 'Caraca!' visual.",
+      "type": "Destaques do Instagram",
+      "description": "Sistema de highlights circulares para Drinks, Clientes, Lanches, Pratos, Porções e Nosso bar.",
+      "imagePlaceholder": "https://placehold.co/800x600/006B60/D5A41D?text=Highlights+Caraca",
+      "imageKey": "social_story",
+      "dimensions": "Capa 1080×1920px adaptada para recorte circular",
+      "materialSpecs": "Digital vetorial com export em PNG @2x e SVG mestre.",
+      "layoutGuidelines": "Manter consistência absoluta de espessura, alinhamento e escala entre ícones.",
+      "typographyHierarchy": "Preferir ícone puro; quando houver texto, usar Montserrat SemiBold.",
+      "artDirection": "Círculo verde, ícone amarelo, linguagem minimalista e simpática.",
       "substrates": [
-        "Acrílico 15mm",
-        "LED frontal",
-        "Vinil adesivo laminado fosco",
-        "Neon LED flex"
+        "Digital — SVG + PNG"
+      ]
+    },
+    {
+      "type": "Fachada e Sinalização",
+      "description": "Fachada com selo/assinatura de alta leitura e sinalização interna que reforça encontro e brasilidade urbana.",
+      "imagePlaceholder": "https://placehold.co/800x600/0E4038/D5A41D?text=Fachada+Caraca",
+      "imageKey": "outdoor_billboard",
+      "dimensions": "Letreiro principal 2200×700mm; placas internas modulares 500×700mm",
+      "materialSpecs": "Acrílico, chapa metálica pintada, adesivo fosco e pintura mural com acabamento matte.",
+      "layoutGuidelines": "Priorizar leitura à distância. O selo pode coexistir com wordmark, mas sem poluição adicional.",
+      "typographyHierarchy": "Logo em destaque, mensagens secundárias em Barlow Condensed ou Montserrat.",
+      "artDirection": "A rua vê a energia verde-amarela; o interior confirma o clima com textura, luz quente e apoio gráfico controlado.",
+      "substrates": [
+        "Acrílico",
+        "Chapa metálica",
+        "Adesivo fosco",
+        "Pintura mural"
+      ]
+    },
+    {
+      "type": "Delivery e Sacola",
+      "description": "Sacolas e embalagens com sistema enxuto: selo forte, bloco de cor, padrão de apoio e frases curtas.",
+      "imagePlaceholder": "https://placehold.co/800x600/E8D5B5/006B60?text=Delivery+Caraca",
+      "imageKey": "food_container",
+      "dimensions": "Sacola P/M/G e adesivos 60mm-90mm",
+      "materialSpecs": "Kraft claro, adesivo fosco, impressão flexográfica de 2 a 3 cores sólidas.",
+      "layoutGuidelines": "Evitar excesso de informação. Logo, frase curta e um padrão consistente bastam.",
+      "typographyHierarchy": "Assinatura em destaque, apoio em Montserrat e headlines pontuais em Barlow Condensed.",
+      "artDirection": "Mais reconhecimento e portabilidade, menos ornamentação densa.",
+      "substrates": [
+        "Kraft claro",
+        "Adesivo fosco",
+        "Flexografia 2-3 cores"
       ]
     }
   ],
@@ -751,284 +929,247 @@ export const caracaBarExample = {
     "platforms": [
       {
         "platform": "Instagram",
-        "primaryFormats": "Feed 1080×1080px (quadrado) ou 1080×1350px (vertical), Stories/Reels 1080×1920px, Carrossel 1080×1080px (até 10 slides)",
-        "tone": "Visual-first, caloroso e entusiasmado. Legendas curtas com emoção, nunca descritivas ou corporativas. O visual fala mais que o texto. Stories mostram bastidores com naturalidade.",
+        "primaryFormats": "Feed 1080×1080 e 1080×1350, Stories/Reels 1080×1920, Highlights circulares",
+        "tone": "Caloroso, direto e visual. A legenda entra para completar o desejo, não para explicar demais.",
         "contentPillars": [
-          "Fotografia de Produto (drinks e pratos sobre madeira rústica com folhas invadindo bordas)",
-          "Artes Promocionais (fundo Geométrico Boêmio escurecido + caixa Kraft central)",
-          "Institucional (Padrão Azulejo Colonial + frases em Amarelo Caju)",
-          "Bastidores (preparo de drinks, chegada de ingredientes, equipe)",
-          "Ingredientes (close dos cacaus, cajus, limões — a origem dos sabores)"
+          "Drinks",
+          "Clientes",
+          "Lanches",
+          "Pratos",
+          "Porções",
+          "Nosso bar"
         ],
-        "frequency": "Feed: 4-5x por semana. Stories: diários (8-12). Reels: 2-3x por semana.",
+        "frequency": "Feed 4-6x por semana. Stories diários. Reels 2-4x por semana.",
         "doList": [
-          "Usar folhas de Monstera invadindo bordas das fotos",
-          "Alternar categorias de post para não saturar o feed",
-          "Usar Amarelo Caju para palavras-chave sobre fundos escuros",
-          "Mostrar bastidores com naturalidade — sem roteiro"
+          "Manter alternância entre produto, ambiente e gente",
+          "Usar o sistema de highlights como arquitetura fixa",
+          "Fazer promoções com headline curta e leitura rápida",
+          "Mostrar a casa viva e não apenas peças estáticas"
         ],
         "dontList": [
-          "Nunca postar foto sem tratamento de cor (manter temperatura quente)",
-          "Nunca usar templates genéricos de Canva",
-          "Nunca saturar o feed com artes gráficas — intercalar com fotos reais",
-          "Nunca usar filtros que descaracterizem a paleta oficial"
+          "Não lotar o feed com arte sem foto real",
+          "Não descaracterizar o verde + amarelo",
+          "Não usar linguagem de restaurante formal",
+          "Não exagerar no tropical a ponto de virar parque temático"
         ],
-        "examplePost": "Caraca, olha esse tucano dividindo espaço com a caipirinha de caju! 🌿🍹 A selva tá on.\n\nToda sexta, drinks especiais com ingredientes que vieram direto do produtor. Hoje: cacau da Bahia + limão siciliano + um toque de pimenta rosa.\n\n#caracabar #saboresbrasileiros #botecotropical"
+        "examplePost": "Caraca, essa mesa aqui tá pedindo tua turma. Drink gelado, porção saindo e aquele clima que faz tu ficar mais um pouco. #caracabar #vemprobem"
       },
       {
         "platform": "WhatsApp Business",
-        "primaryFormats": "Mensagens de texto curtas, imagens 1080×1080px, catálogo de produtos, status 1080×1920px",
-        "tone": "Direto e informal, como um amigo avisando. Sem 'Prezado cliente'. Usa 'tu' ou 'você' natural. Emojis com moderação — no máximo 2 por mensagem.",
+        "primaryFormats": "Texto curto, imagem quadrada, card vertical e status 1080×1920",
+        "tone": "Próximo, útil e rápido. Fala como o bar que já te conhece.",
         "contentPillars": [
-          "Avisos de novidades no cardápio",
-          "Convites para eventos (live de samba, noite temática)",
-          "Confirmação de reservas com toque pessoal",
-          "Promoções relâmpago ('pinga na hora')"
+          "Reserva",
+          "Promo do dia",
+          "Rodízio",
+          "Novidade do cardápio"
         ],
-        "frequency": "Máximo 3 mensagens por semana para lista de transmissão. Respostas: imediatas em horário comercial.",
+        "frequency": "Até 3 disparos por semana; atendimento contínuo em horário operacional.",
         "doList": [
-          "Responder como se fosse o dono do bar",
-          "Usar o nome do cliente quando possível",
-          "Enviar foto real do prato/drink quando perguntarem"
+          "Ser objetivo",
+          "Convidar com simpatia",
+          "Resolver rápido reserva e dúvida"
         ],
         "dontList": [
-          "Nunca enviar mensagens genéricas de 'Bom dia, grupo!'",
-          "Nunca usar linguagem formal de SAC",
-          "Nunca enviar mais de 3 mensagens por semana na lista"
+          "Não usar texto longo",
+          "Não parecer SAC robotizado",
+          "Não disparar em excesso"
         ],
-        "examplePost": "E aí! Sexta tem live de samba e a caipirinha de cacau voltou pro cardápio. Bora? 🎵\nReserva aqui: [link]"
+        "examplePost": "Oi! Hoje tem rodada boa de porções e mesa livre mais tarde. Quer que eu já separe pra vocês?"
       },
       {
         "platform": "TikTok",
-        "primaryFormats": "Vídeos verticais 1080×1920px, duração ideal 15-60 segundos",
-        "tone": "Dinâmico, divertido e autêntico. Menos polido que o Instagram — mais bastidores, mais reação genuína, mais 'caraca!' ao vivo.",
+        "primaryFormats": "Vídeos verticais 1080×1920 entre 10 e 45 segundos",
+        "tone": "Mais cru, divertido e reativo que o Instagram. Deve parecer noite acontecendo.",
         "contentPillars": [
-          "Preparo de drinks em câmera lenta (ASMR visual)",
-          "Reações de clientes ao provar algo novo",
-          "Bastidores da cozinha com trilha de MPB",
-          "Curiosidades sobre ingredientes brasileiros"
+          "Montagem de drinks",
+          "Saída de pratos e porções",
+          "Reação de clientes",
+          "Bastidor do bar"
         ],
         "frequency": "3-5 vídeos por semana",
         "doList": [
-          "Mostrar o processo real — mãos preparando, líquidos sendo servidos",
-          "Usar áudios trending quando coerentes com a marca",
-          "Reagir com entusiasmo genuíno"
+          "Filmar mão, fumaça, gelo, crocância e brinde",
+          "Mostrar movimento real da casa",
+          "Editar com ritmo"
         ],
         "dontList": [
-          "Nunca forçar trends que não combinem com a identidade",
-          "Nunca usar humor que desrespeite ingredientes ou cultura",
-          "Nunca postar conteúdo sem qualidade mínima de áudio"
+          "Não forçar trend incompatível",
+          "Não roteirizar demais",
+          "Não polir a ponto de perder verdade"
         ],
-        "examplePost": "POV: você pediu a caipirinha de cacau e o bartender fez isso... 🤯🍹 #caracabar #caipirinha #saboresbrasileiros"
+        "examplePost": "POV: era só um drink rápido e tu já tá pedindo porção, chamando amigo e ficando até mais tarde."
       }
     ],
-    "globalHashtagStrategy": "Branded: #caracabar #saboresbrasileiros (obrigatórias em todo post). Nicho: #botecotropical #brasilidade #cacaudabahia #caipirinhaartesanal. Alcance: #barsp #barmg #ondebeberem[cidade]. Volume ideal: 8-12 hashtags por post no Instagram, 3-5 no TikTok.",
-    "brandVoiceAdaptation": "A voz da marca é sempre calorosa e entusiasmada, mas o REGISTRO muda: Instagram é visual e aspiracional, WhatsApp é íntimo e direto, TikTok é espontâneo e divertido. O que NÃO muda: o entusiasmo genuíno, a referência à brasilidade e a recusa em usar linguagem corporativa."
+    "globalHashtagStrategy": "Base fixa: #caracabar #vemprobem. Apoio rotativo por categoria: #drinks #porcoes #lanches #pratos #nossoBar #londrina.",
+    "brandVoiceAdaptation": "A voz é sempre brasileira, calorosa e convidativa. O Instagram organiza desejo, o WhatsApp resolve, e o TikTok mostra a vida acontecendo. Em todos os canais a marca deve soar presente, nunca genérica."
   },
   "productionGuidelines": {
-    "fileNamingConvention": "caraca_[variante]_[cor]_[tamanho]_[formato]. Exemplos: caraca_logo_verde-noturno_800x300_rgb.png, caraca_cardapio_capa_a4_cmyk.pdf, caraca_pattern-selva_seamless_3000x3000_rgb.png",
+    "fileNamingConvention": "caraca_[asset]_[variante]_[cor]_[tamanho]_[formato]. Ex: caraca_logo_selo_verde-amarelo_800x300_rgb.png, caraca_highlight_drinks_svg.svg, caraca_post_promocao_combo_1080x1350_rgb.png",
     "handoffChecklist": [
-      "Confirmar perfil de cor correto (CMYK Fogra39 para impressão, sRGB para digital)",
-      "Converter todas as fontes em curvas (Create Outlines)",
-      "Expandir todos os traços (Outline Stroke) para manter espessura",
-      "Incluir sangria de 3-5mm em materiais com arte até a borda",
-      "Verificar margem de segurança (3-5mm) para logotipo e textos vitais",
-      "Incluir marcas de corte e registro no PDF de impressão",
-      "Verificar resolução mínima de 300 DPI para todas as imagens rasterizadas",
-      "Testar impressão sobre Kraft real — cores escurecem significativamente",
-      "Prever Tinta Branca (White Ink / Spot Color) onde houver branco sobre kraft",
-      "Revisar separação de cores para flexografia — evitar gradientes complexos",
-      "Enviar prova digital (softproof) ao cliente antes da produção",
-      "Organizar assets em pastas: /print /digital /social /vectors /fonts-em-curvas"
+      "Confirmar versão oficial do selo e do wordmark",
+      "Converter fontes em curvas (Create Outlines)",
+      "Expandir traços (Outline Stroke)",
+      "Exportar highlights em SVG e PNG @2x",
+      "Garantir contraste mínimo entre Verde Caraca e Amarelo Surpresa",
+      "Testar logo sobre foto real e fundo sólido",
+      "Separar arquivos por /logo /social /print /signage /delivery",
+      "Revisar sangria e margem de segurança nas peças impressas",
+      "Checar legibilidade do lettering em bordado e adesivo pequeno",
+      "Validar perfis de cor CMYK e sRGB conforme saída",
+      "Incluir mockups de fachada, feed e cardápio",
+      "Entregar biblioteca de ícones de highlights com nomes consistentes"
     ],
     "printSpecs": {
-      "colorProfile": "CMYK — Fogra39 ou U.S. Web Coated (SWOP) v2, conforme especificação da gráfica",
-      "resolution": "300 DPI mínimo para todas as imagens rasterizadas. Vetores: resolução independente.",
-      "bleed": "3mm a 5mm de sangria (bleed) em todas as bordas para materiais com arte full-bleed",
-      "safeMargin": "3mm a 5mm de margem de segurança interna — logotipo, slogan e textos devem ficar contidos",
-      "notes": "ATENÇÃO: Impressão sobre papel Kraft real escurece tintas e altera percepção de cores claras (Amarelo Caju perde 15-20% de luminosidade). Sempre fazer prova de cor na gráfica antes da tiragem. Onde houver branco na arte (brilho do olho do tucano), usar Tinta Branca como 5ª cor ou deixar vazado."
+      "colorProfile": "CMYK — Fogra39 ou equivalente definido pela gráfica",
+      "resolution": "300 DPI para raster; vetores sempre que possível",
+      "bleed": "3mm a 5mm em peças full-bleed",
+      "safeMargin": "3mm a 5mm para headline, preço e assinatura",
+      "notes": "O Amarelo Surpresa perde força em substratos escuros ou kraft sem base clara. Em materiais críticos, prever branco de apoio ou ajustar contraste."
     },
     "digitalSpecs": {
-      "colorSpace": "sRGB — garante consistência entre monitores e smartphones",
+      "colorSpace": "sRGB",
       "exportScales": [
-        "1x (72dpi)",
-        "2x (144dpi — Retina)",
-        "3x (216dpi — mobile high-density)"
+        "1x",
+        "2x",
+        "3x"
       ],
       "formats": [
-        "SVG (vetores web/UI — escalabilidade infinita)",
-        "PNG (imagens com transparência — logo isolado)",
-        "JPG (fotografias retangulares sem transparência — 90% qualidade)",
-        "PDF/X-1a:2001 (gráficas de alta precisão)",
-        "EPS/AI (fornecedores de brindes e letreiros — CS6 compat)"
+        "SVG",
+        "PNG",
+        "JPG",
+        "PDF/X-1a",
+        "AI/EPS"
       ],
-      "compressionGuidelines": "JPG feed: 90% qualidade. JPG stories: 85%. PNG: compressão sem perda (lossless). SVG: minificado, sem metadados de editor.",
-      "notes": "Manter originais em formato vetorial (AI/SVG) para todas as ilustrações e patterns. Exportar rasterizado apenas para uso final. Nunca enviar JPG como arquivo-fonte."
+      "compressionGuidelines": "Feed JPG 85-90%; stories JPG 80-85%; SVG minificado para ícones e assets vetoriais.",
+      "notes": "Preservar arquivos mestres das artes promocionais com camadas editáveis e manter ícones sociais como biblioteca vetorial única."
     },
     "deliverables": [
       {
-        "asset": "Logotipo completo (com slogan)",
+        "asset": "Logo principal + selo",
         "formats": [
           "SVG",
           "PNG @2x",
-          "EPS",
-          "AI"
+          "AI",
+          "EPS"
         ],
-        "specs": "Versões: Kraft sobre Verde, Verde sobre Kraft, Monocromático, Negativo"
+        "specs": "Versões positiva, negativa, monocromática e aplicação sobre foto"
       },
       {
-        "asset": "Símbolo (C! mark)",
-        "formats": [
-          "SVG",
-          "PNG @2x",
-          "ICO"
-        ],
-        "specs": "Favicon 16×16, 32×32, 180×180 (Apple Touch)"
-      },
-      {
-        "asset": "Padrão Selva (seamless tile)",
-        "formats": [
-          "PNG @2x",
-          "SVG",
-          "AI"
-        ],
-        "specs": "3000×3000px tile, CMYK e RGB"
-      },
-      {
-        "asset": "Padrão Geométrico Boêmio",
-        "formats": [
-          "PNG @2x",
-          "SVG",
-          "AI"
-        ],
-        "specs": "Grid base 600×600px repeatable"
-      },
-      {
-        "asset": "Padrão Azulejo Colonial",
-        "formats": [
-          "PNG @2x",
-          "SVG",
-          "AI"
-        ],
-        "specs": "Mandala única + tile repetível"
-      },
-      {
-        "asset": "Padrão Ícones Minimalistas",
+        "asset": "Kit de highlights",
         "formats": [
           "SVG",
           "PNG @2x"
         ],
-        "specs": "Ícones individuais + tile espaçado"
+        "specs": "Drinks, Clientes, Lanches, Pratos, Porções, Nosso bar"
       },
       {
-        "asset": "Tucano isolado",
+        "asset": "Templates de feed e stories",
         "formats": [
-          "SVG",
-          "PNG @2x",
-          "AI"
-        ],
-        "specs": "Perfil esquerda + perfil direita"
-      },
-      {
-        "asset": "Kit Flora (elementos individuais)",
-        "formats": [
-          "SVG",
-          "PNG @2x"
-        ],
-        "specs": "Monstera, Helicônia, Cacau, Limão, Coco — cada um isolado"
-      },
-      {
-        "asset": "Kit Redes Sociais (templates)",
-        "formats": [
-          "PSD",
           "Figma",
-          "Canva"
+          "PNG",
+          "PSD"
         ],
-        "specs": "Feed 1080×1080, Stories 1080×1920, Carrossel, Cover"
+        "specs": "Produto, promo, institucional e agenda"
+      },
+      {
+        "asset": "Cardápio e sinalização",
+        "formats": [
+          "PDF",
+          "AI",
+          "INDD/Figma"
+        ],
+        "specs": "Menu principal, placas internas e mural"
+      },
+      {
+        "asset": "Delivery pack",
+        "formats": [
+          "AI",
+          "PDF",
+          "PNG"
+        ],
+        "specs": "Sacola, adesivo e selo reduzido"
       }
     ],
     "productionMethods": [
       {
         "method": "Flexografia",
-        "substrate": "Embalagens de delivery (baldes, potes, sacolas kraft)",
+        "substrate": "Sacolas, adesivos e embalagens delivery",
         "guidelines": [
-          "Trabalhar ilustrações com cores sólidas e sobreposições bem definidas",
-          "Manter traços mínimos de 0.5pt para garantir legibilidade",
-          "Prever registro de cores com tolerância de 0.5mm"
+          "Limitar a 2-3 cores sólidas",
+          "Preservar áreas de respiro do selo",
+          "Traço mínimo de 0.5pt nos ícones"
         ],
         "restrictions": [
-          "Evitar gradientes complexos — chapas flexo não reproduzem bem",
-          "Textos pequenos em negativo (vazados) podem entupir de tinta",
-          "Detalhes finos do bico do tucano precisam de traço reforçado"
+          "Evitar gradiente",
+          "Evitar texto negativo muito pequeno",
+          "Não usar detalhes finos no lettering em escala reduzida"
         ]
       },
       {
         "method": "Serigrafia / Silk-screen",
-        "substrate": "Uniformes (camisetas, aventais), ecobags, bonés",
+        "substrate": "Uniformes, ecobags e aventais",
         "guidelines": [
-          "Enviar arte vetorizada com cores separadas",
-          "Em tecidos escuros (Verde Noturno), prever base branca para receber Laranja Tucano e Amarelo Caju",
-          "Máximo de 4 cores por aplicação para viabilidade de custo"
+          "Separar Verde Caraca e Amarelo Surpresa em chapas distintas",
+          "Usar base clara quando necessário",
+          "Preferir selo e headlines de alto contraste"
         ],
         "restrictions": [
-          "Gradientes não são possíveis — apenas cores sólidas",
-          "Detalhes abaixo de 1mm se perdem no tecido",
-          "Meios-tons (halftone) acima de 55 lpi para simulação de tons"
+          "Sem gradientes",
+          "Sem lettering muito fino",
+          "Máximo de 4 cores por aplicação"
         ]
       },
       {
         "method": "Bordado",
-        "substrate": "Bonés, aventais, polos",
+        "substrate": "Bonés, polos e aventais",
         "guidelines": [
-          "Enviar logotipo em vetor simples — fornecedor converte para matriz de bordado",
-          "Usar fio poliéster nas cores Amarelo Caju e Verde Noturno",
-          "Tamanho mínimo do logotipo bordado: 5cm de largura"
+          "Usar versão simplificada do selo",
+          "Reforçar espessura do lettering",
+          "Tamanho mínimo de 5cm de largura"
         ],
         "restrictions": [
-          "O slogan 'sabores brasileiros' abaixo de 5mm de altura perde legibilidade",
-          "Evitar detalhes finos das ilustrações botânicas — não reproduzem em bordado",
-          "Máximo 6 cores de fio por peça"
+          "Não usar tagline em escala mínima",
+          "Não usar ícones com detalhe excessivo",
+          "Máximo de 5-6 cores de fio"
         ]
       },
       {
-        "method": "Impressão Digital (Plotagem)",
-        "substrate": "Murais, adesivos vinílicos, banners, fachada interna",
+        "method": "Impressão Digital / Plotagem",
+        "substrate": "Murais, placas e ambientação",
         "guidelines": [
-          "Exportar em CMYK com resolução de 150 DPI para grandes formatos (acima de 1m)",
-          "Para murais, usar laminação fosca para coerência com a estética rústica",
-          "Padrão Selva em escala 300-400% para murais instagramáveis"
+          "Trabalhar em áreas amplas de cor sólida",
+          "Garantir leitura à distância",
+          "Usar acabamento fosco para preservar calor material"
         ],
         "restrictions": [
-          "Nunca usar laminação brilhante — contradiz a identidade rústica",
-          "Adesivos em superfícies externas precisam de proteção UV"
+          "Evitar brilho excessivo",
+          "Evitar excesso de elementos no mural principal"
         ]
       }
     ]
   },
   "imageGenerationBriefing": {
-    "visualStyle": "Gravura botânica tropical colorida com texturas de pintura à mão. Estilo que funde Ernst Haeckel (precisão botânica) com arte popular brasileira (vibração cromática). Não é flat design — tem textura, sobreposição de camadas e profundidade manual.",
-    "colorMood": "Base terrosa/kraft (#CBA37B) com explosões de verde profundo (#1E3A2F, #3A6342), laranja vivo (#E66C37), amarelo solar (#F4B41A), azul colonial (#2C4C6B) e vermelho tropical (#BE3B45). A temperatura geral é QUENTE — golden hour permanente.",
-    "compositionNotes": "Regra de ouro da marca: ABUNDÂNCIA nas bordas, RESPIRO no centro. Elementos botânicos (Monstera, Helicônias) invadem a composição pelas margens. O centro permanece em tom Kraft limpo para logotipo ou produto. Profundidade de campo curta para fotos de produto. Iluminação lateral quente, como fim de tarde em varanda tropical.",
+    "visualStyle": "Tropical urbano brasileiro com mistura de fotografia real de bar, design promocional popular bem resolvido e apoio gráfico controlado. Menos gravura densa, mais sistema reconhecível e vivo.",
+    "colorMood": "Predominância de Verde Caraca (#006B60) e Amarelo Surpresa (#D5A41D), com apoio de Areia de Guardanapo (#E8D5B5), Terracota Petisco (#A85A31) e Folha de Varanda (#2F8A72). Sensação quente, convidativa e noturna sem perder frescor.",
+    "compositionNotes": "Organizar a composição a partir de um foco claro: produto, logo ou momento humano. As bordas recebem apoio tropical ou textura; o centro mantém leitura. Alternar peças com mais foto e peças com mais headline, mas sempre preservando reconhecimento imediato do sistema.",
     "moodKeywords": [
-      "tropical",
-      "botânico",
-      "rústico",
-      "kraft",
-      "boêmio",
-      "exuberante",
-      "acolhedor",
-      "artesanal",
-      "biodiversidade",
-      "gravura",
-      "handmade",
-      "golden hour"
+      "boteco",
+      "tropical urbano",
+      "calor humano",
+      "bar vivo",
+      "promocional com personalidade",
+      "verde e amarelo",
+      "encontro",
+      "produto apetitoso",
+      "brasilidade cotidiana"
     ],
-    "artisticReferences": "Ernst Haeckel (Kunstformen der Natur) pela precisão botânica + Cândido Portinari pela brasilidade visceral + Jamie Oliver's food photography pela naturalidade editorial + estética de azulejaria portuguesa do séc. XVIII pela geometria colonial. A fusão resulta em algo que parece ao mesmo tempo científico e afetuoso.",
-    "avoidElements": "Neon, gradientes digitais, estética industrial/hipster, minimalismo escandinavo, palmeiras genéricas de resort, elementos de carnaval (confete, serpentina, máscara), emojis no design, estética de fast food, decoração de Havaianas/praia genérica, tons pastel, preto puro (#000000).",
-    "logoStyleGuide": "Lettering script cursivo fluido — como escrita com pincel japonês. Inclinação leve à direita. Ponto de exclamação integrado como parte da identidade. Verde Noturno (#1E3A2F) sobre fundo Kraft (#CBA37B). O logo sempre mora no espaço negativo central, abraçado pela selva botânica.",
-    "photographyMood": "Mesa de madeira rústica como base. Iluminação quente lateral (golden hour). Profundidade de campo curta (f/2.8-4). Ingredientes frescos visíveis. Vapor/condensação nos copos. Folhas tropicais reais ou gráficas invadindo os cantos. Sensação de espreitar o prato através da floresta tropical.",
-    "patternStyle": "4 sistemas de pattern: 1) Selva (denso, botânico, orgânico), 2) Geométrico (grid quadriculado com blocos de cor + ícones), 3) Azulejo (mandalas coloniais com micro-fauna tropical), 4) Minimalista (ícones espaçados em grid solto). Todos sobre base Kraft. Escala variável conforme suporte.",
-    "marketingVisualLanguage": "Composição em 4 camadas: 1) Nome emocional (Script grande, centro), 2) Slogan racional (Sans-Serif, abaixo), 3) Moldura botânica (bordas ricas), 4) Espaço negativo Kraft (centro limpo). Esta hierarquia se mantém em todo material — de um post de Instagram a um outdoor de 9 metros.",
-    "negativePrompt": "NO neon lights, NO industrial/hipster aesthetic, NO minimalist Scandinavian style, NO generic palm trees, NO carnival elements, NO black backgrounds (#000), NO pastel colors, NO digital gradients, NO flat design, NO stock photo look, NO fast food aesthetic, NO generic tropical resort, NO plastic textures, NO glossy/shiny surfaces — the brand is MATTE, RUSTIC, KRAFT."
+    "artisticReferences": "Campanhas populares brasileiras bem resolvidas, food photography de bar contemporâneo, sinalização urbana e sistemas sociais de marcas locais com forte presença real.",
+    "avoidElements": "Estética de pub inglês, industrial hipster, fine dining, neon de balada genérica, resort tropical, excesso de ilustração botânica densa, minimalismo frio, preto chapado dominante.",
+    "logoStyleGuide": "Usar selo/assinatura como ponto principal de reconhecimento. O gesto do nome precisa parecer humano, espontâneo e legível, sempre ancorado na relação Verde Caraca + Amarelo Surpresa.",
+    "photographyMood": "Produto em primeiro plano, copos gelados, luz quente, fundo de bar real, gente presente quando couber, madeira e azulejo como suporte. Evitar sets artificiais demais.",
+    "patternStyle": "Sistema de apoio composto por canto tropical, azulejo de boteco, medalhões de highlights e grades simples de promoção. Tudo precisa ser reproduzível em social, signage e cardápio.",
+    "marketingVisualLanguage": "Headline curta, logo visível, produto desejável e apoio visual mínimo necessário. A marca deve parecer em movimento e em operação, não como moodboard conceitual.",
+    "negativePrompt": "NO pub aesthetic, NO industrial hipster bar, NO fine dining plating, NO resort tropical clichés, NO overdecorated botanical engraving, NO cold corporate minimalism, NO neon nightclub visuals, NO black-dominant background, NO generic stock imagery"
   }
 } as unknown as BrandbookData;

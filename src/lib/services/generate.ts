@@ -12,6 +12,7 @@ export type GenerateRequestPayload = {
   industry?: string;
   briefing?: string;
   externalUrls?: string[];
+  projectMode?: "new_brand" | "rebrand";
   openaiKey?: string;
   googleKey?: string;
   provider?: string;
@@ -29,6 +30,7 @@ export type GenerateInput = {
   industry: string;
   briefing: string;
   externalUrls?: string[];
+  projectMode: "new_brand" | "rebrand";
   openaiKey?: string;
   googleKey?: string;
   provider: string;
@@ -174,6 +176,7 @@ export function parseGenerateInput(body: GenerateRequestPayload): GenerateInput 
     industry,
     briefing: body.briefing || "",
     externalUrls,
+    projectMode: body.projectMode || "new_brand",
     openaiKey: body.openaiKey,
     googleKey: body.googleKey,
     provider: body.provider || "openai",
@@ -196,6 +199,7 @@ export async function generateBrandbook(
     industry,
     briefing,
     externalUrls,
+    projectMode,
     openaiKey,
     googleKey,
     provider,
@@ -224,7 +228,17 @@ export async function generateBrandbook(
   const externalRefs = externalUrls && externalUrls.length > 0 ? await fetchExternalReferences(externalUrls) : [];
   const externalRefsText = formatExternalReferencesForPrompt(externalRefs);
   const userPromptText =
-    buildUserPrompt(brandName, industry, briefing || "", scope, hasImages, undefined, hasLogoImage) + externalRefsText;
+    buildUserPrompt(
+      brandName,
+      industry,
+      briefing || "",
+      projectMode,
+      scope,
+      hasImages,
+      undefined,
+      hasLogoImage,
+      externalRefs.length > 0
+    ) + externalRefsText;
 
   let fullContent = "";
 

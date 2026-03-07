@@ -8,7 +8,7 @@ import {
   rgba,
 } from "./BrandImmersiveTheme";
 
-import { BrandbookData, UploadedAsset, GeneratedAsset, Colors, type AssetPackFile } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset, Colors, type AiTextProvider, type AssetPackFile } from "@/lib/types";
 import { SectionCover } from "./sections/SectionCover";
 import { FontLoader } from "./FontLoader";
 import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
@@ -17,6 +17,7 @@ import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
 import type { ApiKeys } from "@/components/ApiKeyConfig";
 import {
   buildAvailableAssets,
+  buildCoverVisualSummary,
   chunkAvailableAssets,
   createAssetLookup,
   pickMappedAssetUrl,
@@ -82,7 +83,7 @@ interface Props {
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
   generatedAssets?: Record<string, GeneratedAsset>;
   apiKeys?: ApiKeys;
-  textProvider?: "openai" | "gemini";
+  promptProvider?: AiTextProvider;
   onAssetGenerated?: (key: string, asset: GeneratedAsset) => void;
   onSaveToAssets?: (asset: UploadedAsset) => void;
   onUpdateColors?: (colors: Colors) => void;
@@ -99,7 +100,7 @@ export function BrandbookViewer({
   onUpdateApplicationImageKey,
   generatedAssets = {},
   apiKeys,
-  textProvider = "openai",
+  promptProvider = "openai",
   onAssetGenerated,
   onSaveToAssets,
   onUpdateColors,
@@ -120,7 +121,7 @@ export function BrandbookViewer({
     onSaveToAssets,
     apiKeys: apiKeys ?? EMPTY_KEYS,
     uploadedAssets,
-    textProvider,
+    promptProvider,
   });
 
   const sectionDefs = buildSectionDefs({
@@ -165,6 +166,17 @@ export function BrandbookViewer({
         uploadedAssets,
       }),
     [generatedAssets, generatedImages, uploadedAssets]
+  );
+
+  const coverVisualSummary = useMemo(
+    () =>
+      buildCoverVisualSummary({
+        data,
+        generatedAssets,
+        generatedImages,
+        uploadedAssets,
+      }),
+    [data, generatedAssets, generatedImages, uploadedAssets]
   );
 
   // Track used hero URLs to avoid showing the same image in consecutive sections
@@ -236,7 +248,7 @@ export function BrandbookViewer({
         watermarkUrl={immersiveAssets.watermarkUrl}
       />
       <FontLoader data={data} />
-      <SectionCover data={data} />
+      <SectionCover data={data} visualSummary={coverVisualSummary} />
 
       {/* Immersive Mode Toggle — always visible */}
       <div className="no-print flex items-center justify-end gap-2 mb-4 flex-wrap">

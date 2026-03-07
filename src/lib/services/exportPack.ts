@@ -1,6 +1,8 @@
 import JSZip from "jszip";
+import { lintBrandbook } from "@/lib/brandbookLinter";
 import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
+import { getProtectedExportGuard } from "@/lib/brandbookQualityGate";
 import { slugify } from "@/lib/common";
 import { generateProductionManifest } from "@/lib/productionExport";
 import type { AssetPackFile, BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
@@ -187,6 +189,12 @@ export function parseExportPackInput(body: ExportPackInput): ExportPackPayload {
   const parsed = BrandbookSchemaLoose.safeParse(migrated);
   if (!parsed.success) {
     throw new ExportPackInputError("brandbookData inválido para export");
+  }
+
+  const lintReport = lintBrandbook(parsed.data as unknown as BrandbookData);
+  const guard = getProtectedExportGuard("pack", lintReport);
+  if (!guard.allowed) {
+    throw new ExportPackInputError(guard.reason ?? "Pack bloqueado pelo quality gate.");
   }
 
   return {

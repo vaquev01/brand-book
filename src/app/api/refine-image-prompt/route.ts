@@ -38,8 +38,23 @@ Tarefa: reescreva o prompt base para maximizar a qualidade do provider alvo. Man
 
 PRINCÍPIO CENTRAL: Cada palavra no prompt final deve CONTRIBUIR para o resultado visual. Remova redundâncias. Resolva contradições. Mas NUNCA remova alma.
 
+MODO DE AVALIAÇÃO INTERNA (obrigatório):
+- Antes de finalizar, avalie silenciosamente o prompt contra qualquer bloco de scorecard presente no prompt base.
+- Se existirem blocos como "BRAND_COHERENCE_SCORECARD:", "MINIMUM PASS:" ou "HARD FAIL CONDITIONS:", trate-os como critérios mandatórios de revisão.
+- Se o prompt refinado não atingir claramente o threshold descrito, reescreva antes de responder.
+- Nunca exponha a nota ou a cadeia de raciocínio; devolva apenas o prompt final melhorado.
+
+MODO DE PLANEJAMENTO CONSCIENTE (obrigatório):
+- Se o prompt base trouxer blocos como "CREATIVE_PLAN:", "FIRST_IMPRESSION_TARGET:", "HERO_DECISION:", "PLAN_ORDER:", "CONSCIOUS_CREATION_MODE:", "ELEMENT_ACCOUNTABILITY:", "DECISION_TEST:" ou "REMOVAL_TEST:", trate-os como etapas obrigatórias de planejamento interno.
+- Antes de escrever o prompt final, defina silenciosamente a tese central, a hierarquia dominante, o papel de cada elemento e o que deve ser removido para aumentar clareza sem perder identidade.
+- Não finalize um prompt em que existam elementos sem função clara para reconhecimento, hierarquia, emoção ou coerência de sistema.
+
 PRESERVAR LITERALMENTE (copiar sem alteração):
 - Blocos de sistema: "VISUAL_SYSTEM_ID:", "CONSISTENCY:", "PALETTE", "MOTIFS:", "HIERARCHY:"
+- Blocos de coerência: "BRAND_COHERENCE:", "ESSENCE FIRST:", "RECOGNITION ANCHORS:", "SIGNATURE COMPOSITION:", "REJECTION TEST:", "LOGO JUDGMENT:", "SYSTEM JUDGMENT:", "APPLICATION JUDGMENT:"
+- Blocos de rebrand crítico: "REBRAND_CRITICAL_MODE:", "PRESERVE:", "EVOLVE ONLY THROUGH:", "DO NOT SACRIFICE:"
+- Blocos de scorecard: "BRAND_COHERENCE_SCORECARD:", "MINIMUM PASS:", "HARD FAIL CONDITIONS:"
+- Blocos de planejamento/consciente: "CREATIVE_PLAN:", "FIRST_IMPRESSION_TARGET:", "HERO_DECISION:", "PLAN_ORDER:", "CONSCIOUS_CREATION_MODE:", "ELEMENT_ACCOUNTABILITY:", "DECISION_TEST:", "REMOVAL_TEST:"
 - Blocos de alma: "STYLE_TREE:", "ARCHETYPE:", "EMOTIONAL_CORE:", "BRAND_SOUL:", "BRAND_PROMISE:", "VIEWER_JOURNEY:", "DESIGN_PHILOSOPHY:", "IDENTITY_ASSETS:", "STRUCTURED_PATTERNS:"
 - Blocos de logo: "MASTER_LOGO:", "LOGO_REPLICATION:", "LOGO_SAFETY:"
 
@@ -64,6 +79,7 @@ PROIBIDO ABSOLUTAMENTE adicionar ao prompt:
 - texturas de superfície, materiais, mockups
 OBRIGATÓRIO para logos: reforçar construção geométrica do mark, negative space, consistência de stroke weights, escalabilidade, cores planas, fundo sólido puro.
 O bloco negativo do logo DEVE incluir: photography, photorealistic, scene, background texture, bokeh, lighting effects, shadows, 3D rendering, gradient fill, bevel, emboss, glow, halo.
+Ao refinar logos, preserve também o que o prompt disser sobre warmth, spontaneity, signature energy, colloquial humanity, conceptual specificity e recognition anchors. Não empurre o resultado para estética corporativa fria só porque o logo é vetorial.
 
 CHECKLIST DE QUALIDADE (o prompt refinado DEVE ter TODOS):
 ✓ Conceito visual claro (o que a imagem SIGNIFICA, não apenas MOSTRA)

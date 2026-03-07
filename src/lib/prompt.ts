@@ -17,13 +17,13 @@ const SCOPE_DIRECTIVE: Record<GenerateScope, string> = {
   full: `ESCOPO — BRANDBOOK COMPLETO: Gere TODAS as seções com profundidade máxima e homogênea. Estratégia, identidade visual, design system e produção devem ser igualmente ricos e detalhados. Nenhuma seção pode ser superficial.`,
 
   logo_identity: `ESCOPO — LOGO & IDENTIDADE VISUAL: Este é um projeto de identidade visual. Concentre profundidade máxima em:
-→ logo: conceba um símbolo/logotipo com conceito filosófico claro, regras detalhadas de uso
+→ logo: conceba um símbolo/logotipo como consequência direta do conceito central da marca, com tese semiótica clara, hierarquia verbal coerente e regras detalhadas de uso
 → logoVariants: todas as variações com propósito definido
-→ colors: paleta rica, coerente, com nomes criativos que revelam a psicologia de cada cor
-→ typography: seleção de fontes com forte justificativa de personalidade
-→ keyVisual: elementos gráficos com simbologia, mascotes se aplicável, símbolos e padrões ricos
-→ imageGenerationBriefing: briefing de arte ultra-detalhado
-As seções de estratégia (positioning, personas, UX) devem ser geradas de forma concisa mas coerente — o suficiente para contextualizar as escolhas visuais.`,
+→ colors: paleta rica, coerente, com nomes criativos que revelam a psicologia de cada cor e sustentam a implementação da marca
+→ typography: seleção de fontes com forte justificativa de personalidade e conexão explícita com o símbolo e o tom verbal
+→ keyVisual: elementos gráficos com simbologia, mascotes se aplicável, símbolos e padrões ricos, todos derivados da mesma ideia central
+→ imageGenerationBriefing: briefing de arte ultra-detalhado que traduza a estratégia em instruções visuais implementáveis
+As seções de estratégia (positioning, personas, UX) devem ser geradas de forma concisa mas coerente — o suficiente para contextualizar as escolhas visuais e garantir que a identidade nasça do conceito, não de um recurso gráfico arbitrário.`,
 
   strategy: `ESCOPO — ESTRATÉGIA & POSICIONAMENTO: Este é um projeto de estratégia de marca. Concentre profundidade máxima em:
 → brandConcept: propósito com profundidade filosófica, missão e visão acionáveis, UVP afiada, valores com conexão explícita às escolhas da marca
@@ -81,12 +81,15 @@ PRINCÍPIOS FUNDAMENTAIS DE GERAÇÃO:
 5. TIPOGRAFIA COM PERSONALIDADE: Cada fonte escolhida deve ter uma razão de ser. A combinação tipográfica deve criar contraste e harmonia ao mesmo tempo.
 6. MASCOTES & SÍMBOLOS: Avalie ativamente se a marca se beneficia de um personagem/mascote (marcas com forte personalidade, produtos de consumo, entretenimento, apps para jovens, food & beverage). Se sim, crie mascotes ricos com backstory e diretrizes claras.
 7. COMPLETUDE: Preencha TODOS os campos do JSON. Campos incompletos ou vagos comprometem a usabilidade do brandbook.
+8. LOGO COMO CONSEQUÊNCIA E NÃO COMO TRUQUE: O símbolo/logotipo deve emergir do propósito, posicionamento, personalidade, proposta de valor e identidade verbal. Nunca predefina recursos como pontuação, iniciais, mascotes, monogramas ou metáforas visuais apenas porque parecem interessantes. Eles só podem ser adotados quando forem a consequência estratégica mais coerente.
+9. IMPLEMENTAÇÃO GARANTIDA: Se a marca adotar um recurso expressivo específico — por exemplo pontuação, monograma, contraforma, gesto caligráfico, estrutura modular, contraste cromático distintivo — esse recurso deve ser explicitamente traduzido em regras de aplicação no logo, typography, colors, keyVisual, applications, productionGuidelines e imageGenerationBriefing. O brandbook deve garantir a implementação coerente dessa decisão em todo o sistema.
+10. REBRAND COM PRESERVAÇÃO DE EQUITY: Quando houver sinais de marca existente — logo atual, screenshots de Instagram/feed, fachada, embalagens, cardápios, site, highlights, materiais reais ou links oficiais — trate isso como evidência de equity já construído. Extraia o que a marca já possui de reconhecimento, tom, repertório visual, códigos cromáticos, humor, categorias de conteúdo e percepção pública. Preserve o que for forte e diferencie essência de execução atual. Um rebrand deve soar como evolução estratégica, não como ruptura arbitrária.
 
 REGRAS AVANÇADAS DE QUALIDADE (OBRIGATÓRIAS):
 
-8. CROSS-REFERENCING ENTRE SEÇÕES: Cada cor nomeada na paleta DEVE ser referenciada pelo seu nome exato em TODAS as seções onde aparece. Exemplo: se uma cor se chama "Laranja Tucano", ela deve aparecer como "Laranja Tucano" na typographyHierarchy ("preços em Montserrat Bold Laranja Tucano"), no artDirection das aplicações, nas usageGuidelines do mascote, nos substrates ("fio poliéster Amarelo Caju") e nas productionMethods. Nunca dizer "cor de destaque" genericamente — usar SEMPRE o nome da cor. Isso garante que o brandbook funcione como guia operacional onde qualquer área encontra exatamente a cor certa sem ambiguidade.
+11. CROSS-REFERENCING ENTRE SEÇÕES: Cada cor nomeada na paleta DEVE ser referenciada pelo seu nome exato em TODAS as seções onde aparece. Exemplo: se uma cor se chama "Laranja Tucano", ela deve aparecer como "Laranja Tucano" na typographyHierarchy ("preços em Montserrat Bold Laranja Tucano"), no artDirection das aplicações, nas usageGuidelines do mascote, nos substrates ("fio poliéster Amarelo Caju") e nas productionMethods. Nunca dizer "cor de destaque" genericamente — usar SEMPRE o nome da cor. Isso garante que o brandbook funcione como guia operacional onde qualquer área encontra exatamente a cor certa sem ambiguidade.
 
-9. PROFUNDIDADE DE PRODUÇÃO INDUSTRIAL: As productionMethods e o handoffChecklist devem refletir conhecimento REAL de prepress e produção gráfica:
+12. PROFUNDIDADE DE PRODUÇÃO INDUSTRIAL: As productionMethods e o handoffChecklist devem refletir conhecimento REAL de prepress e produção gráfica:
    • Flexografia: alertar sobre gradientes que não reproduzem, textos vazados (negativos) que entopem de tinta, registro de cores com tolerância em mm.
    • Serigrafia: necessidade de base branca em tecidos escuros para cores claras, máximo de cores por peça, impossibilidade de gradientes.
    • Bordado: tamanho mínimo de texto legível (5mm altura), conversão para matriz, número máximo de cores de fio.
@@ -94,7 +97,7 @@ REGRAS AVANÇADAS DE QUALIDADE (OBRIGATÓRIAS):
    • Impressão sobre substratos coloridos (kraft, tecido escuro): alertar que tintas escurecem e que branco pode exigir 5ª cor (Spot Color / White Ink).
    • Sempre incluir no handoffChecklist: "Converter fontes em curvas (Create Outlines)" e "Expandir traços (Outline Stroke)".
 
-10. PANTONE — ATRIBUIÇÃO CRITERIOSA: Ao atribuir códigos Pantone, use APENAS códigos que você tenha alta confiança de serem correspondências reais do HEX fornecido. Consulte a referência mais próxima da série Pantone Coated (C) para cores sólidas e Pantone Uncoated (U) apenas quando especificamente para papel sem revestimento. Se não tiver confiança na correspondência exata, use "Pantone (verificar com Pantone Color Bridge)" em vez de inventar um código incorreto. Pantone errado causa produção inteira descartada — é preferível indicar "verificar" do que atribuir código falso.
+13. PANTONE — ATRIBUIÇÃO CRITERIOSA: Ao atribuir códigos Pantone, use APENAS códigos que você tenha alta confiança de serem correspondências reais do HEX fornecido. Consulte a referência mais próxima da série Pantone Coated (C) para cores sólidas e Pantone Uncoated (U) apenas quando especificamente para papel sem revestimento. Se não tiver confiança na correspondência exata, use "Pantone (verificar com Pantone Color Bridge)" em vez de inventar um código incorreto. Pantone errado causa produção inteira descartada — é preferível indicar "verificar" do que atribuir código falso.
 
 INSTRUÇÕES POR SEÇÃO:
 1. "brandName" + "industry": nome exato e nicho preciso (não genérico).
@@ -102,10 +105,10 @@ INSTRUÇÕES POR SEÇÃO:
 3. "positioning": categoria inovadora (não a óbvia), mercado-alvo preciso, positioning statement memorável, diferenciais realmente únicos, concorrentes honestos, RTBs concretos.
 4. "audiencePersonas": 2-4 personas ricas — nomes reais, contextos de vida detalhados, objetivos com emoção por trás, dores com profundidade, objeções específicas, canais preferidos com frequência de uso. Para SaaS/produtos digitais, inclua também: "companySize" (tamanho da empresa — ex: "Startup 10-50 pessoas", "Scale-up 200-500", "Enterprise 1000+") e "digitalMaturity" (maturidade digital — ex: "Avançada: usa ferramentas integradas, data-driven", "Intermediária: planilhas + ferramentas básicas", "Iniciante: processos manuais").
 5. "verbalIdentity": tagline memorável e intraduzível (que se perde algo na tradução), one-liner com ganchos, traços de voz com exemplos, messaging pillars com copy real, vocabulário com pelo menos 8 palavras em cada lista, do/don'ts acionáveis, 5+ headlines e CTAs variados.
-6. "logo": URLs placehold.co realistas (use cores da paleta no URL). Conceito do símbolo claro no clearSpace. Regras de uso incorreto específicas e ilustrativas (mínimo 5).
+6. "logo": URLs placehold.co realistas (use cores da paleta no URL). O logo deve ser a representação visual do conceito central da marca, não um ornamento isolado. Explique no clearSpace como o símbolo deriva do brandConcept, do positioning e da verbalIdentity. Se houver recurso expressivo específico (ex: pontuação, monograma, contraforma, gesto caligráfico, estrutura modular), ele deve ser adotado apenas se for a solução estratégica mais coerente e precisa ser descrito como sistema replicável, não como detalhe casual. Regras de uso incorreto específicas e ilustrativas (mínimo 5).
 7. "logoVariants": todas as 6 variações com URLs placehold.co.
 8. "colors": paleta primária (2-3 cores), secundária (2-4 cores), semântica completa, dataViz (5-8 cores). Nomes criativos e específicos. HEX preciso, RGB e CMYK corretos. Cada cor DEVE ter "usage" explicando onde e como usar (ex: "Fundo principal de materiais impressos", "Texto primário e blocos sólidos", "Destaques e call-to-action"). Inclua "pantone" quando aplicável (ex: "Pantone 286 C" para cores sólidas) — essencial para produção física (uniformes, sinalização, embalagens). ESCALA TONAL (OBRIGATÓRIA PARA CORES PRIMÁRIAS E SECUNDÁRIAS): Cada cor primária e secundária DEVE incluir "tonalScale" — array de shades de 50 a 900 (mínimo 7 shades: 50, 100, 200, 300, 500, 700, 900). Shade 500 deve ser a cor principal. Shades claros (50-200) para backgrounds e hover states. Shades escuros (700-900) para textos e estados pressed. Ex: [{"shade":"50","hex":"#EFF6FF"},{"shade":"100","hex":"#DBEAFE"},{"shade":"500","hex":"#3B82F6"},{"shade":"700","hex":"#1D4ED8"},{"shade":"900","hex":"#1E3A8A"}]. Essencial para UI/produto digital.
-9. "typography": 3 famílias distintas com personalidades complementares — marketing/display, UI/interface, monospace/código. Cada fonte DEVE ter: "fallbackFont" (alternativa Google Fonts gratuita), "textTransform" se aplicável (lowercase, uppercase, capitalize, none), "category" (Script, Sans-Serif, Serif, Display, Monospace).
+9. "typography": 3 famílias distintas com personalidades complementares — marketing/display, UI/interface, monospace/código. Cada fonte DEVE ter: "fallbackFont" (alternativa Google Fonts gratuita), "textTransform" se aplicável (lowercase, uppercase, capitalize, none), "category" (Script, Sans-Serif, Serif, Display, Monospace). Explique como a tipografia reforça a mesma ideia central do símbolo e como sustenta qualquer recurso expressivo eventualmente adotado pela marca.
 10. "typographyScale": mínimo 8 níveis (Display, H1, H2, H3, H4, Body Large, Body, Body Small, Caption, Overline) com medidas em px, line-heights calculados, letter-spacing em em.
 11. "designTokens": mínimo 10 valores de spacing (4px grid), 6+ border-radii com casos de uso, shadows (3-5 níveis: sm, md, lg, xl), breakpoints (mobile, tablet, desktop, wide), grid (sistema de grid responsivo).
 12. "uiGuidelines": grid responsivo detalhado, densidade/espaçamento com exemplos, estilo de iconografia com peso e estilo, estilo de ilustração coerente com a marca, guidelines de dataviz, mínimo 6 componentes com estados completos (default, hover, focus, active, disabled, error).
@@ -113,10 +116,10 @@ INSTRUÇÕES POR SEÇÃO:
 14. "microcopy": regras com exemplos reais de copy em cada contexto. "writingConventions" — convenções de escrita para produto digital: capitalização (Sentence case vs Title Case), voz (ativa sempre, nunca passiva), regras de botões (sem artigos: "Criar campanha" não "Criar uma campanha"), tom de erro (nunca culpar o usuário), máximo de caracteres por contexto (botão: 3 palavras, título: 70 chars, tooltip: 120 chars).
 15. "accessibility": regras WCAG 2.2 AA/AAA específicas, exemplos de ratios de contraste, CSS de focus states, estratégias de independência de cor.
 16. "motion": durações em ms, funções de easing específicas (cubic-bezier), triggers e estados de carregamento com exemplos.
-17. "keyVisual": mínimo 6 elementos gráficos detalhados, estilo fotográfico com referências reais, iconografia com peso e estilo, ilustrações com técnica, arquitetura de marketing com hierarquia, compositionPhilosophy (filosofia de composição — como organizar os elementos visuais: abundância vs minimalismo, bordas vs centro, hierarquia espacial). MASCOTES: Avalie e crie se aplicável (1-3 mascotes ricos). SÍMBOLOS: mínimo 3 símbolos identitários. PADRÕES: "patterns" (string[] legado) E "structuredPatterns" (array de objetos detalhados com name, description, composition, usage, density, background — mínimo 2 padrões). CATEGORIZAÇÃO DE ATIVOS VISUAIS: preencher "flora" (elementos botânicos/naturais), "fauna" (animais/mascotes informais), "objects" (objetos identitários — instrumentos, utensílios, elementos culturais).
-18. "applications": mínimo 4 aplicações variadas (digital + print) com imagePlaceholder via placehold.co e imageKey válido. Cada aplicação DEVE ter: "dimensions" (dimensões exatas da peça — ex: "90×50mm cartão de visita", "1080×1080px feed Instagram", "A3 297×420mm cardápio", "outdoor 9×3m"), "materialSpecs" (substrato, gramatura, acabamento, material físico), "layoutGuidelines" (regras de layout — margens, hierarquia, densidade visual), "typographyHierarchy" (qual fonte para cada nível — títulos, subtítulos, corpo, preços), "artDirection" (direção de arte — iluminação, estilo fotográfico, composição gráfica), "substrates" (lista de materiais recomendados).
-19. "productionGuidelines": naming convention com exemplos reais, checklist de handoff completo (mínimo 10 itens), specs de impressão e digital precisas, lista de entregáveis organizada. MÉTODOS DE PRODUÇÃO: "productionMethods" — array detalhando cada método (flexografia, serigrafia/silk-screen, bordado, offset, digital) com: substrate, guidelines específicas, restrictions (o que NÃO fazer naquele método).
-20. "imageGenerationBriefing": briefing de direção de arte profissional com referências artísticas reais, instruções de composição técnica (FOV, profundidade de campo, iluminação), paleta de mood, negative prompt completo. CAMPOS EXTRAS OBRIGATÓRIOS: "emotionalCore" (emoção central que toda imagem deve evocar — conectada ao manifesto e arquétipo), "textureLanguage" (vocabulário tátil/material da marca — texturas que traduzem a personalidade), "lightingSignature" (assinatura de iluminação — temperatura em Kelvin, ratio key:fill, direção, qualidade), "cameraSignature" (linguagem de câmera padrão — lente, DOF, perspectiva por tipo de peça), "brandArchetype" (arquétipo dominante + secundário com tradução visual), "sensoryProfile" (perfil sensorial — como a marca seria percebida pelos 5 sentidos traduzidos em linguagem visual).
+17. "keyVisual": mínimo 6 elementos gráficos detalhados, estilo fotográfico com referências reais, iconografia com peso e estilo, ilustrações com técnica, arquitetura de marketing com hierarquia, compositionPhilosophy (filosofia de composição — como organizar os elementos visuais: abundância vs minimalismo, bordas vs centro, hierarquia espacial). Todos os elementos devem derivar da mesma lógica conceitual do logo e da marca. MASCOTES: Avalie e crie se aplicável (1-3 mascotes ricos). SÍMBOLOS: mínimo 3 símbolos identitários. PADRÕES: "patterns" (string[] legado) E "structuredPatterns" (array de objetos detalhados com name, description, composition, usage, density, background — mínimo 2 padrões). CATEGORIZAÇÃO DE ATIVOS VISUAIS: preencher "flora" (elementos botânicos/naturais), "fauna" (animais/mascotes informais), "objects" (objetos identitários — instrumentos, utensílios, elementos culturais).
+18. "applications": mínimo 4 aplicações variadas (digital + print) com imagePlaceholder via placehold.co e imageKey válido. Cada aplicação DEVE ter: "dimensions" (dimensões exatas da peça — ex: "90×50mm cartão de visita", "1080×1080px feed Instagram", "A3 297×420mm cardápio", "outdoor 9×3m"), "materialSpecs" (substrato, gramatura, acabamento, material físico), "layoutGuidelines" (regras de layout — margens, hierarquia, densidade visual), "typographyHierarchy" (qual fonte para cada nível — títulos, subtítulos, corpo, preços), "artDirection" (direção de arte — iluminação, estilo fotográfico, composição gráfica), "substrates" (lista de materiais recomendados). Mostre como a tese visual do logo se comporta nas aplicações, sem depender de improviso.
+19. "productionGuidelines": naming convention com exemplos reais, checklist de handoff completo (mínimo 10 itens), specs de impressão e digital precisas, lista de entregáveis organizada. MÉTODOS DE PRODUÇÃO: "productionMethods" — array detalhando cada método (flexografia, serigrafia/silk-screen, bordado, offset, digital) com: substrate, guidelines específicas, restrictions (o que NÃO fazer naquele método). Inclua proteções claras para preservar a coerência do conceito do logo e de qualquer recurso expressivo adotado.
+20. "imageGenerationBriefing": briefing de direção de arte profissional com referências artísticas reais, instruções de composição técnica (FOV, profundidade de campo, iluminação), paleta de mood, negative prompt completo. Ele deve traduzir a mesma tese central do brandConcept em linguagem visual executável. CAMPOS EXTRAS OBRIGATÓRIOS: "emotionalCore" (emoção central que toda imagem deve evocar — conectada ao manifesto e arquétipo), "textureLanguage" (vocabulário tátil/material da marca — texturas que traduzem a personalidade), "lightingSignature" (assinatura de iluminação — temperatura em Kelvin, ratio key:fill, direção, qualidade), "cameraSignature" (linguagem de câmera padrão — lente, DOF, perspectiva por tipo de peça), "brandArchetype" (arquétipo dominante + secundário com tradução visual), "sensoryProfile" (perfil sensorial — como a marca seria percebida pelos 5 sentidos traduzidos em linguagem visual).
 
 21. "brandStory": narrativa profunda da marca em 3 campos — "manifesto" (texto de marca de 2-3 parágrafos, estilo manifesto, na voz da marca, emocional e aspiracional), "originStory" (história de origem — por que a marca foi criada, o problema que resolve, o momento da virada), "brandPromise" (promessa central e inquebrável da marca para seus clientes — 1-2 frases precisas), "brandBeliefs" (lista de 4-6 crenças que a marca defende, no formato "Acreditamos que...").
 22. "verbalIdentity.tonePerChannel": para cada canal relevante (Instagram, LinkedIn, WhatsApp, Email, TikTok, Site, Atendimento), especifique: "channel", "tone" (como a marca fala nesse canal especificamente), "example" (exemplo real de post/mensagem/resposta naquele canal).
@@ -197,9 +200,17 @@ ESTRUTURA JSON EXIGIDA:
     "secondary": "string (URL placehold.co)",
     "symbol": "string (URL placehold.co quadrado, ex: https://placehold.co/400x400/...)",
     "favicon": "string (descrição do favicon/app icon)",
-    "clearSpace": "string (conceito do símbolo + regra de respiro)",
+    "clearSpace": "string (conceito do símbolo + regra de respiro + explicação de como ele deriva do conceito central da marca)",
     "minimumSize": "string",
-    "incorrectUsages": ["string (mínimo 5 usos incorretos específicos)"]
+    "incorrectUsages": ["string (mínimo 5 usos incorretos específicos)"],
+    "semioticAnalysis": {
+      "natureOfSymbol": "string (must be one of: 'Icon', 'Index', 'Symbol')",
+      "denotation": "string (o que a forma é literalmente. Ex: Um círculo cortado)",
+      "connotation": "string (o mito/ideologia oculta. Ex: O movimento do trem em direção ao futuro)"
+    },
+    "shapePsychology": "string (qual a forma base e por que? Efeito Bouba-Kiki aplicável)",
+    "negativeSpaceMetaphor": "string (como o espaço em branco está sendo usado para recompensar o cérebro)",
+    "evolutionaryStage": "string (must be one of: 'Descriptive', 'Transitional', 'Iconic')"
   },
   "logoVariants": {
     "horizontal": "string (URL placehold.co)",
@@ -211,25 +222,14 @@ ESTRUTURA JSON EXIGIDA:
   },
   "brandStory": {
     "manifesto": "string (2-3 parágrafos na voz da marca, emocional e aspiracional — manifesto de marca)",
-    "originStory": "string (história de origem: o problema, a virada, o porquê da marca existir)",
-    "brandPromise": "string (promessa central para os clientes — precisa, inquebrável, memorável)",
-    "brandBeliefs": ["string (ex: 'Acreditamos que...' — 4-6 crenças da marca)"]
-  },
-  "colors": {
-    "primary": [{ "name": "string (nome criativo com simbolismo)", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (ex: Pantone 286 C — para produção física)", "usage": "string (onde e como usar esta cor — ex: fundo principal, texto, destaques, CTA)", "tonalScale": [{"shade": "string (50|100|200|300|400|500|600|700|800|900)", "hex": "string"}] }],
-    "secondary": [{ "name": "string", "hex": "string", "rgb": "string", "cmyk": "string", "pantone": "string (opcional)", "usage": "string", "tonalScale": [{"shade": "string", "hex": "string"}] }],
-    "semantic": {
-      "success": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" },
-      "error": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" },
-      "warning": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" },
-      "info": { "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" }
-    },
-    "dataViz": [{ "name": "string", "hex": "string", "rgb": "string", "cmyk": "string" }]
+    "originStory": "string (história de origem da marca)",
+    "brandPromise": "string (promessa inquebrável da marca)",
+    "brandBeliefs": ["string (crenças que a marca defende)"]
   },
   "typography": {
-    "marketing": { "name": "string (fonte Display/Marketing)", "usage": "string (por que esta fonte para esta marca)", "weights": ["string"], "fallbackFont": "string (alternativa Google Fonts gratuita)", "textTransform": "string (lowercase | uppercase | capitalize | none)", "category": "string (Script | Sans-Serif | Serif | Display | Monospace)" },
-    "ui": { "name": "string (fonte UI/Interface)", "usage": "string (por que esta fonte para interface)", "weights": ["string"], "fallbackFont": "string", "textTransform": "string", "category": "string" },
-    "monospace": { "name": "string (fonte Mono/Code)", "usage": "string", "weights": ["string"], "fallbackFont": "string", "category": "Monospace" }
+    "marketing": { "name": "string", "usage": "string", "weights": ["string"], "fallbackFont": "string", "textTransform": "string", "category": "string", "antiBlandingRationale": "string (explicar como combate a mesmice)" },
+    "ui": { "name": "string", "usage": "string", "weights": ["string"], "fallbackFont": "string", "textTransform": "string", "category": "string", "antiBlandingRationale": "string" },
+    "monospace": { "name": "string", "usage": "string", "weights": ["string"], "fallbackFont": "string", "category": "Monospace", "antiBlandingRationale": "string" }
   },
   "typographyScale": [
     {
@@ -385,7 +385,7 @@ ESTRUTURA JSON EXIGIDA:
     "moodKeywords": ["string (mínimo 7 keywords de mood)"],
     "artisticReferences": "string (referências reais: fotógrafos, diretores, artistas, décadas, movimentos culturais — com explicação de por que cada um se aplica à marca)",
     "avoidElements": "string (lista específica do que NÃO fazer nas imagens desta marca)",
-    "logoStyleGuide": "string (conceito visual do logo, formas geométricas, pesos tipográficos, relação figura-fundo)",
+    "logoStyleGuide": "string (conceito visual do logo, formas geométricas, pesos tipográficos, relação figura-fundo, e como o sistema deve aplicar qualquer recurso expressivo apenas se ele for conceitualmente justificado)",
     "photographyMood": "string (iluminação, temperatura de cor, profundidade de campo, cenários, modelos)",
     "patternStyle": "string (estrutura geométrica, escala, densidade, variações de cor do padrão)",
     "marketingVisualLanguage": "string (como a marca se apresenta em mídia: composição, hierarquia, uso de espaço)",
@@ -412,10 +412,12 @@ export function buildUserPrompt(
   brandName: string,
   industry: string,
   briefing: string,
+  projectMode: "new_brand" | "rebrand" = "new_brand",
   scope: GenerateScope = "full",
   hasReferenceImages?: boolean,
   referenceImageDescriptions?: string[],
-  hasLogoImage?: boolean
+  hasLogoImage?: boolean,
+  hasExternalReferences?: boolean
 ): string {
   const scopeLabels: Record<GenerateScope, string> = {
     full: "BRANDBOOK COMPLETO",
@@ -432,7 +434,44 @@ Nicho/Indústria: ${industry}`;
     prompt += `\nBriefing: ${briefing.trim()}`;
   }
 
+  prompt += `\nTipo de projeto: ${projectMode === "rebrand" ? "RENOVAÇÃO / EVOLUÇÃO DE MARCA EXISTENTE" : "MARCA NOVA"}`;
+
   prompt += `\n\nIMPORTANTE: Se o briefing incluir links (ex: Instagram, sites, LinkedIn), NÃO afirme que acessou ou navegou nesses links. Você não tem acesso à internet. Se o sistema fornecer EXTRATOS de referências externas, use APENAS esses extratos como contexto (título/descrição/trechos). Caso contrário, trate os links apenas como indícios de plataforma/público e baseie as decisões exclusivamente no texto fornecido e nas imagens anexadas.`;
+
+  if (projectMode === "rebrand") {
+    prompt += `
+
+════════════════════════════════════════
+MODO REBRAND — PRESERVAÇÃO DE EQUITY
+════════════════════════════════════════
+Este projeto NÃO é uma marca nascendo do zero. É uma renovação estratégica.
+
+Sua responsabilidade é:
+
+1. EXTRAIR O QUE A MARCA JÁ POSSUI DE FORÇA REAL
+   - sinais de reconhecimento
+   - códigos cromáticos recorrentes
+   - estilo tipográfico ou gestual já associado ao nome
+   - humor, vocabulário e tom já vivos no público
+   - tipos de conteúdo e signos visuais que aparecem com frequência
+   - elementos do espaço físico, fachada, cardápio, embalagem e redes
+
+2. SEPARAR ESSÊNCIA DE EXECUÇÃO ATUAL
+   - essência = o que precisa sobreviver
+   - execução atual = o que pode evoluir, simplificar ou ganhar sistema
+
+3. EVOLUIR SEM ROMPER
+   O resultado final deve parecer uma evolução inevitável e mais madura da marca, não uma troca arbitrária de personalidade.
+
+4. EXPLICAR A CONTINUIDADE NO PRÓPRIO BRANDBOOK
+   Ao escrever positioning, verbalIdentity, logo, colors, keyVisual, applications e socialMediaGuidelines, deixe claro como o novo sistema nasce do que a marca já demonstrava na prática.`;
+  }
+
+  if (hasExternalReferences) {
+    prompt += `
+
+Se houver extratos externos fornecidos pelo sistema, trate-os como evidência complementar de marca existente — especialmente para bio, categoria, sinais de audiência, localização, naming, prova social e linguagem pública.`;
+  }
 
   if (hasLogoImage) {
     prompt += `
@@ -481,7 +520,7 @@ REGRA FUNDAMENTAL: O logo fornecido é a ÂNCORA IMUTÁVEL da identidade. TODAS 
     const imgLabel = hasLogoImage ? "IMAGENS DE REFERÊNCIA ADICIONAIS" : "IMAGENS DE REFERÊNCIA FORNECIDAS";
     const count = (referenceImageDescriptions?.length ?? 1) + (hasLogoImage ? 0 : 0);
     const startIndex = hasLogoImage ? 2 : 1;
-    prompt += `\n\n--- ${imgLabel} (a partir da imagem ${startIndex}, ${count} imagem${count > 1 ? "ns" : ""}) ---\nAnalise as imagens de referência. Extraia e incorpore no brandbook:\n• Paleta de cores e temperatura cromática\n• Estilo visual e movimento artístico\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico\nTraduza o que você viu também em estratégia e linguagem: ajuste positioning, brandConcept e verbalIdentity para ficar coerente com o estilo visual observado.\nIncorpore esses atributos nas seções: colors, keyVisual, imageGenerationBriefing.`;
+    prompt += `\n\n--- ${imgLabel} (a partir da imagem ${startIndex}, ${count} imagem${count > 1 ? "ns" : ""}) ---\nAnalise as imagens de referência. Extraia e incorpore no brandbook:\n• Paleta de cores e temperatura cromática\n• Estilo visual e movimento artístico\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico\n• Se houver screenshots de Instagram/feed/fachada/cardápio/embalagem/ambiente, trate isso como evidência da marca atual em operação\n• Se houver imagens mais conceituais ou aspiracionais, trate isso como direção futura a ser absorvida de forma coerente\n\nPara screenshots de redes sociais e materiais reais, extraia especificamente:\n• bio, categoria e sinais de prova social quando visíveis\n• nomes de highlights/categorias de conteúdo\n• equilíbrio entre pessoas, produto, ambiente e peças gráficas\n• humor, linguagem promocional, temas recorrentes e calls to action\n• códigos visuais recorrentes (cor, tipografia, molduras, cantos botânicos, ícones, mascotes, sinalização)\n\nTraduza o que você viu também em estratégia e linguagem: ajuste positioning, brandConcept, verbalIdentity e socialMediaGuidelines para ficar coerente com a marca observada.\nIncorpore esses atributos nas seções: colors, keyVisual, applications, socialMediaGuidelines e imageGenerationBriefing.`;
     if (referenceImageDescriptions && referenceImageDescriptions.length > 0) {
       referenceImageDescriptions.forEach((desc, i) => {
         if (desc) prompt += `\nReferência ${i + 1}: ${desc}`;

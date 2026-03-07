@@ -1,8 +1,9 @@
 "use client";
+import { EditableField } from "@/components/EditableField";
 import { useState } from "react";
 import { BrandbookData, Color, Colors } from "@/lib/types";
 
-function ColorSwatch({ color, onRemove }: { color: Color; onRemove?: () => void }) {
+function ColorSwatch({ color, onChange, onRemove }: { color: Color; onChange?: (color: Color) => void; onRemove?: () => void }) {
   return (
     <div className="color-swatch bg-white rounded-lg shadow-sm border overflow-hidden relative group">
       <div className="h-20 w-full" style={{ backgroundColor: color.hex }} />
@@ -16,18 +17,20 @@ function ColorSwatch({ color, onRemove }: { color: Color; onRemove?: () => void 
         </button>
       )}
       <div className="p-3">
-        <h4 className="font-bold text-xs mb-1 truncate" title={color.name}>{color.name}</h4>
+        <h4 className="font-bold text-xs mb-1 truncate" title={color.name}>
+          <EditableField value={color.name} onSave={(val) => onChange?.({ ...color, name: val })} readOnly={!onChange} />
+        </h4>
         <div className="text-[10px] text-gray-500 space-y-0.5 font-mono">
-          <p><span className="font-semibold text-gray-700">HEX:</span> {color.hex}</p>
-          <p><span className="font-semibold text-gray-700">RGB:</span> {color.rgb}</p>
-          <p><span className="font-semibold text-gray-700">CMYK:</span> {color.cmyk}</p>
+          <p><span className="font-semibold text-gray-700">HEX:</span> <EditableField value={color.hex} onSave={(val) => onChange?.({ ...color, hex: val })} readOnly={!onChange} /></p>
+          <p><span className="font-semibold text-gray-700">RGB:</span> <EditableField value={color.rgb} onSave={(val) => onChange?.({ ...color, rgb: val })} readOnly={!onChange} /></p>
+          <p><span className="font-semibold text-gray-700">CMYK:</span> <EditableField value={color.cmyk} onSave={(val) => onChange?.({ ...color, cmyk: val })} readOnly={!onChange} /></p>
           {color.pantone && (
-            <p><span className="font-semibold text-gray-700">Pantone:</span> {color.pantone}</p>
+            <p><span className="font-semibold text-gray-700">Pantone:</span> <EditableField value={color.pantone} onSave={(val) => onChange?.({ ...color, pantone: val })} readOnly={!onChange} /></p>
           )}
         </div>
         {color.usage && (
           <div className="mt-2 pt-2 border-t">
-            <p className="text-[10px] text-gray-600 leading-relaxed"><span className="font-semibold text-gray-700">Uso:</span> {color.usage}</p>
+            <p className="text-[10px] text-gray-600 leading-relaxed"><span className="font-semibold text-gray-700">Uso:</span> <EditableField value={color.usage} onSave={(val) => onChange?.({ ...color, usage: val })} readOnly={!onChange} multiline /></p>
           </div>
         )}
         {color.tonalScale && color.tonalScale.length > 0 && (
@@ -119,6 +122,42 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
     onUpdateColors(updated);
   }
 
+  function updatePaletteColor(palette: "primary" | "secondary", index: number, nextColor: Color) {
+    if (!onUpdateColors) return;
+    const updated = {
+      ...data.colors,
+      [palette]: data.colors[palette].map((color, i) => i === index ? nextColor : color)
+    };
+    onUpdateColors(updated);
+  }
+
+  function updateSemanticColor(key: keyof NonNullable<Colors["semantic"]>, nextColor: Color) {
+    if (!onUpdateColors || !data.colors.semantic) return;
+    onUpdateColors({
+      ...data.colors,
+      semantic: {
+        ...data.colors.semantic,
+        [key]: nextColor,
+      }
+    });
+  }
+
+  function updateDataVizColor(index: number, nextColor: Color) {
+    if (!onUpdateColors || !data.colors.dataViz) return;
+    onUpdateColors({
+      ...data.colors,
+      dataViz: data.colors.dataViz.map((color, i) => i === index ? nextColor : color)
+    });
+  }
+
+  function removeDataVizColor(index: number) {
+    if (!onUpdateColors || !data.colors.dataViz) return;
+    onUpdateColors({
+      ...data.colors,
+      dataViz: data.colors.dataViz.filter((_, i) => i !== index)
+    });
+  }
+
   return (
     <section className="page-break mb-6">
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
@@ -146,7 +185,7 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
       )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
         {data.colors.primary.map((c, i) => (
-          <ColorSwatch key={i} color={c} onRemove={onUpdateColors ? () => removeColor("primary", i) : undefined} />
+          <ColorSwatch key={i} color={c} onChange={onUpdateColors ? (nextColor) => updatePaletteColor("primary", i, nextColor) : undefined} onRemove={onUpdateColors ? () => removeColor("primary", i) : undefined} />
         ))}
       </div>
 
@@ -171,7 +210,7 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
       )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
         {data.colors.secondary.map((c, i) => (
-          <ColorSwatch key={i} color={c} onRemove={onUpdateColors ? () => removeColor("secondary", i) : undefined} />
+          <ColorSwatch key={i} color={c} onChange={onUpdateColors ? (nextColor) => updatePaletteColor("secondary", i, nextColor) : undefined} onRemove={onUpdateColors ? () => removeColor("secondary", i) : undefined} />
         ))}
       </div>
 
@@ -179,19 +218,33 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
         <>
           <h3 className="text-base font-semibold mb-3 border-l-4 border-blue-500 pl-3">Cores Semânticas (Feedback UI)</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
-            <ColorSwatch color={data.colors.semantic.success} />
-            <ColorSwatch color={data.colors.semantic.error} />
-            <ColorSwatch color={data.colors.semantic.warning} />
-            <ColorSwatch color={data.colors.semantic.info} />
+            <ColorSwatch color={data.colors.semantic.success} onChange={onUpdateColors ? (nextColor) => updateSemanticColor("success", nextColor) : undefined} />
+            <ColorSwatch color={data.colors.semantic.error} onChange={onUpdateColors ? (nextColor) => updateSemanticColor("error", nextColor) : undefined} />
+            <ColorSwatch color={data.colors.semantic.warning} onChange={onUpdateColors ? (nextColor) => updateSemanticColor("warning", nextColor) : undefined} />
+            <ColorSwatch color={data.colors.semantic.info} onChange={onUpdateColors ? (nextColor) => updateSemanticColor("info", nextColor) : undefined} />
           </div>
         </>
       )}
 
       {isAdvanced && data.colors.dataViz && (
         <>
-          <h3 className="text-base font-semibold mb-3 border-l-4 border-purple-500 pl-3">DataViz (Gráficos)</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold border-l-4 border-purple-500 pl-3">DataViz (Gráficos)</h3>
+            {onUpdateColors && (
+              <button
+                type="button"
+                onClick={() => onUpdateColors({
+                  ...data.colors,
+                  dataViz: [...(data.colors.dataViz || []), { name: "Nova cor DataViz", hex: "#000000", rgb: "0, 0, 0", cmyk: "0, 0, 0, 100" }]
+                })}
+                className="no-print text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition"
+              >
+                + Adicionar
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 items-start">
-            {data.colors.dataViz.map((c, i) => <ColorSwatch key={i} color={c} />)}
+            {data.colors.dataViz.map((c, i) => <ColorSwatch key={i} color={c} onChange={onUpdateColors ? (nextColor) => updateDataVizColor(i, nextColor) : undefined} onRemove={onUpdateColors ? () => removeDataVizColor(i) : undefined} />)}
           </div>
         </>
       )}

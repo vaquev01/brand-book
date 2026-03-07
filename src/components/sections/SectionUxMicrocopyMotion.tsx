@@ -1,7 +1,8 @@
 "use client";
+import { EditableField } from "@/components/EditableField";
 import { BrandbookData } from "@/lib/types";
 
-export function SectionUxMicrocopyMotion({ data, num }: { data: BrandbookData; num: number }) {
+export function SectionUxMicrocopyMotion({ data, num, onUpdateData }: { data: BrandbookData; num: number; onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void }) {
   if (!data.uxPatterns || !data.microcopy || !data.motion) return null;
 
   return (
@@ -19,19 +20,19 @@ export function SectionUxMicrocopyMotion({ data, num }: { data: BrandbookData; n
           <div className="space-y-4">
             <div className="bg-blue-50 p-4 rounded border border-blue-100">
               <h4 className="font-bold text-sm text-blue-900 mb-1">Onboarding</h4>
-              <p className="text-sm text-gray-700">{data.uxPatterns.onboarding}</p>
+              <EditableField value={data.uxPatterns.onboarding} onSave={(val) => onUpdateData?.(prev => prev.uxPatterns ? { ...prev, uxPatterns: { ...prev.uxPatterns, onboarding: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             <div className="bg-blue-50 p-4 rounded border border-blue-100">
               <h4 className="font-bold text-sm text-blue-900 mb-1">Empty States</h4>
-              <p className="text-sm text-gray-700">{data.uxPatterns.emptyStates}</p>
+              <EditableField value={data.uxPatterns.emptyStates} onSave={(val) => onUpdateData?.(prev => prev.uxPatterns ? { ...prev, uxPatterns: { ...prev.uxPatterns, emptyStates: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             <div className="bg-blue-50 p-4 rounded border border-blue-100">
               <h4 className="font-bold text-sm text-blue-900 mb-1">Dashboard Layout</h4>
-              <p className="text-sm text-gray-700">{data.uxPatterns.dashboardLayout}</p>
+              <EditableField value={data.uxPatterns.dashboardLayout} onSave={(val) => onUpdateData?.(prev => prev.uxPatterns ? { ...prev, uxPatterns: { ...prev.uxPatterns, dashboardLayout: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             <div className="bg-blue-50 p-4 rounded border border-blue-100">
               <h4 className="font-bold text-sm text-blue-900 mb-1">Modais &amp; Drawers</h4>
-              <p className="text-sm text-gray-700">{data.uxPatterns.modalsAndDrawers}</p>
+              <EditableField value={data.uxPatterns.modalsAndDrawers} onSave={(val) => onUpdateData?.(prev => prev.uxPatterns ? { ...prev, uxPatterns: { ...prev.uxPatterns, modalsAndDrawers: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
           </div>
         </div>
@@ -44,20 +45,20 @@ export function SectionUxMicrocopyMotion({ data, num }: { data: BrandbookData; n
           <div className="space-y-4">
             <div className="bg-green-50 p-4 rounded border border-green-100">
               <h4 className="font-bold text-sm text-green-900 mb-1">Regras de Botão</h4>
-              <p className="text-sm text-gray-700">{data.microcopy.buttonRules}</p>
+              <EditableField value={data.microcopy.buttonRules} onSave={(val) => onUpdateData?.(prev => prev.microcopy ? { ...prev, microcopy: { ...prev.microcopy, buttonRules: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             <div className="bg-green-50 p-4 rounded border border-green-100">
               <h4 className="font-bold text-sm text-green-900 mb-1">Mensagens de Erro</h4>
-              <p className="text-sm text-gray-700">{data.microcopy.errorMessages}</p>
+              <EditableField value={data.microcopy.errorMessages} onSave={(val) => onUpdateData?.(prev => prev.microcopy ? { ...prev, microcopy: { ...prev.microcopy, errorMessages: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             <div className="bg-green-50 p-4 rounded border border-green-100">
               <h4 className="font-bold text-sm text-green-900 mb-1">Copy de Empty States</h4>
-              <p className="text-sm text-gray-700">{data.microcopy.emptyStateCopy}</p>
+              <EditableField value={data.microcopy.emptyStateCopy} onSave={(val) => onUpdateData?.(prev => prev.microcopy ? { ...prev, microcopy: { ...prev.microcopy, emptyStateCopy: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             {data.microcopy.writingConventions && (
               <div className="bg-green-50 p-4 rounded border border-green-100">
                 <h4 className="font-bold text-sm text-green-900 mb-1">Convenções de Escrita</h4>
-                <p className="text-sm text-gray-700 whitespace-pre-line">{data.microcopy.writingConventions}</p>
+                <EditableField value={data.microcopy.writingConventions} onSave={(val) => onUpdateData?.(prev => prev.microcopy ? { ...prev, microcopy: { ...prev.microcopy, writingConventions: val } } : prev)} className="text-sm text-gray-700 whitespace-pre-line" readOnly={!onUpdateData} multiline />
               </div>
             )}
           </div>
@@ -71,15 +72,15 @@ export function SectionUxMicrocopyMotion({ data, num }: { data: BrandbookData; n
           <div className="space-y-4">
             <div className="bg-purple-50 p-4 rounded border border-purple-100">
               <h4 className="font-bold text-sm text-purple-900 mb-1">Transições</h4>
-              <p className="text-sm text-gray-700">{data.motion.transitions}</p>
+              <EditableField value={data.motion.transitions} onSave={(val) => onUpdateData?.(prev => prev.motion ? { ...prev, motion: { ...prev.motion, transitions: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             <div className="bg-purple-50 p-4 rounded border border-purple-100">
               <h4 className="font-bold text-sm text-purple-900 mb-1">Microinterações</h4>
-              <p className="text-sm text-gray-700">{data.motion.microinteractions}</p>
+              <EditableField value={data.motion.microinteractions} onSave={(val) => onUpdateData?.(prev => prev.motion ? { ...prev, motion: { ...prev.motion, microinteractions: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
             <div className="bg-purple-50 p-4 rounded border border-purple-100">
               <h4 className="font-bold text-sm text-purple-900 mb-1">Loading States</h4>
-              <p className="text-sm text-gray-700">{data.motion.loadingStates}</p>
+              <EditableField value={data.motion.loadingStates} onSave={(val) => onUpdateData?.(prev => prev.motion ? { ...prev, motion: { ...prev.motion, loadingStates: val } } : prev)} className="text-sm text-gray-700" readOnly={!onUpdateData} multiline />
             </div>
           </div>
         </div>

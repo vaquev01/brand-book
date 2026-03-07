@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ApiKeys } from "@/components/ApiKeyConfig";
-import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset } from "@/lib/types";
+import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset, type AiTextProvider } from "@/lib/types";
 import {
   ASSET_CATALOG,
   buildImagePrompt,
@@ -108,7 +108,7 @@ export interface UseImageGenerationProps {
   onSaveToAssets?: (asset: UploadedAsset) => void;
   apiKeys: ApiKeys;
   uploadedAssets: UploadedAsset[];
-  textProvider: "openai" | "gemini";
+  promptProvider: AiTextProvider;
   enabled?: boolean;
 }
 
@@ -119,7 +119,7 @@ export function useImageGeneration({
   onSaveToAssets,
   apiKeys,
   uploadedAssets,
-  textProvider,
+  promptProvider,
 }: UseImageGenerationProps) {
   const [provider, setProvider] = useState<ImageProvider>(() =>
     pickDefaultProvider(apiKeys)
@@ -223,8 +223,8 @@ export function useImageGeneration({
             !isStrictLogoAsset(assetKey) &&
             (provider !== "stability" || prompt.includes(" --neg "));
           const hasTextKey =
-            (textProvider === "openai" && !!apiKeys.openai) ||
-            (textProvider === "gemini" && !!apiKeys.google);
+            (promptProvider === "openai" && !!apiKeys.openai) ||
+            (promptProvider === "gemini" && !!apiKeys.google);
           if (canRefine && hasTextKey) {
             try {
               const refineRes = await fetch("/api/refine-image-prompt", {
@@ -234,11 +234,11 @@ export function useImageGeneration({
                   basePrompt,
                   imageProvider: provider,
                   assetKey,
-                  textProvider,
+                  textProvider: promptProvider,
                   openaiKey: apiKeys.openai || undefined,
                   googleKey: apiKeys.google || undefined,
-                  openaiModel: apiKeys.openaiTextModel || undefined,
-                  googleModel: apiKeys.googleTextModel || undefined,
+                  openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+                  googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
                 }),
               });
               const refineJson = await readJsonResponse<{
@@ -323,7 +323,7 @@ export function useImageGeneration({
       data,
       provider,
       apiKeys,
-      textProvider,
+      promptProvider,
       refineBeforeGenerate,
       useReferenceImages,
       onAssetGenerated,
@@ -354,8 +354,8 @@ export function useImageGeneration({
         let prompt = basePrompt;
         if (refineBeforeGenerate) {
           const hasTextKey =
-            (textProvider === "openai" && !!apiKeys.openai) ||
-            (textProvider === "gemini" && !!apiKeys.google);
+            (promptProvider === "openai" && !!apiKeys.openai) ||
+            (promptProvider === "gemini" && !!apiKeys.google);
           if (hasTextKey) {
             try {
               const refineRes = await fetch("/api/refine-image-prompt", {
@@ -365,11 +365,11 @@ export function useImageGeneration({
                   basePrompt,
                   imageProvider: provider,
                   assetKey: "brand_collateral",
-                  textProvider,
+                  textProvider: promptProvider,
                   openaiKey: apiKeys.openai || undefined,
                   googleKey: apiKeys.google || undefined,
-                  openaiModel: apiKeys.openaiTextModel || undefined,
-                  googleModel: apiKeys.googleTextModel || undefined,
+                  openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+                  googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
                 }),
               });
               const refineJson = await readJsonResponse<{
@@ -434,7 +434,7 @@ export function useImageGeneration({
       data,
       provider,
       apiKeys,
-      textProvider,
+      promptProvider,
       refineBeforeGenerate,
       useReferenceImages,
       onAssetGenerated,

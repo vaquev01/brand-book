@@ -1,18 +1,19 @@
 "use client";
-import { BrandbookData } from "@/lib/types";
+import { EditableField } from "@/components/EditableField";
+import { BrandbookData, Governance } from "@/lib/types";
 
-export function SectionGovernance({ data, num }: { data: BrandbookData; num: number }) {
+export function SectionGovernance({ data, num, onUpdateData }: { data: BrandbookData; num: number; onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void }) {
   if (!data.governance) return null;
 
   const g = data.governance;
 
-  const items: { label: string; value: string; icon: string; color: string }[] = [
-    { label: "Ferramentas de Design", value: g.designTools, icon: "Fg", color: "bg-blue-100 text-blue-700" },
-    { label: "Documentação", value: g.documentationPlatform, icon: "Dc", color: "bg-green-100 text-green-700" },
-    { label: "Biblioteca de Componentes", value: g.componentLibrary, icon: "Sb", color: "bg-purple-100 text-purple-700" },
-    { label: "Versionamento", value: g.versioningStrategy, icon: "Vs", color: "bg-orange-100 text-orange-700" },
-    { label: "Processo de Atualização", value: g.updateProcess, icon: "Up", color: "bg-pink-100 text-pink-700" },
-    { label: "Ownership & Papéis", value: g.ownershipRoles, icon: "Ow", color: "bg-indigo-100 text-indigo-700" },
+  const items: { key: keyof Governance; label: string; value: string; icon: string; color: string }[] = [
+    { key: "designTools", label: "Ferramentas de Design", value: g.designTools, icon: "Fg", color: "bg-blue-100 text-blue-700" },
+    { key: "documentationPlatform", label: "Documentação", value: g.documentationPlatform, icon: "Dc", color: "bg-green-100 text-green-700" },
+    { key: "componentLibrary", label: "Biblioteca de Componentes", value: g.componentLibrary, icon: "Sb", color: "bg-purple-100 text-purple-700" },
+    { key: "versioningStrategy", label: "Versionamento", value: g.versioningStrategy, icon: "Vs", color: "bg-orange-100 text-orange-700" },
+    { key: "updateProcess", label: "Processo de Atualização", value: g.updateProcess, icon: "Up", color: "bg-pink-100 text-pink-700" },
+    { key: "ownershipRoles", label: "Ownership & Papéis", value: g.ownershipRoles, icon: "Ow", color: "bg-indigo-100 text-indigo-700" },
   ];
 
   return (
@@ -30,7 +31,13 @@ export function SectionGovernance({ data, num }: { data: BrandbookData; num: num
               </span>
               <h3 className="text-sm font-bold text-gray-900">{item.label}</h3>
             </div>
-            <p className="text-sm text-gray-700 leading-relaxed">{item.value}</p>
+            <EditableField
+              value={item.value}
+              onSave={(val) => onUpdateData?.(prev => prev.governance ? { ...prev, governance: { ...prev.governance, [item.key]: val } } : prev)}
+              className="text-sm text-gray-700 leading-relaxed"
+              readOnly={!onUpdateData}
+              multiline
+            />
           </div>
         ))}
       </div>

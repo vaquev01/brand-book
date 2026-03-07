@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { BrandbookData } from "@/lib/types";
+import type { BrandbookLintReport } from "@/lib/brandbookLinter";
+import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
+import { getProfessionalExportGateSummary, getProtectedExportGuard, type ProtectedExportIntent } from "@/lib/brandbookQualityGate";
 import { exportCSSTokens, exportW3CTokens, exportTailwindConfig, downloadTextFile } from "@/lib/exportUtils";
 import { copyShareUrl } from "@/lib/shareUtils";
 import { exportBrandbookPDFMultiPage } from "@/lib/pdfExport";
-import { Code2, Coins, Wind, FileText, Link2, Download, Check, AlertCircle, Loader2 } from "lucide-react";
+import { Code2, Coins, Wind, FileText, Link2, Download, Check, AlertCircle, Loader2, ShieldCheck, ShieldAlert, ShieldQuestion } from "lucide-react";
 
 interface Props {
   brandbook: BrandbookData;
@@ -32,6 +35,34 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
   });
   const [shareMsg, setShareMsg] = useState("");
   const [errors, setErrors] = useState<ExportErrors>({});
+  const [lintLoading, setLintLoading] = useState(false);
+  const [lintError, setLintError] = useState("");
+  const [lintReport, setLintReport] = useState<BrandbookLintReport | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refreshLint() {
+      setLintLoading(true);
+      setLintError("");
+      try {
+        const report = await fetchBrandbookLintReport(brandbook);
+        if (!cancelled) setLintReport(report);
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setLintError(err instanceof Error ? err.message : "Erro ao verificar prontidão de export.");
+          setLintReport(null);
+        }
+      } finally {
+        if (!cancelled) setLintLoading(false);
+      }
+    }
+
+    void refreshLint();
+    return () => {
+      cancelled = true;
+    };
+  }, [brandbook]);
 
   function setS(key: keyof ExportState, val: ExportStatus) {
     setStatus((p) => ({ ...p, [key]: val }));
@@ -41,9 +72,20 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
     setErrors((p) => ({ ...p, [key]: msg }));
   }
 
+  function guardProtectedExport(intent: ProtectedExportIntent, key: ExportKey): boolean {
+    if (!lintReport) return true;
+    const guard = getProtectedExportGuard(intent, lintReport);
+    if (guard.allowed) return true;
+    setS(key, "error");
+    setErr(key, guard.reason ?? "Export bloqueado pelo quality gate.");
+    setTimeout(() => setS(key, "idle"), 4000);
+    return false;
+  }
+
   async function handleCSS() {
     setS("css", "loading");
     setErr("css", "");
+    if (!guardProtectedExport("css", "css")) return;
     try {
       const content = exportCSSTokens(brandbook);
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
@@ -59,6 +101,7 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
   async function handleW3C() {
     setS("tokens", "loading");
     setErr("tokens", "");
+    if (!guardProtectedExport("tokens", "tokens")) return;
     try {
       const content = exportW3CTokens(brandbook);
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
@@ -74,6 +117,7 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
   async function handleTailwind() {
     setS("tailwind", "loading");
     setErr("tailwind", "");
+    if (!guardProtectedExport("tailwind", "tailwind")) return;
     try {
       const content = exportTailwindConfig(brandbook);
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
@@ -89,6 +133,7 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
   async function handlePDF() {
     setS("pdf", "loading");
     setErr("pdf", "");
+    if (!guardProtectedExport("pdf", "pdf")) return;
     try {
       await exportBrandbookPDFMultiPage(viewerElementId, brandbook);
       setS("pdf", "done");
@@ -146,6 +191,16 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
     if (s === "error") return <span className="text-xs font-bold text-red-600">Erro</span>;
     return null;
   }
+
+  const gate = getProfessionalExportGateSummary(lintReport);
+  const GateIcon = lintLoading ? Loader2 : gate.tone === "red" ? ShieldAlert : gate.tone === "green" ? ShieldCheck : ShieldQuestion;
+  const gateClass = gate.tone === "red"
+    ? "bg-red-50 border-red-200 text-red-800"
+    : gate.tone === "green"
+      ? "bg-green-50 border-green-200 text-green-800"
+      : gate.tone === "amber"
+        ? "bg-amber-50 border-amber-200 text-amber-800"
+        : "bg-gray-50 border-gray-200 text-gray-700";
 
   const sections = [
     {
@@ -210,6 +265,24 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
 
   return (
     <div className="space-y-8">
+      <div className={`border rounded-2xl p-4 ${gateClass}`}>
+        <div className="flex items-start gap-3">
+          <GateIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${lintLoading ? "animate-spin" : ""}`} />
+          <div className="min-w-0 flex-1">
+            <div className="font-bold text-sm">{gate.title}</div>
+            <div className="text-xs mt-1 leading-relaxed opacity-90">{gate.description}</div>
+            {lintReport && (
+              <div className="flex gap-2 mt-3 flex-wrap text-[11px]">
+                <span className="px-2 py-1 rounded-full bg-white/70 border border-current/10 font-medium">score {lintReport.score}</span>
+                <span className="px-2 py-1 rounded-full bg-white/70 border border-current/10 font-medium">{lintReport.stats.critical} crítico(s)</span>
+                <span className="px-2 py-1 rounded-full bg-white/70 border border-current/10 font-medium">{lintReport.stats.warning} aviso(s)</span>
+                <span className="px-2 py-1 rounded-full bg-white/70 border border-current/10 font-medium">{lintReport.stats.suggestion} sugestão(ões)</span>
+              </div>
+            )}
+            {lintError && <div className="text-xs mt-2 text-red-700">{lintError}</div>}
+          </div>
+        </div>
+      </div>
       {sections.map((section) => (
         <div key={section.title}>
           <div className="mb-4 pb-3 border-b border-gray-100">

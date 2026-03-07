@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { BrandbookData } from "@/lib/types";
+import type { AiTextProvider, BrandbookData } from "@/lib/types";
 import type { ApiKeys } from "./ApiKeyConfig";
 import { Wand2, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface Props {
   brandbook: BrandbookData;
   apiKeys: ApiKeys;
-  textProvider: "openai" | "gemini";
+  strategyProvider: AiTextProvider;
   onRefined: (updated: BrandbookData) => void;
 }
 
@@ -23,7 +23,7 @@ const SUGGESTIONS = [
   "Adicione mais detalhe às diretrizes de aplicação da marca",
 ];
 
-export function RefinePanel({ brandbook, apiKeys, textProvider, onRefined }: Props) {
+export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }: Props) {
   const [instruction, setInstruction] = useState("");
   const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,11 +62,11 @@ export function RefinePanel({ brandbook, apiKeys, textProvider, onRefined }: Pro
           brandbook,
           instruction,
           externalUrls: externalUrls.length > 0 ? externalUrls : undefined,
-          provider: textProvider,
+          provider: strategyProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
-          openaiModel: apiKeys.openaiTextModel || undefined,
-          googleModel: apiKeys.googleTextModel || undefined,
+          openaiModel: strategyProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
+          googleModel: strategyProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
         }),
       });
 

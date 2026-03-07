@@ -1,5 +1,8 @@
 import { execSync } from "node:child_process";
 
+const args = process.argv.slice(2);
+const skipChecks = args.includes("--skip-checks");
+
 function sh(cmd) {
   return execSync(cmd, { stdio: "pipe" }).toString("utf8").trim();
 }
@@ -14,10 +17,18 @@ function hasChanges() {
 }
 
 function buildMessage() {
-  const argMsg = process.argv.slice(2).join(" ").trim();
+  const argMsg = args.filter((arg) => arg !== "--skip-checks").join(" ").trim();
   if (argMsg) return argMsg;
   const ts = new Date().toISOString().replace("T", " ").slice(0, 16);
-  return `chore: sync ${ts}`;
+  return `chore: release ${ts}`;
+}
+
+function runChecks() {
+  console.log("🧪 Running release checks...");
+  run("npm run test");
+  run("npm run typecheck");
+  run("npm run lint");
+  run("npm run build");
 }
 
 try {
@@ -31,6 +42,12 @@ try {
   if (!hasChanges()) {
     console.log("✅ No local changes to sync.");
     process.exit(0);
+  }
+
+  if (skipChecks) {
+    console.log("⚡ Skipping local checks...");
+  } else {
+    runChecks();
   }
 
   const msg = buildMessage();
