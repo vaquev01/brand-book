@@ -15,6 +15,8 @@ const ACCENT_DRIFT_MAP: Record<string, string[]> = {
   y: ["ý", "ÿ"],
 };
 
+ const MAX_ACCENT_DRIFT_VARIANTS = 16;
+
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -63,6 +65,22 @@ function extractIncorrectNameVariants(incorrectUsages: string[], canonicalName: 
   return [...found];
 }
 
+ function addAccentDriftVariants(found: Set<string>, baseValue: string, canonicalName: string) {
+   let accentDriftCount = 0;
+   for (let index = 0; index < baseValue.length; index += 1) {
+     const sourceChar = baseValue[index];
+     const replacements = ACCENT_DRIFT_MAP[sourceChar.toLowerCase()];
+     if (!replacements) continue;
+     for (const replacement of replacements) {
+       if (accentDriftCount >= MAX_ACCENT_DRIFT_VARIANTS) break;
+       const drifted = `${baseValue.slice(0, index)}${sourceChar === sourceChar.toUpperCase() ? replacement.toUpperCase() : replacement}${baseValue.slice(index + 1)}`;
+       pushIfUseful(found, drifted, canonicalName);
+       accentDriftCount += 1;
+     }
+     if (accentDriftCount >= MAX_ACCENT_DRIFT_VARIANTS) break;
+   }
+ }
+
 function generateDefaultForbiddenVariants(canonicalName: string): string[] {
   const found = new Set<string>();
   const noPunctuation = normalizeWhitespace(canonicalName.replace(/[^\p{L}\p{N}\s]/gu, ""));
@@ -74,18 +92,9 @@ function generateDefaultForbiddenVariants(canonicalName: string): string[] {
   pushIfUseful(found, noDiacriticsOrPunctuation, canonicalName);
 
   const plain = stripDiacritics(canonicalName);
-  let accentDriftCount = 0;
-  for (let index = 0; index < plain.length; index += 1) {
-    const sourceChar = plain[index];
-    const replacements = ACCENT_DRIFT_MAP[sourceChar.toLowerCase()];
-    if (!replacements) continue;
-    for (const replacement of replacements) {
-      if (accentDriftCount >= 16) break;
-      const drifted = `${plain.slice(0, index)}${sourceChar === sourceChar.toUpperCase() ? replacement.toUpperCase() : replacement}${plain.slice(index + 1)}`;
-      pushIfUseful(found, drifted, canonicalName);
-      accentDriftCount += 1;
-    }
-    if (accentDriftCount >= 16) break;
+  addAccentDriftVariants(found, plain, canonicalName);
+  if (noDiacriticsOrPunctuation && noDiacriticsOrPunctuation !== plain) {
+    addAccentDriftVariants(found, noDiacriticsOrPunctuation, canonicalName);
   }
 
   return [...found];
