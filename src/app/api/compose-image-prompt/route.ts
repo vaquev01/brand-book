@@ -4,6 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 import type { BrandbookData } from "@/lib/types";
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { fnv1a32 } from "@/lib/common";
+import { buildBrandNameFidelityLines } from "@/lib/brandNameFidelity";
 
 export const runtime = "nodejs";
 
@@ -74,6 +75,15 @@ function compactBrandContext(brandbook: BrandbookData): string {
   const logoStyleGuide = igb?.logoStyleGuide ?? "";
   const patternStyle = igb?.patternStyle ?? "";
   const compositionPhilosophy = brandbook.keyVisual?.compositionPhilosophy ?? "";
+  const logoClearSpace = brandbook.logo?.clearSpace ?? "";
+  const logoMinimumSize = brandbook.logo?.minimumSize ?? "";
+  const logoIncorrectUsages = (brandbook.logo?.incorrectUsages ?? []).slice(0, 6).join(" | ");
+  const logoFavicon = brandbook.logo?.favicon ?? "";
+  const brandNameFidelity = buildBrandNameFidelityLines(
+    brandbook.brandName ?? "",
+    brandbook.logo?.incorrectUsages ?? [],
+    "brand_visible"
+  );
   const rebrandCriticalMode = "Treat this as brand-direction work, not surface styling. Preserve proprietary memory before novelty. Evolve only through clarity, hierarchy, scalability, controlled synthesis, and stronger recognition.";
   const scorecard = "Internally score 0-5 on recognition, emotional fidelity, system coherence, real-world plausibility, and distinctiveness. Do not finalize below 20/25. If the result feels generic, colder, more corporate, or weakens proprietary brand memory, it fails.";
   const creativePlan = "Before styling, define one thesis, one hero decision, one dominant hierarchy, one first-impression target, and one success condition.";
@@ -111,6 +121,7 @@ function compactBrandContext(brandbook: BrandbookData): string {
   return [
     `VISUAL_SYSTEM_ID: ${visualSystemId(brandbook)}.`,
     `Brand: ${brandName} (${industry})`,
+    ...brandNameFidelity,
     purpose ? `Purpose: ${purpose}` : "",
     personality ? `Personality: ${personality}` : "",
     tone ? `Tone of voice: ${tone}` : "",
@@ -144,6 +155,10 @@ function compactBrandContext(brandbook: BrandbookData): string {
     cameraSignature ? `Camera signature: ${cameraSignature}` : "",
     sensoryProfile ? `Sensory profile: ${sensoryProfile}` : "",
     logoStyleGuide ? `Logo style guide: ${logoStyleGuide}` : "",
+    logoClearSpace ? `Logo clear space: ${logoClearSpace}` : "",
+    logoMinimumSize ? `Logo minimum size: ${logoMinimumSize}` : "",
+    logoIncorrectUsages ? `Logo incorrect usages: ${logoIncorrectUsages}` : "",
+    logoFavicon ? `Favicon hint: ${logoFavicon}` : "",
     patternStyle ? `Pattern style: ${patternStyle}` : "",
     avoidElements ? `Avoid elements: ${avoidElements}` : "",
     negativePrompt ? `Global negative prompt: ${negativePrompt}` : "",

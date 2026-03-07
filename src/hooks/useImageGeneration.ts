@@ -11,6 +11,7 @@ import {
   AssetKey,
   AspectRatioOption,
 } from "@/lib/imagePrompts";
+import { buildBrandNameFidelityBlock } from "@/lib/brandNameFidelity";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
 import { downloadImageUrl, fetchImageDataUrl } from "@/lib/imageTransport";
 import { readJsonResponse } from "@/lib/http";
@@ -213,14 +214,25 @@ export function useImageGeneration({
       setError(null);
       try {
         const basePromptRaw = buildImagePrompt(assetKey, data, provider);
+        const userDirectionBlock = options?.customInstruction
+          ? [
+              "MANDATORY USER DIRECTION:",
+              buildBrandNameFidelityBlock(
+                data.brandName,
+                data.logo.incorrectUsages ?? [],
+                isStrictLogoAsset(assetKey) || assetKey === "logo_primary" ? "logo" : "brand_visible"
+              ),
+              "Treat the user's explicit rules as binding constraints. If they conflict with model defaults, follow the user's rules.",
+              options.customInstruction,
+            ].join("\n")
+          : "";
         const basePrompt = options?.customInstruction
-          ? `${basePromptRaw}\n\nADDITIONAL CREATIVE DIRECTION FROM THE USER:\n${options.customInstruction}`
+          ? `${basePromptRaw}\n\n${userDirectionBlock}`
           : basePromptRaw;
         let prompt = basePrompt;
 
         if (refineBeforeGenerate) {
           const canRefine =
-            !isStrictLogoAsset(assetKey) &&
             (provider !== "stability" || prompt.includes(" --neg "));
           const hasTextKey =
             (promptProvider === "openai" && !!apiKeys.openai) ||

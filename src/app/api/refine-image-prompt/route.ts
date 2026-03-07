@@ -56,7 +56,7 @@ PRESERVAR LITERALMENTE (copiar sem alteração):
 - Blocos de scorecard: "BRAND_COHERENCE_SCORECARD:", "MINIMUM PASS:", "HARD FAIL CONDITIONS:"
 - Blocos de planejamento/consciente: "CREATIVE_PLAN:", "FIRST_IMPRESSION_TARGET:", "HERO_DECISION:", "PLAN_ORDER:", "CONSCIOUS_CREATION_MODE:", "ELEMENT_ACCOUNTABILITY:", "DECISION_TEST:", "REMOVAL_TEST:"
 - Blocos de alma: "STYLE_TREE:", "ARCHETYPE:", "EMOTIONAL_CORE:", "BRAND_SOUL:", "BRAND_PROMISE:", "VIEWER_JOURNEY:", "DESIGN_PHILOSOPHY:", "IDENTITY_ASSETS:", "STRUCTURED_PATTERNS:"
-- Blocos de logo: "MASTER_LOGO:", "LOGO_REPLICATION:", "LOGO_SAFETY:"
+- Blocos de logo: "MASTER_LOGO:", "LOGO_REPLICATION:", "LOGO_SAFETY:", "CANONICAL_BRAND_NAME:", "EXACT_BRAND_TEXT:", "STRUCTURAL_CHARACTERS:", "NAME_FIDELITY_RULES:", "FORBIDDEN_NAME_VARIANTS:", "LOGO_CLEAR_SPACE:", "LOGO_MINIMUM_SIZE:", "LOGO_INCORRECT_USAGES:", "FAVICON_HINT:"
 
 AMPLIFICAR (não apenas preservar):
 - Metáforas sensoriais — se o prompt usa "warm 3200K candlelight on kraft paper", preserve e contextualize.
@@ -79,7 +79,8 @@ PROIBIDO ABSOLUTAMENTE adicionar ao prompt:
 - texturas de superfície, materiais, mockups
 OBRIGATÓRIO para logos: reforçar construção geométrica do mark, negative space, consistência de stroke weights, escalabilidade, cores planas, fundo sólido puro.
 O bloco negativo do logo DEVE incluir: photography, photorealistic, scene, background texture, bokeh, lighting effects, shadows, 3D rendering, gradient fill, bevel, emboss, glow, halo.
-Ao refinar logos, preserve também o que o prompt disser sobre warmth, spontaneity, signature energy, colloquial humanity, conceptual specificity e recognition anchors. Não empurre o resultado para estética corporativa fria só porque o logo é vetorial.
+Ao refinar logos, preserve também o que o prompt disser sobre warmth, spontaneity, signature energy, colloquial humanity, conceptual specificity, recognition anchors e fidelidade textual do nome. Não empurre o resultado para estética corporativa fria só porque o logo é vetorial.
+Se houver qualquer bloco de naming fidelity, preserve-o literalmente e trate-o como restrição dura: o wordmark deve permanecer idêntico ao nome canônico, sem drift de ortografia, pontuação, acento, spacing ou substituição de caracteres.
 
 CHECKLIST DE QUALIDADE (o prompt refinado DEVE ter TODOS):
 ✓ Conceito visual claro (o que a imagem SIGNIFICA, não apenas MOSTRA)
