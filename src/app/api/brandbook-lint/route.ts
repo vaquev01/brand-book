@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
-import { migrateBrandbook } from "@/lib/brandbookMigration";
-import { formatZodIssues } from "@/lib/brandbookSchema";
 import { lintBrandbook } from "@/lib/brandbookLinter";
+import { validateLooseBrandbook } from "@/lib/brandbookValidation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,20 +12,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "brandbook é obrigatório." }, { status: 400 });
     }
 
-    const migrated = migrateBrandbook(brandbook);
-    const parsed = BrandbookSchemaLoose.safeParse(migrated);
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "brandbook inválido para lint determinístico. Erros:\n" + formatZodIssues(parsed.error.issues),
-        },
-        { status: 400 }
-      );
-    }
+    const validated = validateLooseBrandbook(brandbook, {
+      action: "rodar lint determinístico",
+      subject: "Brandbook",
+    });
 
-    return NextResponse.json(lintBrandbook(parsed.data));
+    return NextResponse.json(lintBrandbook(validated));
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erro desconhecido";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

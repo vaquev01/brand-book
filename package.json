@@ -9,12 +9,30 @@
     "lint": "next lint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit --incremental false",
+    "postinstall": "prisma generate --schema Database/schema.prisma",
+    "db:generate": "npx prisma generate --schema Database/schema.prisma",
+    "db:migrate:dev": "npx prisma migrate dev --schema Database/schema.prisma",
+    "db:push": "npx prisma db push --schema Database/schema.prisma",
+    "db:seed": "npx tsx Database/seed.ts",
+    "docker:up": "docker compose -f Deploy/docker-compose.yml up --build",
+    "docker:down": "docker compose -f Deploy/docker-compose.yml down",
     "sync": "node scripts/git-sync.mjs",
+    "sync:auto": "node scripts/auto-sync.mjs",
+    "sync:auto:fast": "node scripts/auto-sync.mjs --skip-checks",
     "sync:fast": "node scripts/git-sync.mjs --skip-checks",
     "release": "node scripts/git-sync.mjs"
   },
+  "prisma": {
+    "seed": "tsx Database/seed.ts"
+  },
   "dependencies": {
     "@google/genai": "^0.7.0",
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-query-devtools": "^5.91.3",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
@@ -22,10 +40,13 @@
     "lucide-react": "^0.400.0",
     "next": "^14.2.0",
     "openai": "^4.50.0",
+    "pg": "^8.20.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "tailwind-merge": "^2.3.0",
-    "zod": "^3.23.8"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
@@ -35,7 +56,9 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
     "postcss": "^8.4.0",
+    "prisma": "^7.4.2",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.0",
     "vitest": "^4.0.18"
   }

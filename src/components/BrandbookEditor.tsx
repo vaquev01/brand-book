@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { validateLooseBrandbook } from "@/lib/brandbookValidation";
 import { BrandbookData, Color, Mascot, Typography } from "@/lib/types";
 
 type Tab =
@@ -231,16 +232,28 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
   const [editForm, setEditForm] = useState<BrandbookData>(() => JSON.parse(JSON.stringify(data)));
   const [activeTab, setActiveTab] = useState<Tab>("dna");
   const [saved, setSaved] = useState(false);
+  const [validationError, setValidationError] = useState("");
 
   function patch(partial: Partial<BrandbookData>) {
     setEditForm((prev) => ({ ...prev, ...partial }));
     setSaved(false);
+    setValidationError("");
   }
 
   function handleSave() {
-    onUpdate(editForm);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      const validated = validateLooseBrandbook(editForm, {
+        action: "salvar alterações no editor",
+        subject: "Brandbook editado",
+      });
+      onUpdate(validated);
+      setValidationError("");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error: unknown) {
+      setSaved(false);
+      setValidationError(error instanceof Error ? error.message : "Brandbook inválido para salvar.");
+    }
   }
 
   function addNewMascot() {
@@ -315,6 +328,11 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
 
         {/* Content */}
         <div className="flex-1 p-6 overflow-y-auto max-h-[70vh] space-y-6">
+          {validationError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 whitespace-pre-line">
+              {validationError}
+            </div>
+          )}
 
           {/* DNA & Identidade */}
           {activeTab === "dna" && (

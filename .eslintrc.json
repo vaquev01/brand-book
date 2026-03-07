@@ -1,3 +1,14 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "overrides": [
+    {
+      "files": [
+        "src/components/BrandbookViewer.tsx",
+        "src/components/GenerateBriefingFormSections.tsx"
+      ],
+      "rules": {
+        "@next/next/no-img-element": "off"
+      }
+    }
+  ]
 }

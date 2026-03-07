@@ -6,3 +6,9 @@ out/
 build/
 *.tsbuildinfo
 next-env.d.ts
+Database/dev.db
+Database/dev.db-journal
+Database/generated/
+src/generated/prisma/
+Deploy/.env
+Deploy/.env.*

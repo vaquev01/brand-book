@@ -9,15 +9,12 @@ import { BrandbookEditor } from "@/components/BrandbookEditor";
 import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
 import { GenerateBriefingForm, type GenerateBriefingData } from "@/components/GenerateBriefingForm";
 import { GenerationProgress } from "@/components/GenerationProgress";
-import { RefinePanel } from "@/components/RefinePanel";
-import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
-import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
+import { SystemHealthBadge } from "@/components/SystemHealthBadge";
 import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackFile } from "@/lib/types";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
-import { BrandbookSchemaLoose, BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
-import { migrateBrandbook } from "@/lib/brandbookMigration";
+import { validateLooseBrandbook } from "@/lib/brandbookValidation";
 import { decompressBrandbook } from "@/lib/shareUtils";
 import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
 import { downloadBlob, downloadJsonFile } from "@/lib/browserDownload";
@@ -43,12 +40,17 @@ import {
 } from "lucide-react";
 import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
 import { getProtectedExportGuard } from "@/lib/brandbookQualityGate";
+import {
+  selectHasHydrated,
+  selectPromptOpsProvider,
+  selectSetPromptOpsProvider,
+  selectSetStrategyProvider,
+  selectStrategyProvider,
+  useAppPreferencesStore,
+} from "@/store/appPreferences";
 
 type Tab = "generate" | "examples" | "viewer";
 type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
-
-const STRATEGY_PROVIDER_LS = "bb_strategy_provider";
-const PROMPT_OPS_PROVIDER_LS = "bb_prompt_ops_provider";
 
 function isAiTextProvider(value: string | null | undefined): value is AiTextProvider {
   return value === "openai" || value === "gemini";
@@ -93,8 +95,11 @@ export default function Home() {
   const [assetPackFiles, setAssetPackFiles] = useState<AssetPackFile[]>([]);
   const [assetPackGenerating, setAssetPackGenerating] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
-  const [strategyProvider, setStrategyProvider] = useState<AiTextProvider>("openai");
-  const [promptOpsProvider, setPromptOpsProvider] = useState<AiTextProvider>("openai");
+  const strategyProvider = useAppPreferencesStore(selectStrategyProvider);
+  const promptOpsProvider = useAppPreferencesStore(selectPromptOpsProvider);
+  const hasHydratedPreferences = useAppPreferencesStore(selectHasHydrated);
+  const setStrategyProvider = useAppPreferencesStore(selectSetStrategyProvider);
+  const setPromptOpsProvider = useAppPreferencesStore(selectSetPromptOpsProvider);
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [exportingPack, setExportingPack] = useState(false);
   const [undoStack, setUndoStack] = useState<BrandbookData[]>([]);
@@ -259,14 +264,6 @@ export default function Home() {
   useEffect(() => {
     const keys = loadApiKeys();
     setApiKeys(keys);
-    if (typeof window !== "undefined") {
-      setStrategyProvider(resolveTextProviderPreference(localStorage.getItem(STRATEGY_PROVIDER_LS), keys));
-      setPromptOpsProvider(resolveTextProviderPreference(localStorage.getItem(PROMPT_OPS_PROVIDER_LS), keys));
-    } else {
-      const fallback = pickDefaultTextProvider(keys);
-      setStrategyProvider(fallback);
-      setPromptOpsProvider(fallback);
-    }
 
     void (async () => {
       await migrateLegacyLocalStorageToIndexedDB().catch(() => {});
@@ -281,10 +278,11 @@ export default function Home() {
         decompressBrandbook(bbParam)
           .then(async (raw) => {
             if (!raw) throw new Error("Link inválido");
-            const migrated = migrateBrandbook(raw);
-            const validated = BrandbookSchemaLoose.safeParse(migrated);
-            if (!validated.success) throw new Error("Link inválido");
-            await restoreBrandbookSession(migrated as BrandbookData, {
+            const validated = validateLooseBrandbook(raw, {
+              action: "abrir link compartilhado",
+              subject: "Brandbook do link",
+            });
+            await restoreBrandbookSession(validated, {
               nextTab: "viewer",
               nextViewerTab: "preview",
             });
@@ -306,8 +304,11 @@ export default function Home() {
         const savedData = loadBrandbookData(activeSlug);
         if (savedData) {
           try {
-            const migrated = migrateBrandbook(savedData);
-            void restoreBrandbookSession(migrated as BrandbookData, { nextTab: "viewer" });
+            const validated = validateLooseBrandbook(savedData, {
+              action: "restaurar a sessão salva",
+              subject: "Brandbook salvo",
+            });
+            void restoreBrandbookSession(validated, { nextTab: "viewer" });
           } catch {
             // Corrupt saved data — ignore and show default screen
           }
@@ -317,19 +318,26 @@ export default function Home() {
   }, [restoreBrandbookSession]);
 
   useEffect(() => {
-    setStrategyProvider((prev) => resolveTextProviderPreference(prev, apiKeys));
-    setPromptOpsProvider((prev) => resolveTextProviderPreference(prev, apiKeys));
-  }, [apiKeys]);
+    if (!hasHydratedPreferences) return;
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(STRATEGY_PROVIDER_LS, strategyProvider);
-  }, [strategyProvider]);
+    const nextStrategyProvider = resolveTextProviderPreference(strategyProvider, apiKeys);
+    const nextPromptOpsProvider = resolveTextProviderPreference(promptOpsProvider, apiKeys);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(PROMPT_OPS_PROVIDER_LS, promptOpsProvider);
-  }, [promptOpsProvider]);
+    if (nextStrategyProvider !== strategyProvider) {
+      setStrategyProvider(nextStrategyProvider);
+    }
+
+    if (nextPromptOpsProvider !== promptOpsProvider) {
+      setPromptOpsProvider(nextPromptOpsProvider);
+    }
+  }, [
+    apiKeys,
+    hasHydratedPreferences,
+    promptOpsProvider,
+    setPromptOpsProvider,
+    setStrategyProvider,
+    strategyProvider,
+  ]);
 
   async function handleGenerate(formData: GenerateBriefingData) {
     setLoading(true);
@@ -394,14 +402,15 @@ export default function Home() {
               setGenerationPhase(event.phase ?? "");
               setGenerationPct(event.pct ?? 0);
             } else if (event.type === "complete" && event.data) {
-              const migrated = migrateBrandbook(event.data);
-              const strict = BrandbookSchemaV2.safeParse(migrated);
-              const nextBrandbook = (strict.success ? strict.data : migrated) as unknown as BrandbookData;
-              await restoreBrandbookSession(nextBrandbook, { nextTab: "viewer" });
+              const validated = validateLooseBrandbook(event.data, {
+                action: "gerar brandbook",
+                subject: "Brandbook gerado",
+              });
+              await restoreBrandbookSession(validated, { nextTab: "viewer" });
 
               // Auto-generate logo images
               const currentKeys = loadApiKeys();
-              autoGenerateLogos(nextBrandbook, currentKeys, promptOpsProvider).catch(() => {});
+              autoGenerateLogos(validated, currentKeys, promptOpsProvider).catch(() => {});
             } else if (event.type === "error") {
               throw new Error(event.error ?? "Erro desconhecido");
             }
@@ -423,8 +432,11 @@ export default function Home() {
 
   function handleLoadExample(example: BrandbookData) {
     try {
-      const migrated = migrateBrandbook(example);
-      void restoreBrandbookSession(migrated, {
+      const validated = validateLooseBrandbook(example, {
+        action: "carregar exemplo",
+        subject: "Brandbook de exemplo",
+      });
+      void restoreBrandbookSession(validated, {
         nextTab: "viewer",
         nextViewerTab: "preview",
       });
@@ -439,7 +451,11 @@ export default function Home() {
     setExportingPack(true);
     setError("");
     try {
-      const lintReport = await fetchBrandbookLintReport(brandbookData);
+      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
+        action: "exportar o pack completo",
+        subject: "Brandbook atual",
+      });
+      const lintReport = await fetchBrandbookLintReport(validatedBrandbook);
       const guard = getProtectedExportGuard("pack", lintReport);
       if (!guard.allowed) throw new Error(guard.reason ?? "Pack bloqueado pelo quality gate.");
 
@@ -447,7 +463,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandbookData,
+          brandbookData: validatedBrandbook,
           generatedAssets: Object.values(generatedAssets),
           uploadedAssets: uploadedBrandAssets,
           assetPackFiles,
@@ -458,7 +474,7 @@ export default function Home() {
         throw new Error((j as { error?: string }).error ?? "Erro ao exportar pack");
       }
       const blob = await res.blob();
-      const slug = slugifyForStorage(brandbookData.brandName);
+      const slug = slugifyForStorage(validatedBrandbook.brandName);
       downloadBlob(blob, `${slug}-brandbook-pack.zip`, { rel: "noopener" });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao exportar pack");
@@ -477,12 +493,16 @@ export default function Home() {
     if (!brandbookData) return;
     setError("");
     try {
-      const lintReport = await fetchBrandbookLintReport(brandbookData);
+      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
+        action: "exportar o manifesto de produção",
+        subject: "Brandbook atual",
+      });
+      const lintReport = await fetchBrandbookLintReport(validatedBrandbook);
       const guard = getProtectedExportGuard("production_manifest", lintReport);
       if (!guard.allowed) throw new Error(guard.reason ?? "Manifesto de produção bloqueado pelo quality gate.");
 
-      const manifest = generateProductionManifest(brandbookData);
-      const slug = slugifyForStorage(brandbookData.brandName);
+      const manifest = generateProductionManifest(validatedBrandbook);
+      const slug = slugifyForStorage(validatedBrandbook.brandName);
       downloadJsonFile(manifest, `${slug}-production-manifest.json`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao exportar manifesto de produção");
@@ -492,18 +512,16 @@ export default function Home() {
   async function handleImportJson() {
     try {
       const parsed = JSON.parse(jsonText);
-      const migrated = migrateBrandbook(parsed);
-      const base = BrandbookSchemaLoose.safeParse(migrated);
-      if (!base.success) {
-        setError("JSON inválido:\n" + formatZodIssues(base.error.issues));
-        return;
-      }
-      await restoreBrandbookSession(migrated, {
+      const validated = validateLooseBrandbook(parsed, {
+        action: "importar JSON",
+        subject: "JSON do brandbook",
+      });
+      await restoreBrandbookSession(validated, {
         nextTab: "viewer",
         nextViewerTab: "preview",
       });
-    } catch {
-      setError("JSON inválido. Verifique a formatação.");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "JSON inválido. Verifique a formatação.");
     }
   }
 
@@ -519,11 +537,15 @@ export default function Home() {
     setAssetPackGenerating(true);
     setError("");
     try {
+      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
+        action: "gerar o Asset Pack",
+        subject: "Brandbook atual",
+      });
       const res = await fetch("/api/generate-asset-pack", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandbookData,
+          brandbookData: validatedBrandbook,
           textProvider: promptOpsProvider,
           openaiKey: apiKeys.openai || undefined,
           googleKey: apiKeys.google || undefined,
@@ -696,6 +718,12 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <SystemHealthBadge />
+              {!hasHydratedPreferences && (
+                <span className="hidden lg:inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-500">
+                  Sincronizando preferências
+                </span>
+              )}
               <ApiKeyStatusBadge keys={apiKeys} />
               <button onClick={() => setShowApiConfig(true)} className="flex items-center gap-2 bg-gray-100 text-gray-700 text-sm font-semibold px-3 py-2 rounded-xl hover:bg-gray-200 transition" title="Configurar chaves de API">
                 <Settings className="w-4 h-4" />

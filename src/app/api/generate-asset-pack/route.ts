@@ -3,8 +3,14 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
-import { migrateBrandbook } from "@/lib/brandbookMigration";
-import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
+import { validateLooseBrandbook } from "@/lib/brandbookValidation";
+import {
+  AssetPackGenerationError,
+  buildAssetPackRepairPrompt,
+  buildExpectedAssetPackPaths,
+  normalizeAssetPackFiles,
+  parseAssetPackModelResponse,
+} from "@/lib/services/generateAssetPack";
 import type { AssetPackFile, BrandbookData } from "@/lib/types";
 import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
 
@@ -92,14 +98,6 @@ function deriveBrandIconNames(bb: BrandbookData, brandName: string, industry: st
   return named.slice(0, 16);
 }
 
-function safeRelPath(path: string): string | null {
-  const p = path.replace(/\\/g, "/").trim();
-  if (!p) return null;
-  if (p.startsWith("/") || p.startsWith("..") || p.includes("/../") || p.includes("\0")) return null;
-  if (p.length > 180) return null;
-  return p;
-}
-
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
   const startedAt = Date.now();
@@ -144,13 +142,10 @@ export async function POST(request: NextRequest) {
       return respond(400, { error: "brandbookData e textProvider são obrigatórios." });
     }
 
-    const migrated = migrateBrandbook(body.brandbookData);
-    const base = BrandbookSchemaLoose.safeParse(migrated);
-    if (!base.success) {
-      return respond(400, { error: "brandbookData inválido." });
-    }
-
-    const brandbookData = base.data as unknown as BrandbookData;
+    const brandbookData = validateLooseBrandbook(body.brandbookData, {
+      action: "gerar o Asset Pack",
+      subject: "brandbookData",
+    }) as BrandbookData;
 
     const bb = brandbookData;
 
@@ -178,6 +173,7 @@ export async function POST(request: NextRequest) {
 
     const iconNames = deriveBrandIconNames(bb, brandName, industry);
     const patternSlug = slugify(brandName) || "brand";
+    const expectedPaths = buildExpectedAssetPackPaths(iconNames, patternSlug);
 
     const systemPrompt =
       "Você é um Diretor de Arte e Brand Designer Sênior especializado em identidade visual. " +
@@ -257,31 +253,31 @@ Contexto do brandbook:
 ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVisual: bb.keyVisual, logo: bb.logo, colors: bb.colors, positioning: bb.positioning, motion: bb.motion }, null, 2)}
 `;
 
-    let raw = "";
+    async function generateRaw(prompt: string): Promise<string> {
+      if (body.textProvider === "gemini") {
+        const apiKey = body.googleKey?.trim() || process.env.GOOGLE_API_KEY;
+        if (!apiKey) throw new Error("GOOGLE_API_KEY não configurada.");
+        const ai = new GoogleGenAI({ apiKey });
+        const { value: resp } = await withGoogleTextModelFallback({
+          apiKey,
+          preferredModel: body.googleModel,
+          run: (model) =>
+            ai.models.generateContent({
+              model,
+              contents: prompt,
+              config: {
+                systemInstruction: systemPrompt,
+                responseMimeType: "application/json",
+                temperature: 0.85,
+                maxOutputTokens: 16384,
+              },
+            }),
+        });
+        return resp.text ?? "";
+      }
 
-    if (body.textProvider === "gemini") {
-      const apiKey = body.googleKey?.trim() || process.env.GOOGLE_API_KEY;
-      if (!apiKey) return respond(500, { error: "GOOGLE_API_KEY não configurada." }, { textProvider: "gemini" });
-      const ai = new GoogleGenAI({ apiKey });
-      const { value: resp } = await withGoogleTextModelFallback({
-        apiKey,
-        preferredModel: body.googleModel,
-        run: (model) =>
-          ai.models.generateContent({
-            model,
-            contents: userPrompt,
-            config: {
-              systemInstruction: systemPrompt,
-              responseMimeType: "application/json",
-              temperature: 0.85,
-              maxOutputTokens: 16384,
-            },
-          }),
-      });
-      raw = resp.text ?? "";
-    } else {
       const apiKey = body.openaiKey?.trim() || process.env.OPENAI_API_KEY;
-      if (!apiKey) return respond(500, { error: "OPENAI_API_KEY não configurada." }, { textProvider: "openai" });
+      if (!apiKey) throw new Error("OPENAI_API_KEY não configurada.");
       const openai = new OpenAI({ apiKey });
       const completion = await openai.chat.completions.create({
         model: body.openaiModel?.trim() || "gpt-4o",
@@ -290,44 +286,79 @@ ${JSON.stringify({ brandName: bb.brandName, brandConcept: bb.brandConcept, keyVi
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "user", content: prompt },
         ],
       });
-      raw = completion.choices[0]?.message?.content ?? "";
+      return completion.choices[0]?.message?.content ?? "";
     }
 
-    let parsed: unknown;
+    function finalizeRaw(raw: string) {
+      const parsed = parseAssetPackModelResponse(raw);
+      return normalizeAssetPackFiles(parsed, expectedPaths);
+    }
+
+    const firstRaw = await generateRaw(userPrompt);
+    let normalized;
+    let repairAttempted = false;
+
     try {
-      parsed = JSON.parse(raw);
-    } catch {
-      return respond(500, { error: "IA retornou JSON inválido." });
+      normalized = finalizeRaw(firstRaw);
+      if (!normalized.isComplete) {
+        repairAttempted = true;
+        const repairPrompt = buildAssetPackRepairPrompt({
+          brandName,
+          expected: expectedPaths,
+          raw: firstRaw,
+          issues: [
+            ...normalized.issues,
+            ...normalized.missingPaths.map((path) => `Faltou o path obrigatório ${path}.`),
+            ...normalized.invalidSvgPaths.map((path) => `O path ${path} não contém SVG válido.`),
+          ],
+        });
+        const repairedRaw = await generateRaw(repairPrompt);
+        normalized = finalizeRaw(repairedRaw);
+      }
+    } catch (error: unknown) {
+      if (!(error instanceof AssetPackGenerationError)) throw error;
+      repairAttempted = true;
+      const repairPrompt = buildAssetPackRepairPrompt({
+        brandName,
+        expected: expectedPaths,
+        raw: firstRaw,
+        issues: error.issues.length > 0 ? error.issues : [error.message],
+      });
+      const repairedRaw = await generateRaw(repairPrompt);
+      normalized = finalizeRaw(repairedRaw);
     }
 
-    const filesRaw = (parsed as { files?: unknown }).files;
-    if (!Array.isArray(filesRaw)) {
-      return respond(500, { error: "IA não retornou files." });
+    if (!normalized.isComplete) {
+      const issueSummary = [
+        ...normalized.issues,
+        ...normalized.missingPaths.slice(0, 8).map((path) => `Ausente: ${path}`),
+        ...normalized.invalidSvgPaths.slice(0, 8).map((path) => `SVG inválido: ${path}`),
+      ];
+      return respond(
+        500,
+        {
+          error: `Asset Pack personalizado incompleto após validação${repairAttempted ? " e reparo" : ""}.\n${issueSummary.slice(0, 12).join("\n")}`,
+        },
+        {
+          repairAttempted,
+          filesCount: normalized.files.length,
+          coverage: normalized.coverage,
+        }
+      );
     }
 
-    const files: AssetPackFile[] = [];
-    const MAX_FILES = 40;
-    const MAX_CONTENT_CHARS = 260_000;
-
-    for (const f of filesRaw.slice(0, MAX_FILES)) {
-      if (!f || typeof f !== "object") continue;
-      const path = safeRelPath((f as { path?: unknown }).path as string);
-      const content = (f as { content?: unknown }).content;
-      if (!path || typeof content !== "string") continue;
-      const trimmed = content.trim();
-      if (!trimmed) continue;
-      if (trimmed.length > MAX_CONTENT_CHARS) continue;
-      files.push({ path, content: trimmed + (trimmed.endsWith("\n") ? "" : "\n") });
-    }
-
-    if (files.length === 0) {
-      return respond(500, { error: "Nenhum arquivo válido foi gerado." });
-    }
-
-    return respond(200, { files }, { filesCount: files.length });
+    return respond(
+      200,
+      { files: normalized.files as AssetPackFile[] },
+      {
+        repairAttempted,
+        filesCount: normalized.files.length,
+        coverage: normalized.coverage,
+      }
+    );
   } catch (error: unknown) {
     bbLog("error", "api.generate-asset-pack.exception", {
       requestId,

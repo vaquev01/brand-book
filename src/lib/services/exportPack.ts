@@ -1,10 +1,9 @@
 import JSZip from "jszip";
 import { lintBrandbook } from "@/lib/brandbookLinter";
-import { BrandbookSchemaLoose } from "@/lib/brandbookSchema";
-import { migrateBrandbook } from "@/lib/brandbookMigration";
 import { getProtectedExportGuard } from "@/lib/brandbookQualityGate";
 import { slugify } from "@/lib/common";
 import { generateProductionManifest } from "@/lib/productionExport";
+import { validateLooseBrandbook } from "@/lib/brandbookValidation";
 import type { AssetPackFile, BrandbookData, GeneratedAsset, UploadedAsset } from "@/lib/types";
 
 export type ExportPackInput = {
@@ -185,20 +184,24 @@ export function parseExportPackInput(body: ExportPackInput): ExportPackPayload {
     throw new ExportPackInputError("brandbookData é obrigatório");
   }
 
-  const migrated = migrateBrandbook(body.brandbookData);
-  const parsed = BrandbookSchemaLoose.safeParse(migrated);
-  if (!parsed.success) {
-    throw new ExportPackInputError("brandbookData inválido para export");
+  let validatedBrandbook: BrandbookData;
+  try {
+    validatedBrandbook = validateLooseBrandbook(body.brandbookData, {
+      action: "exportar o pack completo",
+      subject: "brandbookData",
+    });
+  } catch (error: unknown) {
+    throw new ExportPackInputError(error instanceof Error ? error.message : "brandbookData inválido para export");
   }
 
-  const lintReport = lintBrandbook(parsed.data as unknown as BrandbookData);
+  const lintReport = lintBrandbook(validatedBrandbook);
   const guard = getProtectedExportGuard("pack", lintReport);
   if (!guard.allowed) {
     throw new ExportPackInputError(guard.reason ?? "Pack bloqueado pelo quality gate.");
   }
 
   return {
-    brandbookData: parsed.data as unknown as BrandbookData,
+    brandbookData: validatedBrandbook,
     generatedAssets: Array.isArray(body.generatedAssets) ? body.generatedAssets : [],
     uploadedAssets: Array.isArray(body.uploadedAssets) ? body.uploadedAssets : [],
     assetPackFiles: Array.isArray(body.assetPackFiles) ? body.assetPackFiles : [],

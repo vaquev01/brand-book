@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
+import { AppProviders } from "@/components/AppProviders";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +53,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

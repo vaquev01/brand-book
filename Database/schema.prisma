@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectMode {
+  new_brand
+  rebrand
+}
+
+enum ProjectStatus {
+  draft
+  in_review
+  approved
+  archived
+}
+
+enum AssetKind {
+  logo
+  pattern
+  mascot
+  mockup
+  packaging
+  social
+  ui
+  other
+}
+
+enum JobType {
+  generation
+  refine
+  regenerate_section
+  export_pack
+  consistency_check
+}
+
+enum JobStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  role         String    @default("editor")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  projects     Project[]
+  auditLogs    AuditLog[]
+  generationJobs GenerationJob[]
+}
+
+model Project {
+  id                String             @id @default(cuid())
+  slug              String             @unique
+  name              String
+  industry          String
+  projectMode       ProjectMode        @default(new_brand)
+  status            ProjectStatus      @default(draft)
+  briefing          String?
+  currentVersion    Int                @default(1)
+  ownerId           String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  owner             User?              @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  brandbookVersions BrandbookVersion[]
+  assets            ProjectAsset[]
+  generationJobs    GenerationJob[]
+  auditLogs         AuditLog[]
+
+  @@index([ownerId])
+  @@index([status, updatedAt])
+}
+
+model BrandbookVersion {
+  id              String   @id @default(cuid())
+  projectId       String
+  versionNumber   Int
+  brandbookJson   Json
+  lintScore       Int?
+  qualityScore    Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, versionNumber])
+  @@index([projectId, createdAt])
+}
+
+model ProjectAsset {
+  id             String    @id @default(cuid())
+  projectId      String
+  kind           AssetKind @default(other)
+  key            String
+  name           String
+  sourceUrl      String?
+  storagePath    String?
+  prompt         String?
+  provider       String?
+  mimeType       String?
+  metadataJson   Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, kind])
+  @@index([projectId, key])
+}
+
+model GenerationJob {
+  id            String    @id @default(cuid())
+  projectId     String
+  requestedById String?
+  type          JobType
+  status        JobStatus @default(queued)
+  provider      String?
+  payloadJson   Json?
+  resultJson    Json?
+  errorMessage  String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requestedBy   User?     @relation(fields: [requestedById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, type, status])
+  @@index([requestedById])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  projectId   String?
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  detailsJson Json?
+  createdAt   DateTime @default(now())
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  actorUser   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@index([actorUserId, createdAt])
+}
