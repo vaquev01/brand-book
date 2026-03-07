@@ -1,4 +1,5 @@
 import { BrandbookData, ImageProvider } from "./types";
+import { buildBrandNameFidelityBlock, buildBrandNameFidelityNegativeTerms } from "./brandNameFidelity";
 
 export const ASSET_CATALOG = [
   // ─── LOGO ──────────────────────────────────────────────────────────────────
@@ -248,6 +249,12 @@ function extractBrandContext(data: BrandbookData) {
   const logoPrimary = data.logo.primary ?? `clean logotype for ${data.brandName}`;
   const logoStyle = igb?.logoStyleGuide ?? `precise vector, ${logoPrimary}`;
   const patternStyle = igb?.patternStyle ?? `geometric repeating motifs derived from brand symbol`;
+  const logoClearSpace = data.logo.clearSpace ?? "";
+  const logoMinimumSize = data.logo.minimumSize ?? "";
+  const logoIncorrectUsagesList = (data.logo.incorrectUsages ?? []).slice(0, 6);
+  const logoIncorrectUsages = logoIncorrectUsagesList.join("; ");
+  const logoFavicon = data.logo.favicon ?? "";
+  const logoNamingRules = buildBrandNameFidelityBlock(data.brandName, logoIncorrectUsagesList, "logo");
 
   // Audience
   const audienceDesc = persona
@@ -373,6 +380,7 @@ function extractBrandContext(data: BrandbookData) {
     photoStyle, elements, visualStyle, colorMood, composition,
     artisticRef, moodWords, marketingLanguage, negativeBase, avoid,
     logoSymbol, logoPrimary, logoStyle, patternStyle,
+    logoClearSpace, logoMinimumSize, logoIncorrectUsagesList, logoIncorrectUsages, logoFavicon, logoNamingRules,
     audienceDesc, messagingPillar, preferredVocab, reasonsToBelieve,
     userPsychographics, marketingArch, competitiveAngle, purpose, visualMetaphor,
     industryLang, brandApplications,
@@ -752,6 +760,9 @@ function consistencyPrefix(
   const logoRule = (logoRequired || key === "logo_dark_bg")
     ? "LOGO REQUIRED: The logo must be present, readable, and match the exact reference logo (no redesign, no new symbol variants, no different typography, no distortion)."
     : "Do not invent new logos/symbols; only use motifs derived from the logo symbol.";
+  const brandTextRule = logoRequired
+    ? buildBrandNameFidelityBlock(data.brandName, data.logo.incorrectUsages ?? [], "brand_visible")
+    : "";
 
   return [
     `VISUAL_SYSTEM_ID: ${visualSystemId(ctx, data)}.`,
@@ -765,6 +776,7 @@ function consistencyPrefix(
     creativePlanningDirective(ctx, data, key),
     consciousCreationDirective(ctx, data, key),
     logoRule,
+    brandTextRule,
     `HIERARCHY: ${assetHierarchy(key)}`,
   ].join(" ");
 }
@@ -1260,6 +1272,18 @@ function logoExecutionDirective(
   return "EXECUTION PROFILE: timeless brand identity balance. Use clear structure, confident silhouette, and emotional intelligibility without drifting into sterility or ornamental excess.";
 }
 
+function logoGovernanceDirective(
+  ctx: ReturnType<typeof extractBrandContext>
+): string {
+  return [
+    ctx.logoNamingRules,
+    ctx.logoClearSpace ? `LOGO_CLEAR_SPACE: ${ctx.logoClearSpace}.` : "",
+    ctx.logoMinimumSize ? `LOGO_MINIMUM_SIZE: ${ctx.logoMinimumSize}. The mark must remain fully legible and ownable at this reduction threshold.` : "",
+    ctx.logoIncorrectUsages ? `LOGO_INCORRECT_USAGES: ${ctx.logoIncorrectUsages}. Treat every one of these as a hard prohibition, not as optional advice.` : "",
+    ctx.logoFavicon ? `FAVICON_HINT: ${ctx.logoFavicon}.` : "",
+  ].filter(Boolean).join(" ");
+}
+
 function buildDiffusionLogoPrompt(
   ctx: ReturnType<typeof extractBrandContext>,
   data: BrandbookData,
@@ -1287,6 +1311,7 @@ function buildDiffusionLogoPrompt(
   const planning = creativePlanningDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
   const consciousness = consciousCreationDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
   const execution = logoExecutionDirective(ctx, data);
+  const governance = logoGovernanceDirective(ctx);
 
   const bg = variant === "light" 
     ? "pure solid white #FFFFFF background" 
@@ -1299,17 +1324,18 @@ function buildDiffusionLogoPrompt(
 
   // 1. ABSOLUTE MEDIUM & SUBJECT ANCHOR
   let prompt = provider === "imagen" 
-    ? `CRITICAL SYSTEM DIRECTIVE: YOU MUST DRAW A FLAT 2D VECTOR CORPORATE LOGO. YOU ARE STRICTLY FORBIDDEN FROM DRAWING SCENES, PHYSICAL OBJECTS, PEOPLE, BUILDINGS, OR REALISTIC ILLUSTRATIONS OF THE INDUSTRY. ZERO PHOTOREALISM.\n\nAn isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `
+    ? `CRITICAL SYSTEM DIRECTIVE: YOU MUST DRAW A FLAT 2D VECTOR CORPORATE LOGO. YOU ARE STRICTLY FORBIDDEN FROM DRAWING SCENES, PHYSICAL OBJECTS, PEOPLE, BUILDINGS, OR REALISTIC ILLUSTRATIONS OF THE INDUSTRY. ZERO PHOTOREALISM. If the logo contains text, reproduce the exact canonical brand name "${data.brandName}" with zero spelling drift, punctuation drift, accent drift, or character substitution.\n\nAn isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `
     : `An isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `;
 
   // 2. FOCUS STRICTLY ON GEOMETRY (DO NOT mention what we don't want, as it triggers attention)
   prompt += `Focus exclusively on abstract graphic design, pure geometry, and typography. The canvas must remain entirely empty except for the central logo lockup. `;
-  prompt += `Strategic Core: the logo must be the visual consequence of the brand concept, not an isolated decorative idea. Translate the brand's purpose (${ctx.purpose}), unique value (${ctx.uniqueValue}), differentiators (${ctx.differentiators}), personality (${ctx.personality}), and tone of voice (${ctx.toneOfVoice}) into one coherent identity decision. ${coherence} ${rebrandCritical} ${scorecard} ${planning} ${consciousness} ${execution} `;
+  prompt += `Strategic Core: the logo must be the visual consequence of the brand concept, not an isolated decorative idea. Translate the brand's purpose (${ctx.purpose}), unique value (${ctx.uniqueValue}), differentiators (${ctx.differentiators}), personality (${ctx.personality}), and tone of voice (${ctx.toneOfVoice}) into one coherent identity decision. ${coherence} ${rebrandCritical} ${scorecard} ${planning} ${consciousness} ${execution} ${governance} `;
 
   // 3. TYPOGRAPHY
+  const typographyRationale = (data.typography.marketing as any)?.antiBlandingRationale ?? "excellent optical kerning";
+  prompt += `Wordmark: The logo must feature the exact text "${data.brandName}" rendered perfectly in ${ctx.displayFont} style typography. This is mandatory for every provider and must remain perfectly legible with unchanged spelling, spacing, punctuation, and diacritics. Typographic direction: ${typographyRationale}. `;
   if (isIdeogram) {
-    const typographyRationale = (data.typography.marketing as any)?.antiBlandingRationale ?? "excellent optical kerning";
-    prompt += `Wordmark: The logo must feature the exact text "${data.brandName}" rendered perfectly in ${ctx.displayFont} style typography. Typographic direction: ${typographyRationale}. `;
+    prompt += `TYPOGRAPHY PRECISION: preserve every character of "${data.brandName}" exactly as written; no substitutions, no omissions, no reinterpretation. `;
   }
   prompt += `Visual hierarchy: the main wordmark must be the primary verbal signal. Any descriptor, second line, category label, or supporting text must be visibly subordinate in size and emphasis. Typography must reinforce the same conceptual thesis as the symbol and feel strategically connected to the verbal identity. Symbol and wordmark must feel like one coherent identity system, not disconnected stacked parts. If the brand's strength lives in warmth, spontaneity, signature energy, or colloquial humanity, preserve that in the letterform behavior instead of neutralizing it. `;
 
@@ -1338,6 +1364,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
   const B = `"${data.brandName}"`;
   const prefix = providerPrefix(provider, key) + consistencyPrefix(ctx, data, key) + " ";
   const sTags = provider === "stability" ? stabilityTags(ctx, key) : "";
+  const namingNegativeTerms = buildBrandNameFidelityNegativeTerms(data.brandName, data.logo.incorrectUsages ?? []).join(", ");
 
   const parts = (...lines: (string | false | undefined | null)[]): string =>
     lines.filter(Boolean).join(" ");
@@ -1358,7 +1385,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       const basePrompt = buildDiffusionLogoPrompt(ctx, data, provider, "light");
       return parts(
         basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
-        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, perspective distortion, background texture, table, wood, paper, drop shadow, glow, gradient, bevel, emboss, halo, outer glow, multiple logos, decorative frame, badge border, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept"),
+        sTags, q, neg(ctx, provider, `photography, photorealistic, 3D render, mockup, scene, environment, perspective distortion, background texture, table, wood, paper, drop shadow, glow, gradient, bevel, emboss, halo, outer glow, multiple logos, decorative frame, badge border, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept, ${namingNegativeTerms}`),
       );
     }
 
@@ -1367,7 +1394,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       return parts(
         basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
         `CRITICAL: Exactly the same mark as primary, just reversed palette.`,
-        sTags, q, neg(ctx, provider, "photography, photorealistic, 3D render, mockup, scene, environment, bokeh, gradient background, lighting effects, glow, 3D, perspective, bevel, emboss, halo, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept"),
+        sTags, q, neg(ctx, provider, `photography, photorealistic, 3D render, mockup, scene, environment, bokeh, gradient background, lighting effects, glow, 3D, perspective, bevel, emboss, halo, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept, ${namingNegativeTerms}`),
       );
     }
 
