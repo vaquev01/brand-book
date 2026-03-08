@@ -51,7 +51,7 @@ export function SectionTypographyScale({ data, num, onUpdateData }: { data: Bran
 
         <div className="divide-y">
           {data.typographyScale.map((t, i) => (
-            <div key={i} className="px-4 py-3.5 relative group/item md:px-5">
+            <div key={i} className="px-3 py-2 relative group/item md:px-4">
               {onUpdateData && (
                 <button
                   type="button"
@@ -59,16 +59,16 @@ export function SectionTypographyScale({ data, num, onUpdateData }: { data: Bran
                     ...prev,
                     typographyScale: (prev.typographyScale || []).filter((_, idx) => idx !== i)
                   }))}
-                  className="absolute top-3 right-3 no-print w-6 h-6 bg-white border rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover/item:opacity-100 transition flex items-center justify-center"
+                  className="absolute top-2 right-2 no-print w-5 h-5 bg-white border rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover/item:opacity-100 transition flex items-center justify-center"
                   title="Excluir estilo"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
               )}
-              <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(13.5rem,15rem)_minmax(0,1fr)] items-start">
-                <div className="bg-white border rounded-lg p-3.5 min-w-0">
-                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Display</div>
-                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+              <div className="grid grid-cols-1 gap-2 xl:grid-cols-[minmax(11rem,12.5rem)_minmax(0,1fr)] items-start">
+                {/* Left: name + metrics */}
+                <div className="border rounded-lg p-2.5 min-w-0 bg-white">
+                  <div className="flex items-baseline gap-1.5 mb-0.5 flex-wrap">
                     <EditableField
                       value={t.name}
                       onSave={(val) => onUpdateData?.(prev => {
@@ -77,77 +77,76 @@ export function SectionTypographyScale({ data, num, onUpdateData }: { data: Bran
                         return { ...prev, typographyScale: next };
                       })}
                       readOnly={!onUpdateData}
+                      inline
+                      className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-700"
+                    />
+                    <EditableField
+                      value={t.fontRole}
+                      onSave={(val) => onUpdateData?.(prev => {
+                        const next = [...(prev.typographyScale || [])];
+                        next[i] = { ...next[i], fontRole: val as TypographyScaleItem["fontRole"] };
+                        return { ...prev, typographyScale: next };
+                      })}
+                      readOnly={!onUpdateData}
+                      inline
+                      className="text-[9px] font-mono text-gray-400 bg-gray-100 px-1 rounded"
                     />
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Role:{" "}
-                    <span className="font-mono">
-                      <EditableField
-                        value={t.fontRole}
-                        onSave={(val) => onUpdateData?.(prev => {
-                          const next = [...(prev.typographyScale || [])];
-                          next[i] = { ...next[i], fontRole: val as TypographyScaleItem["fontRole"] };
-                          return { ...prev, typographyScale: next };
-                        })}
-                        readOnly={!onUpdateData}
-                      />
-                    </span>
-                  </div>
-                  <div className="mt-2 grid gap-2 text-sm text-gray-600 sm:grid-cols-2 xl:grid-cols-1">
-                    <div className="rounded-md bg-gray-50 px-2.5 py-2">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1">Escala</div>
-                      <div>
-                        <EditableField
-                          value={t.size}
-                          onSave={(val) => onUpdateData?.(prev => {
-                            const next = [...(prev.typographyScale || [])];
-                            next[i] = { ...next[i], size: val };
-                            return { ...prev, typographyScale: next };
-                          })}
-                          readOnly={!onUpdateData}
-                        />{" "}·{" "}
-                        <EditableField
-                          value={t.lineHeight}
-                          onSave={(val) => onUpdateData?.(prev => {
-                            const next = [...(prev.typographyScale || [])];
-                            next[i] = { ...next[i], lineHeight: val };
-                            return { ...prev, typographyScale: next };
-                          })}
-                          readOnly={!onUpdateData}
-                        />{" "}·{" "}
-                        <EditableField
-                          value={t.fontWeight}
-                          onSave={(val) => onUpdateData?.(prev => {
-                            const next = [...(prev.typographyScale || [])];
-                            next[i] = { ...next[i], fontWeight: val };
-                            return { ...prev, typographyScale: next };
-                          })}
-                          readOnly={!onUpdateData}
-                        />
-                      </div>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-x-0.5 text-xs font-mono text-gray-500">
+                    <EditableField
+                      value={t.size}
+                      onSave={(val) => onUpdateData?.(prev => {
+                        const next = [...(prev.typographyScale || [])];
+                        next[i] = { ...next[i], size: val };
+                        return { ...prev, typographyScale: next };
+                      })}
+                      readOnly={!onUpdateData}
+                      inline
+                    />
+                    <span className="text-gray-300 select-none">·</span>
+                    <EditableField
+                      value={t.lineHeight}
+                      onSave={(val) => onUpdateData?.(prev => {
+                        const next = [...(prev.typographyScale || [])];
+                        next[i] = { ...next[i], lineHeight: val };
+                        return { ...prev, typographyScale: next };
+                      })}
+                      readOnly={!onUpdateData}
+                      inline
+                    />
+                    <span className="text-gray-300 select-none">·</span>
+                    <EditableField
+                      value={t.fontWeight}
+                      onSave={(val) => onUpdateData?.(prev => {
+                        const next = [...(prev.typographyScale || [])];
+                        next[i] = { ...next[i], fontWeight: val };
+                        return { ...prev, typographyScale: next };
+                      })}
+                      readOnly={!onUpdateData}
+                      inline
+                    />
                     {t.letterSpacing && (
-                      <div className="rounded-md bg-gray-50 px-2.5 py-2">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1">Tracking</div>
-                        <div>
-                          <EditableField
-                            value={t.letterSpacing}
-                            onSave={(val) => onUpdateData?.(prev => {
-                              const next = [...(prev.typographyScale || [])];
-                              next[i] = { ...next[i], letterSpacing: val };
-                              return { ...prev, typographyScale: next };
-                            })}
-                            readOnly={!onUpdateData}
-                          />
-                        </div>
-                      </div>
+                      <>
+                        <span className="text-gray-300 select-none">·</span>
+                        <EditableField
+                          value={t.letterSpacing}
+                          onSave={(val) => onUpdateData?.(prev => {
+                            const next = [...(prev.typographyScale || [])];
+                            next[i] = { ...next[i], letterSpacing: val };
+                            return { ...prev, typographyScale: next };
+                          })}
+                          readOnly={!onUpdateData}
+                          inline
+                        />
+                      </>
                     )}
                   </div>
                 </div>
 
-                <div className="grid gap-3 min-w-0 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                  <div className="bg-white border rounded-lg p-3.5 min-w-0">
-                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Uso</div>
+                {/* Right: uso + preview */}
+                <div className="grid gap-2 min-w-0 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+                  <div className="border rounded-lg p-2.5 min-w-0 bg-white">
+                    <div className="text-[9px] text-gray-400 font-bold uppercase tracking-[0.15em] mb-1">Uso</div>
                     <EditableField
                       value={t.usage}
                       onSave={(val) => onUpdateData?.(prev => {
@@ -162,8 +161,8 @@ export function SectionTypographyScale({ data, num, onUpdateData }: { data: Bran
                   </div>
 
                   <div className="min-w-0">
-                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Preview</div>
-                    <div className="bg-gray-50 border rounded-lg px-4 py-3 min-h-[96px] flex items-center">
+                    <div className="text-[9px] text-gray-400 font-bold uppercase tracking-[0.15em] mb-1">Preview</div>
+                    <div className="bg-gray-50 border rounded-lg px-3 py-2 min-h-[64px] flex items-center">
                       <div
                         className="text-gray-900 break-words max-w-full"
                         style={{

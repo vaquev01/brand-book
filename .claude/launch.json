@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "brandbook-app (Next.js dev)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3005
+    },
+    {
+      "name": "brandbook-app (Docker full stack)",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "Deploy/docker-compose.yml", "up", "--build"],
+      "port": 8080
+    }
+  ]
+}
