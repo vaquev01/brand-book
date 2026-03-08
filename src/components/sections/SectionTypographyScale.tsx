@@ -65,57 +65,88 @@ export function SectionTypographyScale({ data, num, onUpdateData }: { data: Bran
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
               )}
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.14fr)_minmax(15rem,0.86fr)] items-start">
-                <div className="grid gap-3 min-w-0 md:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)]">
-                  <div className="bg-white border rounded-lg p-3.5">
-                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Display</div>
-                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+              <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(13.5rem,15rem)_minmax(0,1fr)] items-start">
+                <div className="bg-white border rounded-lg p-3.5 min-w-0">
+                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Display</div>
+                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                    <EditableField
+                      value={t.name}
+                      onSave={(val) => onUpdateData?.(prev => {
+                        const next = [...(prev.typographyScale || [])];
+                        next[i] = { ...next[i], name: val };
+                        return { ...prev, typographyScale: next };
+                      })}
+                      readOnly={!onUpdateData}
+                    />
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    Role:{" "}
+                    <span className="font-mono">
                       <EditableField
-                        value={t.name}
+                        value={t.fontRole}
                         onSave={(val) => onUpdateData?.(prev => {
                           const next = [...(prev.typographyScale || [])];
-                          next[i] = { ...next[i], name: val };
+                          next[i] = { ...next[i], fontRole: val as TypographyScaleItem["fontRole"] };
                           return { ...prev, typographyScale: next };
                         })}
                         readOnly={!onUpdateData}
                       />
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">Role: <span className="font-mono"><EditableField value={t.fontRole} onSave={(val) => onUpdateData?.(prev => {
-                      const next = [...(prev.typographyScale || [])];
-                      next[i] = { ...next[i], fontRole: val as TypographyScaleItem["fontRole"] };
-                      return { ...prev, typographyScale: next };
-                    })} readOnly={!onUpdateData} /></span></div>
-                    <div className="mt-2 grid gap-2 text-sm text-gray-600 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
-                      <div className="rounded-md bg-gray-50 px-2.5 py-2">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1">Escala</div>
-                        <div><EditableField value={t.size} onSave={(val) => onUpdateData?.(prev => {
-                        const next = [...(prev.typographyScale || [])];
-                        next[i] = { ...next[i], size: val };
-                        return { ...prev, typographyScale: next };
-                      })} readOnly={!onUpdateData} /> · <EditableField value={t.lineHeight} onSave={(val) => onUpdateData?.(prev => {
-                        const next = [...(prev.typographyScale || [])];
-                        next[i] = { ...next[i], lineHeight: val };
-                        return { ...prev, typographyScale: next };
-                      })} readOnly={!onUpdateData} /> · <EditableField value={t.fontWeight} onSave={(val) => onUpdateData?.(prev => {
-                        const next = [...(prev.typographyScale || [])];
-                        next[i] = { ...next[i], fontWeight: val };
-                        return { ...prev, typographyScale: next };
-                      })} readOnly={!onUpdateData} /></div>
-                      </div>
-                      {t.letterSpacing && (
-                        <div className="rounded-md bg-gray-50 px-2.5 py-2">
-                          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1">Tracking</div>
-                          <div><EditableField value={t.letterSpacing} onSave={(val) => onUpdateData?.(prev => {
-                            const next = [...(prev.typographyScale || [])];
-                            next[i] = { ...next[i], letterSpacing: val };
-                            return { ...prev, typographyScale: next };
-                          })} readOnly={!onUpdateData} /></div>
-                        </div>
-                      )}
-                    </div>
+                    </span>
                   </div>
+                  <div className="mt-2 grid gap-2 text-sm text-gray-600 sm:grid-cols-2 xl:grid-cols-1">
+                    <div className="rounded-md bg-gray-50 px-2.5 py-2">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1">Escala</div>
+                      <div>
+                        <EditableField
+                          value={t.size}
+                          onSave={(val) => onUpdateData?.(prev => {
+                            const next = [...(prev.typographyScale || [])];
+                            next[i] = { ...next[i], size: val };
+                            return { ...prev, typographyScale: next };
+                          })}
+                          readOnly={!onUpdateData}
+                        />{" "}·{" "}
+                        <EditableField
+                          value={t.lineHeight}
+                          onSave={(val) => onUpdateData?.(prev => {
+                            const next = [...(prev.typographyScale || [])];
+                            next[i] = { ...next[i], lineHeight: val };
+                            return { ...prev, typographyScale: next };
+                          })}
+                          readOnly={!onUpdateData}
+                        />{" "}·{" "}
+                        <EditableField
+                          value={t.fontWeight}
+                          onSave={(val) => onUpdateData?.(prev => {
+                            const next = [...(prev.typographyScale || [])];
+                            next[i] = { ...next[i], fontWeight: val };
+                            return { ...prev, typographyScale: next };
+                          })}
+                          readOnly={!onUpdateData}
+                        />
+                      </div>
+                    </div>
+                    {t.letterSpacing && (
+                      <div className="rounded-md bg-gray-50 px-2.5 py-2">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1">Tracking</div>
+                        <div>
+                          <EditableField
+                            value={t.letterSpacing}
+                            onSave={(val) => onUpdateData?.(prev => {
+                              const next = [...(prev.typographyScale || [])];
+                              next[i] = { ...next[i], letterSpacing: val };
+                              return { ...prev, typographyScale: next };
+                            })}
+                            readOnly={!onUpdateData}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                  <div className="bg-white border rounded-lg p-3.5">
+                <div className="grid gap-3 min-w-0 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+                  <div className="bg-white border rounded-lg p-3.5 min-w-0">
                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Uso</div>
                     <EditableField
                       value={t.usage}
@@ -129,22 +160,22 @@ export function SectionTypographyScale({ data, num, onUpdateData }: { data: Bran
                       multiline
                     />
                   </div>
-                </div>
 
-                <div className="min-w-0">
-                  <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Preview</div>
-                  <div className="bg-gray-50 border rounded-lg p-4 min-h-[108px] flex items-center">
-                    <div
-                      className="text-gray-900 break-words max-w-full"
-                      style={{
-                        fontFamily: fontMap[t.fontRole] ? `'${fontMap[t.fontRole]}', ${t.fontRole === "monospace" ? "ui-monospace, SFMono-Regular, Menlo, monospace" : "sans-serif"}` : undefined,
-                        fontSize: t.size,
-                        lineHeight: t.lineHeight,
-                        fontWeight: /^\d+$/.test(t.fontWeight) ? Number(t.fontWeight) : t.fontWeight,
-                        letterSpacing: t.letterSpacing,
-                      }}
-                    >
-                      {data.brandName}
+                  <div className="min-w-0">
+                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Preview</div>
+                    <div className="bg-gray-50 border rounded-lg px-4 py-3 min-h-[96px] flex items-center">
+                      <div
+                        className="text-gray-900 break-words max-w-full"
+                        style={{
+                          fontFamily: fontMap[t.fontRole] ? `'${fontMap[t.fontRole]}', ${t.fontRole === "monospace" ? "ui-monospace, SFMono-Regular, Menlo, monospace" : "sans-serif"}` : undefined,
+                          fontSize: t.size,
+                          lineHeight: t.lineHeight,
+                          fontWeight: /^\d+$/.test(t.fontWeight) ? Number(t.fontWeight) : t.fontWeight,
+                          letterSpacing: t.letterSpacing,
+                        }}
+                      >
+                        {data.brandName}
+                      </div>
                     </div>
                   </div>
                 </div>

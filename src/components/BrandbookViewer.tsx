@@ -247,7 +247,7 @@ export function BrandbookViewer({
 
   return (
     <div
-      className={`w-full px-3 sm:px-4 lg:px-5 ${immersive ? "bb-immersive" : ""}`}
+      className={`w-full px-2 sm:px-3 lg:px-4 xl:px-5 ${immersive ? "bb-immersive" : ""}`}
       id="brandbook-content"
       style={immersiveStyle}
     >
@@ -398,7 +398,7 @@ export function BrandbookViewer({
 
       <section className="page-break mb-8 md:mb-9" id="sumario">
         <div
-          className={immersive ? "bb-section-shell" : "rounded-[1.7rem] border px-4 py-5 md:px-6 md:py-6"}
+          className={immersive ? "bb-section-shell" : "rounded-[1.7rem] border px-3.5 py-4 md:px-5 md:py-5"}
           style={immersive ? undefined : defaultShellStyle}
         >
           {/* Sumário header */}
@@ -672,7 +672,7 @@ export function BrandbookViewer({
                 )}
 
                 <div
-                  className={immersive ? "bb-section-shell" : "rounded-[1.6rem] border px-4 py-4 md:px-6 md:py-5"}
+                  className={immersive ? "bb-section-shell" : "rounded-[1.6rem] border px-3.5 py-4 md:px-5 md:py-5"}
                   style={immersive ? undefined : defaultShellStyle}
                 >
                   {immersive && <div className="bb-section-mascot" aria-hidden="true" />}
