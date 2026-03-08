@@ -881,7 +881,7 @@ export const caracaBarExample = {
       "type": "Destaques do Instagram",
       "description": "Sistema de highlights circulares para Drinks, Clientes, Lanches, Pratos, Porções e Nosso bar.",
       "imagePlaceholder": "https://placehold.co/800x600/006B60/D5A41D?text=Highlights+Caraca",
-      "imageKey": "social_story",
+      "imageKey": "instagram_story",
       "dimensions": "Capa 1080×1920px adaptada para recorte circular",
       "materialSpecs": "Digital vetorial com export em PNG @2x e SVG mestre.",
       "layoutGuidelines": "Manter consistência absoluta de espessura, alinhamento e escala entre ícones.",

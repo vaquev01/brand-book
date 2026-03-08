@@ -3,6 +3,10 @@ import { AssetKeySchema, type AssetKey } from "./brandbookSchema";
 
 export const LATEST_SCHEMA_VERSION = "2.0";
 
+const LEGACY_ASSET_KEY_MAP: Record<string, AssetKey> = {
+  social_story: "instagram_story",
+};
+
 const KEYWORD_MAP: [string[], AssetKey][] = [
   [["cartão", "cartao", "card", "visita", "business"], "business_card"],
   [["app", "mobile", "interface", "tela", "dashboard"], "app_mockup"],
@@ -24,6 +28,11 @@ function inferAssetKeyFromText(text: string): AssetKey | undefined {
   return undefined;
 }
 
+function normalizeLegacyAssetKey(imageKey?: string): string | undefined {
+  if (!imageKey) return undefined;
+  return LEGACY_ASSET_KEY_MAP[imageKey] ?? imageKey;
+}
+
 export function migrateBrandbook(raw: unknown): BrandbookData {
   if (typeof raw !== "object" || raw === null) {
     throw new Error("JSON inválido: esperado um objeto.");
@@ -35,7 +44,13 @@ export function migrateBrandbook(raw: unknown): BrandbookData {
 
   if (Array.isArray(data.applications)) {
     data.applications = data.applications.map((app) => {
-      if (app.imageKey) return app;
+      const normalizedImageKey = normalizeLegacyAssetKey(app.imageKey);
+      if (normalizedImageKey) {
+        return {
+          ...app,
+          imageKey: normalizedImageKey,
+        };
+      }
       const inferred = inferAssetKeyFromText(app.type);
       return {
         ...app,
