@@ -93,18 +93,18 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
   return (
     <div className="space-y-6">
       {/* Upload Area */}
-      <div className="bg-white border rounded-xl p-5">
-        <h3 className="font-bold text-gray-900 mb-4">Adicionar Ativos de Marca</h3>
+      <div className="app-shell p-5 sm:p-6">
+        <h3 className="mb-4 font-bold text-gray-900">Adicionar Ativos de Marca</h3>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
           {ASSET_TYPES.map((t) => (
             <button
               key={t.value}
               type="button"
               onClick={() => setUploadType(t.value)}
-              className={`p-2.5 rounded-lg border-2 text-center transition ${
+              className={`rounded-2xl border p-3 text-center transition ${
                 uploadType === t.value
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-200 hover:border-gray-400"
+                  ? "border-gray-900 bg-gray-900 text-white shadow-[0_18px_32px_-24px_rgba(15,23,42,0.45)]"
+                  : "border-gray-200 bg-white/75 hover:border-gray-400 hover:bg-white"
               }`}
             >
               <div className="text-lg mb-0.5">{t.icon}</div>
@@ -114,7 +114,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
         </div>
         <div
           onClick={() => inputRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-500 hover:bg-gray-50 transition"
+          className="cursor-pointer rounded-[1.4rem] border-2 border-dashed border-slate-300 bg-gradient-to-br from-white to-slate-50 p-7 text-center transition hover:border-slate-500 hover:bg-slate-50"
         >
           <input
             ref={inputRef}
@@ -135,14 +135,14 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
         </div>
 
         {uploadError && (
-          <div className="mt-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <div className="app-surface-soft mt-3 rounded-lg border-red-200 bg-red-50 px-3 py-2">
             <p className="text-xs text-red-800 font-semibold">{uploadError}</p>
           </div>
         )}
       </div>
 
       {assets.length > 0 && (
-        <div className="bg-white border rounded-xl p-5">
+        <div className="app-shell p-5 sm:p-6">
           {/* Filter Tabs */}
           <div className="flex flex-wrap gap-2 mb-5">
             <button
@@ -174,8 +174,8 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
               const typeInfo = ASSET_TYPES.find((t) => t.value === asset.type);
               const isEditing = editingId === asset.id;
               return (
-                <div key={asset.id} className="border rounded-xl overflow-hidden bg-gray-50 group relative">
-                  <div className="h-40 bg-white flex items-center justify-center p-3 border-b">
+                <div key={asset.id} className="app-surface-soft group relative overflow-hidden">
+                  <div className="flex h-40 items-center justify-center border-b border-slate-200/80 bg-white p-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={asset.dataUrl}
@@ -183,9 +183,9 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
                       className="max-h-full max-w-full object-contain"
                     />
                   </div>
-                  <div className="p-3">
+                  <div className="p-3.5">
                     <div className="flex items-start justify-between gap-1 mb-2">
-                      <span className="text-[10px] font-bold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full uppercase">
+                      <span className="app-chip text-[10px] uppercase">
                         {typeInfo?.icon} {typeInfo?.label}
                       </span>
                       <div className="flex gap-1 shrink-0">
@@ -215,12 +215,12 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
                           value={asset.name}
                           onChange={(e) => handleUpdate(asset.id, { name: e.target.value })}
                           placeholder="Nome do ativo"
-                          className="w-full text-xs px-2 py-1 border rounded focus:ring-1 focus:ring-gray-800 outline-none"
+                          className="app-input text-xs px-3 py-2"
                         />
                         <select
                           value={asset.type}
                           onChange={(e) => handleUpdate(asset.id, { type: e.target.value as UploadedAsset["type"] })}
-                          className="w-full text-xs px-2 py-1 border rounded focus:ring-1 focus:ring-gray-800 outline-none bg-white"
+                          className="app-select text-xs px-3 py-2 bg-white"
                         >
                           {ASSET_TYPES.map((t) => (
                             <option key={t.value} value={t.value}>{t.label}</option>
@@ -231,12 +231,12 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
                           onChange={(e) => handleUpdate(asset.id, { description: e.target.value })}
                           placeholder="Descrição / notas..."
                           rows={2}
-                          className="w-full text-xs px-2 py-1 border rounded resize-none focus:ring-1 focus:ring-gray-800 outline-none"
+                          className="app-textarea text-xs"
                         />
                         <button
                           type="button"
                           onClick={() => setEditingId(null)}
-                          className="w-full text-xs bg-gray-900 text-white py-1 rounded font-medium hover:bg-gray-700 transition"
+                          className="app-primary-button w-full py-2 text-xs"
                         >
                           Salvar
                         </button>
@@ -258,7 +258,7 @@ export function UploadedAssetsPanel({ assets, onChange }: Props) {
       )}
 
       {assets.length === 0 && (
-        <div className="text-center py-12 text-gray-400 bg-white border rounded-xl">
+        <div className="app-surface-soft py-12 text-center text-gray-400">
           <div className="text-4xl mb-3">🗂️</div>
           <p className="font-semibold text-gray-500">Nenhum ativo enviado</p>
           <p className="text-sm mt-1">Suba logos, mascotes, elementos e padrões para enriquecer o brandbook.</p>

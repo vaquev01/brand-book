@@ -105,12 +105,12 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, 
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm flex items-center gap-2">
+        <div className="app-surface-soft rounded-xl border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-700 text-sm flex items-center gap-2">
+        <div className="app-surface-soft rounded-xl border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> {success}
         </div>
       )}
@@ -123,20 +123,20 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, 
           return (
             <div
               key={section.key}
-              className={`border rounded-xl overflow-hidden transition-all ${
-                isSelected ? "border-gray-900 shadow-sm" : "border-gray-200"
+              className={`app-surface-soft overflow-hidden transition-all ${
+                isSelected ? "border-slate-900/20 shadow-[0_24px_44px_-34px_rgba(15,23,42,0.32)]" : ""
               }`}
             >
               <button
                 type="button"
                 onClick={() => setSelected(isSelected ? null : section.key)}
                 disabled={!!loading}
-                className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition disabled:opacity-50"
+                className="w-full flex items-center gap-4 p-4 text-left transition hover:bg-white/70 disabled:opacity-50"
               >
-                <span className="text-xl w-8 text-center flex-shrink-0">{section.icon}</span>
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">{section.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm">{section.label}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{section.description}</div>
+                  <div className="font-semibold text-sm text-slate-900">{section.label}</div>
+                  <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">{section.description}</div>
                 </div>
                 {isSelected
                   ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -145,27 +145,27 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, 
               </button>
 
               {isSelected && (
-                <div className="border-t px-4 py-4 bg-gray-50 space-y-3">
+                <div className="space-y-3 border-t border-slate-200/80 bg-white/60 px-4 py-4">
                   <textarea
                     rows={2}
                     value={instruction}
                     onChange={(e) => setInstruction(e.target.value)}
                     placeholder={`Instrução opcional para esta seção... (ex: "Torne mais criativo e diferenciado")`}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                    className="app-textarea"
                   />
                   <textarea
                     rows={2}
                     value={externalUrlsRaw}
                     onChange={(e) => setExternalUrlsRaw(e.target.value)}
                     placeholder="Referências externas (URLs) — 1 por linha (opcional)"
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                    className="app-textarea"
                   />
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => handleRegenerate(section.key)}
                       disabled={isLoading}
-                      className="flex-1 bg-gray-900 text-white py-2.5 px-4 rounded-xl text-sm font-bold hover:bg-gray-800 disabled:opacity-60 transition flex items-center justify-center gap-2"
+                      className="app-primary-button flex-1 px-4 py-2.5 text-sm"
                     >
                       {isLoading ? (
                         <>
@@ -182,7 +182,7 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, 
                     <button
                       type="button"
                       onClick={() => { setSelected(null); setInstruction(""); setExternalUrlsRaw(""); }}
-                      className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border rounded-lg hover:border-gray-400 transition"
+                      className="app-secondary-button px-4 py-2 text-sm"
                     >
                       Cancelar
                     </button>

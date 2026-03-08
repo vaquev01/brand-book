@@ -25,22 +25,26 @@ export function ExampleCard({
   return (
     <button
       onClick={onClick}
-      className="text-left bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all group"
+      className="app-card-button group overflow-hidden text-left"
     >
-      <div className={`h-32 bg-gradient-to-br ${colorMap[color]} flex items-center justify-center relative`}>
-        <span className="text-white text-3xl font-extrabold tracking-tight opacity-80 group-hover:opacity-100 transition-opacity">
+      <div className={`relative flex h-36 items-end justify-between overflow-hidden bg-gradient-to-br px-5 pb-5 pt-8 ${colorMap[color]}`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),transparent_48%)] opacity-80" />
+        <span className="relative text-left text-3xl font-extrabold tracking-tight text-white opacity-90 transition-opacity group-hover:opacity-100">
           {title}
         </span>
         {badge && (
-          <span className="absolute top-3 right-3 bg-white/20 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full backdrop-blur-sm">
+          <span className="absolute right-4 top-4 rounded-full border border-white/20 bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
             {badge}
           </span>
         )}
       </div>
-      <div className="p-5">
-        <h3 className="font-bold text-lg">{title}</h3>
-        <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">{subtitle}</p>
-        <p className="text-gray-600 text-sm">{description}</p>
+      <div className="space-y-3 p-5">
+        <div className="space-y-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-400">{subtitle}</p>
+          <h3 className="text-lg font-bold text-gray-950 transition-colors group-hover:text-indigo-900">{title}</h3>
+        </div>
+        <p className="text-sm leading-relaxed text-gray-600">{description}</p>
+        <span className="app-chip">Abrir exemplo</span>
       </div>
     </button>
   );

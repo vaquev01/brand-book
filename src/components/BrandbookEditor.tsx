@@ -35,17 +35,18 @@ interface FieldProps {
   rows?: number;
   placeholder?: string;
 }
+
 function Field({ label, value, onChange, multiline = false, rows = 3, placeholder }: FieldProps) {
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{label}</label>
+      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500">{label}</label>
       {multiline ? (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={rows}
           placeholder={placeholder}
-          className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none resize-none transition"
+          className="app-textarea text-sm"
         />
       ) : (
         <input
@@ -53,7 +54,7 @@ function Field({ label, value, onChange, multiline = false, rows = 3, placeholde
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition"
+          className="app-input text-sm"
         />
       )}
     </div>
@@ -66,6 +67,7 @@ interface ArrayEditorProps {
   onChange: (items: string[]) => void;
   addLabel?: string;
 }
+
 function ArrayEditor({ label, items, onChange, addLabel = "Adicionar" }: ArrayEditorProps) {
   const [draft, setDraft] = useState("");
 
@@ -77,8 +79,8 @@ function ArrayEditor({ label, items, onChange, addLabel = "Adicionar" }: ArrayEd
 
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</label>
-      <div className="space-y-1.5 mb-2">
+      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">{label}</label>
+      <div className="mb-2 space-y-1.5">
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-2">
             <input
@@ -89,12 +91,12 @@ function ArrayEditor({ label, items, onChange, addLabel = "Adicionar" }: ArrayEd
                 next[i] = e.target.value;
                 onChange(next);
               }}
-              className="flex-1 px-2.5 py-1.5 border rounded-lg text-sm focus:ring-1 focus:ring-gray-900 outline-none transition"
+              className="app-input flex-1 px-3 py-2 text-sm"
             />
             <button
               type="button"
               onClick={() => onChange(items.filter((_, j) => j !== i))}
-              className="text-gray-400 hover:text-red-500 transition text-lg leading-none w-6 shrink-0"
+              className="w-6 shrink-0 text-lg leading-none text-gray-400 transition hover:text-red-500"
               aria-label="Remover item"
               title="Remover"
             >
@@ -110,12 +112,13 @@ function ArrayEditor({ label, items, onChange, addLabel = "Adicionar" }: ArrayEd
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addItem()}
           placeholder={`+ ${addLabel}...`}
-          className="flex-1 px-2.5 py-1.5 border border-dashed rounded-lg text-sm focus:ring-1 focus:ring-gray-900 outline-none transition"
+          className="app-input flex-1 border-dashed px-3 py-2 text-sm"
         />
         <button
+          type="button"
           onClick={addItem}
           disabled={!draft.trim()}
-          className="px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg font-semibold hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className="app-primary-button px-3 py-2 text-xs"
         >
           Add
         </button>
@@ -129,15 +132,16 @@ interface ColorEditorProps {
   onChange: (c: Color) => void;
   onRemove: () => void;
 }
+
 function ColorEditor({ color, onChange, onRemove }: ColorEditorProps) {
   return (
-    <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
+    <div className="app-surface-soft space-y-2 p-3">
       <div className="flex items-center gap-2">
         <input
           type="color"
           value={color.hex.startsWith("#") ? color.hex : "#000000"}
           onChange={(e) => onChange({ ...color, hex: e.target.value })}
-          className="w-10 h-10 rounded border cursor-pointer shrink-0"
+          className="h-10 w-10 shrink-0 cursor-pointer rounded border"
           title="Escolher cor"
         />
         <input
@@ -145,12 +149,12 @@ function ColorEditor({ color, onChange, onRemove }: ColorEditorProps) {
           value={color.name}
           onChange={(e) => onChange({ ...color, name: e.target.value })}
           placeholder="Nome da cor"
-          className="flex-1 px-2 py-1.5 border rounded text-sm focus:ring-1 focus:ring-gray-900 outline-none"
+          className="app-input flex-1 px-3 py-2 text-sm"
         />
         <button
           type="button"
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-500 transition text-lg leading-none w-6 shrink-0"
+          className="w-6 shrink-0 text-lg leading-none text-gray-400 transition hover:text-red-500"
           aria-label="Remover cor"
           title="Remover"
         >
@@ -163,21 +167,21 @@ function ColorEditor({ color, onChange, onRemove }: ColorEditorProps) {
           value={color.hex}
           onChange={(e) => onChange({ ...color, hex: e.target.value })}
           placeholder="HEX"
-          className="px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-gray-900 outline-none font-mono"
+          className="app-input px-3 py-2 text-xs font-mono"
         />
         <input
           type="text"
           value={color.rgb}
           onChange={(e) => onChange({ ...color, rgb: e.target.value })}
           placeholder="RGB"
-          className="px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-gray-900 outline-none font-mono"
+          className="app-input px-3 py-2 text-xs font-mono"
         />
         <input
           type="text"
           value={color.cmyk}
           onChange={(e) => onChange({ ...color, cmyk: e.target.value })}
           placeholder="CMYK"
-          className="px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-gray-900 outline-none font-mono"
+          className="app-input px-3 py-2 text-xs font-mono"
         />
       </div>
     </div>
@@ -189,11 +193,12 @@ interface TypographyEditorProps {
   value: Typography | undefined;
   onChange: (t: Typography) => void;
 }
+
 function TypographyEditor({ label, value, onChange }: TypographyEditorProps) {
   const t = value ?? { name: "", usage: "", weights: [] };
   return (
-    <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
-      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</h4>
+    <div className="app-surface-soft space-y-3 p-4">
+      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">{label}</h4>
       <Field label="Família" value={t.name} onChange={(v) => onChange({ ...t, name: v })} placeholder="Ex: Inter, Playfair Display..." />
       <Field label="Uso" value={t.usage} onChange={(v) => onChange({ ...t, usage: v })} placeholder="Ex: Headlines, corpo de texto..." />
       <ArrayEditor label="Pesos" items={t.weights} onChange={(w) => onChange({ ...t, weights: w })} addLabel="Peso (ex: 400, 700, Bold)" />
@@ -207,12 +212,13 @@ interface MascotEditorProps {
   onChange: (m: Mascot) => void;
   onRemove: () => void;
 }
+
 function MascotEditorCard({ mascot, index, onChange, onRemove }: MascotEditorProps) {
   return (
-    <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
+    <div className="app-surface-soft space-y-3 p-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Mascote {index + 1}</h4>
-        <button onClick={onRemove} className="text-gray-400 hover:text-red-500 transition text-xs font-medium">Remover</button>
+        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Mascote {index + 1}</h4>
+        <button onClick={onRemove} className="text-xs font-medium text-gray-400 transition hover:text-red-500">Remover</button>
       </div>
       <Field label="Nome" value={mascot.name} onChange={(v) => onChange({ ...mascot, name: v })} placeholder="Ex: Flux, Bolinha, Kana..." />
       <Field label="Descrição Visual" value={mascot.description} onChange={(v) => onChange({ ...mascot, description: v })} multiline rows={3} placeholder="Aparência, cores, traços, estilo de ilustração..." />
@@ -277,20 +283,20 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
   }
 
   return (
-    <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 bg-gray-50 border-b">
+    <div className="app-shell overflow-hidden">
+      <div className="flex items-center justify-between border-b border-slate-200/80 bg-white/60 px-5 py-4">
         <div>
           <h3 className="font-bold text-gray-900">Editar Brandbook</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Edite qualquer campo abaixo e clique em Salvar</p>
+          <p className="mt-0.5 text-xs text-gray-500">Edite qualquer campo abaixo e clique em Salvar</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 border rounded-lg hover:bg-gray-100 transition">Cancelar</button>
+          <button onClick={onCancel} className="app-secondary-button px-4 py-2 text-sm">Cancelar</button>
           <button
             onClick={handleSave}
-            className={`px-5 py-2 text-sm font-semibold rounded-lg transition ${
-              saved ? "bg-green-600 text-white" : "bg-gray-900 text-white hover:bg-gray-700"
-            }`}
+            className={saved
+              ? "inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-5 py-2 text-sm font-semibold text-white transition shadow-[0_18px_38px_-24px_rgba(22,163,74,0.55)]"
+              : "app-primary-button px-5 py-2 text-sm"
+            }
           >
             {saved ? "✓ Salvo!" : "Salvar Alterações"}
           </button>
@@ -298,14 +304,13 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
       </div>
 
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-52 shrink-0 border-r bg-gray-50 py-3 hidden md:block">
+        <div className="hidden w-56 shrink-0 border-r border-slate-200/80 bg-white/45 py-3 md:block">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`w-full text-left px-4 py-2.5 text-sm font-medium transition flex items-center gap-2.5 ${
-                activeTab === t.id ? "bg-white border-r-2 border-gray-900 text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              className={`mx-2 flex w-[calc(100%-1rem)] items-center gap-2.5 rounded-2xl px-4 py-2.5 text-left text-sm font-medium transition ${
+                activeTab === t.id ? "bg-white text-gray-900 shadow-sm ring-1 ring-slate-200" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"
               }`}
             >
               <span>{t.icon}</span>
@@ -314,33 +319,30 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
           ))}
         </div>
 
-        {/* Mobile tab selector */}
-        <div className="md:hidden w-full px-4 py-3 border-b">
+        <div className="w-full border-b border-slate-200/80 px-4 py-3 md:hidden">
           <select
             value={activeTab}
             onChange={(e) => setActiveTab(e.target.value as Tab)}
-            className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none"
+            className="app-select text-sm"
             aria-label="Selecionar seção"
           >
             {TABS.map((t) => <option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}
           </select>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-6 overflow-y-auto max-h-[70vh] space-y-6">
+        <div className="max-h-[72vh] flex-1 space-y-6 overflow-y-auto p-5 sm:p-6">
           {validationError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 whitespace-pre-line">
+            <div className="app-surface-soft whitespace-pre-line border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {validationError}
             </div>
           )}
 
-          {/* DNA & Identidade */}
           {activeTab === "dna" && (
             <>
               <Field label="Nome da Marca" value={editForm.brandName} onChange={(v) => patch({ brandName: v })} />
               <Field label="Indústria / Nicho" value={editForm.industry} onChange={(v) => patch({ industry: v })} />
-              <div className="border-t pt-4">
-                <h4 className="font-bold text-sm text-gray-700 mb-4">Brand Concept</h4>
+              <div className="border-t border-slate-200/80 pt-4">
+                <h4 className="mb-4 text-sm font-bold text-gray-700">Brand Concept</h4>
                 <div className="space-y-4">
                   <Field label="Propósito" value={editForm.brandConcept.purpose} onChange={(v) => patch({ brandConcept: { ...editForm.brandConcept, purpose: v } })} multiline rows={2} />
                   <Field label="Missão" value={editForm.brandConcept.mission} onChange={(v) => patch({ brandConcept: { ...editForm.brandConcept, mission: v } })} multiline rows={2} />
@@ -356,7 +358,6 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
-          {/* Logo */}
           {activeTab === "logo" && (
             <>
               <Field label="Logo Primário (URL)" value={editForm.logo.primary} onChange={(v) => patch({ logo: { ...editForm.logo, primary: v } })} placeholder="https://placehold.co/800x200/..." />
@@ -367,8 +368,8 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
               <Field label="Tamanho Mínimo" value={editForm.logo.minimumSize} onChange={(v) => patch({ logo: { ...editForm.logo, minimumSize: v } })} />
               <ArrayEditor label="Usos Incorretos" items={editForm.logo.incorrectUsages} onChange={(v) => patch({ logo: { ...editForm.logo, incorrectUsages: v } })} addLabel="Uso incorreto" />
               {editForm.logoVariants && (
-                <div className="border-t pt-4">
-                  <h4 className="font-bold text-sm text-gray-700 mb-4">Variações de Logo (URLs)</h4>
+                <div className="border-t border-slate-200/80 pt-4">
+                  <h4 className="mb-4 text-sm font-bold text-gray-700">Variações de Logo (URLs)</h4>
                   <div className="space-y-3">
                     {(["horizontal", "stacked", "mono", "negative", "markOnly", "wordmarkOnly"] as const).map((key) => (
                       <Field key={key} label={key} value={editForm.logoVariants?.[key] ?? ""} onChange={(v) => patch({ logoVariants: { ...editForm.logoVariants, [key]: v } })} placeholder="https://placehold.co/..." />
@@ -379,13 +380,12 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
-          {/* Cores */}
           {activeTab === "cores" && (
             <>
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold text-sm text-gray-700">Cores Primárias</h4>
-                  <button onClick={() => addColor("primary")} className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded font-medium transition">+ Adicionar</button>
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-700">Cores Primárias</h4>
+                  <button type="button" onClick={() => addColor("primary")} className="app-secondary-button px-3 py-1.5 text-xs">+ Adicionar</button>
                 </div>
                 <div className="space-y-3">
                   {editForm.colors.primary.map((c, i) => (
@@ -402,10 +402,10 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
                   ))}
                 </div>
               </div>
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold text-sm text-gray-700">Cores Secundárias</h4>
-                  <button onClick={() => addColor("secondary")} className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded font-medium transition">+ Adicionar</button>
+              <div className="border-t border-slate-200/80 pt-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-700">Cores Secundárias</h4>
+                  <button type="button" onClick={() => addColor("secondary")} className="app-secondary-button px-3 py-1.5 text-xs">+ Adicionar</button>
                 </div>
                 <div className="space-y-3">
                   {editForm.colors.secondary.map((c, i) => (
@@ -423,12 +423,12 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
                 </div>
               </div>
               {editForm.colors.semantic && (
-                <div className="border-t pt-4">
-                  <h4 className="font-bold text-sm text-gray-700 mb-3">Cores Semânticas</h4>
+                <div className="border-t border-slate-200/80 pt-4">
+                  <h4 className="mb-3 text-sm font-bold text-gray-700">Cores Semânticas</h4>
                   <div className="space-y-3">
                     {(["success", "error", "warning", "info"] as const).map((key) => (
                       <div key={key}>
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">{key}</label>
+                        <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-400">{key}</label>
                         <ColorEditor
                           color={editForm.colors.semantic![key]}
                           onChange={(nc) => patch({ colors: { ...editForm.colors, semantic: { ...editForm.colors.semantic!, [key]: nc } } })}
@@ -442,7 +442,6 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
-          {/* Tipografia */}
           {activeTab === "tipografia" && (
             <>
               {(["marketing", "ui", "monospace", "primary", "secondary"] as const).map((key) => (
@@ -458,7 +457,6 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
-          {/* Key Visual & Mascotes */}
           {activeTab === "keyvisual" && (
             <>
               <ArrayEditor label="Elementos Gráficos" items={editForm.keyVisual.elements} onChange={(v) => patch({ keyVisual: { ...editForm.keyVisual, elements: v } })} addLabel="Elemento gráfico" />
@@ -469,21 +467,18 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
               <ArrayEditor label="Símbolos Identitários" items={editForm.keyVisual.symbols ?? []} onChange={(v) => patch({ keyVisual: { ...editForm.keyVisual, symbols: v } })} addLabel="Símbolo" />
               <ArrayEditor label="Padrões Gráficos" items={editForm.keyVisual.patterns ?? []} onChange={(v) => patch({ keyVisual: { ...editForm.keyVisual, patterns: v } })} addLabel="Padrão gráfico" />
 
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-bold text-sm text-gray-700">Mascotes &amp; Personagens</h4>
-                  <button
-                    onClick={addNewMascot}
-                    className="text-xs bg-gray-900 text-white px-3 py-1.5 rounded font-semibold hover:bg-gray-700 transition"
-                  >
+              <div className="border-t border-slate-200/80 pt-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-700">Mascotes &amp; Personagens</h4>
+                  <button type="button" onClick={addNewMascot} className="app-primary-button px-3 py-2 text-xs">
                     + Novo Mascote
                   </button>
                 </div>
                 {(editForm.keyVisual.mascots ?? []).length === 0 && (
-                  <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg text-gray-400">
-                    <div className="text-3xl mb-2">🐾</div>
+                  <div className="app-surface-soft border-2 border-dashed border-slate-200 py-8 text-center text-gray-400">
+                    <div className="mb-2 text-3xl">🐾</div>
                     <p className="text-sm font-medium">Nenhum mascote definido</p>
-                    <p className="text-xs mt-1">Clique em &quot;+ Novo Mascote&quot; para adicionar um personagem à marca</p>
+                    <p className="mt-1 text-xs">Clique em &quot;+ Novo Mascote&quot; para adicionar um personagem à marca</p>
                   </div>
                 )}
                 <div className="space-y-4">
@@ -508,7 +503,6 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
-          {/* Posicionamento */}
           {activeTab === "estrategia" && editForm.positioning && (
             <>
               <Field label="Categoria" value={editForm.positioning.category} onChange={(v) => patch({ positioning: { ...editForm.positioning!, category: v } })} />
@@ -520,7 +514,6 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
-          {/* Identidade Verbal */}
           {activeTab === "verbal" && editForm.verbalIdentity && (
             <>
               <Field label="Tagline" value={editForm.verbalIdentity.tagline} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, tagline: v } })} />
@@ -528,50 +521,58 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
               <ArrayEditor label="Traços de Voz" items={editForm.verbalIdentity.brandVoiceTraits} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, brandVoiceTraits: v } })} addLabel="Traço de voz" />
               <ArrayEditor label="Headlines de Exemplo" items={editForm.verbalIdentity.sampleHeadlines} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, sampleHeadlines: v } })} addLabel="Headline" />
               <ArrayEditor label="CTAs de Exemplo" items={editForm.verbalIdentity.sampleCTAs} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, sampleCTAs: v } })} addLabel="CTA" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <ArrayEditor label="Vocabulário Preferido" items={editForm.verbalIdentity.vocabulary.preferred} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, vocabulary: { ...editForm.verbalIdentity!.vocabulary, preferred: v } } })} addLabel="Palavra preferida" />
                 <ArrayEditor label="Vocabulário a Evitar" items={editForm.verbalIdentity.vocabulary.avoid} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, vocabulary: { ...editForm.verbalIdentity!.vocabulary, avoid: v } } })} addLabel="Palavra a evitar" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <ArrayEditor label="Do (Faça)" items={editForm.verbalIdentity.doDont.do} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, doDont: { ...editForm.verbalIdentity!.doDont, do: v } } })} addLabel="Do" />
                 <ArrayEditor label="Don't (Não faça)" items={editForm.verbalIdentity.doDont.dont} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, doDont: { ...editForm.verbalIdentity!.doDont, dont: v } } })} addLabel="Don't" />
               </div>
             </>
           )}
 
-          {/* Aplicações */}
           {activeTab === "aplicacoes" && (
             <div className="space-y-4">
               {editForm.applications.map((app, i) => (
-                <div key={i} className="border rounded-lg p-4 bg-gray-50 space-y-3">
+                <div key={i} className="app-surface-soft space-y-3 p-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Aplicação {i + 1}</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Aplicação {i + 1}</h4>
                     <button
+                      type="button"
                       onClick={() => patch({ applications: editForm.applications.filter((_, j) => j !== i) })}
-                      className="text-xs text-gray-400 hover:text-red-500 font-medium transition"
-                    >Remover</button>
+                      className="text-xs font-medium text-gray-400 transition hover:text-red-500"
+                    >
+                      Remover
+                    </button>
                   </div>
                   <Field label="Tipo" value={app.type} onChange={(v) => {
-                    const next = [...editForm.applications]; next[i] = { ...next[i], type: v }; patch({ applications: next });
+                    const next = [...editForm.applications];
+                    next[i] = { ...next[i], type: v };
+                    patch({ applications: next });
                   }} placeholder="Ex: Cartão de Visita, Post Instagram..." />
                   <Field label="Descrição" value={app.description} onChange={(v) => {
-                    const next = [...editForm.applications]; next[i] = { ...next[i], description: v }; patch({ applications: next });
+                    const next = [...editForm.applications];
+                    next[i] = { ...next[i], description: v };
+                    patch({ applications: next });
                   }} multiline rows={2} />
                   <Field label="Image Placeholder URL" value={app.imagePlaceholder} onChange={(v) => {
-                    const next = [...editForm.applications]; next[i] = { ...next[i], imagePlaceholder: v }; patch({ applications: next });
+                    const next = [...editForm.applications];
+                    next[i] = { ...next[i], imagePlaceholder: v };
+                    patch({ applications: next });
                   }} />
                 </div>
               ))}
               <button
+                type="button"
                 onClick={() => patch({ applications: [...editForm.applications, { type: "Nova Aplicação", description: "", imagePlaceholder: "https://placehold.co/800x600/cccccc/666666?text=Nova+Aplicação" }] })}
-                className="w-full border-2 border-dashed border-gray-300 rounded-lg py-3 text-sm font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 transition"
+                className="app-surface-soft w-full border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-gray-500 transition hover:border-slate-500 hover:text-gray-700"
               >
                 + Adicionar Aplicação
               </button>
             </div>
           )}
 
-          {/* Briefing de Imagens */}
           {activeTab === "imagebriefing" && editForm.imageGenerationBriefing && (
             <>
               <Field label="Estilo Visual" value={editForm.imageGenerationBriefing.visualStyle} onChange={(v) => patch({ imageGenerationBriefing: { ...editForm.imageGenerationBriefing!, visualStyle: v } })} multiline rows={2} />
@@ -591,24 +592,24 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
               <Field label="🎭 Arquétipo da Marca" value={editForm.imageGenerationBriefing.brandArchetype ?? ""} onChange={(v) => patch({ imageGenerationBriefing: { ...editForm.imageGenerationBriefing!, brandArchetype: v || undefined } })} multiline rows={2} />
               <Field label="🌊 Perfil Sensorial" value={editForm.imageGenerationBriefing.sensoryProfile ?? ""} onChange={(v) => patch({ imageGenerationBriefing: { ...editForm.imageGenerationBriefing!, sensoryProfile: v || undefined } })} multiline rows={2} />
               <div>
-                <label className="block text-xs font-bold text-red-500 uppercase tracking-wider mb-1">Negative Prompt (global)</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-red-500">Negative Prompt (global)</label>
                 <textarea
                   value={editForm.imageGenerationBriefing.negativePrompt}
                   onChange={(e) => patch({ imageGenerationBriefing: { ...editForm.imageGenerationBriefing!, negativePrompt: e.target.value } })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-red-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none transition"
+                  className="app-textarea border-red-200 text-sm"
                 />
               </div>
             </>
           )}
 
-          {/* Bottom save */}
-          <div className="border-t pt-4 flex justify-end">
+          <div className="flex justify-end border-t border-slate-200/80 pt-4">
             <button
               onClick={handleSave}
-              className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition ${
-                saved ? "bg-green-600 text-white" : "bg-gray-900 text-white hover:bg-gray-700"
-              }`}
+              className={saved
+                ? "inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white transition shadow-[0_18px_38px_-24px_rgba(22,163,74,0.55)]"
+                : "app-primary-button px-6 py-2.5 text-sm"
+              }
             >
               {saved ? "✓ Alterações Salvas!" : "Salvar Alterações"}
             </button>

@@ -631,16 +631,16 @@ export default function Home() {
   const promptOpsProviderHasKey = hasPromptOpsProviderKey(promptOpsProvider, apiKeys);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
+      <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
         {tab === "viewer" && brandbookData ? (
           /* ── Viewer mode: single consolidated row ── */
-          <div className="px-3 sm:px-4 py-1.5 flex items-center gap-2 min-w-0">
+          <div className="app-shell mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 min-w-0">
             {/* Logo — click to go back */}
             <button
               onClick={() => setTab("generate")}
-              className="w-7 h-7 bg-gray-900 rounded-lg flex items-center justify-center shadow-inner flex-shrink-0 hover:bg-gray-700 transition"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:bg-indigo-700"
               title="Voltar ao gerador"
             >
               <Hexagon className="text-white w-3.5 h-3.5" fill="currentColor" />
@@ -652,32 +652,32 @@ export default function Home() {
             </span>
 
             {/* Divider */}
-            <div className="w-px h-4 bg-gray-200 flex-shrink-0 hidden sm:block" />
+            <div className="hidden h-5 w-px flex-shrink-0 bg-slate-200 sm:block" />
 
             {/* Sub-tabs — flex-1 with overflow scroll */}
-            <nav className="flex gap-0.5 bg-gray-100 rounded-xl p-1 flex-1 min-w-0 overflow-x-auto">
-              <button onClick={() => setViewerTab("preview")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "preview" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+            <nav className="app-segmented flex-1 min-w-0 overflow-x-auto">
+              <button onClick={() => setViewerTab("preview")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "preview" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <LayoutDashboard className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Brandbook</span>
               </button>
-              <button onClick={() => setViewerTab("edit")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "edit" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+              <button onClick={() => setViewerTab("edit")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "edit" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <Pencil className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Editar</span>
               </button>
-              <button onClick={() => setViewerTab("assets")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "assets" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+              <button onClick={() => setViewerTab("assets")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "assets" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <ImageIcon className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Ref. Assets</span>
-                {uploadedBrandAssets.length > 0 && <span className="bg-indigo-100 text-indigo-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">{uploadedBrandAssets.length}</span>}
+                {uploadedBrandAssets.length > 0 && <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-800">{uploadedBrandAssets.length}</span>}
               </button>
-              <button onClick={() => setViewerTab("refine")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "refine" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+              <button onClick={() => setViewerTab("refine")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "refine" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <Wand2 className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Refinar</span>
               </button>
-              <button onClick={() => setViewerTab("consistency")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "consistency" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+              <button onClick={() => setViewerTab("consistency")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "consistency" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Consistência</span>
               </button>
-              <button onClick={() => setViewerTab("export")} className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex-shrink-0 ${viewerTab === "export" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"}`}>
+              <button onClick={() => setViewerTab("export")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "export" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Exportar</span>
               </button>
@@ -685,19 +685,19 @@ export default function Home() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button onClick={handleUndo} disabled={undoStack.length === 0} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Desfazer">
+              <button onClick={handleUndo} disabled={undoStack.length === 0} className="rounded-xl p-2 text-gray-500 transition hover:bg-white/80 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30" title="Desfazer">
                 <Undo2 className="w-3.5 h-3.5" />
               </button>
-              <button onClick={handleRedo} disabled={redoStack.length === 0} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Refazer">
+              <button onClick={handleRedo} disabled={redoStack.length === 0} className="rounded-xl p-2 text-gray-500 transition hover:bg-white/80 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30" title="Refazer">
                 <Redo2 className="w-3.5 h-3.5" />
               </button>
-              <button onClick={handleClearImageCache} disabled={Object.keys(generatedAssets).length === 0} className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition" title="Limpar imagens geradas">
+              <button onClick={handleClearImageCache} disabled={Object.keys(generatedAssets).length === 0} className="rounded-xl p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30" title="Limpar imagens geradas">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => setShowApiConfig(true)} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition" title="APIs">
+              <button onClick={() => setShowApiConfig(true)} className="rounded-xl p-2 text-gray-500 transition hover:bg-white/80 hover:text-gray-900" title="APIs">
                 <Settings className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => setViewerTab("export")} className="flex items-center gap-1 bg-indigo-600 text-white py-1.5 px-3 rounded-lg text-xs font-bold hover:bg-indigo-700 transition ml-1">
+              <button onClick={() => setViewerTab("export")} className="app-primary-button ml-1 px-3 py-2 text-xs font-bold">
                 <Download className="w-3 h-3" />
                 <span className="hidden sm:inline">Exportar</span>
               </button>
@@ -705,39 +705,39 @@ export default function Home() {
           </div>
         ) : (
           /* ── Default mode ── */
-          <div className="max-w-full px-4 sm:px-6 py-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gray-900 rounded-xl flex items-center justify-center shadow-inner flex-shrink-0">
+          <div className="app-shell mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gray-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
                 <Hexagon className="text-white w-4 h-4" fill="currentColor" />
               </div>
               <div>
-                <h1 className="text-base font-extrabold tracking-tight text-gray-900 leading-tight">Brandbook Builder</h1>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Gerador de Manual com IA</p>
+                <h1 className="text-base font-extrabold tracking-tight text-gray-900 leading-tight sm:text-lg">Brandbook Builder</h1>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-500">Gerador de Manual com IA</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
               <SystemHealthBadge />
               {!hasHydratedPreferences && (
-                <span className="hidden lg:inline-flex items-center rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-500">
+                <span className="app-chip hidden lg:inline-flex">
                   Sincronizando preferências
                 </span>
               )}
               <ApiKeyStatusBadge keys={apiKeys} />
-              <button onClick={() => setShowApiConfig(true)} className="flex items-center gap-2 bg-gray-100 text-gray-700 text-sm font-semibold px-3 py-2 rounded-xl hover:bg-gray-200 transition" title="Configurar chaves de API">
+              <button onClick={() => setShowApiConfig(true)} className="app-secondary-button px-3 py-2 text-sm" title="Configurar chaves de API">
                 <Settings className="w-4 h-4" />
                 <span className="hidden sm:inline">APIs</span>
               </button>
-              <nav className="flex gap-1 bg-gray-100 rounded-xl p-1">
-                <button onClick={() => setTab("generate")} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "generate" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}>
+              <nav className="app-segmented">
+                <button onClick={() => setTab("generate")} className={`app-tab-button ${tab === "generate" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                   <Sparkles className="w-4 h-4" />
                   <span className="hidden sm:inline">Gerar com IA</span>
                 </button>
-                <button onClick={() => setTab("examples")} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "examples" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-900"}`}>
+                <button onClick={() => setTab("examples")} className={`app-tab-button ${tab === "examples" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                   <Library className="w-4 h-4" />
                   <span className="hidden sm:inline">Exemplos</span>
                 </button>
                 {brandbookData && (
-                  <button onClick={() => setTab("viewer")} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${tab === "viewer" ? "bg-white shadow-sm text-indigo-700" : "text-gray-500 hover:text-gray-900"}`}>
+                  <button onClick={() => setTab("viewer")} className={`app-tab-button ${tab === "viewer" ? "bg-white text-indigo-700 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                     <Eye className="w-4 h-4" />
                     <span className="hidden sm:inline">Visualizar</span>
                   </button>
@@ -757,17 +757,17 @@ export default function Home() {
         }}
       />
 
-      <main className={tab === "viewer" ? "w-full pt-2 pb-8" : "max-w-7xl mx-auto px-6 py-8"}>
+      <main className={tab === "viewer" ? "w-full px-3 pb-8 pt-4 sm:px-4 sm:pb-10" : "mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8"}>
         {/* Error Banner */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div className="app-surface-soft mb-6 flex items-center justify-between gap-3 border-red-200 bg-red-50 px-4 py-3 text-red-800">
             <span className="text-sm">{error}</span>
             <button onClick={() => setError("")} className="text-red-600 hover:text-red-800 font-bold text-lg leading-none">&times;</button>
           </div>
         )}
 
         {tab === "viewer" && !brandbookData && loadingShared && (
-          <div className="max-w-xl mx-auto bg-white border rounded-xl p-8 shadow-sm">
+          <div className="app-shell mx-auto max-w-xl p-8">
             <div className="flex items-center justify-center gap-3">
               <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
               <span className="text-sm font-semibold text-gray-700">Carregando brandbook compartilhado...</span>
@@ -778,21 +778,22 @@ export default function Home() {
         {/* Tab: Generate */}
         {tab === "generate" && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white border rounded-xl p-8 shadow-sm">
-              <div className="flex items-start justify-between mb-2">
+            <div className="app-shell p-6 sm:p-8">
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-2xl font-extrabold tracking-tight">Gerar Brandbook com IA</h2>
-                  <p className="text-gray-500 text-sm mt-1">Defina o briefing, escopo e nível de criatividade. A IA faz o resto.</p>
+                  <span className="app-chip mb-3">Fluxo guiado + geração premium</span>
+                  <h2 className="text-2xl font-extrabold tracking-tight text-gray-950 sm:text-[2rem]">Gerar Brandbook com IA</h2>
+                  <p className="mt-1 max-w-xl text-sm text-gray-500">Defina o briefing, escopo e nível de criatividade. A IA faz o resto com estrutura pronta para edição, auditoria e export.</p>
                 </div>
               </div>
 
               <div className="mt-6 mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50/70">
+                <div className="app-surface-soft p-4">
                   <div className="mb-3">
                     <h3 className="text-sm font-extrabold tracking-tight text-gray-900">Curador de Estratégia</h3>
                     <p className="text-xs text-gray-500 mt-1">Usado para gerar o brandbook, refinar conteúdo, regenerar seções e auditar consistência.</p>
                   </div>
-                  <div className="p-1.5 bg-gray-100 rounded-xl inline-flex w-full">
+                  <div className="app-segmented inline-flex w-full p-1.5">
                     <button
                       type="button"
                       onClick={() => setStrategyProvider("openai")}
@@ -829,12 +830,12 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50/70">
+                <div className="app-surface-soft p-4">
                   <div className="mb-3">
                     <h3 className="text-sm font-extrabold tracking-tight text-gray-900">Prompts & Arquivos</h3>
                     <p className="text-xs text-gray-500 mt-1">Usado para refinar prompts de imagem, gerar logos automáticos e montar arquivos do asset pack.</p>
                   </div>
-                  <div className="p-1.5 bg-gray-100 rounded-xl inline-flex w-full">
+                  <div className="app-segmented inline-flex w-full p-1.5">
                     <button
                       type="button"
                       onClick={() => setPromptOpsProvider("openai")}
@@ -872,7 +873,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="mb-6 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+              <div className="app-surface-soft mb-6 px-4 py-3 text-xs text-gray-500">
                 Imagens & assets continuam com provider próprio dentro do viewer, no painel de geração visual.
               </div>
 
@@ -886,7 +887,7 @@ export default function Home() {
                 />
               )}
 
-              <div className="mt-8 pt-8 border-t">
+              <div className="mt-8 border-t border-slate-200/80 pt-8">
                 <div className="flex items-center gap-2 mb-4 text-gray-500">
                   <FileJson className="w-4 h-4" />
                   <h3 className="text-sm font-bold uppercase tracking-wider">Ou importe um JSON existente</h3>
@@ -896,13 +897,13 @@ export default function Home() {
                   value={jsonText}
                   onChange={(e) => setJsonText(e.target.value)}
                   placeholder="Cole aqui o conteúdo do brandbook.json..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition resize-none shadow-inner"
+                  className="app-textarea font-mono text-xs shadow-inner"
                   aria-label="JSON do brandbook para importar"
                 />
                 <button
                   onClick={handleImportJson}
                   disabled={!jsonText.trim()}
-                  className="mt-3 flex items-center gap-2 bg-gray-900 text-white py-2.5 px-5 rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="app-primary-button mt-3 px-5 py-2.5 text-sm"
                 >
                   <UploadCloud className="w-4 h-4" />
                   Importar JSON
@@ -914,11 +915,14 @@ export default function Home() {
 
         {/* Tab: Examples */}
         {tab === "examples" && (
-          <div>
-            <h2 className="text-3xl font-extrabold tracking-tight mb-2">Exemplos de Brandbooks</h2>
-            <p className="text-gray-500 mb-8 text-lg">Explore manuais gerados pela IA para entender o potencial estrutural.</p>
+          <div className="space-y-8">
+            <div className="app-shell px-6 py-7 sm:px-8 sm:py-8">
+              <span className="app-chip mb-4">Galeria curada</span>
+              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 sm:text-[2.4rem]">Exemplos de Brandbooks</h2>
+              <p className="mt-2 max-w-3xl text-base text-gray-500 sm:text-lg">Explore manuais gerados pela IA para entender o potencial estrutural, o nível de acabamento visual e a profundidade estratégica que o produto já suporta.</p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
               <ExampleCard
                 title="CloudFlow"
                 subtitle="SaaS / B2B Software"
@@ -1003,8 +1007,8 @@ export default function Home() {
 
             {/* Sub-tab: Referência Assets */}
             {viewerTab === "assets" && (
-              <div>
-                <div className="mb-6 bg-blue-50 border border-blue-100 rounded-xl px-6 py-5 shadow-sm">
+              <div className="mx-auto max-w-6xl space-y-6">
+                <div className="app-panel-intro border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-blue-900">
                   <div className="flex items-center gap-2 mb-2">
                     <ImageIcon className="w-5 h-5 text-blue-700" />
                     <h3 className="font-bold text-blue-900 text-lg">Referência Assets</h3>
@@ -1024,8 +1028,8 @@ export default function Home() {
 
             {/* Sub-tab: Refinar */}
             {viewerTab === "refine" && (
-              <div className="max-w-2xl mx-auto space-y-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-xl px-6 py-5 shadow-sm">
+              <div className="mx-auto max-w-3xl space-y-6">
+                <div className="app-panel-intro border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 text-amber-900">
                   <div className="flex items-center gap-2 mb-2">
                     <Wand2 className="w-5 h-5 text-amber-700" />
                     <h3 className="font-bold text-amber-900 text-lg">Refinar com IA</h3>
@@ -1036,7 +1040,7 @@ export default function Home() {
                     <strong>Regenerar seção</strong> — reescreve apenas uma seção específica, com instrução opcional.
                   </p>
                 </div>
-                <div className="bg-white border rounded-xl p-8 shadow-sm">
+                <div className="app-shell p-6 sm:p-8">
                   <RefinePanel
                     brandbook={brandbookData}
                     apiKeys={apiKeys}
@@ -1047,7 +1051,7 @@ export default function Home() {
                     }}
                   />
                 </div>
-                <div className="bg-white border rounded-xl p-8 shadow-sm">
+                <div className="app-shell p-6 sm:p-8">
                   <RegenerateSectionsPanel
                     brandbook={brandbookData}
                     apiKeys={apiKeys}
@@ -1060,7 +1064,7 @@ export default function Home() {
 
             {/* Sub-tab: Consistência */}
             {viewerTab === "consistency" && (
-              <div className="max-w-2xl mx-auto bg-white border rounded-xl p-8 shadow-sm">
+              <div className="app-shell mx-auto max-w-3xl p-6 sm:p-8">
                 <ConsistencyPanel
                   brandbook={brandbookData}
                   apiKeys={apiKeys}
@@ -1071,14 +1075,14 @@ export default function Home() {
 
             {/* Sub-tab: Exportar */}
             {viewerTab === "export" && (
-              <div className="max-w-2xl mx-auto space-y-6">
-                <div className="bg-white border rounded-xl p-8 shadow-sm">
+              <div className="mx-auto max-w-3xl space-y-6">
+                <div className="app-shell p-6 sm:p-8">
                   <ExportPanel
                     brandbook={brandbookData}
                     viewerElementId="brandbook-content"
                   />
                 </div>
-                <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+                <div className="app-shell p-6 sm:p-8">
                   <div className="flex items-center gap-2 mb-2">
                     <FileJson className="w-5 h-5 text-gray-700" />
                     <h3 className="font-bold text-lg text-gray-900">Arquivos JSON</h3>
@@ -1087,9 +1091,9 @@ export default function Home() {
                   <div className="space-y-3">
                     <button
                       onClick={handleExportBrandbook}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm transition-all group"
+                      className="app-card-button group flex items-center gap-4 p-4"
                     >
-                      <div className="w-12 h-12 bg-gray-50 group-hover:bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors group-hover:border-indigo-100 group-hover:bg-indigo-50">
                         <BookOpen className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
                       </div>
                       <div className="flex-1">
@@ -1100,9 +1104,9 @@ export default function Home() {
                     </button>
                     <button
                       onClick={handleExportProduction}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm transition-all group"
+                      className="app-card-button group flex items-center gap-4 p-4"
                     >
-                      <div className="w-12 h-12 bg-gray-50 group-hover:bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors group-hover:border-indigo-100 group-hover:bg-indigo-50">
                         <Settings className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
                       </div>
                       <div className="flex-1">
@@ -1114,9 +1118,9 @@ export default function Home() {
                     <button
                       onClick={handleExportPack}
                       disabled={exportingPack}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left bg-white border-gray-200 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm transition-all disabled:opacity-50 disabled:hover:border-gray-200 disabled:hover:ring-0 group"
+                      className="app-card-button group flex items-center gap-4 p-4 disabled:opacity-50 disabled:hover:transform-none disabled:hover:border-slate-200 disabled:hover:shadow-none"
                     >
-                      <div className="w-12 h-12 bg-gray-50 group-hover:bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors group-hover:border-indigo-100 group-hover:bg-indigo-50">
                         <UploadCloud className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
                       </div>
                       <div className="flex-1">
@@ -1132,7 +1136,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+                <div className="app-shell p-6 sm:p-8">
                   <JsonBySectionPanel
                     data={brandbookData}
                     onDownload={downloadJsonFile}

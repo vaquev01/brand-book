@@ -110,7 +110,7 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <LogoUploadSection
         logoDragActive={logoDragActive}
         logoImage={logoImage}

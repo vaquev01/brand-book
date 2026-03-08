@@ -82,7 +82,7 @@ export function BriefingImageUpload({ images, onChange }: Props) {
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center cursor-pointer hover:border-gray-500 hover:bg-gray-50 transition"
+        className="cursor-pointer rounded-[1.4rem] border-2 border-dashed border-slate-300 bg-gradient-to-br from-white to-slate-50 p-5 text-center transition hover:border-slate-500 hover:bg-slate-50"
       >
         <input
           ref={inputRef}
@@ -103,7 +103,7 @@ export function BriefingImageUpload({ images, onChange }: Props) {
       </div>
 
       {uploadError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+        <div className="app-surface-soft rounded-lg border-red-200 bg-red-50 px-3 py-2">
           <p className="text-xs text-red-800 font-semibold">{uploadError}</p>
         </div>
       )}
@@ -111,12 +111,12 @@ export function BriefingImageUpload({ images, onChange }: Props) {
       {images.length > 0 && (
         <div className="space-y-2">
           {images.map((img) => (
-            <div key={img.id} className="flex items-start gap-3 bg-gray-50 border rounded-lg p-3">
+            <div key={img.id} className="app-surface-soft flex items-start gap-3 p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={img.dataUrl}
                 alt={img.name}
-                className="w-16 h-16 object-cover rounded-md border shrink-0"
+                className="h-16 w-16 shrink-0 rounded-xl border object-cover"
               />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-gray-700 truncate mb-1">{img.name}</p>
@@ -125,7 +125,7 @@ export function BriefingImageUpload({ images, onChange }: Props) {
                   value={img.description || ""}
                   onChange={(e) => handleDescriptionChange(img.id, e.target.value)}
                   placeholder="Descreva esta referência (ex: 'moodboard com tons terrosos', 'mascote existente')..."
-                  className="w-full text-xs px-2 py-1.5 border rounded focus:ring-1 focus:ring-gray-800 outline-none"
+                  className="app-input w-full px-3 py-2 text-xs"
                 />
               </div>
               <button
@@ -138,7 +138,7 @@ export function BriefingImageUpload({ images, onChange }: Props) {
               </button>
             </div>
           ))}
-          <p className="text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded px-3 py-2">
+          <p className="app-surface-soft rounded-lg border-blue-100 bg-blue-50 px-3 py-2 text-xs text-blue-600">
             ✦ {images.length} imagem{images.length > 1 ? "ns" : ""} de referência será{images.length > 1 ? "ão" : ""} enviada{images.length > 1 ? "s" : ""} para a IA analisar e replicar ao longo do brandbook.
           </p>
         </div>

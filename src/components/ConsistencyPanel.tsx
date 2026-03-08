@@ -52,7 +52,7 @@ function IssueCard({ issue }: { issue: ConsistencyIssue }) {
   const [expanded, setExpanded] = useState(false);
   const cfg = SEVERITY_CONFIG[issue.severity];
   return (
-    <div className={`border rounded-xl overflow-hidden ${cfg.color}`}>
+    <div className={`app-surface-soft overflow-hidden ${cfg.color}`}>
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -81,7 +81,7 @@ function IssueCard({ issue }: { issue: ConsistencyIssue }) {
 function LintIssueRow({ issue }: { issue: BrandbookLintIssue }) {
   const cfg = SEVERITY_CONFIG[issue.severity];
   return (
-    <div className={`border rounded-xl p-4 ${cfg.color}`}>
+    <div className={`app-surface-soft p-4 ${cfg.color}`}>
       <div className="flex items-start gap-3">
         <cfg.Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
         <div className="min-w-0 flex-1">
@@ -102,7 +102,7 @@ function SystemIssueRow({ issue }: { issue: SystemIssue }) {
       : "bg-blue-50 border-blue-200 text-blue-800";
   const IssueIcon = issue.severity === "critical" ? AlertTriangle : Info;
   return (
-    <div className={`border rounded-xl p-4 ${color}`}>
+    <div className={`app-surface-soft p-4 ${color}`}>
       <div className="flex items-start gap-3">
         <IssueIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
         <div className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
         </p>
       </div>
 
-      <div className={`border rounded-xl p-4 ${qualityToneClass}`}>
+      <div className={`app-surface-soft p-4 ${qualityToneClass}`}>
         <div className="flex items-start gap-4">
           {qualityOverview.score !== null ? (
             <ScoreRing score={qualityOverview.score} label="qualidade geral" />
@@ -249,7 +249,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
         </div>
       </div>
 
-      <div className="bg-white border rounded-xl p-4">
+      <div className="app-surface-soft p-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h4 className="font-bold text-sm">Lint determinístico do Brandbook</h4>
@@ -261,7 +261,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
             type="button"
             onClick={handleLint}
             disabled={lintLoading}
-            className="text-xs bg-gray-900 text-white px-3 py-2 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="app-primary-button px-3 py-2 text-xs"
           >
             {lintLoading ? "Analisando..." : "Rodar lint"}
           </button>
@@ -275,7 +275,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
 
         {lintReport && (
           <div className="mt-4 space-y-4">
-            <div className={`border rounded-xl p-4 flex items-start gap-4 ${lintReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
+            <div className={`app-surface-soft flex items-start gap-4 p-4 ${lintReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-amber-50 border-amber-200 text-amber-800"}`}>
               <ScoreRing score={lintReport.score} />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-sm">
@@ -301,7 +301,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
         )}
       </div>
 
-      <div className="bg-white border rounded-xl p-4">
+      <div className="app-surface-soft p-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h4 className="font-bold text-sm">Saúde do Sistema (sem IA)</h4>
@@ -313,7 +313,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
             type="button"
             onClick={handleSystemHealth}
             disabled={systemLoading}
-            className="text-xs bg-gray-900 text-white px-3 py-2 rounded-lg font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="app-primary-button px-3 py-2 text-xs"
           >
             {systemLoading ? "Verificando..." : "Verificar"}
           </button>
@@ -327,7 +327,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
 
         {systemReport && (
           <div className="mt-4 space-y-3">
-            <div className={`border rounded-xl p-4 flex items-start gap-3 ${systemReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+            <div className={`app-surface-soft flex items-start gap-3 p-4 ${systemReport.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
               {systemReport.ok
                 ? <ShieldCheck className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 : <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -358,7 +358,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
         <button
           type="button"
           onClick={handleCheck}
-          className="w-full bg-gray-900 text-white py-3 px-6 rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2"
+          className="app-primary-button w-full px-6 py-3"
         >
           <ScanSearch className="w-4 h-4" />
           Analisar consistência do brandbook
@@ -366,7 +366,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
       )}
 
       {loading && (
-        <div className="flex flex-col items-center gap-3 py-8">
+        <div className="app-surface-soft flex flex-col items-center gap-3 py-8">
           <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
           <p className="text-sm text-gray-500">Auditando brandbook... pode levar 20-30s</p>
         </div>
@@ -380,7 +380,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
 
       {report && (
         <div className="space-y-6">
-          <div className="flex items-center gap-6">
+          <div className="app-surface-soft flex items-center gap-6 p-5">
             <ScoreRing score={report.score} />
             <div className="flex-1">
               <p className="text-sm text-gray-700 leading-relaxed">{report.summary}</p>
@@ -407,7 +407,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
           </div>
 
           {report.strengths.length > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="app-surface-soft rounded-xl border-green-200 bg-green-50 p-4">
               <h4 className="font-semibold text-sm text-green-900 mb-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Pontos fortes</h4>
               <ul className="space-y-1">
                 {report.strengths.map((s, i) => (
@@ -431,7 +431,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
                     className={`text-xs px-3 py-1 rounded-full border transition ${
                       filter === f
                         ? "bg-gray-900 text-white border-gray-900"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                        : "bg-white/80 text-gray-600 border-gray-200 hover:border-gray-400"
                     }`}
                   >
                     {f === "all" ? "Todos" : SEVERITY_CONFIG[f].label}
@@ -451,7 +451,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
           <button
             type="button"
             onClick={handleCheck}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
+            className="app-secondary-button self-start px-4 py-2 text-sm"
           >
             Reanalisar
           </button>

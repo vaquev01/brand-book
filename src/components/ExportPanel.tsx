@@ -172,10 +172,10 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
   }
 
   function btnClass(s: ExportStatus) {
-    if (s === "done") return "bg-green-50 border-green-400 text-green-800 ring-2 ring-green-100";
-    if (s === "loading") return "opacity-70 cursor-not-allowed bg-white border-gray-200";
-    if (s === "error") return "bg-red-50 border-red-300 text-red-700";
-    return "bg-white border-gray-200 text-gray-800 hover:border-indigo-300 hover:ring-4 hover:ring-indigo-50 hover:shadow-sm group";
+    if (s === "done") return "border-green-300 bg-green-50 text-green-800 ring-2 ring-green-100";
+    if (s === "loading") return "cursor-not-allowed border-slate-200 bg-white/90 opacity-70";
+    if (s === "error") return "border-red-300 bg-red-50 text-red-700";
+    return "text-gray-800";
   }
 
   function btnTrailing(s: ExportStatus) {
@@ -265,7 +265,7 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
 
   return (
     <div className="space-y-8">
-      <div className={`border rounded-2xl p-4 ${gateClass}`}>
+      <div className={`app-surface-soft p-4 ${gateClass}`}>
         <div className="flex items-start gap-3">
           <GateIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${lintLoading ? "animate-spin" : ""}`} />
           <div className="min-w-0 flex-1">
@@ -284,8 +284,8 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
         </div>
       </div>
       {sections.map((section) => (
-        <div key={section.title}>
-          <div className="mb-4 pb-3 border-b border-gray-100">
+        <div key={section.title} className="app-surface-soft p-5 sm:p-6">
+          <div className="mb-4 border-b border-slate-200/80 pb-3">
             <h3 className="font-bold text-gray-900">{section.title}</h3>
             <p className="text-xs text-gray-500 mt-0.5">{section.desc}</p>
           </div>
@@ -298,9 +298,9 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
                   type="button"
                   onClick={item.onClick}
                   disabled={s === "loading"}
-                  className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${btnClass(s)}`}
+                  className={`app-card-button group flex w-full items-center gap-4 p-4 text-left ${btnClass(s)}`}
                 >
-                  <div className="w-11 h-11 bg-gray-50 group-hover:bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors border border-gray-100 group-hover:border-indigo-100">
+                  <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors group-hover:border-indigo-100 group-hover:bg-indigo-50">
                     <item.Icon className="w-5 h-5 text-gray-500 group-hover:text-indigo-600 transition-colors" />
                   </div>
                   <div className="flex-1 min-w-0">
