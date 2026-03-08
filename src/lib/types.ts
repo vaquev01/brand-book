@@ -371,6 +371,47 @@ export interface AssetPackFile {
   content: string;
 }
 
+export type AssetPackQualityStatus = "pass" | "warn" | "fail";
+
+export interface AssetPackPlanIcon {
+  path: string;
+  label: string;
+  concept: string;
+  rationale: string;
+}
+
+export interface AssetPackPlan {
+  creativeThesis: string;
+  shapeLanguage: string[];
+  coreMotifs: string[];
+  avoidMotifs: string[];
+  bucketDirectives: {
+    icons: string;
+    elements: string;
+    patterns: string;
+    motion: string;
+  };
+  iconPlan: AssetPackPlanIcon[];
+}
+
+export interface AssetPackBucketQuality {
+  bucket: "icons" | "elements" | "patterns" | "motion";
+  status: AssetPackQualityStatus;
+  score: number;
+  strengths: string[];
+  issues: string[];
+}
+
+export interface AssetPackQualityReport {
+  status: AssetPackQualityStatus;
+  score: number;
+  summary: string;
+  strengths: string[];
+  warnings: string[];
+  issues: string[];
+  buckets: AssetPackBucketQuality[];
+}
+
 export interface ProductionColorSpec {
   role: string;
   name: string;
