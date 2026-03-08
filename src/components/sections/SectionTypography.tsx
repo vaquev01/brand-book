@@ -4,9 +4,9 @@ import { EditableField } from "@/components/EditableField";
 
 function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo: Typography; typoKey: string; onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void }) {
   return (
-    <div className="bg-gray-50 p-5 rounded-lg border relative group/typo">
-      <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">{title}</h3>
-      <div className="text-2xl font-bold mb-1" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
+    <div className="bg-gray-50 p-4 rounded-[1.2rem] border relative group/typo">
+      <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1.5">{title}</h3>
+      <div className="text-[1.7rem] font-bold mb-1 leading-tight" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
         <EditableField
           value={typo.name}
           onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], name: val } } }))}
@@ -14,7 +14,7 @@ function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo:
         />
       </div>
       {typo.category && (
-        <span className="inline-block text-[10px] font-semibold bg-gray-200 text-gray-600 px-2 py-0.5 rounded mb-3">
+        <span className="inline-block text-[10px] font-semibold bg-gray-200 text-gray-600 px-2 py-0.5 rounded mb-2">
           <EditableField
             value={typo.category}
             onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], category: val } } }))}
@@ -22,10 +22,10 @@ function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo:
           />
         </span>
       )}
-      <div className="text-gray-400 text-sm mb-3">Aa Bb Cc 0123456789 !@#</div>
-      <div className="mb-2">
+      <div className="text-gray-400 text-sm leading-tight mb-2.5">Aa Bb Cc 0123456789 !@#</div>
+      <div className="mb-3">
         <span className="text-xs font-bold text-gray-500 uppercase">Uso: </span>
-        <span className="text-sm">
+        <span className="text-sm leading-6 text-gray-700">
           <EditableField
             value={typo.usage}
             onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], usage: val } } }))}
@@ -34,7 +34,7 @@ function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo:
           />
         </span>
       </div>
-      <div className="flex flex-wrap gap-2 mb-2">
+      <div className="flex flex-wrap gap-1.5 mb-3">
         {typo.weights.map((w, i) => (
           <span key={i} className="bg-gray-200 text-xs px-2 py-1 rounded flex items-stretch overflow-hidden group/item">
             <EditableField
@@ -73,7 +73,7 @@ function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo:
         )}
       </div>
       {(typo.fallbackFont || typo.textTransform) && (
-        <div className="border-t pt-3 space-y-1">
+        <div className="border-t pt-2.5 space-y-1">
           {typo.fallbackFont && (
             <div className="text-xs text-gray-600 flex">
               <span className="font-semibold text-gray-700 mr-1">Alternativa Google Fonts:</span>
@@ -109,14 +109,14 @@ export function SectionTypography({ data, num, onUpdateData }: { data: Brandbook
   if (data.typography.ui) advancedTypos.push({ title: "UI & Alta Legibilidade", typo: data.typography.ui, key: "ui" });
   if (data.typography.monospace) advancedTypos.push({ title: "Dados & Monospace", typo: data.typography.monospace, key: "monospace" });
 
-  const advancedCols = advancedTypos.length >= 3 ? "md:grid-cols-3" : advancedTypos.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1";
+  const advancedCols = advancedTypos.length >= 3 ? "md:grid-cols-2 2xl:grid-cols-3" : advancedTypos.length === 2 ? "md:grid-cols-2" : "md:grid-cols-1";
 
   return (
     <section className="page-break mb-6">
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Tipografia
       </h2>
-      <div className={`grid grid-cols-1 ${isAdvanced ? advancedCols : "md:grid-cols-2"} gap-5`}>
+      <div className={`grid grid-cols-1 ${isAdvanced ? advancedCols : "md:grid-cols-2"} gap-4`}>
         {isAdvanced ? (
           <>
             {advancedTypos.map(({ title, typo, key }) => (

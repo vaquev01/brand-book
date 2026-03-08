@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/imageStorage", () => ({
   clearGeneratedImages: vi.fn().mockResolvedValue(undefined),
   isIndexedDBAvailable: vi.fn().mockResolvedValue(false),
-  loadAssetPack: vi.fn().mockResolvedValue([]),
+  loadAssetPack: vi.fn().mockResolvedValue({ files: [] }),
   loadBrandAssets: vi.fn().mockResolvedValue([]),
   loadGeneratedImages: vi.fn().mockResolvedValue({}),
   saveAssetPack: vi.fn().mockResolvedValue(undefined),
@@ -62,10 +62,10 @@ describe("brandbookLocalSession", () => {
     expect(loadCachedBrandAssets("brand")).toEqual([
       { id: "asset_1", name: "Logo", type: "logo", dataUrl: "data:image/png;base64,abc" },
     ]);
-    expect(loadCachedAssetPack("brand")).toEqual([{ path: "tokens/colors.json", content: "{}" }]);
+    expect(loadCachedAssetPack("brand")).toEqual({ files: [{ path: "tokens/colors.json", content: "{}" }] });
 
     await expect(loadBrandbookSessionAssets("brand")).resolves.toEqual({
-      assetPackFiles: [{ path: "tokens/colors.json", content: "{}" }],
+      assetPack: { files: [{ path: "tokens/colors.json", content: "{}" }] },
       generatedAssets: { logo_primary: { key: "logo_primary", url: "data:image/png;base64,abc" } },
       uploadedBrandAssets: [
         { id: "asset_1", name: "Logo", type: "logo", dataUrl: "data:image/png;base64,abc" },

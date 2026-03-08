@@ -14,6 +14,10 @@ import {
 import { buildBrandNameFidelityBlock } from "@/lib/brandNameFidelity";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
 import { downloadImageUrl, fetchImageDataUrl } from "@/lib/imageTransport";
+import {
+  hasPromptOpsProviderKey,
+  refineImagePromptClient,
+} from "@/lib/imagePromptClient";
 import { readJsonResponse } from "@/lib/http";
 
 const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
@@ -234,32 +238,17 @@ export function useImageGeneration({
         if (refineBeforeGenerate) {
           const canRefine =
             (provider !== "stability" || prompt.includes(" --neg "));
-          const hasTextKey =
-            (promptProvider === "openai" && !!apiKeys.openai) ||
-            (promptProvider === "gemini" && !!apiKeys.google);
+          const hasTextKey = hasPromptOpsProviderKey(promptProvider, apiKeys);
           if (canRefine && hasTextKey) {
             try {
-              const refineRes = await fetch("/api/refine-image-prompt", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  basePrompt,
-                  imageProvider: provider,
-                  assetKey,
-                  textProvider: promptProvider,
-                  openaiKey: apiKeys.openai || undefined,
-                  googleKey: apiKeys.google || undefined,
-                  openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-                  googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-                }),
+              const refinedPrompt = await refineImagePromptClient({
+                basePrompt,
+                imageProvider: provider,
+                assetKey,
+                promptProvider,
+                apiKeys,
               });
-              const refineJson = await readJsonResponse<{
-                prompt?: string;
-                error?: string;
-              }>(refineRes, "/api/refine-image-prompt");
-              if (refineRes.ok && refineJson.prompt) {
-                prompt = refineJson.prompt;
-              }
+              if (refinedPrompt) prompt = refinedPrompt;
             } catch {
               // Prompt refinement is optional; fall back to base prompt.
             }
@@ -365,30 +354,17 @@ export function useImageGeneration({
         );
         let prompt = basePrompt;
         if (refineBeforeGenerate) {
-          const hasTextKey =
-            (promptProvider === "openai" && !!apiKeys.openai) ||
-            (promptProvider === "gemini" && !!apiKeys.google);
+          const hasTextKey = hasPromptOpsProviderKey(promptProvider, apiKeys);
           if (hasTextKey) {
             try {
-              const refineRes = await fetch("/api/refine-image-prompt", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  basePrompt,
-                  imageProvider: provider,
-                  assetKey: "brand_collateral",
-                  textProvider: promptProvider,
-                  openaiKey: apiKeys.openai || undefined,
-                  googleKey: apiKeys.google || undefined,
-                  openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-                  googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-                }),
+              const refinedPrompt = await refineImagePromptClient({
+                basePrompt,
+                imageProvider: provider,
+                assetKey: "brand_collateral",
+                promptProvider,
+                apiKeys,
               });
-              const refineJson = await readJsonResponse<{
-                prompt?: string;
-                error?: string;
-              }>(refineRes, "/api/refine-image-prompt");
-              if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
+              if (refinedPrompt) prompt = refinedPrompt;
             } catch {
               // Prompt refinement is optional; fall back to base prompt.
             }

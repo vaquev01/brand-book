@@ -1,7 +1,46 @@
-import type { AssetPackFile } from "@/lib/types";
+import type {
+  AssetPackBucketQuality,
+  AssetPackFile,
+  AssetPackPlan,
+  AssetPackPlanIcon,
+  AssetPackQualityReport,
+  AssetPackQualityStatus,
+} from "@/lib/types";
 
 const MAX_FILES = 40;
 const MAX_CONTENT_CHARS = 260_000;
+const SUSPICIOUS_NAME_FRAGMENTS = [
+  "http",
+  "https",
+  "www",
+  "placeholder",
+  "undefined",
+  "null",
+  "lorem",
+  "temp",
+  "example",
+  "mock",
+  "sample",
+  "image",
+  "img",
+  "blob",
+  "base64",
+];
+const WEAK_ICON_TOKENS = new Set([
+  "brand",
+  "icon",
+  "asset",
+  "shape",
+  "symbol",
+  "graphic",
+  "generic",
+  "vector",
+  "mark",
+  "spark",
+  "star",
+  "emblem",
+  "diamond",
+]);
 
 export type ExpectedAssetPackPaths = {
   icons: string[];
@@ -23,10 +62,14 @@ export type AssetPackCoverage = {
 export type NormalizedAssetPackResult = {
   files: AssetPackFile[];
   coverage: AssetPackCoverage;
+  quality: AssetPackQualityReport;
   issues: string[];
   missingPaths: string[];
   unexpectedPaths: string[];
   invalidSvgPaths: string[];
+  suspiciousPaths: string[];
+  isStructurallyComplete: boolean;
+  passesQualityGate: boolean;
   isComplete: boolean;
 };
 
@@ -86,6 +129,233 @@ function extractJsonCodeFence(raw: string): string | null {
   return match?.[1]?.trim() ?? null;
 }
 
+function readString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function readStringList(value: unknown, limit = 8): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => readString(item))
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
+function fileStem(path: string): string {
+  return path.split("/").pop()?.replace(/\.svg$/i, "") ?? path;
+}
+
+function titleizeSlug(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+    .join(" ");
+}
+
+function tokenizeStem(value: string): string[] {
+  return value
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function rootStem(value: string): string {
+  return value.replace(/-\d+$/i, "");
+}
+
+function hasSuspiciousFragment(value: string): boolean {
+  const lower = value.toLowerCase();
+  return SUSPICIOUS_NAME_FRAGMENTS.some((fragment) => lower.includes(fragment));
+}
+
+function countSvgPrimitiveTags(content: string): number {
+  return (content.match(/<(path|circle|rect|ellipse|polygon|polyline|line|g|defs|pattern|use)\b/gi) ?? []).length;
+}
+
+function hasAnimationMarkup(content: string): boolean {
+  return /<(animate|animateTransform|animateMotion|set)\b/i.test(content);
+}
+
+function makeBucketQuality(params: {
+  bucket: AssetPackBucketQuality["bucket"];
+  strengths: string[];
+  softIssues: string[];
+  hardIssues: string[];
+}): AssetPackBucketQuality {
+  const issues = [...params.hardIssues, ...params.softIssues];
+  const score = Math.max(0, 100 - params.hardIssues.length * 35 - params.softIssues.length * 12);
+  const status: AssetPackQualityStatus = params.hardIssues.length > 0 ? "fail" : params.softIssues.length > 0 ? "warn" : "pass";
+
+  return {
+    bucket: params.bucket,
+    status,
+    score,
+    strengths: params.strengths,
+    issues,
+  };
+}
+
+function evaluateAssetPackQuality(params: {
+  files: AssetPackFile[];
+  expected: ExpectedAssetPackPaths;
+  brandName?: string;
+  plan?: AssetPackPlan;
+}): {
+  quality: AssetPackQualityReport;
+  suspiciousPaths: string[];
+} {
+  const byPath = new Map(params.files.map((file) => [file.path, file]));
+  const expectedSet = new Set(params.expected.all);
+  const suspiciousPaths = params.files
+    .filter((file) => expectedSet.has(file.path) && hasSuspiciousFragment(file.path))
+    .map((file) => file.path);
+
+  const iconFiles = params.expected.icons.map((path) => byPath.get(path)).filter(Boolean) as AssetPackFile[];
+  const elementFiles = params.expected.elements.map((path) => byPath.get(path)).filter(Boolean) as AssetPackFile[];
+  const patternFiles = params.expected.patterns.map((path) => byPath.get(path)).filter(Boolean) as AssetPackFile[];
+  const motionFiles = params.expected.motion.map((path) => byPath.get(path)).filter(Boolean) as AssetPackFile[];
+
+  const repeatedRoots = new Map<string, number>();
+  for (const file of iconFiles) {
+    const root = rootStem(fileStem(file.path));
+    repeatedRoots.set(root, (repeatedRoots.get(root) ?? 0) + 1);
+  }
+
+  const numberedIconCount = iconFiles.filter((file) => /-\d+$/i.test(fileStem(file.path))).length;
+  const weakIconNames = iconFiles
+    .filter((file) => {
+      const tokens = tokenizeStem(fileStem(file.path));
+      return tokens.length > 0 && tokens.every((token) => WEAK_ICON_TOKENS.has(token) || /^\d+$/.test(token));
+    })
+    .map((file) => file.path);
+  const lowDetailElements = elementFiles.filter((file) => countSvgPrimitiveTags(file.content) < 3).map((file) => file.path);
+  const lowDetailIcons = iconFiles.filter((file) => countSvgPrimitiveTags(file.content) < 1).map((file) => file.path);
+  const invalidPatterns = patternFiles.filter((file) => !/<pattern\b/i.test(file.content) || !/<defs\b/i.test(file.content)).map((file) => file.path);
+  const invalidMotion = motionFiles.filter((file) => !hasAnimationMarkup(file.content)).map((file) => file.path);
+  const planMismatchIcons = params.plan
+    ? params.plan.iconPlan
+        .filter((entry) => !params.expected.icons.includes(entry.path))
+        .map((entry) => entry.path)
+    : [];
+
+  const iconSoftIssues: string[] = [];
+  const iconHardIssues: string[] = [];
+  const repeatedFamilies = Array.from(repeatedRoots.entries()).filter(([, count]) => count >= 3);
+
+  if (iconFiles.length < params.expected.icons.length) {
+    iconHardIssues.push(`Cobertura incompleta de ícones (${iconFiles.length}/${params.expected.icons.length}).`);
+  }
+  if (suspiciousPaths.some((path) => path.startsWith("vectors/icons/"))) {
+    iconHardIssues.push("Há nomes de ícones contaminados por placeholders, URLs ou tokens inválidos.");
+  }
+  if (lowDetailIcons.length > 0) {
+    iconHardIssues.push(`Há ${lowDetailIcons.length} ícone(s) sem detalhe vetorial mínimo.`);
+  }
+  if (weakIconNames.length >= 6) {
+    iconSoftIssues.push("Muitos ícones ainda usam semântica fraca demais e tendem a soar genéricos.");
+  }
+  if (numberedIconCount >= 5) {
+    iconSoftIssues.push("Há ícones demais dependentes de sufixos numéricos, sugerindo fallback genérico em excesso.");
+  }
+  if (repeatedFamilies.length > 0) {
+    iconSoftIssues.push(`Algumas famílias de ícones estão repetidas demais: ${repeatedFamilies.map(([root, count]) => `${root} (${count})`).join(", ")}.`);
+  }
+
+  const elementSoftIssues: string[] = [];
+  const elementHardIssues: string[] = [];
+  if (elementFiles.length < params.expected.elements.length) {
+    elementHardIssues.push(`Cobertura incompleta de elementos (${elementFiles.length}/${params.expected.elements.length}).`);
+  }
+  if (lowDetailElements.length >= 3) {
+    elementHardIssues.push("Elementos abstratos demais foram retornados simples demais para uso premium.");
+  } else if (lowDetailElements.length > 0) {
+    elementSoftIssues.push(`Há ${lowDetailElements.length} elemento(s) abstrato(s) com pouca elaboração vetorial.`);
+  }
+
+  const patternSoftIssues: string[] = [];
+  const patternHardIssues: string[] = [];
+  if (patternFiles.length < params.expected.patterns.length) {
+    patternHardIssues.push("O padrão seamless obrigatório não foi entregue.");
+  }
+  if (invalidPatterns.length > 0) {
+    patternHardIssues.push("O padrão não trouxe estrutura real de tile com <defs><pattern>.");
+  }
+
+  const motionSoftIssues: string[] = [];
+  const motionHardIssues: string[] = [];
+  if (motionFiles.length < params.expected.motion.length) {
+    motionHardIssues.push(`Cobertura incompleta de motion (${motionFiles.length}/${params.expected.motion.length}).`);
+  }
+  if (invalidMotion.length > 0) {
+    motionHardIssues.push("Há motion SVG sem animação declarada no markup.");
+  }
+
+  const buckets: AssetPackBucketQuality[] = [
+    makeBucketQuality({
+      bucket: "icons",
+      strengths: [
+        `${iconFiles.length}/${params.expected.icons.length} ícones entregues.`,
+        params.plan?.bucketDirectives.icons || `Vocabulário guiado para ${params.brandName || "a marca"}.`,
+      ],
+      softIssues: iconSoftIssues,
+      hardIssues: [...iconHardIssues, ...(planMismatchIcons.length > 0 ? ["O plano de ícones retornou paths fora da lista obrigatória."] : [])],
+    }),
+    makeBucketQuality({
+      bucket: "elements",
+      strengths: [
+        `${elementFiles.length}/${params.expected.elements.length} elementos entregues.`,
+        params.plan?.bucketDirectives.elements || "Elementos abstratos orientados para uso de sistema visual.",
+      ],
+      softIssues: elementSoftIssues,
+      hardIssues: elementHardIssues,
+    }),
+    makeBucketQuality({
+      bucket: "patterns",
+      strengths: [
+        `${patternFiles.length}/${params.expected.patterns.length} padrão entregue.`,
+        params.plan?.bucketDirectives.patterns || "Pattern voltado a repetição contínua e handoff.",
+      ],
+      softIssues: patternSoftIssues,
+      hardIssues: patternHardIssues,
+    }),
+    makeBucketQuality({
+      bucket: "motion",
+      strengths: [
+        `${motionFiles.length}/${params.expected.motion.length} motion SVGs entregues.`,
+        params.plan?.bucketDirectives.motion || "Motion alinhado ao gesto da marca.",
+      ],
+      softIssues: motionSoftIssues,
+      hardIssues: motionHardIssues,
+    }),
+  ];
+
+  const issues = buckets.flatMap((bucket) => bucket.status === "fail" ? bucket.issues.map((issue) => `[${bucket.bucket}] ${issue}`) : []);
+  const warnings = buckets.flatMap((bucket) => bucket.status === "warn" ? bucket.issues.map((issue) => `[${bucket.bucket}] ${issue}`) : []);
+  const strengths = buckets.flatMap((bucket) => bucket.strengths.slice(0, 2));
+  const score = Math.max(0, Math.round(buckets.reduce((sum, bucket) => sum + bucket.score, 0) / buckets.length));
+  const status: AssetPackQualityStatus = buckets.some((bucket) => bucket.status === "fail") ? "fail" : buckets.some((bucket) => bucket.status === "warn") ? "warn" : "pass";
+  const summary = status === "pass"
+    ? "Asset Pack aprovado com cobertura e direção criativa consistentes."
+    : status === "warn"
+      ? "Asset Pack utilizável, mas ainda com sinais de genericidade ou direção visual fraca em parte dos buckets."
+      : "Asset Pack reprovado por problemas semânticos ou estruturais que comprometem a qualidade do handoff.";
+
+  return {
+    suspiciousPaths,
+    quality: {
+      status,
+      score,
+      summary,
+      strengths,
+      warnings,
+      issues,
+      buckets,
+    },
+  };
+}
+
 export function parseAssetPackModelResponse(raw: string): unknown {
   const candidates = uniqueCandidates([raw, extractJsonCodeFence(raw), extractFirstJsonObject(raw)]);
 
@@ -100,13 +370,58 @@ export function parseAssetPackModelResponse(raw: string): unknown {
   throw new AssetPackGenerationError("IA retornou JSON inválido para o Asset Pack.", ["A resposta da IA não pôde ser convertida em JSON válido."]);
 }
 
+function normalizePlanIcon(raw: unknown, fallbackPath: string): AssetPackPlanIcon {
+  const item = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  const path = safeRelPath(readString(item.path)) || fallbackPath;
+  const stem = fileStem(path);
+  const label = readString(item.label) || titleizeSlug(stem);
+  const concept = readString(item.concept) || label;
+  const rationale = readString(item.rationale) || `Representar ${concept.toLowerCase()} com personalidade própria da marca.`;
+
+  return {
+    path: fallbackPath,
+    label,
+    concept,
+    rationale,
+  };
+}
+
+export function parseAssetPackPlanResponse(raw: string, expected: ExpectedAssetPackPaths): AssetPackPlan {
+  const parsed = parseAssetPackModelResponse(raw);
+  if (!parsed || typeof parsed !== "object") {
+    throw new AssetPackGenerationError("IA não retornou um plano válido para o Asset Pack.", ["O plano retornado não é um objeto JSON válido."]);
+  }
+
+  const data = parsed as Record<string, unknown>;
+  const iconPlanRaw = Array.isArray(data.iconPlan) ? data.iconPlan : [];
+  const iconPlan = expected.icons.map((path, index) => normalizePlanIcon(iconPlanRaw[index], path));
+
+  return {
+    creativeThesis: readString(data.creativeThesis) || "Construir um sistema de assets reconhecível, expressivo e diretamente ligado ao universo da marca.",
+    shapeLanguage: readStringList(data.shapeLanguage, 6),
+    coreMotifs: readStringList(data.coreMotifs, 8),
+    avoidMotifs: readStringList(data.avoidMotifs, 8),
+    bucketDirectives: {
+      icons: readString((data.bucketDirectives as Record<string, unknown> | undefined)?.icons) || "Cada ícone precisa parecer parte de uma mesma família proprietária, evitando semântica de UI genérica.",
+      elements: readString((data.bucketDirectives as Record<string, unknown> | undefined)?.elements) || "Os elementos abstratos devem funcionar como matéria-prima premium para embalagem, posts e papelaria.",
+      patterns: readString((data.bucketDirectives as Record<string, unknown> | undefined)?.patterns) || "O padrão precisa ser realmente tileável e carregar ritmo visual reconhecível da marca.",
+      motion: readString((data.bucketDirectives as Record<string, unknown> | undefined)?.motion) || "Os motions devem animar gestos da marca, sem recorrer a loaders genéricos.",
+    },
+    iconPlan,
+  };
+}
+
 function isSvgContent(content: string): boolean {
   return /<svg[\s>]/i.test(content.trim());
 }
 
 export function normalizeAssetPackFiles(
   parsed: unknown,
-  expected: ExpectedAssetPackPaths
+  expected: ExpectedAssetPackPaths,
+  options: {
+    brandName?: string;
+    plan?: AssetPackPlan;
+  } = {}
 ): NormalizedAssetPackResult {
   const filesRaw = (parsed as { files?: unknown })?.files;
   if (!Array.isArray(filesRaw)) {
@@ -182,14 +497,29 @@ export function normalizeAssetPackFiles(
     issues.push(`Há ${invalidSvgPaths.length} arquivo(s) obrigatório(s) sem markup SVG válido.`);
   }
 
+  const { quality, suspiciousPaths } = evaluateAssetPackQuality({
+    files,
+    expected,
+    brandName: options.brandName,
+    plan: options.plan,
+  });
+
+  const isStructurallyComplete = missingPaths.length === 0 && invalidSvgPaths.length === 0;
+  const passesQualityGate = quality.status !== "fail";
+  const isComplete = isStructurallyComplete && passesQualityGate;
+
   return {
     files,
     coverage,
-    issues,
+    quality,
+    issues: [...issues, ...quality.issues, ...quality.warnings],
     missingPaths,
     unexpectedPaths,
     invalidSvgPaths,
-    isComplete: missingPaths.length === 0 && invalidSvgPaths.length === 0,
+    suspiciousPaths,
+    isStructurallyComplete,
+    passesQualityGate,
+    isComplete,
   };
 }
 
@@ -198,18 +528,27 @@ export function buildAssetPackRepairPrompt(params: {
   expected: ExpectedAssetPackPaths;
   raw: string;
   issues: string[];
+  plan?: AssetPackPlan;
 }): string {
-  const issueList = params.issues.length > 0 ? params.issues.map((issue) => `- ${issue}`).join("\n") : "- A resposta anterior não atendeu ao formato/cobertura exigidos.";
+  const issueList = params.issues.length > 0 ? params.issues.map((issue) => `- ${issue}`).join("\n") : "- A resposta anterior não atendeu ao formato/cobertura/qualidade exigidos.";
   const expectedList = params.expected.all.map((path) => `- ${path}`).join("\n");
 
   return [
-    `Sua resposta anterior para o Asset Pack da marca \"${params.brandName}\" ficou inválida ou incompleta.`,
+    `Sua resposta anterior para o Asset Pack da marca \"${params.brandName}\" ficou inválida, incompleta ou genérica demais.`,
     "Reescreva o JSON COMPLETO do zero, sem markdown, sem comentários e sem texto extra.",
     "Você DEVE retornar `files` como array e incluir TODOS os paths obrigatórios abaixo, cada um com SVG válido em `content`.",
+    "Além da cobertura, corrija genericidade, nomes contaminados, falta de animação e qualquer fraqueza de direção criativa apontada.",
     "",
     "Problemas detectados:",
     issueList,
     "",
+    ...(params.plan
+      ? [
+          "Plano criativo obrigatório para seguir:",
+          JSON.stringify(params.plan, null, 2),
+          "",
+        ]
+      : []),
     "Paths obrigatórios:",
     expectedList,
     "",

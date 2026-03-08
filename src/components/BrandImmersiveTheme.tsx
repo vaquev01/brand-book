@@ -307,11 +307,11 @@ export function BrandImmersiveTheme({
           }
 
           #brandbook-content.bb-immersive .bb-cat-banner {
-            padding: 24px 20px;
+            padding: 22px 18px;
           }
 
           #brandbook-content.bb-immersive .bb-section-shell {
-            padding: 22px 18px 22px 16px;
+            padding: 20px 16px 20px 14px;
           }
         }
 
@@ -322,7 +322,7 @@ export function BrandImmersiveTheme({
           border-left: 5px solid ${P};
           border-radius: 24px;
           box-shadow: var(--bb-shadow), inset 0 1px 0 ${rgba("#ffffff", 0.24)};
-          padding: 36px 34px 34px 30px;
+          padding: 30px 28px 28px 24px;
           margin-bottom: 0;
           backdrop-filter: blur(22px) saturate(1.22);
           position: relative;
@@ -499,9 +499,9 @@ export function BrandImmersiveTheme({
         #brandbook-content.bb-immersive .bb-cat-banner {
           background: linear-gradient(135deg, ${rgba(P, 0.98)} 0%, ${rgba(A, 0.94)} 58%, ${rgba(T, 0.86)} 100%);
           border-radius: 24px;
-          padding: 36px 40px;
-          margin-bottom: 24px;
-          margin-top: 32px;
+          padding: 30px 32px;
+          margin-bottom: 18px;
+          margin-top: 24px;
           position: relative;
           overflow: hidden;
           border: 1px solid ${rgba("#ffffff", dk ? 0.10 : 0.16)};
@@ -545,7 +545,7 @@ export function BrandImmersiveTheme({
 
         #brandbook-content.bb-immersive .bb-cat-banner h2 {
           color: ${bannerText} !important;
-          font-size: 1.72rem;
+          font-size: 1.58rem;
           font-weight: 900;
           text-transform: uppercase;
           letter-spacing: 0.16em;
@@ -554,9 +554,9 @@ export function BrandImmersiveTheme({
 
         #brandbook-content.bb-immersive .bb-cat-banner h2::after {
           background: ${dk ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.2)"};
-          width: 56px;
+          width: 48px;
           height: 3px;
-          margin-top: 14px;
+          margin-top: 10px;
         }
 
         #brandbook-content.bb-immersive .bb-cat-banner .bb-cat-back {
@@ -620,8 +620,8 @@ export function BrandImmersiveTheme({
 
         #brandbook-content.bb-immersive .bb-voice .bb-voice-text {
           font-family: var(--bb-heading-font);
-          font-size: 1.05rem;
-          line-height: 1.65;
+          font-size: 0.98rem;
+          line-height: 1.58;
           font-style: italic;
           color: ${rgba(P, 0.8)};
         }
@@ -783,7 +783,7 @@ export function BrandImmersiveTheme({
           position: relative;
           border-radius: 18px;
           overflow: hidden;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
           box-shadow: 0 16px 48px ${rgba(P, 0.18)};
         }
 
@@ -791,7 +791,7 @@ export function BrandImmersiveTheme({
           display: block;
           width: 100%;
           height: auto;
-          max-height: 320px;
+          max-height: 280px;
           object-fit: cover;
           filter: saturate(1.1) contrast(1.02);
         }
@@ -822,10 +822,10 @@ export function BrandImmersiveTheme({
         /* ═══════ PATTERN BAND ═══════ */
         #brandbook-content.bb-immersive .bb-pattern-band {
           position: relative;
-          height: 80px;
+          height: 68px;
           border-radius: 16px;
           overflow: hidden;
-          margin: 24px 0;
+          margin: 18px 0;
           background: linear-gradient(135deg, ${rgba(P, 0.08)}, ${rgba(A, 0.06)});
           box-shadow: inset 0 0 0 1px ${rgba(P, 0.10)};
         }
@@ -870,8 +870,8 @@ export function BrandImmersiveTheme({
           display: flex;
           gap: 12px;
           overflow-x: auto;
-          padding: 8px 0 16px;
-          margin: 16px 0;
+          padding: 6px 0 12px;
+          margin: 12px 0;
           scrollbar-width: thin;
           scrollbar-color: ${rgba(P, 0.2)} transparent;
         }
@@ -959,8 +959,8 @@ export function BrandImmersiveTheme({
 
         /* ═══════ MINI ASSET STRIP (distributed between categories) ═══════ */
         #brandbook-content.bb-immersive .bb-mini-strip {
-          margin: 28px 0;
-          padding: 6px 0 12px;
+          margin: 20px 0;
+          padding: 4px 0 10px;
         }
 
         #brandbook-content.bb-immersive .bb-mini-strip .bb-strip-item img {
@@ -973,8 +973,8 @@ export function BrandImmersiveTheme({
           position: relative;
           border-radius: 20px;
           overflow: hidden;
-          margin: 32px 0;
-          height: 220px;
+          margin: 24px 0;
+          height: 196px;
           box-shadow: 0 20px 56px ${rgba(P, 0.22)};
         }
 

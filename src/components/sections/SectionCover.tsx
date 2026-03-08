@@ -156,19 +156,19 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
 
   return (
     <section
-      className="page-break mb-16 rounded-3xl overflow-hidden shadow-2xl"
+      className="page-break mb-12 rounded-3xl overflow-hidden shadow-2xl"
       style={{
         background: dark
           ? `linear-gradient(140deg, ${primaryHex} 0%, ${primaryHex}F4 48%, ${accentHex}20 100%)`
           : `linear-gradient(140deg, ${primaryHex} 0%, ${primaryHex}F4 46%, ${accentHex}1E 100%)`,
-        minHeight: "92vh",
+        minHeight: "84vh",
         fontFamily: `'${primaryFont}', sans-serif`,
       }}
     >
       {/* Top stripe */}
       <div style={{ height: 4, background: accentHex }} />
 
-      <div className="relative flex flex-col justify-between overflow-hidden px-6 py-10 md:px-10 md:py-12 lg:px-16" style={{ minHeight: "calc(92vh - 4px)" }}>
+      <div className="relative flex flex-col justify-between overflow-hidden px-5 py-8 md:px-8 md:py-10 lg:px-12" style={{ minHeight: "calc(84vh - 4px)" }}>
         <div
           aria-hidden="true"
           className="absolute right-[-8rem] top-[-6rem] h-[23rem] w-[23rem] rounded-full"
@@ -221,10 +221,10 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
         </div>
 
         {/* Main content */}
-        <div className="relative grid flex-1 grid-cols-1 items-center gap-10 py-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(21rem,0.92fr)] lg:gap-12 xl:gap-14">
-          <div className="flex min-h-full flex-col justify-center rounded-[2.25rem] border p-7 md:p-9 lg:p-10 xl:p-12" style={{ borderColor: dividerColor, background: dark ? "linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.04) 100%)" : "linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.18) 100%)", backdropFilter: "blur(18px)", boxShadow: dark ? "0 30px 90px rgba(0,0,0,0.18)" : "0 30px 90px rgba(0,0,0,0.08)" }}>
+        <div className="relative grid flex-1 grid-cols-1 items-center gap-7 py-8 lg:grid-cols-[minmax(0,1.04fr)_minmax(20rem,0.96fr)] lg:gap-8 xl:gap-10">
+          <div className="flex min-h-full flex-col justify-center rounded-[2rem] border p-6 md:p-7 lg:p-8 xl:p-9" style={{ borderColor: dividerColor, background: dark ? "linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.04) 100%)" : "linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.18) 100%)", backdropFilter: "blur(18px)", boxShadow: dark ? "0 30px 90px rgba(0,0,0,0.18)" : "0 30px 90px rgba(0,0,0,0.08)" }}>
             {/* Brand name */}
-            <div className="mb-7 flex flex-wrap items-center gap-3">
+            <div className="mb-5 flex flex-wrap items-center gap-3">
               <span
                 className="rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.24em]"
                 style={{
@@ -240,10 +240,10 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
               </span>
             </div>
             <h1
-              className="mb-5 font-black leading-[0.94]"
+              className="mb-4 font-black leading-[0.94]"
               style={{
                 color: textColor,
-                fontSize: "clamp(3.15rem, 7vw, 6.8rem)",
+                fontSize: "clamp(2.9rem, 6.4vw, 6.2rem)",
                 letterSpacing: "-0.045em",
                 fontFamily: `'${primaryFont}', sans-serif`,
                 textWrap: "balance",
@@ -254,7 +254,7 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
 
             {/* Industry */}
             <p
-              className="mb-6 text-sm font-bold uppercase tracking-[0.3em]"
+              className="mb-5 text-sm font-bold uppercase tracking-[0.3em]"
               style={{ color: subtextColor }}
             >
               {data.industry}
@@ -263,7 +263,7 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
             {/* Tagline */}
             {tagline && (
               <p
-                className="mb-5 max-w-2xl text-[1.3rem] font-medium leading-[1.55] md:text-[1.45rem]"
+                className="mb-4 max-w-2xl text-[1.2rem] font-medium leading-[1.48] md:text-[1.34rem]"
                 style={{ color: textColor, opacity: 0.92, textWrap: "balance" }}
               >
                 &ldquo;{tagline}&rdquo;
@@ -271,17 +271,17 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
             )}
 
             {summaryLine && (
-              <p className="mb-8 max-w-[40rem] text-[15px] leading-7 md:text-[1.02rem]" style={{ color: dark ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0.72)", fontFamily: `'${secondaryFont}', sans-serif` }}>
+              <p className="mb-6 max-w-[38rem] text-[15px] leading-6 md:text-[0.98rem]" style={{ color: dark ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0.72)", fontFamily: `'${secondaryFont}', sans-serif` }}>
                 {summaryLine}
               </p>
             )}
 
             {signaturePanels.length > 0 && (
-              <div className="mb-8 grid gap-3 md:grid-cols-3">
+              <div className="mb-6 grid gap-3 md:grid-cols-3">
                 {signaturePanels.map((panel) => (
                   <div
                     key={panel.label}
-                    className="rounded-[1.35rem] border px-4 py-4"
+                    className="rounded-[1.2rem] border px-4 py-3"
                     style={{
                       borderColor: dividerColor,
                       background: dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.22)",
@@ -300,11 +300,11 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
 
             {/* Personality tags */}
             {personality.length > 0 && (
-              <div className="mb-8 flex flex-wrap gap-2.5">
+              <div className="mb-6 flex flex-wrap gap-2.5">
                 {personality.slice(0, 5).map((trait) => (
                   <span
                     key={trait}
-                    className="rounded-full border px-3.5 py-1.5 text-xs font-semibold"
+                    className="rounded-full border px-3 py-1.5 text-xs font-semibold"
                     style={{
                       color: textColor,
                       borderColor: dividerColor,
@@ -318,8 +318,8 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
             )}
 
             {/* Divider */}
-            <div className="mb-8 flex items-center gap-4">
-              <div style={{ width: "4rem", height: 2, background: accentHex }} />
+            <div className="mb-6 flex items-center gap-4">
+              <div style={{ width: "3.25rem", height: 2, background: accentHex }} />
               {editorialDescriptors[2] && (
                 <span className="text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: subtextColor }}>
                   {editorialDescriptors[2]}
@@ -329,11 +329,11 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
 
             {/* Core values */}
             {data.brandConcept?.values?.length > 0 && (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {data.brandConcept.values.slice(0, 3).map((v, index) => (
                   <div
                     key={v}
-                    className="rounded-[1.35rem] border p-4"
+                    className="rounded-[1.2rem] border p-3.5"
                     style={{ color: textColor, borderColor: dividerColor, background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.14)" }}
                   >
                     <div className="mb-2 flex items-center justify-between">
@@ -350,7 +350,7 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
               </div>
             )}
           </div>
-          <div className="grid gap-4 lg:grid-rows-[minmax(19rem,1fr)_auto] xl:gap-5">
+          <div className="grid gap-3 lg:grid-rows-[minmax(17rem,1fr)_auto] xl:gap-4">
             {heroCard && (
               <VisualCard
                 accentHex={accentHex}
@@ -363,7 +363,7 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
               />
             )}
             {supportCards.length > 0 && (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:[grid-template-columns:repeat(1,minmax(0,1fr))] xl:[grid-template-columns:repeat(3,minmax(0,1fr))]">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 lg:[grid-template-columns:repeat(1,minmax(0,1fr))] xl:[grid-template-columns:repeat(3,minmax(0,1fr))]">
                 {supportCards.map((card) => (
                   <VisualCard
                     key={card.id}
@@ -382,9 +382,9 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
 
         {/* Bottom row — color palette */}
         <div className="relative">
-          <div className="mb-6 border-t" style={{ borderColor: dividerColor }} />
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex flex-col gap-4">
+          <div className="mb-5 border-t" style={{ borderColor: dividerColor }} />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-3">
               <div className="flex gap-2 items-center flex-wrap">
                 {allColors.map((c, i) => (
                   <div
@@ -395,7 +395,7 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
                   />
                 ))}
               </div>
-              <div className="flex flex-wrap gap-4 md:gap-6">
+              <div className="flex flex-wrap gap-3 md:gap-4">
                 <div className="rounded-[1.25rem] border px-4 py-3" style={{ borderColor: dividerColor, background: dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.2)" }}>
                   <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: subtextColor }}>
                     Tipografia

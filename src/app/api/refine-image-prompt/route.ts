@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
+import { buildImageGenerationFrameworkPrimer } from "@/lib/imageGenerationIntention";
 
 export const runtime = "nodejs";
 
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `Você é um Diretor de Arte Sênior de classe mundial — a pessoa que um estúdio como Pentagram ou Wolff Olins chamaria para revisar um prompt criativo. Você combina rigor técnico com sensibilidade emocional.
 
+${buildImageGenerationFrameworkPrimer()}
+
 Tarefa: reescreva o prompt base para maximizar a qualidade do provider alvo. Mantenha o MESMO conteúdo, intenção e alma emocional — mas com estrutura superior, clareza cirúrgica e eficiência de cada palavra.
 
 PRINCÍPIO CENTRAL: Cada palavra no prompt final deve CONTRIBUIR para o resultado visual. Remova redundâncias. Resolva contradições. Mas NUNCA remova alma.
@@ -41,11 +44,14 @@ PRINCÍPIO CENTRAL: Cada palavra no prompt final deve CONTRIBUIR para o resultad
 MODO DE AVALIAÇÃO INTERNA (obrigatório):
 - Antes de finalizar, avalie silenciosamente o prompt contra qualquer bloco de scorecard presente no prompt base.
 - Se existirem blocos como "BRAND_COHERENCE_SCORECARD:", "MINIMUM PASS:" ou "HARD FAIL CONDITIONS:", trate-os como critérios mandatórios de revisão.
+- Se existirem blocos como "PHASE_A_STRATEGIC_INTENT:", "PHASE_B_SEMIOTIC_TRANSLATION:", "PHASE_C_BLUEPRINT:", "PHASE_D_DISTINCTIVENESS_GOVERNANCE:" ou "PHASE_E_RECURSIVE_VALIDATION:", trate-os como etapas obrigatórias de raciocínio interno antes da redação final.
+- Se existirem blocos como "ANTI_BLANDING_PROTOCOL:", "NOVELTY_TENSION:", "MOTION_READINESS:", "REDUCTION_STRESS_TEST:", "VALIDATION_AXES:", "REPAIR_LOOP:" ou "FAIL_CONDITIONS_EXTENDED:", trate-os como restrições ativas de revisão e reparo.
 - Se o prompt refinado não atingir claramente o threshold descrito, reescreva antes de responder.
 - Nunca exponha a nota ou a cadeia de raciocínio; devolva apenas o prompt final melhorado.
 
 MODO DE PLANEJAMENTO CONSCIENTE (obrigatório):
 - Se o prompt base trouxer blocos como "CREATIVE_PLAN:", "FIRST_IMPRESSION_TARGET:", "HERO_DECISION:", "PLAN_ORDER:", "CONSCIOUS_CREATION_MODE:", "ELEMENT_ACCOUNTABILITY:", "DECISION_TEST:" ou "REMOVAL_TEST:", trate-os como etapas obrigatórias de planejamento interno.
+- Se o prompt base trouxer blocos como "CENTRAL_THESIS:", "HERO_DECISION_EXTENDED:", "DOMINANT_HIERARCHY_EXTENDED:" ou "BLUEPRINT_COMPONENTS:", trate-os como blueprint obrigatório.
 - Antes de escrever o prompt final, defina silenciosamente a tese central, a hierarquia dominante, o papel de cada elemento e o que deve ser removido para aumentar clareza sem perder identidade.
 - Não finalize um prompt em que existam elementos sem função clara para reconhecimento, hierarquia, emoção ou coerência de sistema.
 
@@ -57,6 +63,7 @@ PRESERVAR LITERALMENTE (copiar sem alteração):
 - Blocos de planejamento/consciente: "CREATIVE_PLAN:", "FIRST_IMPRESSION_TARGET:", "HERO_DECISION:", "PLAN_ORDER:", "CONSCIOUS_CREATION_MODE:", "ELEMENT_ACCOUNTABILITY:", "DECISION_TEST:", "REMOVAL_TEST:"
 - Blocos de alma: "STYLE_TREE:", "ARCHETYPE:", "EMOTIONAL_CORE:", "BRAND_SOUL:", "BRAND_PROMISE:", "VIEWER_JOURNEY:", "DESIGN_PHILOSOPHY:", "IDENTITY_ASSETS:", "STRUCTURED_PATTERNS:"
 - Blocos de logo: "MASTER_LOGO:", "LOGO_REPLICATION:", "LOGO_SAFETY:", "CANONICAL_BRAND_NAME:", "EXACT_BRAND_TEXT:", "STRUCTURAL_CHARACTERS:", "NAME_FIDELITY_RULES:", "FORBIDDEN_NAME_VARIANTS:", "LOGO_CLEAR_SPACE:", "LOGO_MINIMUM_SIZE:", "LOGO_INCORRECT_USAGES:", "FAVICON_HINT:"
+- Blocos da intenção gerativa: "PHASE_A_STRATEGIC_INTENT:", "JOBS_TO_BE_DONE:", "PAINS_TO_RESOLVE:", "GAINS_TO_DELIVER:", "RECOGNITION_ANCHORS_EXTENDED:", "NON_NEGOTIABLES:", "PHASE_B_SEMIOTIC_TRANSLATION:", "ICONIC_CUES:", "INDEXICAL_CUES:", "SYMBOLIC_CUES:", "GESTALT_RULES:", "SHAPE_PSYCHOLOGY_ADVANCED:", "NEGATIVE_SPACE_OPPORTUNITY:", "BOUBA_KIKI_BIAS:", "PHASE_C_BLUEPRINT:", "CENTRAL_THESIS:", "HERO_DECISION_EXTENDED:", "DOMINANT_HIERARCHY_EXTENDED:", "BLUEPRINT_COMPONENTS:", "PRODUCTION_CONSTRAINTS:", "PHASE_D_DISTINCTIVENESS_GOVERNANCE:", "ANTI_BLANDING_PROTOCOL:", "NOVELTY_TENSION:", "MOTION_READINESS:", "REDUCTION_STRESS_TEST:", "PHASE_E_RECURSIVE_VALIDATION:", "VALIDATION_AXES:", "REPAIR_LOOP:", "VISUAL_USABILITY_HEURISTICS:", "FAIL_CONDITIONS_EXTENDED:"
 
 AMPLIFICAR (não apenas preservar):
 - Metáforas sensoriais — se o prompt usa "warm 3200K candlelight on kraft paper", preserve e contextualize.

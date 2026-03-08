@@ -1,5 +1,6 @@
 import { BrandbookData, ImageProvider } from "./types";
 import { buildBrandNameFidelityBlock, buildBrandNameFidelityNegativeTerms } from "./brandNameFidelity";
+import { buildImageGenerationIntentSummary } from "./imageGenerationIntention";
 
 export const ASSET_CATALOG = [
   // ─── LOGO ──────────────────────────────────────────────────────────────────
@@ -1321,6 +1322,10 @@ function buildDiffusionLogoPrompt(
   const shapePsychology = (data.logo as any).shapePsychology 
     ? (data.logo as any).shapePsychology 
     : getShapePsychology(archetype);
+  const generativeIntent = buildImageGenerationIntentSummary({
+    brandbook: data,
+    assetKey: variant === "dark" ? "logo_dark_bg" : "logo_primary",
+  });
 
   // 1. ABSOLUTE MEDIUM & SUBJECT ANCHOR
   let prompt = provider === "imagen" 
@@ -1330,6 +1335,7 @@ function buildDiffusionLogoPrompt(
   // 2. FOCUS STRICTLY ON GEOMETRY (DO NOT mention what we don't want, as it triggers attention)
   prompt += `Focus exclusively on abstract graphic design, pure geometry, and typography. The canvas must remain entirely empty except for the central logo lockup. `;
   prompt += `Strategic Core: the logo must be the visual consequence of the brand concept, not an isolated decorative idea. Translate the brand's purpose (${ctx.purpose}), unique value (${ctx.uniqueValue}), differentiators (${ctx.differentiators}), personality (${ctx.personality}), and tone of voice (${ctx.toneOfVoice}) into one coherent identity decision. ${coherence} ${rebrandCritical} ${scorecard} ${planning} ${consciousness} ${execution} ${governance} `;
+  prompt += `${generativeIntent} `;
 
   // 3. TYPOGRAPHY
   const typographyRationale = (data.typography.marketing as any)?.antiBlandingRationale ?? "excellent optical kerning";
@@ -1362,7 +1368,11 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
   const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
   const q = providerQuality(provider, key, archetypeName);
   const B = `"${data.brandName}"`;
-  const prefix = providerPrefix(provider, key) + consistencyPrefix(ctx, data, key) + " ";
+  const generativeIntent = buildImageGenerationIntentSummary({
+    brandbook: data,
+    assetKey: key,
+  });
+  const prefix = providerPrefix(provider, key) + consistencyPrefix(ctx, data, key) + " " + generativeIntent + " ";
   const sTags = provider === "stability" ? stabilityTags(ctx, key) : "";
   const namingNegativeTerms = buildBrandNameFidelityNegativeTerms(data.brandName, data.logo.incorrectUsages ?? []).join(", ");
 
@@ -1987,7 +1997,13 @@ export function buildApplicationPrompt(
     : "brand_collateral";
 
   const q = providerQuality(provider, detectedKey, archetypeName);
-  const prefix = providerPrefix(provider, detectedKey) + consistencyPrefix(ctx, data, detectedKey) + " ";
+  const generativeIntent = buildImageGenerationIntentSummary({
+    brandbook: data,
+    assetKey: detectedKey,
+    application: app,
+    aspectRatio,
+  });
+  const prefix = providerPrefix(provider, detectedKey) + consistencyPrefix(ctx, data, detectedKey) + " " + generativeIntent + " ";
   const sTags = provider === "stability" ? stabilityTags(ctx, detectedKey) : "";
 
   const parts = (...lines: (string | false | undefined | null)[]): string =>

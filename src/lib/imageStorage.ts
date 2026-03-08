@@ -1,4 +1,4 @@
-import { type GeneratedAsset, type BrandbookData, type UploadedAsset, type AssetPackFile } from "./types";
+import { type GeneratedAsset, type BrandbookData, type UploadedAsset, type AssetPackFile, type AssetPackState } from "./types";
 
 const DB_NAME = "brandbook-builder";
 const DB_VERSION = 2;
@@ -231,26 +231,44 @@ export async function loadBrandAssets(slug: string): Promise<UploadedAsset[]> {
 
 // ─── Asset pack (IndexedDB) ───────────────────────────────────────────────
 
-export async function saveAssetPack(slug: string, files: AssetPackFile[]): Promise<void> {
+function normalizeAssetPackState(value: unknown): AssetPackState {
+  if (Array.isArray(value)) {
+    return { files: value as AssetPackFile[] };
+  }
+
+  if (!value || typeof value !== "object") {
+    return { files: [] };
+  }
+
+  const candidate = value as Partial<AssetPackState> & { files?: unknown };
+  return {
+    files: Array.isArray(candidate.files) ? candidate.files as AssetPackFile[] : [],
+    coverage: candidate.coverage ?? null,
+    quality: candidate.quality ?? null,
+    plan: candidate.plan ?? null,
+  };
+}
+
+export async function saveAssetPack(slug: string, assetPack: AssetPackState): Promise<void> {
   try {
     await withDB(async (db) => {
       const tx = db.transaction(STORE_ASSET_PACK, "readwrite");
-      await idbPut(tx.objectStore(STORE_ASSET_PACK), files, slug);
+      await idbPut(tx.objectStore(STORE_ASSET_PACK), assetPack, slug);
     });
   } catch {
     // silent
   }
 }
 
-export async function loadAssetPack(slug: string): Promise<AssetPackFile[]> {
+export async function loadAssetPack(slug: string): Promise<AssetPackState> {
   try {
     return await withDB(async (db) => {
       const tx = db.transaction(STORE_ASSET_PACK, "readonly");
-      const result = await idbGet<AssetPackFile[]>(tx.objectStore(STORE_ASSET_PACK), slug);
-      return Array.isArray(result) ? result : [];
+      const result = await idbGet<AssetPackState | AssetPackFile[]>(tx.objectStore(STORE_ASSET_PACK), slug);
+      return normalizeAssetPackState(result);
     });
   } catch {
-    return [];
+    return { files: [] };
   }
 }
 

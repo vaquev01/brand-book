@@ -371,6 +371,15 @@ export interface AssetPackFile {
   content: string;
 }
 
+export interface AssetPackCoverage {
+  icons: number;
+  elements: number;
+  patterns: number;
+  motion: number;
+  total: number;
+  expectedTotal: number;
+}
+
 export type AssetPackQualityStatus = "pass" | "warn" | "fail";
 
 export interface AssetPackPlanIcon {
@@ -410,6 +419,13 @@ export interface AssetPackQualityReport {
   warnings: string[];
   issues: string[];
   buckets: AssetPackBucketQuality[];
+}
+
+export interface AssetPackState {
+  files: AssetPackFile[];
+  coverage?: AssetPackCoverage | null;
+  quality?: AssetPackQualityReport | null;
+  plan?: AssetPackPlan | null;
 }
 
 export interface ProductionColorSpec {

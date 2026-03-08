@@ -1,4 +1,4 @@
-import type { AssetPackFile, GeneratedAsset, UploadedAsset } from "@/lib/types";
+import type { AssetPackFile, AssetPackState, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import {
   clearGeneratedImages,
   isIndexedDBAvailable,
@@ -16,10 +16,28 @@ const BRAND_ASSETS_LS_PREFIX = "bb_brand_assets::";
 const ASSET_PACK_LS_PREFIX = "bb_asset_pack::";
 
 export type BrandbookSessionAssets = {
-  assetPackFiles: AssetPackFile[];
+  assetPack: AssetPackState;
   generatedAssets: Record<string, GeneratedAsset>;
   uploadedBrandAssets: UploadedAsset[];
 };
+
+function normalizeAssetPackState(value: unknown): AssetPackState {
+  if (Array.isArray(value)) {
+    return { files: value as AssetPackFile[] };
+  }
+
+  if (!value || typeof value !== "object") {
+    return { files: [] };
+  }
+
+  const candidate = value as Partial<AssetPackState> & { files?: unknown };
+  return {
+    files: Array.isArray(candidate.files) ? candidate.files as AssetPackFile[] : [],
+    coverage: candidate.coverage ?? null,
+    quality: candidate.quality ?? null,
+    plan: candidate.plan ?? null,
+  };
+}
 
 export function slugifyForStorage(name: string): string {
   return slugify(name);
@@ -59,17 +77,16 @@ export function loadCachedBrandAssets(slug: string): UploadedAsset[] {
   }
 }
 
-export function loadCachedAssetPack(slug: string): AssetPackFile[] {
-  if (typeof window === "undefined") return [];
-  if (!slug) return [];
+export function loadCachedAssetPack(slug: string): AssetPackState {
+  if (typeof window === "undefined") return { files: [] };
+  if (!slug) return { files: [] };
   try {
     const raw = localStorage.getItem(ASSET_PACK_LS_PREFIX + slug);
-    if (!raw) return [];
+    if (!raw) return { files: [] };
     const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed as AssetPackFile[];
+    return normalizeAssetPackState(parsed);
   } catch {
-    return [];
+    return { files: [] };
   }
 }
 
@@ -77,7 +94,7 @@ export async function loadBrandbookSessionAssets(slug: string): Promise<Brandboo
   const [generatedFromDb, uploadedFromDb, packFromDb] = await Promise.all([
     loadGeneratedImages(slug).catch(() => ({})),
     loadBrandAssets(slug).catch(() => []),
-    loadAssetPack(slug).catch(() => []),
+    loadAssetPack(slug).catch(() => ({ files: [] })),
   ]);
 
   return {
@@ -87,7 +104,7 @@ export async function loadBrandbookSessionAssets(slug: string): Promise<Brandboo
         : loadCachedGeneratedAssets(slug),
     uploadedBrandAssets:
       uploadedFromDb.length > 0 ? uploadedFromDb : loadCachedBrandAssets(slug),
-    assetPackFiles: packFromDb.length > 0 ? packFromDb : loadCachedAssetPack(slug),
+    assetPack: packFromDb.files.length > 0 ? packFromDb : loadCachedAssetPack(slug),
   };
 }
 
@@ -129,9 +146,9 @@ export async function migrateLegacyLocalStorageToIndexedDB(): Promise<void> {
     } catch {}
 
     try {
-      const assetPackFiles = loadCachedAssetPack(slug);
-      if (assetPackFiles.length > 0) {
-        await saveAssetPack(slug, assetPackFiles);
+      const assetPack = loadCachedAssetPack(slug);
+      if (Object.keys(assetPack).length > 0) {
+        await saveAssetPack(slug, assetPack);
         localStorage.removeItem(ASSET_PACK_LS_PREFIX + slug);
       }
     } catch {}

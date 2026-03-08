@@ -9,6 +9,7 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
   const differentiators = p.primaryDifferentiators ?? [];
   const alternatives = p.competitiveAlternatives ?? [];
   const rtbs = p.reasonsToBelieve ?? [];
+  const actionButtonClass = "no-print text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition";
 
   return (
     <section className="page-break mb-6">
@@ -16,9 +17,9 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
         {String(num).padStart(2, "0")}. Posicionamento
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-gray-50 p-4 rounded-lg border">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.04fr)_minmax(18rem,0.96fr)]">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-[1.25rem] border bg-gray-50 p-4 md:p-5">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Categoria</h3>
             <EditableField
               value={p.category}
@@ -28,7 +29,7 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
             />
           </div>
 
-          <div className="bg-gray-50 p-4 rounded-lg border">
+          <div className="rounded-[1.25rem] border bg-gray-50 p-4 md:p-5">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Mercado-alvo</h3>
             <EditableField
               value={p.targetMarket}
@@ -39,7 +40,7 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
             />
           </div>
 
-          <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-lg">
+          <div className="md:col-span-2 rounded-[1.4rem] border border-indigo-100 bg-indigo-50 p-4 md:p-5">
             <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-2">Positioning Statement</h3>
             <EditableField
               value={p.positioningStatement}
@@ -51,8 +52,8 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="bg-white border rounded-lg p-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+          <div className="bg-white border rounded-[1.25rem] p-4 md:p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold">Diferenciais</h3>
               {onUpdateData && (
@@ -61,13 +62,13 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
                     if (!prev.positioning) return prev;
                     return { ...prev, positioning: { ...prev.positioning, primaryDifferentiators: [...(prev.positioning.primaryDifferentiators || []), "Novo diferencial"] } };
                   })}
-                  className="no-print text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+                  className={actionButtonClass}
                 >
                   + Adicionar
                 </button>
               )}
             </div>
-            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2">
+            <ul className="list-disc pl-4 text-sm text-gray-700 space-y-1.5">
               {differentiators.map((d, i) => (
                 <li key={i} className="group/item">
                   <EditableField
@@ -90,7 +91,7 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
             </ul>
           </div>
 
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-white border rounded-[1.25rem] p-4 md:p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold">Alternativas / Concorrentes</h3>
               {onUpdateData && (
@@ -99,13 +100,13 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
                     if (!prev.positioning) return prev;
                     return { ...prev, positioning: { ...prev.positioning, competitiveAlternatives: [...(prev.positioning.competitiveAlternatives || []), "Novo concorrente"] } };
                   })}
-                  className="no-print text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+                  className={actionButtonClass}
                 >
                   + Adicionar
                 </button>
               )}
             </div>
-            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2">
+            <ul className="list-disc pl-4 text-sm text-gray-700 space-y-1.5">
               {alternatives.map((c, i) => (
                 <li key={i} className="group/item">
                   <EditableField
@@ -127,7 +128,7 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
             </ul>
           </div>
 
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-white border rounded-[1.25rem] p-4 md:p-5 md:col-span-2 xl:col-span-1">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold">Reasons to Believe</h3>
               {onUpdateData && (
@@ -136,13 +137,13 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
                     if (!prev.positioning) return prev;
                     return { ...prev, positioning: { ...prev.positioning, reasonsToBelieve: [...(prev.positioning.reasonsToBelieve || []), "Novo RTB"] } };
                   })}
-                  className="no-print text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+                  className={actionButtonClass}
                 >
                   + Adicionar
                 </button>
               )}
             </div>
-            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2">
+            <ul className="list-disc pl-4 text-sm text-gray-700 space-y-1.5">
               {rtbs.map((r, i) => (
                 <li key={i} className="group/item">
                   <EditableField

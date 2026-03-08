@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { AssetPackFile, BrandbookData, UploadedAsset } from "@/lib/types";
+import type { AssetPackFile, AssetPackQualityStatus, AssetPackState, BrandbookData, UploadedAsset } from "@/lib/types";
 import { downloadTextFile } from "@/lib/browserDownload";
 
 interface Props {
@@ -9,9 +9,46 @@ interface Props {
   num: number;
   uploadedAssets?: UploadedAsset[];
   generatedImages?: Record<string, string>;
-  assetPackFiles?: AssetPackFile[];
+  assetPack?: AssetPackState;
   generating?: boolean;
   onGenerate?: () => void;
+}
+
+const EXPECTED_BUCKET_COUNTS = {
+  icons: 16,
+  elements: 8,
+  patterns: 1,
+  motion: 2,
+} as const;
+
+function getStatusTone(status: AssetPackQualityStatus) {
+  if (status === "pass") {
+    return {
+      badge: "bg-green-50 border-green-200 text-green-700",
+      panel: "bg-green-50 border-green-200",
+      accent: "text-green-700",
+    };
+  }
+
+  if (status === "warn") {
+    return {
+      badge: "bg-amber-50 border-amber-200 text-amber-700",
+      panel: "bg-amber-50 border-amber-200",
+      accent: "text-amber-700",
+    };
+  }
+
+  return {
+    badge: "bg-red-50 border-red-200 text-red-700",
+    panel: "bg-red-50 border-red-200",
+    accent: "text-red-700",
+  };
+}
+
+function statusLabel(status: AssetPackQualityStatus) {
+  if (status === "pass") return "Aprovado";
+  if (status === "warn") return "Atenção";
+  return "Bloqueado";
 }
 
 function mimeFromPath(path: string): string {
@@ -64,8 +101,9 @@ function FileThumb({ file }: { file: AssetPackFile }) {
   );
 }
 
-export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImages = {}, assetPackFiles = [], generating = false, onGenerate }: Props) {
+export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImages = {}, assetPack = { files: [] }, generating = false, onGenerate }: Props) {
   const [previewFile, setPreviewFile] = useState<AssetPackFile | null>(null);
+  const assetPackFiles = assetPack.files;
 
   useEffect(() => {
     if (!previewFile) return;
@@ -93,19 +131,25 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
   const hasPatternImage = !!(generatedImages["brand_pattern"] || uploadedPatterns.length > 0);
   const hasMascotImage = !!(generatedImages["brand_mascot"] || uploadedMascots.length > 0);
 
-  const filledBuckets = [
-    { key: "icons",    label: "Vetor — Ícones",            files: byBucket.icons,    strip: "vectors/icons/" },
-    { key: "elements", label: "Vetor — Elementos Abstratos", files: byBucket.elements, strip: "vectors/elements/" },
-    { key: "patterns", label: "Vetor — Padrão (Seamless)",  files: byBucket.patterns, strip: "vectors/patterns/" },
-    { key: "motion",   label: "Motion — Animated SVG",      files: byBucket.motion,   strip: "motion/" },
-  ].filter((b) => b.files.length > 0);
-
   const emptyBuckets = [
     byBucket.icons.length === 0 && "Ícones",
     byBucket.elements.length === 0 && "Elementos",
     byBucket.patterns.length === 0 && "Padrão",
     byBucket.motion.length === 0 && "Motion",
   ].filter(Boolean) as string[];
+
+  const coverage = assetPack.coverage;
+  const quality = assetPack.quality;
+  const plan = assetPack.plan;
+  const overallTone = getStatusTone(quality?.status ?? "warn");
+  const bucketQualityMap = new Map((quality?.buckets ?? []).map((bucket) => [bucket.bucket, bucket]));
+
+  const bucketCards = [
+    { key: "icons", label: "Vetor — Ícones", files: byBucket.icons, strip: "vectors/icons/", expected: EXPECTED_BUCKET_COUNTS.icons, covered: coverage?.icons ?? byBucket.icons.length },
+    { key: "elements", label: "Vetor — Elementos Abstratos", files: byBucket.elements, strip: "vectors/elements/", expected: EXPECTED_BUCKET_COUNTS.elements, covered: coverage?.elements ?? byBucket.elements.length },
+    { key: "patterns", label: "Vetor — Padrão (Seamless)", files: byBucket.patterns, strip: "vectors/patterns/", expected: EXPECTED_BUCKET_COUNTS.patterns, covered: coverage?.patterns ?? byBucket.patterns.length },
+    { key: "motion", label: "Motion — Animated SVG", files: byBucket.motion, strip: "motion/", expected: EXPECTED_BUCKET_COUNTS.motion, covered: coverage?.motion ?? byBucket.motion.length },
+  ] as const;
 
   return (
     <section className="page-break mb-6">
@@ -138,14 +182,173 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
         </span>
       </div>
 
-      {filledBuckets.length > 0 && (
+      {quality && (
+        <div className={`mb-4 rounded-xl border p-4 ${overallTone.panel}`}>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${overallTone.badge}`}>
+                  Quality Gate · {statusLabel(quality.status)}
+                </span>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border bg-white/80 border-white text-gray-700">
+                  Score {quality.score}/100
+                </span>
+                {coverage && (
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border bg-white/80 border-white text-gray-700">
+                    Cobertura {coverage.total}/{coverage.expectedTotal}
+                  </span>
+                )}
+              </div>
+              <div className="mt-2 text-sm font-semibold text-gray-900">{quality.summary}</div>
+              {quality.status === "fail" && (
+                <div className={`mt-2 text-xs font-semibold ${overallTone.accent}`}>
+                  O pack foi gerado, mas a avaliação semântica indica que ele ainda precisa de correções para handoff profissional.
+                </div>
+              )}
+            </div>
+            {quality.strengths.length > 0 && (
+              <div className="lg:max-w-xs">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Pontos fortes</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {quality.strengths.slice(0, 4).map((strength) => (
+                    <span key={strength} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/80 border border-white text-gray-700">
+                      {strength}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {(quality.warnings.length > 0 || quality.issues.length > 0) && (
+            <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {quality.warnings.length > 0 && (
+                <div className="rounded-lg border border-white bg-white/70 p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Warnings</div>
+                  <div className="mt-2 space-y-1">
+                    {quality.warnings.slice(0, 4).map((warning) => (
+                      <div key={warning} className="text-xs text-gray-700">{warning}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {quality.issues.length > 0 && (
+                <div className="rounded-lg border border-white bg-white/70 p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Issues críticos</div>
+                  <div className="mt-2 space-y-1">
+                    {quality.issues.slice(0, 4).map((issue) => (
+                      <div key={issue} className="text-xs text-gray-700">{issue}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {plan && (
+        <div className="mb-4 rounded-xl border bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 lg:max-w-2xl">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Plano criativo</div>
+              <div className="mt-2 text-sm font-semibold text-gray-900">{plan.creativeThesis}</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {plan.shapeLanguage.slice(0, 5).map((item) => (
+                  <span key={item} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-50 border text-gray-700">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:w-[26rem]">
+              <div className="rounded-lg border bg-gray-50 p-3">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Motivos centrais</div>
+                <div className="mt-2 space-y-1">
+                  {plan.coreMotifs.slice(0, 4).map((item) => (
+                    <div key={item} className="text-xs text-gray-700">{item}</div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-lg border bg-gray-50 p-3">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Evitar</div>
+                <div className="mt-2 space-y-1">
+                  {plan.avoidMotifs.slice(0, 4).map((item) => (
+                    <div key={item} className="text-xs text-gray-700">{item}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="rounded-lg border bg-gray-50 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Diretriz de ícones</div>
+              <div className="mt-2 text-xs text-gray-700 leading-relaxed">{plan.bucketDirectives.icons}</div>
+            </div>
+            <div className="rounded-lg border bg-gray-50 p-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Diretriz de elementos e motion</div>
+              <div className="mt-2 text-xs text-gray-700 leading-relaxed">
+                {plan.bucketDirectives.elements}
+                <div className="mt-2">{plan.bucketDirectives.motion}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bucketCards.some((bucket) => bucket.files.length > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-          {filledBuckets.map((bucket) => (
+          {bucketCards.filter((bucket) => bucket.files.length > 0).map((bucket) => {
+            const bucketQuality = bucketQualityMap.get(bucket.key);
+            const bucketTone = getStatusTone(bucketQuality?.status ?? "warn");
+
+            return (
             <div key={bucket.key} className="bg-white border rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-gray-900 text-sm">{bucket.label}</h3>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-sm">{bucket.label}</h3>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${bucketTone.badge}`}>
+                      {statusLabel(bucketQuality?.status ?? "warn")}
+                    </span>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border bg-gray-50 border-gray-200 text-gray-600">
+                      Cobertura {bucket.covered}/{bucket.expected}
+                    </span>
+                    {bucketQuality && (
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border bg-gray-50 border-gray-200 text-gray-600">
+                        Score {bucketQuality.score}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <span className="text-[10px] text-gray-400">{bucket.files.length} arq.</span>
               </div>
+
+              {bucketQuality && (
+                <div className={`mb-3 rounded-lg border p-3 ${bucketTone.panel}`}>
+                  {bucketQuality.strengths.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Fortes</div>
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        {bucketQuality.strengths.slice(0, 3).map((strength) => (
+                          <span key={strength} className="text-[11px] font-semibold px-2 py-1 rounded-full bg-white/80 border border-white text-gray-700">
+                            {strength}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {bucketQuality.issues.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {bucketQuality.issues.slice(0, 3).map((issue) => (
+                        <div key={issue} className="text-xs text-gray-700">{issue}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 {bucket.files.slice(0, 8).map((f) => (
                   <div key={f.path} className="flex items-center justify-between gap-3 border rounded-lg px-3 py-1.5 bg-gray-50">
@@ -173,7 +376,8 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -8,7 +8,7 @@ import {
   rgba,
 } from "./BrandImmersiveTheme";
 
-import { BrandbookData, UploadedAsset, GeneratedAsset, Colors, type AiTextProvider, type AssetPackFile } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset, Colors, type AiTextProvider, type AssetPackState } from "@/lib/types";
 import { SectionCover } from "./sections/SectionCover";
 import { FontLoader } from "./FontLoader";
 import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
@@ -77,7 +77,7 @@ interface Props {
   data: BrandbookData;
   generatedImages?: Record<string, string>;
   uploadedAssets?: UploadedAsset[];
-  assetPackFiles?: AssetPackFile[];
+  assetPack?: AssetPackState;
   assetPackGenerating?: boolean;
   onGenerateAssetPack?: () => void;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
@@ -94,7 +94,7 @@ export function BrandbookViewer({
   data,
   generatedImages = {},
   uploadedAssets = [],
-  assetPackFiles = [],
+  assetPack = { files: [] },
   assetPackGenerating = false,
   onGenerateAssetPack,
   onUpdateApplicationImageKey,
@@ -125,7 +125,7 @@ export function BrandbookViewer({
   });
 
   const sectionDefs = buildSectionDefs({
-    assetPackFiles,
+    assetPack,
     assetPackGenerating,
     data,
     generatedAssets,
@@ -247,7 +247,7 @@ export function BrandbookViewer({
 
   return (
     <div
-      className={`w-full px-4 sm:px-6 ${immersive ? "bb-immersive" : ""}`}
+      className={`w-full px-3 sm:px-4 lg:px-5 ${immersive ? "bb-immersive" : ""}`}
       id="brandbook-content"
       style={immersiveStyle}
     >
@@ -336,7 +336,7 @@ export function BrandbookViewer({
 
       {/* Generation Control Bar */}
       {hasGeneration && (
-        <div className="no-print sticky top-12 z-30 bg-white/95 backdrop-blur border rounded-xl p-4 mb-8 shadow-sm">
+        <div className="no-print sticky top-12 z-30 bg-white/95 backdrop-blur border rounded-xl p-3 sm:p-4 mb-6 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Provider:</span>
@@ -396,14 +396,14 @@ export function BrandbookViewer({
         </div>
       )}
 
-      <section className="page-break mb-10" id="sumario">
+      <section className="page-break mb-8 md:mb-9" id="sumario">
         <div
-          className={immersive ? "bb-section-shell" : "rounded-[1.85rem] border px-5 py-6 md:px-7 md:py-8"}
+          className={immersive ? "bb-section-shell" : "rounded-[1.7rem] border px-4 py-5 md:px-6 md:py-6"}
           style={immersive ? undefined : defaultShellStyle}
         >
           {/* Sumário header */}
           {immersive ? (
-            <div className="mb-6">
+            <div className="mb-5">
               <div className="flex items-center gap-3 mb-1">
                 <div
                   style={{
@@ -428,7 +428,7 @@ export function BrandbookViewer({
               <ColorStrip />
             </div>
           ) : (
-            <div className="mb-6 border-b pb-4" style={{ borderColor: rgba(theme.primaryHex, 0.08) }}>
+            <div className="mb-5 border-b pb-3" style={{ borderColor: rgba(theme.primaryHex, 0.08) }}>
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
                   <div
@@ -465,17 +465,17 @@ export function BrandbookViewer({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 items-start">
             {byCategory.map((g) => (
               <div
                 key={g.cat}
-                className={`rounded-2xl p-5 shadow-sm ${
+                className={`rounded-2xl p-4 shadow-sm ${
                   immersive ? "bb-sumario-card" : "border"
                 }`}
                 style={immersive ? undefined : defaultCardStyle}
               >
                 {immersive && <div className="bb-sumario-mascot" aria-hidden="true" />}
-                <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="mb-2.5 flex items-start justify-between gap-3">
                   <h3
                     className={`text-[11px] font-extrabold uppercase tracking-[0.25em] ${
                       immersive ? "bb-sumario-cat" : ""
@@ -498,7 +498,7 @@ export function BrandbookViewer({
                     <a
                       key={s.id}
                       href={`#${s.id}`}
-                      className="block rounded-xl px-3 py-2.5 transition"
+                      className="block rounded-xl px-3 py-2 transition"
                       style={immersive ? undefined : { background: "transparent" }}
                     >
                       <div className="flex items-start gap-3">
@@ -517,7 +517,7 @@ export function BrandbookViewer({
                   ))}
                 </div>
                 {!immersive && (
-                  <div className="mt-4 h-px" style={{ background: `linear-gradient(90deg, ${rgba(theme.primaryHex, 0.12)} 0%, transparent 100%)` }} />
+                  <div className="mt-3 h-px" style={{ background: `linear-gradient(90deg, ${rgba(theme.primaryHex, 0.12)} 0%, transparent 100%)` }} />
                 )}
               </div>
             ))}
@@ -525,7 +525,7 @@ export function BrandbookViewer({
 
           {/* Brand identity watermark in sumário */}
           {immersive && (
-            <div className="mt-6 flex items-center justify-between" style={{ opacity: 0.4 }}>
+            <div className="mt-5 flex items-center justify-between" style={{ opacity: 0.4 }}>
               <div className="flex gap-1.5">
                 {theme.allColors.slice(0, 6).map((c, i) => (
                   <div
@@ -594,7 +594,7 @@ export function BrandbookViewer({
                   </div>
                 );
               })()}
-              <div className="page-break mb-6 mt-8">
+              <div className="page-break mb-5 mt-7">
                 {immersive ? (
                   <div className="bb-cat-banner">
                     <div className="flex items-center justify-between">
@@ -612,7 +612,7 @@ export function BrandbookViewer({
                   </div>
                 ) : (
                   <div
-                    className="rounded-[1.6rem] border px-5 py-5 md:px-6"
+                    className="rounded-[1.45rem] border px-4 py-4 md:px-5"
                     style={{
                       background: `linear-gradient(135deg, rgba(255,255,255,0.98) 0%, ${rgba(theme.accentHex, 0.08)} 100%)`,
                       borderColor: rgba(theme.primaryHex, 0.08),
@@ -643,7 +643,7 @@ export function BrandbookViewer({
               </div>
             </>
           ) : (
-            <div className="page-break mb-4 mt-6">
+            <div className="page-break mb-3 mt-5">
               <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                 <h2 className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-gray-500">{g.cat}</h2>
                 <a href="#sumario" className="no-print text-sm font-semibold text-gray-600 hover:text-gray-900">
@@ -672,7 +672,7 @@ export function BrandbookViewer({
                 )}
 
                 <div
-                  className={immersive ? "bb-section-shell" : "rounded-[1.75rem] border px-5 py-5 md:px-7 md:py-7"}
+                  className={immersive ? "bb-section-shell" : "rounded-[1.6rem] border px-4 py-4 md:px-6 md:py-5"}
                   style={immersive ? undefined : defaultShellStyle}
                 >
                   {immersive && <div className="bb-section-mascot" aria-hidden="true" />}
@@ -698,7 +698,7 @@ export function BrandbookViewer({
                   )}
 
                   {quote && (
-                    <div className="bb-voice mb-5 px-5 py-4 rounded-xl border">
+                    <div className="bb-voice mb-4 px-4 py-3 rounded-xl border">
                       <div className="flex items-center gap-2 mb-2">
                         <div
                           style={{

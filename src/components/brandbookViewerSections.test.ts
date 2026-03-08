@@ -31,7 +31,7 @@ describe("brandbookViewerSections", () => {
 
   it("builds core sections for a full brandbook fixture", () => {
     const sections = buildSectionDefs({
-      assetPackFiles: [],
+      assetPack: { files: [] },
       assetPackGenerating: false,
       data: saasExample,
       generatedAssets: {} as Record<string, GeneratedAsset>,

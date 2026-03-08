@@ -6,6 +6,11 @@ import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset, type AiTex
 import { ASSET_CATALOG, buildImagePrompt, buildApplicationPrompt, detectSizeVariants, AssetKey, AspectRatioOption } from "@/lib/imagePrompts";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
 import { downloadImageUrl, fetchImageDataUrl } from "@/lib/imageTransport";
+import {
+  composeImagePromptClient,
+  hasPromptOpsProviderKey,
+  refineImagePromptClient,
+} from "@/lib/imagePromptClient";
 import { readJsonResponse } from "@/lib/http";
 
 interface Props {
@@ -218,27 +223,16 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
       const basePrompt = buildApplicationPrompt(app, data, provider, aspectRatio);
       let prompt = basePrompt;
       if (refineBeforeGenerate) {
-        const hasTextKey = (promptProvider === "openai" && !!apiKeys.openai) || (promptProvider === "gemini" && !!apiKeys.google);
+        const hasTextKey = hasPromptOpsProviderKey(promptProvider, apiKeys);
         if (hasTextKey) {
-          const refineRes = await fetch("/api/refine-image-prompt", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              basePrompt,
-              imageProvider: provider,
-              assetKey: "brand_collateral",
-              textProvider: promptProvider,
-              openaiKey: apiKeys.openai || undefined,
-              googleKey: apiKeys.google || undefined,
-              openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-              googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-            }),
+          const refinedPrompt = await refineImagePromptClient({
+            basePrompt,
+            imageProvider: provider,
+            assetKey: "brand_collateral",
+            promptProvider,
+            apiKeys,
           });
-          const refineJson = await readJsonResponse<{ prompt?: string; error?: string }>(
-            refineRes,
-            "/api/refine-image-prompt"
-          );
-          if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
+          if (refinedPrompt) prompt = refinedPrompt;
         }
       }
       const canUseRefImages = provider === "imagen" && !!apiKeys.google && useReferenceImages;
@@ -299,28 +293,17 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
 
       if (refineBeforeGenerate) {
         const canRefine = !isStrictLogoAsset(assetKey) && ((provider !== "stability") || prompt.includes(" --neg "));
-        const hasTextKey = (promptProvider === "openai" && !!apiKeys.openai) || (promptProvider === "gemini" && !!apiKeys.google);
+        const hasTextKey = hasPromptOpsProviderKey(promptProvider, apiKeys);
         if (canRefine && hasTextKey) {
-          const refineRes = await fetch("/api/refine-image-prompt", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              basePrompt,
-              imageProvider: provider,
-              assetKey,
-              textProvider: promptProvider,
-              openaiKey: apiKeys.openai || undefined,
-              googleKey: apiKeys.google || undefined,
-              openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-              googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-            }),
+          const refinedPrompt = await refineImagePromptClient({
+            basePrompt,
+            imageProvider: provider,
+            assetKey,
+            promptProvider,
+            apiKeys,
           });
-          const refineJson = await readJsonResponse<{ prompt?: string; error?: string }>(
-            refineRes,
-            "/api/refine-image-prompt"
-          );
-          if (refineRes.ok && refineJson.prompt) {
-            prompt = refineJson.prompt;
+          if (refinedPrompt) {
+            prompt = refinedPrompt;
           }
         }
       }
@@ -431,33 +414,17 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
     setCustomPrompt("");
 
     try {
-      const composeRes = await fetch("/api/compose-image-prompt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandbook: data,
-          brief: effectiveBrief,
-          imageProvider: provider,
-          aspectRatio: customAspectRatio,
-          creativity: customCreativity,
-          referenceImageDataUrl: customPieceDataUrl || undefined,
-          referenceImageMode: customPieceDataUrl ? customPieceMode : undefined,
-          textProvider: promptProvider,
-          openaiKey: apiKeys.openai || undefined,
-          googleKey: apiKeys.google || undefined,
-          openaiModel: promptProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-          googleModel: promptProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-        }),
+      const prompt = await composeImagePromptClient({
+        brandbook: data,
+        brief: effectiveBrief,
+        imageProvider: provider,
+        aspectRatio: customAspectRatio,
+        creativity: customCreativity,
+        referenceImageDataUrl: customPieceDataUrl || undefined,
+        referenceImageMode: customPieceDataUrl ? customPieceMode : undefined,
+        promptProvider,
+        apiKeys,
       });
-      const composeJson = await readJsonResponse<{ prompt?: string; error?: string }>(
-        composeRes,
-        "/api/compose-image-prompt"
-      );
-      if (!composeRes.ok || !composeJson.prompt) {
-        throw new Error(composeJson.error ?? "Erro ao compor prompt");
-      }
-
-      const prompt = composeJson.prompt;
       setCustomPrompt(prompt);
 
       const canUseRefImages =

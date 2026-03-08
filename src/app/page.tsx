@@ -14,13 +14,17 @@ import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
 import { SystemHealthBadge } from "@/components/SystemHealthBadge";
-import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackFile } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackState } from "@/lib/types";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { validateLooseBrandbook } from "@/lib/brandbookValidation";
 import { decompressBrandbook } from "@/lib/shareUtils";
 import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
 import { downloadBlob, downloadJsonFile } from "@/lib/browserDownload";
+import {
+  hasPromptOpsProviderKey,
+  refineImagePromptClient,
+} from "@/lib/imagePromptClient";
 import {
   clearBrandbookGeneratedAssetSession,
   loadBrandbookSessionAssets,
@@ -59,10 +63,6 @@ function isAiTextProvider(value: string | null | undefined): value is AiTextProv
   return value === "openai" || value === "gemini";
 }
 
-function hasTextProviderKey(provider: AiTextProvider, keys: ApiKeys): boolean {
-  return provider === "openai" ? !!keys.openai : !!keys.google;
-}
-
 function pickDefaultTextProvider(keys: ApiKeys): AiTextProvider {
   if (keys.openai) return "openai";
   if (keys.google) return "gemini";
@@ -72,7 +72,7 @@ function pickDefaultTextProvider(keys: ApiKeys): AiTextProvider {
 function resolveTextProviderPreference(rawValue: string | null | undefined, keys: ApiKeys): AiTextProvider {
   const fallback = pickDefaultTextProvider(keys);
   if (!isAiTextProvider(rawValue)) return fallback;
-  if (hasTextProviderKey(rawValue, keys) || (!keys.openai && !keys.google)) return rawValue;
+  if (hasPromptOpsProviderKey(rawValue, keys) || (!keys.openai && !keys.google)) return rawValue;
   return fallback;
 }
 
@@ -95,7 +95,7 @@ export default function Home() {
   const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
   const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
-  const [assetPackFiles, setAssetPackFiles] = useState<AssetPackFile[]>([]);
+  const [assetPack, setAssetPack] = useState<AssetPackState>({ files: [] });
   const [assetPackGenerating, setAssetPackGenerating] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const strategyProvider = useAppPreferencesStore(selectStrategyProvider);
@@ -107,6 +107,7 @@ export default function Home() {
   const [exportingPack, setExportingPack] = useState(false);
   const [undoStack, setUndoStack] = useState<BrandbookData[]>([]);
   const [redoStack, setRedoStack] = useState<BrandbookData[]>([]);
+  const assetPackFiles = assetPack.files;
 
   useEffect(() => {
     brandbookRef.current = brandbookData;
@@ -159,7 +160,7 @@ export default function Home() {
     const session = await loadBrandbookSessionAssets(slug);
     setGeneratedAssets(session.generatedAssets);
     setUploadedBrandAssets(session.uploadedBrandAssets);
-    setAssetPackFiles(session.assetPackFiles);
+    setAssetPack(session.assetPack);
     if (options.nextViewerTab) setViewerTab(options.nextViewerTab);
     if (options.nextTab) setTab(options.nextTab);
     setError("");
@@ -176,11 +177,11 @@ export default function Home() {
     const logoKeys: AssetKey[] = ["logo_primary", "logo_dark_bg"];
     const slug = slugifyForStorage(bbData.brandName);
     const session = await loadBrandbookSessionAssets(slug).catch((): {
-      assetPackFiles: AssetPackFile[];
+      assetPack: AssetPackState;
       generatedAssets: Record<string, GeneratedAsset>;
       uploadedBrandAssets: UploadedAsset[];
     } => ({
-      assetPackFiles: [],
+      assetPack: { files: [] },
       generatedAssets: {},
       uploadedBrandAssets: [],
     }));
@@ -201,28 +202,17 @@ export default function Home() {
         const basePrompt = buildImagePrompt(assetKey, bbData, provider);
         let prompt = basePrompt;
 
-        const hasTextKey = hasTextProviderKey(promptProvider, keys);
+        const hasTextKey = hasPromptOpsProviderKey(promptProvider, keys);
         if (hasTextKey) {
           try {
-            const refineRes = await fetch("/api/refine-image-prompt", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                basePrompt,
-                imageProvider: provider,
-                assetKey,
-                textProvider: promptProvider,
-                openaiKey: keys.openai || undefined,
-                googleKey: keys.google || undefined,
-                openaiModel: promptProvider === "openai" ? keys.openaiTextModel || undefined : undefined,
-                googleModel: promptProvider === "gemini" ? keys.googleTextModel || undefined : undefined,
-              }),
+            const refinedPrompt = await refineImagePromptClient({
+              basePrompt,
+              imageProvider: provider,
+              assetKey,
+              promptProvider,
+              apiKeys: keys,
             });
-            const refineJson = await readJsonResponse<{ prompt?: string }>(
-              refineRes,
-              "/api/refine-image-prompt"
-            );
-            if (refineRes.ok && refineJson.prompt) prompt = refineJson.prompt;
+            if (refinedPrompt) prompt = refinedPrompt;
           } catch { /* use base prompt */ }
         }
 
@@ -531,7 +521,7 @@ export default function Home() {
   async function handleGenerateAssetPack() {
     if (!brandbookData) return;
 
-    const hasKey = hasTextProviderKey(promptOpsProvider, apiKeys);
+    const hasKey = hasPromptOpsProviderKey(promptOpsProvider, apiKeys);
     if (!hasKey) {
       setError("Configure uma chave de IA (OpenAI ou Google) para gerar o Asset Pack.");
       return;
@@ -556,13 +546,18 @@ export default function Home() {
           googleModel: promptOpsProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
         }),
       });
-      const j = await readJsonResponse<{ files?: AssetPackFile[]; error?: string }>(
+      const j = await readJsonResponse<(AssetPackState & { error?: string }) | { error?: string }>(
         res,
         "/api/generate-asset-pack"
-      ).catch((): { files?: AssetPackFile[]; error?: string } => ({}));
+      ).catch((): { error?: string } => ({}));
       if (!res.ok) throw new Error(j.error ?? "Erro ao gerar Asset Pack");
-      if (!j.files || !Array.isArray(j.files)) throw new Error("Resposta inválida ao gerar Asset Pack");
-      setAssetPackFiles(j.files);
+      if (!("files" in j) || !Array.isArray(j.files)) throw new Error("Resposta inválida ao gerar Asset Pack");
+      setAssetPack({
+        files: j.files,
+        coverage: j.coverage ?? null,
+        quality: j.quality ?? null,
+        plan: j.plan ?? null,
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao gerar Asset Pack");
     } finally {
@@ -597,8 +592,8 @@ export default function Home() {
   useEffect(() => {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
-    saveAssetPack(slug, assetPackFiles).catch(() => {});
-  }, [assetPackFiles, brandbookData]);
+    saveAssetPack(slug, assetPack).catch(() => {});
+  }, [assetPack, brandbookData]);
 
   function handleClearImageCache() {
     if (!brandbookData) return;
@@ -632,8 +627,8 @@ export default function Home() {
     setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
   }
 
-  const strategyProviderHasKey = hasTextProviderKey(strategyProvider, apiKeys);
-  const promptOpsProviderHasKey = hasTextProviderKey(promptOpsProvider, apiKeys);
+  const strategyProviderHasKey = hasPromptOpsProviderKey(strategyProvider, apiKeys);
+  const promptOpsProviderHasKey = hasPromptOpsProviderKey(promptOpsProvider, apiKeys);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -970,7 +965,7 @@ export default function Home() {
                   Object.entries(generatedAssets).map(([k, v]) => [k, v.url])
                 )}
                 uploadedAssets={uploadedBrandAssets}
-                assetPackFiles={assetPackFiles}
+                assetPack={assetPack}
                 assetPackGenerating={assetPackGenerating}
                 onGenerateAssetPack={handleGenerateAssetPack}
                 generatedAssets={generatedAssets}

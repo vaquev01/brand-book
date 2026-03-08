@@ -5,6 +5,10 @@ import type { BrandbookData } from "@/lib/types";
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { fnv1a32 } from "@/lib/common";
 import { buildBrandNameFidelityLines } from "@/lib/brandNameFidelity";
+import {
+  buildImageGenerationFrameworkPrimer,
+  buildImageGenerationIntentSummary,
+} from "@/lib/imageGenerationIntention";
 
 export const runtime = "nodejs";
 
@@ -34,9 +38,24 @@ function visualSystemId(brandbook: BrandbookData): string {
   return `BBVS-${hex}`;
 }
 
-function compactBrandContext(brandbook: BrandbookData): string {
+function compactBrandContext(
+  brandbook: BrandbookData,
+  options?: {
+    brief?: string;
+    aspectRatio?: string;
+    creativity?: "consistent" | "balanced" | "creative";
+    referenceImageMode?: "strict" | "guided" | "loose" | "remix" | "none";
+  }
+): string {
   const brandName = brandbook.brandName ?? "";
   const industry = brandbook.industry ?? "";
+  const generativeIntent = buildImageGenerationIntentSummary({
+    brandbook,
+    brief: options?.brief,
+    aspectRatio: options?.aspectRatio,
+    creativity: options?.creativity,
+    referenceImageMode: options?.referenceImageMode,
+  });
 
   const purpose = brandbook.brandConcept?.purpose ?? "";
   const personality = Array.isArray(brandbook.brandConcept?.personality)
@@ -119,6 +138,7 @@ function compactBrandContext(brandbook: BrandbookData): string {
   ].filter(Boolean).join(" ");
 
   return [
+    buildImageGenerationFrameworkPrimer(),
     `VISUAL_SYSTEM_ID: ${visualSystemId(brandbook)}.`,
     `Brand: ${brandName} (${industry})`,
     ...brandNameFidelity,
@@ -136,6 +156,7 @@ function compactBrandContext(brandbook: BrandbookData): string {
     `BRAND_COHERENCE_SCORECARD: ${scorecard}`,
     `CREATIVE_PLAN: ${creativePlan}`,
     `CONSCIOUS_CREATION_MODE: ${consciousCreationMode}`,
+    generativeIntent,
     tree ? tree : "",
     compositionPhilosophy ? `Signature composition: ${compositionPhilosophy}` : "",
     elements ? `Key visual elements: ${elements}` : "",
@@ -224,6 +245,8 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `Você é um Diretor de Arte Sênior de classe mundial — referência em branding, prompt engineering para IA e design com alma. Você pensa como Paula Scher, Stefan Sagmeister e David Carson combinados: cada decisão visual carrega intenção, emoção e significado.
 
+${buildImageGenerationFrameworkPrimer()}
+
 Tarefa: Dado o contexto do brandbook e uma intenção curta do usuário, gere um prompt FINAL e completo para gerar uma imagem com qualidade de estúdio top-tier.
 
 COMO PENSAR (antes de escrever o prompt):
@@ -311,7 +334,12 @@ CREATIVITY_MODE: ${creativity}
 REFERENCE_IMAGE_MODE: ${referenceImageDataUrl ? referenceImageMode : "none"}
 
 BRANDBOOK CONTEXT:
-${compactBrandContext(body.brandbook)}
+${compactBrandContext(body.brandbook, {
+  brief,
+  aspectRatio: ratio,
+  creativity,
+  referenceImageMode: referenceImageDataUrl ? referenceImageMode : "none",
+})}
 
 USER INTENT (short):
 ${brief}`;

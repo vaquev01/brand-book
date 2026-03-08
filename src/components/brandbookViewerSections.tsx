@@ -18,7 +18,7 @@ import { SectionTypographyScale } from "./sections/SectionTypographyScale";
 import { SectionUiGuidelines } from "./sections/SectionUiGuidelines";
 import { SectionUxMicrocopyMotion } from "./sections/SectionUxMicrocopyMotion";
 import { SectionVerbalIdentity } from "./sections/SectionVerbalIdentity";
-import type { AssetPackFile, BrandbookData, Colors, GeneratedAsset, UploadedAsset } from "@/lib/types";
+import type { AssetPackState, BrandbookData, Colors, GeneratedAsset, UploadedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 
 export type Category =
@@ -66,7 +66,7 @@ export type BrandbookViewerImageGenerationControls = {
 };
 
 export function buildSectionDefs({
-  assetPackFiles,
+  assetPack,
   assetPackGenerating,
   data,
   generatedAssets,
@@ -80,7 +80,7 @@ export function buildSectionDefs({
   onUpdateData,
   uploadedAssets,
 }: {
-  assetPackFiles: AssetPackFile[];
+  assetPack: AssetPackState;
   assetPackGenerating: boolean;
   data: BrandbookData;
   generatedAssets: Record<string, GeneratedAsset>;
@@ -286,7 +286,7 @@ export function buildSectionDefs({
           num={num}
           uploadedAssets={uploadedAssets}
           generatedImages={generatedImages}
-          assetPackFiles={assetPackFiles}
+          assetPack={assetPack}
           generating={assetPackGenerating}
           onGenerate={onGenerateAssetPack}
         />
