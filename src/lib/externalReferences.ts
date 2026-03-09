@@ -183,24 +183,42 @@ export async function fetchExternalReferences(input: unknown, maxUrls = 4): Prom
   return results;
 }
 
-export function formatExternalReferencesForPrompt(refs: ExternalReference[], maxExcerptChars = 700): string {
+export function formatExternalReferencesForPrompt(refs: ExternalReference[], maxExcerptChars = 1200): string {
   if (!refs || refs.length === 0) return "";
 
   const lines: string[] = [];
-  lines.push("\n\n--- REFERÊNCIAS EXTERNAS (EXTRATOS EXTRAÍDOS PELO SISTEMA) ---");
+  lines.push("\n\n════════════════════════════════════════");
+  lines.push("REFERÊNCIAS EXTERNAS (EXTRATOS EXTRAÍDOS PELO SISTEMA)");
+  lines.push("════════════════════════════════════════");
   lines.push("Use APENAS estes extratos como base. Não diga que você navegou na internet.");
+  lines.push("Para cada extrato, aplique o Protocolo de Mineração Profunda descrito acima.");
 
   refs.forEach((r, idx) => {
-    const head = `[${idx + 1}] ${r.finalUrl || r.url}`;
-    lines.push("\n" + head);
+    const finalUrl = r.finalUrl || r.url;
+    const head = `\n[${idx + 1}] ${finalUrl}`;
+    lines.push(head);
+
+    // Detect platform type for contextual hints
+    const urlLower = finalUrl.toLowerCase();
+    if (urlLower.includes("instagram.com")) {
+      lines.push("Plataforma: Instagram — extraia bio, categoria, estilo de feed, hashtags, linguagem visual");
+    } else if (urlLower.includes("linkedin.com")) {
+      lines.push("Plataforma: LinkedIn — extraia posicionamento profissional, setor, tom corporativo, headline");
+    } else if (urlLower.includes("tiktok.com")) {
+      lines.push("Plataforma: TikTok — extraia tom de vídeo, público jovem, tendências, estilo informal");
+    } else if (urlLower.includes("facebook.com")) {
+      lines.push("Plataforma: Facebook — extraia categoria, reviews, público, eventos, comunidade");
+    }
+
     if (!r.ok) {
       lines.push(`Status: ${r.status ?? "?"} (falha) — ${r.error ?? "Erro"}`);
+      lines.push("INFERÊNCIA: Mesmo sem acesso ao conteúdo, o domínio/URL indica plataforma e tipo de presença. Use como pista contextual.");
       return;
     }
     if (r.ogTitle || r.title) lines.push(`Título: ${r.ogTitle || r.title}`);
     if (r.ogDescription || r.description) lines.push(`Descrição: ${r.ogDescription || r.description}`);
     if (r.ogImage) lines.push(`OG Image: ${r.ogImage}`);
-    if (r.textExcerpt) lines.push(`Trecho: ${r.textExcerpt.slice(0, maxExcerptChars)}`);
+    if (r.textExcerpt) lines.push(`Trecho de conteúdo: ${r.textExcerpt.slice(0, maxExcerptChars)}`);
   });
 
   return lines.join("\n");

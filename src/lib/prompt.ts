@@ -462,7 +462,48 @@ Nicho/Indústria: ${industry}`;
 
   prompt += `\nTipo de projeto: ${projectMode === "rebrand" ? "RENOVAÇÃO / EVOLUÇÃO DE MARCA EXISTENTE" : "MARCA NOVA"}`;
 
-  prompt += `\n\nIMPORTANTE: Se o briefing incluir links (ex: Instagram, sites, LinkedIn), NÃO afirme que acessou ou navegou nesses links. Você não tem acesso à internet. Se o sistema fornecer EXTRATOS de referências externas, use APENAS esses extratos como contexto (título/descrição/trechos). Caso contrário, trate os links apenas como indícios de plataforma/público e baseie as decisões exclusivamente no texto fornecido e nas imagens anexadas.`;
+  prompt += `
+
+════════════════════════════════════════
+FASE 0 — DISSECAÇÃO OBRIGATÓRIA DOS INPUTS (ANTES DE GERAR QUALQUER COISA)
+════════════════════════════════════════
+Antes de começar a gerar o brandbook, execute internamente (sem expor no JSON) uma análise profunda de cada input. As conclusões desta fase DEVEM guiar TODAS as decisões do brandbook.
+
+1. DISSECAÇÃO DO NOME "${brandName}":
+   • FONÉTICA: O nome soa bouba (suave, redondo, acolhedor) ou kiki (cortante, angular, energético)? Que emoção o som das sílabas evoca?
+   • ETIMOLOGIA/SEMÂNTICA: O nome tem raiz em algum idioma? Referencia algo (natureza, mitologia, ciência, cultura, lugar)? Existe duplo sentido ou trocadilho?
+   • PESO VISUAL: O nome é curto (≤5 letras = logo compacto, pode ser bold) ou longo (≥10 letras = precisa de tracking generoso, pesos leves)? Tem ascendentes/descendentes que criam ritmo tipográfico?
+   • REGISTRO CULTURAL: O nome soa premium, popular, técnico, artesanal, jovem, corporativo? Esse registro DEVE alinhar com toneOfVoice e personality.
+   • UNICIDADE: O nome é inventado, composto, abreviação, ou palavra existente recontextualizada? Isso define o estágio evolutivo do logo (descritivo vs icônico).
+
+2. DISSECAÇÃO DA INDÚSTRIA "${industry}":
+   • CÓDIGOS VISUAIS DO SETOR: Quais são os clichês visuais deste setor? (Ex: fintech = azul + geometria; restaurante = kraft + lettering). IDENTIFIQUE para SUBVERTER com intenção ou HONRAR com excelência.
+   • TEMPERATURA EMOCIONAL DO SETOR: Este setor pede confiança? Prazer? Performance? Cuidado? Essa temperatura define a paleta base.
+   • PÚBLICO IMPLÍCITO: Quem tipicamente consome neste setor? (Faixa etária, poder aquisitivo, momento de vida). Use para calibrar personas e linguagem.
+   • TOUCHPOINTS CRÍTICOS: Onde esta marca REALMENTE vive? (Digital-first? Físico? Ambos? Redes sociais? PDV?). Isso define quais applications são prioritárias.
+   • CONCORRÊNCIA VISUAL: Quais são as 2-3 marcas mais reconhecidas neste setor? O que elas fazem bem visualmente? O que falta? Posicione-se em relação a elas.
+
+3. DISSECAÇÃO DO BRIEFING (se fornecido):
+   Extraia TODOS os sinais do texto do briefing, mesmo que implícitos:
+   • SINAIS DE PERSONALIDADE: Quais adjetivos (explícitos ou implícitos) o briefing sugere? (sofisticado, divertido, premium, acessível, artesanal, tech...)
+   • SINAIS DE PÚBLICO: Menção a faixa etária, classe social, estilo de vida, profissão, localização geográfica?
+   • SINAIS DE POSICIONAMENTO: O briefing sugere ser líder, desafiante, nicho, premium, popular, democrático?
+   • SINAIS VISUAIS: Cores mencionadas, estilos referenciados, materiais citados, marcas admiradas?
+   • SINAIS VERBAIS: Tom da escrita do briefing em si — formal? Coloquial? Técnico? Emocional? O PRÓPRIO tom do briefing é uma pista do tom desejado para a marca.
+   • CONTRADIÇÕES: Há pedidos contraditórios no briefing? (ex: "premium mas acessível", "minimalista mas rico"). Se sim, resolva a tensão de forma criativa no brandbook.
+   • LACUNAS: O que o briefing NÃO diz que você precisa inferir do contexto? Preencha com a decisão mais coerente com os sinais existentes.
+
+4. SÍNTESE PRÉ-CRIATIVA (conclusão obrigatória da Fase 0):
+   Com base nas 3 análises acima, defina INTERNAMENTE antes de gerar:
+   → TESE CENTRAL: Uma frase que sintetiza a essência da marca (ex: "precisão científica com alma artesanal")
+   → TERRITÓRIO VISUAL: O universo estético onde esta marca vive (ex: "minimalismo japonês encontra brutalismo paulistano")
+   → TENSÃO CRIATIVA: A dualidade que torna a marca interessante (ex: "tecnologia + humanidade", "tradição + irreverência")
+   → PRIMEIRA IMPRESSÃO ALVO: O que alguém deve sentir nos primeiros 3 segundos ao ver qualquer peça da marca
+   → DECISÃO HEROICA: Uma escolha visual corajosa e específica que diferencia esta marca de QUALQUER concorrente
+
+Todas as decisões do brandbook DEVEM ser rastreáveis a estas conclusões. Se uma escolha de cor, tipografia, ou tom de voz não puder ser justificada pela Fase 0, ela está errada.
+
+IMPORTANTE: Se o briefing incluir links (ex: Instagram, sites, LinkedIn), NÃO afirme que acessou ou navegou nesses links. Você não tem acesso à internet. Se o sistema fornecer EXTRATOS de referências externas, use APENAS esses extratos como contexto (título/descrição/trechos). Caso contrário, trate os links apenas como indícios de plataforma/público e baseie as decisões exclusivamente no texto fornecido e nas imagens anexadas.`;
 
   if (projectMode === "rebrand") {
     prompt += `
@@ -496,7 +537,22 @@ Sua responsabilidade é:
   if (hasExternalReferences) {
     prompt += `
 
-Se houver extratos externos fornecidos pelo sistema, trate-os como evidência complementar de marca existente — especialmente para bio, categoria, sinais de audiência, localização, naming, prova social e linguagem pública.`;
+════════════════════════════════════════
+REFERÊNCIAS EXTERNAS — PROTOCOLO DE MINERAÇÃO PROFUNDA
+════════════════════════════════════════
+O sistema forneceu extratos de URLs. Trate cada extrato como EVIDÊNCIA FORENSE da marca:
+
+EXTRAIR DE CADA REFERÊNCIA:
+• IDENTIDADE VERBAL: bio, tagline, tom de escrita, hashtags, calls to action — TUDO é pista de personalidade
+• CATEGORIA & NICHO: como a marca se auto-define? É diferente de como o mercado a classificaria?
+• SINAIS DE AUDIÊNCIA: quem interage? Que tipo de linguagem os seguidores usam? Faixa etária implícita?
+• PROVA SOCIAL: número de seguidores, tipo de engajamento, parcerias visíveis, menções de imprensa
+• CÓDIGOS VISUAIS RECORRENTES: cores que aparecem mais, estilo de foto, filtros, composição de feed
+• LINGUAGEM PROMOCIONAL: como vendem? Desconto? Exclusividade? Comunidade? Escassez?
+• LOCALIZAÇÃO & CONTEXTO CULTURAL: cidade, bairro, referências locais — isso define materialidade e tom
+• GAPS & OPORTUNIDADES: o que a presença digital atual NÃO faz bem? Onde o rebrand pode elevar?
+
+REGRA: Não repita os extratos literalmente no brandbook. INTERPRETE e TRANSFORME em decisões estratégicas e visuais. Os extratos são ingredientes brutos — o brandbook é o prato finalizado.`;
   }
 
   if (hasLogoImage) {
@@ -546,7 +602,49 @@ REGRA FUNDAMENTAL: O logo fornecido é a ÂNCORA IMUTÁVEL da identidade. TODAS 
     const imgLabel = hasLogoImage ? "IMAGENS DE REFERÊNCIA ADICIONAIS" : "IMAGENS DE REFERÊNCIA FORNECIDAS";
     const count = (referenceImageDescriptions?.length ?? 1) + (hasLogoImage ? 0 : 0);
     const startIndex = hasLogoImage ? 2 : 1;
-    prompt += `\n\n--- ${imgLabel} (a partir da imagem ${startIndex}, ${count} imagem${count > 1 ? "ns" : ""}) ---\nAnalise as imagens de referência. Extraia e incorpore no brandbook:\n• Paleta de cores e temperatura cromática\n• Estilo visual e movimento artístico\n• Atmosfera e mood emocional\n• Elementos gráficos, padrões e texturas\n• Estilo fotográfico\n• Se houver screenshots de Instagram/feed/fachada/cardápio/embalagem/ambiente, trate isso como evidência da marca atual em operação\n• Se houver imagens mais conceituais ou aspiracionais, trate isso como direção futura a ser absorvida de forma coerente\n\nPara screenshots de redes sociais e materiais reais, extraia especificamente:\n• bio, categoria e sinais de prova social quando visíveis\n• nomes de highlights/categorias de conteúdo\n• equilíbrio entre pessoas, produto, ambiente e peças gráficas\n• humor, linguagem promocional, temas recorrentes e calls to action\n• códigos visuais recorrentes (cor, tipografia, molduras, cantos botânicos, ícones, mascotes, sinalização)\n\nTraduza o que você viu também em estratégia e linguagem: ajuste positioning, brandConcept, verbalIdentity e socialMediaGuidelines para ficar coerente com a marca observada.\nIncorpore esses atributos nas seções: colors, keyVisual, applications, socialMediaGuidelines e imageGenerationBriefing.`;
+    prompt += `
+
+════════════════════════════════════════
+${imgLabel} (a partir da imagem ${startIndex}, ${count} imagem${count > 1 ? "ns" : ""})
+PROTOCOLO DE ANÁLISE FORENSE VISUAL
+════════════════════════════════════════
+
+Para CADA imagem de referência, execute uma análise em 4 camadas:
+
+CAMADA 1 — EVIDÊNCIA OBJETIVA (o que está na imagem):
+• Cores dominantes: extraia os 3-5 hexadecimais mais presentes
+• Tipografia visível: serif/sans/script/display? Peso? Tracking? Hierarchy?
+• Composição: centrada/assimétrica/grid? Densidade? Breathing room?
+• Materiais e texturas: papel/metal/madeira/tecido/digital/vidro?
+• Pessoas: faixa etária, estilo, expressão, contexto social?
+• Ambiente: interior/exterior/estúdio? Iluminação natural/artificial? Temperatura?
+• Elementos gráficos: ícones, padrões, ilustrações, formas, molduras?
+
+CAMADA 2 — EVIDÊNCIA DE MARCA EXISTENTE (se for screenshot/material real):
+• Bio, categoria, tagline — copie EXATAMENTE o que está escrito
+• Nomes de highlights, categorias, seções do menu/cardápio
+• Estilo de posts: proporção foto/gráfico/texto, filtros recorrentes
+• Linguagem promocional: como vendem? Tom? Vocabulário?
+• Prova social: seguidores, comentários, tipo de engajamento
+• Códigos visuais recorrentes: o que se repete entre materiais?
+
+CAMADA 3 — DECODIFICAÇÃO SEMIÓTICA (o que a imagem COMUNICA):
+• Que arquétipo de marca ela sugere? (Herói? Cuidador? Rebelde? Sábio?)
+• Que classe social/cultural ela projeta?
+• Que emoção ela provoca nos primeiros 0.5 segundos?
+• O que ela DIZ sobre o público-alvo sem dizer explicitamente?
+
+CAMADA 4 — TRADUÇÃO EM DECISÕES (o que isso MUDA no brandbook):
+• Como essa evidência impacta brandConcept? (personality, tone, archetype)
+• Como impacta positioning? (categoria, target, diferenciadores)
+• Como impacta colors? (paleta base, temperatura, contraste)
+• Como impacta typography? (estilo, peso, hierarchy)
+• Como impacta keyVisual? (elementos, composição, fotografia)
+• Como impacta verbalIdentity? (tom, vocabulário, messaging)
+• Como impacta socialMediaGuidelines? (pilares, frequência, formatos)
+• Como impacta applications? (materiais prioritários, dimensões relevantes)
+
+REGRA: Nenhuma imagem pode ser ignorada. Cada imagem DEVE deixar rastro em pelo menos 3 seções do brandbook.`;
     if (referenceImageDescriptions && referenceImageDescriptions.length > 0) {
       referenceImageDescriptions.forEach((desc, i) => {
         if (desc) prompt += `\nReferência ${i + 1}: ${desc}`;
