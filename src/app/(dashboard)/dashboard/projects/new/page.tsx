@@ -6,7 +6,7 @@ export default function NewProjectPage() {
   const router = useRouter()
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto animate-page-enter">
       <div className="mb-6">
         <Link href="/dashboard" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
           &larr; Dashboard

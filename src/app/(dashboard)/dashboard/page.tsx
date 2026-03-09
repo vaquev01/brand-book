@@ -18,59 +18,51 @@ export default async function DashboardPage() {
     include: { brandbookVersions: { take: 1, orderBy: { createdAt: "desc" } } },
   })
 
+  const totalProjects = projects.length
+  const withBrandbook = projects.filter((p) => p.brandbookVersions.length > 0).length
+  const inReview = projects.filter((p) => p.status === "in_review").length
+  const approved = projects.filter((p) => p.status === "approved").length
+
   return (
-    <div>
+    <div className="animate-page-enter">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Olá, {session?.user?.name?.split(" ")[0]} 👋
+            Olá, {session?.user?.name?.split(" ")[0]}
           </h1>
-          <p className="text-gray-500 mt-1">Seus brandbooks e projetos de marca</p>
+          <p className="text-gray-400 mt-1 text-sm">Seus brandbooks e projetos de marca</p>
         </div>
         <Link
           href="/dashboard/projects/new"
-          className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+          className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)",
+            boxShadow: "0 20px 40px -24px rgba(55, 48, 163, 0.6)",
+          }}
         >
-          ✦ Novo Brandbook
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          Novo Brandbook
         </Link>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: "Projetos", value: projects.length, icon: "📁" },
-          { label: "Brandbooks gerados", value: projects.filter((p) => p.brandbookVersions.length > 0).length, icon: "✦" },
-          { label: "Em revisão", value: projects.filter((p) => p.status === "in_review").length, icon: "👁" },
-          { label: "Aprovados", value: projects.filter((p) => p.status === "approved").length, icon: "✅" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-            <div className="text-2xl mb-2">{stat.icon}</div>
-            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-            <div className="text-sm text-gray-500">{stat.label}</div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard label="Projetos" value={totalProjects} delay={0} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>} />
+        <StatCard label="Brandbooks" value={withBrandbook} delay={1} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-violet-400"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>} />
+        <StatCard label="Em revisão" value={inReview} delay={2} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>} />
+        <StatCard label="Aprovados" value={approved} delay={3} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>} />
       </div>
 
       {/* Projects grid */}
       {projects.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
-          <div className="text-4xl mb-4">✦</div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum projeto ainda</h3>
-          <p className="text-gray-400 mb-6">Crie seu primeiro brandbook com IA em minutos</p>
-          <Link
-            href="/dashboard/projects/new"
-            className="bg-violet-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-violet-700 transition-colors"
-          >
-            Criar primeiro brandbook
-          </Link>
-        </div>
+        <EmptyState />
       ) : (
         <div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Projetos recentes</h2>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Projetos recentes</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+            {projects.map((project, i) => (
+              <ProjectCard key={project.id} project={project} index={i} />
             ))}
           </div>
         </div>
@@ -79,36 +71,106 @@ export default async function DashboardPage() {
   )
 }
 
-const statusColors: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-600",
-  in_review: "bg-yellow-100 text-yellow-700",
-  approved: "bg-green-100 text-green-700",
-  archived: "bg-gray-100 text-gray-400",
+function StatCard({ label, value, delay, icon }: { label: string; value: number; delay: number; icon: React.ReactNode }) {
+  return (
+    <div
+      className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm animate-fade-in-up stagger-${delay + 1}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center">
+          {icon}
+        </div>
+      </div>
+      <div className="text-2xl font-bold text-gray-900 animate-count-up">{value}</div>
+      <div className="text-xs text-gray-400 mt-1 font-medium">{label}</div>
+    </div>
+  )
 }
 
-function ProjectCard({ project }: { project: ProjectWithVersions }) {
+function EmptyState() {
+  return (
+    <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm animate-fade-in-up stagger-5">
+      <div className="animate-float mb-6 inline-flex">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-violet-500">
+            <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+          </svg>
+        </div>
+      </div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">Crie seu primeiro brandbook</h3>
+      <p className="text-gray-400 mb-8 max-w-sm mx-auto text-sm leading-relaxed">
+        Envie um logo ou descreva sua marca em poucas palavras — a IA gera uma identidade visual completa em minutos.
+      </p>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <Link
+          href="/dashboard/editor?tab=generate"
+          className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)",
+            boxShadow: "0 20px 40px -24px rgba(55, 48, 163, 0.6)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/></svg>
+          Gerar com IA
+        </Link>
+        <Link
+          href="/dashboard/editor?tab=examples"
+          className="inline-flex items-center gap-2 text-gray-600 bg-white border border-gray-200 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:border-gray-300 hover:bg-gray-50"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Ver exemplos
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+  draft: { bg: "bg-gray-100", text: "text-gray-500", label: "Rascunho" },
+  in_review: { bg: "bg-amber-50", text: "text-amber-600", label: "Em revisão" },
+  approved: { bg: "bg-emerald-50", text: "text-emerald-600", label: "Aprovado" },
+  archived: { bg: "bg-gray-50", text: "text-gray-400", label: "Arquivado" },
+}
+
+function ProjectCard({ project, index }: { project: ProjectWithVersions; index: number }) {
+  const status = statusConfig[project.status] ?? statusConfig.draft
+  const initial = project.name[0]?.toUpperCase() ?? "B"
+
+  // Generate consistent color from brand name
+  const hue = project.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
+
   return (
     <Link
-      href={`/?slug=${project.slug}`}
-      className="group bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md hover:border-violet-200 transition-all"
+      href={`/dashboard/editor?slug=${project.slug}`}
+      className={`group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-lg hover:border-violet-200/60 transition-all hover:-translate-y-0.5 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
-          {project.name[0].toUpperCase()}
-        </div>
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[project.status] ?? ""}`}
+      <div className="flex items-start justify-between mb-4">
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
+          style={{
+            background: `linear-gradient(135deg, hsl(${hue}, 65%, 52%) 0%, hsl(${(hue + 30) % 360}, 55%, 42%) 100%)`,
+          }}
         >
-          {project.status}
+          {initial}
+        </div>
+        <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold ${status.bg} ${status.text}`}>
+          {status.label}
         </span>
       </div>
-      <h3 className="font-semibold text-gray-900 truncate group-hover:text-violet-700 transition-colors">
+      <h3 className="font-bold text-gray-900 truncate group-hover:text-violet-700 transition-colors text-[15px]">
         {project.name}
       </h3>
-      <p className="text-xs text-gray-400 mt-1">{project.industry}</p>
-      <p className="text-xs text-gray-300 mt-3">
-        {new Date(project.updatedAt).toLocaleDateString("pt-BR")}
-      </p>
+      <p className="text-xs text-gray-400 mt-1 truncate">{project.industry}</p>
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
+        <p className="text-[11px] text-gray-300 font-medium">
+          {new Date(project.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+        </p>
+        {project.brandbookVersions.length > 0 && (
+          <span className="text-[10px] text-violet-500 font-semibold bg-violet-50 px-2 py-0.5 rounded-full">
+            v{project.brandbookVersions.length}
+          </span>
+        )}
+      </div>
     </Link>
   )
 }

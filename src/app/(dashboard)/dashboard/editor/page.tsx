@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "sonner";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
 import { ExampleCard } from "@/components/ExampleCard";
 import { JsonBySectionPanel } from "@/components/JsonBySectionPanel";
@@ -400,6 +401,9 @@ export default function Home() {
                 subject: "Brandbook gerado",
               });
               await restoreBrandbookSession(validated, { nextTab: "viewer" });
+              toast.success("Brandbook gerado com sucesso", {
+                description: `${validated.brandName} — ${validated.industry}`,
+              });
 
               // Auto-generate logo images
               const currentKeys = loadApiKeys();
@@ -416,6 +420,7 @@ export default function Home() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro desconhecido";
       setError(message);
+      toast.error("Falha na geração", { description: message.slice(0, 120) });
     } finally {
       setLoading(false);
       setGenerationPhase("");
@@ -480,6 +485,7 @@ export default function Home() {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
     downloadJsonFile(brandbookData, `${slug}-brandbook.json`);
+    toast.success("JSON exportado", { description: `${slug}-brandbook.json` });
   }
 
   async function handleExportProduction() {
@@ -497,8 +503,11 @@ export default function Home() {
       const manifest = generateProductionManifest(validatedBrandbook);
       const slug = slugifyForStorage(validatedBrandbook.brandName);
       downloadJsonFile(manifest, `${slug}-production-manifest.json`);
+      toast.success("Manifesto de produção exportado");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao exportar manifesto de produção");
+      const msg = e instanceof Error ? e.message : "Erro ao exportar manifesto de produção";
+      setError(msg);
+      toast.error("Falha na exportação", { description: msg.slice(0, 120) });
     }
   }
 
