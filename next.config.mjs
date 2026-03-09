@@ -1,3 +1,6 @@
+// Ensure AUTH_TRUST_HOST is set at build time for NextAuth middleware
+process.env.AUTH_TRUST_HOST = "true";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
