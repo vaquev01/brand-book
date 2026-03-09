@@ -32,14 +32,45 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
       <div className="space-y-6">
         <div>
           <h3 className="mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Manifesto</h3>
-          <div className="rounded-[1.8rem] border border-gray-900 bg-gray-950 px-6 py-6 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
-            <div className="text-[1.06rem] leading-8 text-gray-100 whitespace-pre-line">
-              <EditableField
-                value={s.manifesto}
-                onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, manifesto: val } } : prev)}
-                readOnly={!onUpdateData}
-                multiline
-              />
+          {/* Editorial manifesto — uses brand fonts + primary color via CSS variables */}
+          <div
+            className="rounded-[1.8rem] overflow-hidden shadow-[0_32px_80px_rgba(15,23,42,0.22)] relative"
+            style={{
+              background: `var(--bb-primary, #0a0a0a)`,
+              color: `var(--bb-bg, #ffffff)`,
+            }}
+          >
+            {/* Decorative rule */}
+            <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: `var(--bb-accent, #c0a060)` }} />
+            {/* Background texture */}
+            <div className="absolute inset-0 opacity-[0.06]" style={{
+              backgroundImage: `radial-gradient(circle at 20% 80%, var(--bb-accent, #c0a060) 0%, transparent 60%), radial-gradient(circle at 80% 20%, var(--bb-accent, #c0a060) 0%, transparent 50%)`,
+            }} />
+            <div className="relative px-7 py-10 md:px-10 md:py-14">
+              <div
+                className="text-[10px] font-bold uppercase tracking-[0.35em] mb-6 opacity-60"
+                style={{ color: `var(--bb-accent, #c0a060)` }}
+              >
+                Manifesto
+              </div>
+              <div
+                className="whitespace-pre-line leading-[1.65] opacity-95"
+                style={{
+                  fontFamily: `var(--bb-heading-font, 'Georgia', serif)`,
+                  fontSize: "clamp(1.15rem, 2.5vw, 1.5rem)",
+                  fontWeight: 600,
+                  color: `var(--bb-bg, #ffffff)`,
+                }}
+              >
+                <EditableField
+                  value={s.manifesto}
+                  onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, manifesto: val } } : prev)}
+                  readOnly={!onUpdateData}
+                  multiline
+                />
+              </div>
+              {/* Decorative bottom rule */}
+              <div className="mt-8 w-16 h-[2px] opacity-40" style={{ background: `var(--bb-accent, #c0a060)` }} />
             </div>
           </div>
         </div>

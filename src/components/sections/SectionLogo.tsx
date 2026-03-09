@@ -4,6 +4,7 @@ import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
+import { downloadJsonFile } from "@/lib/browserDownload";
 
 interface Props {
   data: BrandbookData;
@@ -45,6 +46,7 @@ function LogoCard({
   onDownload,
   onSaveToAssets,
   onPreview,
+  brandName,
 }: {
   title: string;
   image: string | null;
@@ -57,6 +59,7 @@ function LogoCard({
   onDownload?: (url: string, name: string) => void;
   onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
   onPreview?: (url: string, title: string) => void;
+  brandName?: string;
 }) {
   return (
     <div className="bg-white border rounded-xl overflow-hidden shadow-sm group">
@@ -78,6 +81,13 @@ function LogoCard({
                 Salvar
               </button>
             )}
+            <button
+              onClick={() => downloadJsonFile(generated, `${brandName ?? "brand"}-${assetKey}-spec.json`)}
+              className="text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded transition"
+              title="Exportar especificação de geração"
+            >
+              JSON
+            </button>
           </div>
         )}
       </div>
@@ -426,6 +436,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
             onDownload={onDownload}
             onSaveToAssets={onSaveToAssets}
             onPreview={(url, t) => setPreviewImage({ url, title: t })}
+            brandName={data.brandName}
           />
           {renderBriefingPanel("logo_primary")}
         </div>
@@ -442,10 +453,68 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
             onDownload={onDownload}
             onSaveToAssets={onSaveToAssets}
             onPreview={(url, t) => setPreviewImage({ url, title: t })}
+            brandName={data.brandName}
           />
           {renderBriefingPanel("logo_dark_bg")}
         </div>
       </div>
+
+      {/* Multi-background logo preview strip */}
+      {logoPrimary && (
+        <div className="mb-6">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Logo em diferentes fundos</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-[1.2rem] overflow-hidden border shadow-sm">
+            {[
+              { label: "Branco", bg: "#ffffff", border: true },
+              { label: "Preto", bg: "#0a0a0a" },
+              { label: "Primária", bg: data.colors.primary[0]?.hex ?? "#006B60" },
+              { label: "Secundária", bg: data.colors.primary[1]?.hex ?? data.colors.secondary[0]?.hex ?? "#D5A41D" },
+            ].map(({ label, bg, border }) => (
+              <div
+                key={label}
+                className={`flex flex-col items-center justify-center p-4 h-28 relative${border ? " border border-gray-100" : ""}`}
+                style={{ backgroundColor: bg }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoPrimary} alt={`Logo em ${label}`} className="max-h-14 max-w-full object-contain" />
+                <span className="absolute bottom-2 text-[9px] font-bold opacity-60" style={{ color: bg === "#ffffff" ? "#666" : "#fff" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Protection zone diagram */}
+      {data.logo.clearSpace && (
+        <div className="mb-6 bg-gray-50 border rounded-[1.2rem] p-5">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Zona de Proteção (Clear Space)</h3>
+          <div className="flex items-center justify-center">
+            <div className="relative inline-flex items-center justify-center">
+              {/* outer dashed zone */}
+              <div className="border-2 border-dashed border-indigo-300 rounded p-7 bg-white shadow-sm">
+                {/* inner logo area */}
+                <div className="border border-gray-200 bg-gray-100 rounded px-10 py-5 flex items-center justify-center min-w-[100px]">
+                  {logoPrimary
+                    ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={logoPrimary} alt="logo" className="max-h-10 object-contain opacity-70" />
+                    : <span className="text-gray-400 font-bold text-xs">LOGO</span>
+                  }
+                </div>
+                {/* arrows */}
+                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5">
+                  <span className="text-indigo-400 text-[9px] font-mono">↕</span>
+                </div>
+                <div className="absolute left-1.5 top-1/2 -translate-y-1/2">
+                  <span className="text-indigo-400 text-[9px] font-mono">↔</span>
+                </div>
+              </div>
+              {/* label */}
+              <div className="absolute -bottom-5 left-0 right-0 text-center text-[10px] text-indigo-500 font-semibold">
+                {data.logo.clearSpace}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Logo description cards */}
       {(secondaryText || symbolText) && (
@@ -546,10 +615,13 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
         )}
       </div>
 
-      {/* Incorrect usages */}
-      <div className="bg-red-50 border border-red-100 p-4 rounded-lg">
+      {/* Incorrect usages — visual cards */}
+      <div className="rounded-[1.2rem] border border-red-100 bg-red-50 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-red-800">Usos Incorretos</h3>
+          <div>
+            <h3 className="font-bold text-red-800">Usos Incorretos</h3>
+            <p className="text-[11px] text-red-400 mt-0.5">Estas aplicações comprometem a integridade da marca</p>
+          </div>
           {onUpdateData && (
             <button
               onClick={() => onUpdateData(prev => ({ ...prev, logo: { ...prev.logo, incorrectUsages: [...prev.logo.incorrectUsages, "Novo uso incorreto"] } }))}
@@ -559,9 +631,18 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
             </button>
           )}
         </div>
-        <ul className="list-disc pl-5 text-red-700 space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {data.logo.incorrectUsages.map((u, i) => (
-            <li key={i} className="group/item">
+            <div key={i} className="group/item bg-white border border-red-100 rounded-xl p-4 relative shadow-sm">
+              {/* X badge */}
+              <div className="absolute -top-2 -left-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-black shadow">✕</div>
+              {/* Faded logo preview (if available) */}
+              {logoPrimary && (
+                <div className="mb-2 flex items-center justify-center h-12 opacity-25 grayscale">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={logoPrimary} alt="" className="max-h-full max-w-full object-contain" />
+                </div>
+              )}
               <EditableField
                 value={u}
                 onSave={(val) => onUpdateData?.(prev => {
@@ -572,12 +653,12 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
                 onDelete={onUpdateData ? () => onUpdateData?.(prev => ({
                   ...prev, logo: { ...prev.logo, incorrectUsages: prev.logo.incorrectUsages.filter((_, idx) => idx !== i) }
                 })) : undefined}
-                className="text-sm"
+                className="text-sm text-red-700 leading-snug"
                 readOnly={!onUpdateData}
               />
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
 
       {/* Preview Modal */}

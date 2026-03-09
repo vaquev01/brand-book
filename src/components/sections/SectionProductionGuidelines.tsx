@@ -122,7 +122,7 @@ export function SectionProductionGuidelines({ data, num, onUpdateData }: { data:
                 )}
                 <div className="px-5 py-4 bg-gray-50 border-b">
                   <h4 className="font-bold text-gray-900"><EditableField value={pm.method} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, productionMethods: (prev.productionGuidelines.productionMethods || []).map((item, idx) => idx === i ? { ...item, method: val } : item) } } : prev)} readOnly={!onUpdateData} /></h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Substrato: <EditableField value={pm.substrate} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, productionMethods: (prev.productionGuidelines.productionMethods || []).map((item, idx) => idx === i ? { ...item, substrate: val } : item) } } : prev)} readOnly={!onUpdateData} /></p>
+                  <div className="text-xs text-gray-500 mt-0.5">Substrato: <EditableField value={pm.substrate} onSave={(val) => onUpdateData?.(prev => prev.productionGuidelines ? { ...prev, productionGuidelines: { ...prev.productionGuidelines, productionMethods: (prev.productionGuidelines.productionMethods || []).map((item, idx) => idx === i ? { ...item, substrate: val } : item) } } : prev)} readOnly={!onUpdateData} /></div>
                 </div>
                 <div className="p-4 space-y-3">
                   <div>

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { extractNegativePrompt, pickGenerateImageAspectRatio } from "./generateImage";
+import {
+  extractNegativePrompt,
+  pickGenerateImageAspectRatio,
+  shouldUseGoogleGenerateContentModel,
+} from "./generateImage";
 
 describe("generateImage service helpers", () => {
   it("extracts the inline --neg prompt suffix", () => {
@@ -24,5 +28,25 @@ describe("generateImage service helpers", () => {
 
   it("falls back to the asset catalog aspect ratio", () => {
     expect(pickGenerateImageAspectRatio("instagram_story")).toBe("9:16");
+  });
+
+  it("avoids Gemini preview for primary logos without references", () => {
+    expect(
+      shouldUseGoogleGenerateContentModel(
+        "gemini-3.1-flash-image-preview",
+        "logo_primary",
+        false
+      )
+    ).toBe(false);
+  });
+
+  it("keeps Gemini path when reference images are present", () => {
+    expect(
+      shouldUseGoogleGenerateContentModel(
+        "gemini-3.1-flash-image-preview",
+        "logo_dark_bg",
+        true
+      )
+    ).toBe(true);
   });
 });

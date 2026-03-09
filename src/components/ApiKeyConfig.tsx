@@ -254,11 +254,11 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
         if (p.imageModelKey && !prev[p.imageModelKey] && data.imageModels?.[0]) {
           if (providerKey === "google") {
             const order = [
+              "imagen-3.0-generate-002",
+              "imagen-3.0-fast-generate-001",
               "gemini-3.1-flash-image-preview",
               "gemini-3-pro-image-preview",
               "gemini-2.5-flash-image",
-              "imagen-3.0-generate-002",
-              "imagen-3.0-fast-generate-001",
             ];
             next[p.imageModelKey] = order.find((m) => data.imageModels.includes(m)) ?? data.imageModels[0];
           } else {

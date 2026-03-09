@@ -57,8 +57,8 @@ export const PROVIDERS: {
   },
   {
     id: "imagen",
-    name: "Google Image (Nano Banana 2)",
-    desc: "Google · Nano Banana 2 (gemini-3.1-flash-image-preview) · Alta qualidade e velocidade",
+    name: "Google Image",
+    desc: "Google · Imagen 3 por padrão, Gemini com referências · alta qualidade e velocidade",
     envKey: "GOOGLE_API_KEY",
     color: "bg-blue-50 border-blue-200 text-blue-800",
   },

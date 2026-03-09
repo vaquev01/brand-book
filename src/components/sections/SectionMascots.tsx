@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset, Mascot, BrandPattern } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
+import { downloadJsonFile } from "@/lib/browserDownload";
 
 interface Props {
   data: BrandbookData;
@@ -451,6 +452,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                           <button type="button" onClick={() => setPreviewImage({ url: mascotImage, title: mascot.name })} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Visualizar</button>
                           <button type="button" onClick={() => { if (onDownload) onDownload(mascotImage, `${data.brandName}-${mascot.name}`); else downloadImageDirect(mascotImage, `${data.brandName}-${mascot.name}`); }} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Baixar</button>
+                          {generatedAssets[storageKey] && (
+                            <button type="button" onClick={() => downloadJsonFile(generatedAssets[storageKey]!, `${data.brandName}-${mascot.name}-spec.json`)} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition" title="Exportar especificação de geração">JSON</button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -602,6 +606,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                           <div className="absolute inset-0 bg-black/0 group-hover/sym:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover/sym:opacity-100">
                             <button type="button" onClick={() => setPreviewImage({ url: symImg, title: sym })} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Visualizar</button>
                             <button type="button" onClick={() => { if (onDownload) onDownload(symImg, `${data.brandName}-simbolo-${i}`); else downloadImageDirect(symImg, `${data.brandName}-simbolo-${i}`); }} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Baixar</button>
+                            {generatedAssets[symKey] && (
+                              <button type="button" onClick={() => downloadJsonFile(generatedAssets[symKey]!, `${data.brandName}-simbolo-${i}-spec.json`)} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition" title="Exportar especificação de geração">JSON</button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -706,6 +713,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                             <div className="absolute inset-0 bg-black/0 group-hover/patcard:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover/patcard:opacity-100">
                               <button type="button" onClick={() => setPreviewImage({ url: patImg, title: pat.name })} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Visualizar</button>
                               <button type="button" onClick={() => { if (onDownload) onDownload(patImg, `${data.brandName}-${pat.name}`); else downloadImageDirect(patImg, `${data.brandName}-${pat.name}`); }} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Baixar</button>
+                              {generatedAssets[patKey] && (
+                                <button type="button" onClick={() => downloadJsonFile(generatedAssets[patKey]!, `${data.brandName}-${pat.name}-spec.json`)} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition" title="Exportar especificação de geração">JSON</button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -810,6 +820,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                             <div className="absolute inset-0 bg-black/0 group-hover/patitem:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover/patitem:opacity-100">
                               <button type="button" onClick={() => setPreviewImage({ url: patImg, title: pat })} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Visualizar</button>
                               <button type="button" onClick={() => { if (onDownload) onDownload(patImg, `${data.brandName}-padrao-${i}`); else downloadImageDirect(patImg, `${data.brandName}-padrao-${i}`); }} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Baixar</button>
+                              {generatedAssets[patKey] && (
+                                <button type="button" onClick={() => downloadJsonFile(generatedAssets[patKey]!, `${data.brandName}-padrao-${i}-spec.json`)} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition" title="Exportar especificação de geração">JSON</button>
+                              )}
                             </div>
                           )}
                         </div>

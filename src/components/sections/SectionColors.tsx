@@ -21,16 +21,16 @@ function ColorSwatch({ color, onChange, onRemove }: { color: Color; onChange?: (
           <EditableField value={color.name} onSave={(val) => onChange?.({ ...color, name: val })} readOnly={!onChange} />
         </h4>
         <div className="text-[10px] text-gray-500 space-y-0.5 font-mono">
-          <p><span className="font-semibold text-gray-700">HEX:</span> <EditableField value={color.hex} onSave={(val) => onChange?.({ ...color, hex: val })} readOnly={!onChange} /></p>
-          <p><span className="font-semibold text-gray-700">RGB:</span> <EditableField value={color.rgb} onSave={(val) => onChange?.({ ...color, rgb: val })} readOnly={!onChange} /></p>
-          <p><span className="font-semibold text-gray-700">CMYK:</span> <EditableField value={color.cmyk} onSave={(val) => onChange?.({ ...color, cmyk: val })} readOnly={!onChange} /></p>
+          <div><span className="font-semibold text-gray-700">HEX:</span> <EditableField value={color.hex} onSave={(val) => onChange?.({ ...color, hex: val })} readOnly={!onChange} /></div>
+          <div><span className="font-semibold text-gray-700">RGB:</span> <EditableField value={color.rgb} onSave={(val) => onChange?.({ ...color, rgb: val })} readOnly={!onChange} /></div>
+          <div><span className="font-semibold text-gray-700">CMYK:</span> <EditableField value={color.cmyk} onSave={(val) => onChange?.({ ...color, cmyk: val })} readOnly={!onChange} /></div>
           {color.pantone && (
-            <p><span className="font-semibold text-gray-700">Pantone:</span> <EditableField value={color.pantone} onSave={(val) => onChange?.({ ...color, pantone: val })} readOnly={!onChange} /></p>
+            <div><span className="font-semibold text-gray-700">Pantone:</span> <EditableField value={color.pantone} onSave={(val) => onChange?.({ ...color, pantone: val })} readOnly={!onChange} /></div>
           )}
         </div>
         {color.usage && (
           <div className="mt-2 pt-2 border-t">
-            <p className="text-[10px] text-gray-600 leading-relaxed"><span className="font-semibold text-gray-700">Uso:</span> <EditableField value={color.usage} onSave={(val) => onChange?.({ ...color, usage: val })} readOnly={!onChange} multiline /></p>
+            <div className="text-[10px] text-gray-600 leading-relaxed"><span className="font-semibold text-gray-700">Uso:</span> <EditableField value={color.usage} onSave={(val) => onChange?.({ ...color, usage: val })} readOnly={!onChange} multiline /></div>
           </div>
         )}
         {color.tonalScale && color.tonalScale.length > 0 && (
@@ -84,6 +84,105 @@ function hexToRgb(hex: string): string {
   const g = parseInt(h.substring(2, 4), 16) || 0;
   const b = parseInt(h.substring(4, 6), 16) || 0;
   return `${r}, ${g}, ${b}`;
+}
+
+function hexToSrgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  return [
+    parseInt(h.substring(0, 2), 16) / 255,
+    parseInt(h.substring(2, 4), 16) / 255,
+    parseInt(h.substring(4, 6), 16) / 255,
+  ];
+}
+
+function toLinear(c: number): number {
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance(hex: string): number {
+  const [r, g, b] = hexToSrgb(hex).map(toLinear);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(hex1: string, hex2: string): number {
+  const l1 = relativeLuminance(hex1);
+  const l2 = relativeLuminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function WCAGMatrix({ colors }: { colors: Array<{ name: string; hex: string }> }) {
+  if (colors.length < 2) return null;
+  const pairs = colors.slice(0, 8); // max 8 colors for readability
+
+  return (
+    <div className="mt-6">
+      <h3 className="text-base font-semibold mb-1 border-l-4 border-indigo-500 pl-3">Matriz de Contraste WCAG</h3>
+      <p className="text-xs text-gray-500 mb-3 pl-4">Combinações de cor verificadas para acessibilidade. AA exige ≥ 4.5:1 (texto), AAA exige ≥ 7:1.</p>
+      <div className="overflow-x-auto rounded-xl border shadow-sm">
+        <table className="min-w-full text-[11px] font-mono border-collapse">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-3 py-2 text-left text-gray-400 font-bold border-b border-r border-gray-200 w-28">bg \ text</th>
+              {pairs.map((c) => (
+                <th key={c.name} className="px-2 py-2 text-center border-b border-gray-200 min-w-[72px]">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-5 h-5 rounded-full border border-gray-200 shadow-sm" style={{ backgroundColor: c.hex }} />
+                    <span className="text-[9px] text-gray-500 leading-tight truncate max-w-[64px]" title={c.name}>{c.name.split(" ")[0]}</span>
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {pairs.map((bg) => (
+              <tr key={bg.name} className="border-b border-gray-100 last:border-0">
+                <td className="px-3 py-1.5 border-r border-gray-200 bg-gray-50">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3.5 h-3.5 rounded-full border border-gray-200 shrink-0" style={{ backgroundColor: bg.hex }} />
+                    <span className="text-[9px] text-gray-500 truncate max-w-[70px]" title={bg.name}>{bg.name.split(" ")[0]}</span>
+                  </div>
+                </td>
+                {pairs.map((fg) => {
+                  const ratio = contrastRatio(bg.hex, fg.hex);
+                  const passAA = ratio >= 4.5;
+                  const passAAA = ratio >= 7;
+                  const isSame = bg.hex === fg.hex;
+                  return (
+                    <td
+                      key={fg.name}
+                      className="px-1 py-1.5 text-center relative"
+                      title={`${bg.name} / ${fg.name}: ${ratio.toFixed(2)}:1`}
+                    >
+                      {isSame ? (
+                        <span className="text-gray-200">—</span>
+                      ) : (
+                        <div
+                          className="rounded-md px-1 py-1 flex flex-col items-center gap-0.5"
+                          style={{ backgroundColor: bg.hex }}
+                        >
+                          <span
+                            className="font-bold text-[10px] leading-none"
+                            style={{ color: fg.hex }}
+                          >
+                            {ratio.toFixed(1)}
+                          </span>
+                          <span className={`text-[8px] font-bold leading-none px-1 rounded ${passAAA ? "bg-green-500 text-white" : passAA ? "bg-yellow-400 text-gray-900" : "bg-red-500 text-white"}`}>
+                            {passAAA ? "AAA" : passAA ? "AA" : "FAIL"}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 interface Props {
@@ -284,6 +383,12 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
           </div>
         </div>
       )}
+
+      {/* WCAG Contrast Matrix */}
+      {(() => {
+        const allColors = [...data.colors.primary, ...data.colors.secondary].filter(c => /^#[0-9a-fA-F]{6}$/.test(c.hex));
+        return allColors.length >= 2 ? <WCAGMatrix colors={allColors} /> : null;
+      })()}
     </section>
   );
 }

@@ -106,6 +106,16 @@ function isStrictLogoAsset(assetKey?: string): boolean {
   return !!assetKey && STRICT_LOGO_ASSETS.has(assetKey);
 }
 
+export function shouldUseGoogleGenerateContentModel(
+  selectedModel: string,
+  assetKey?: string,
+  hasReferenceImages = false
+): boolean {
+  if (hasReferenceImages) return true;
+  if (!selectedModel.toLowerCase().startsWith("gemini")) return false;
+  return assetKey !== "logo_primary";
+}
+
 export function extractNegativePrompt(prompt: string): { positive: string; negative: string } {
   const trimmed = prompt.trim();
   const fallback = "blurry, low quality, watermark, deformed, ugly";
@@ -454,7 +464,7 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
         );
       }
 
-      const shouldUseGemini = hasRefImages || selectedLower.startsWith("gemini");
+      const shouldUseGemini = shouldUseGoogleGenerateContentModel(selectedModel, assetKey, hasRefImages);
       const geminiModel = selectedLower.startsWith("gemini") ? selectedModel : "gemini-3.1-flash-image-preview";
 
       if (shouldUseGemini) {

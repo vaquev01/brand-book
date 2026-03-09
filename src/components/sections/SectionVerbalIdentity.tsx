@@ -414,6 +414,130 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
         </div>
       </div>
 
+      {/* Brand Voice em Ação — mock compositions with brand aesthetics */}
+      {(v.sampleHeadlines?.length > 0 || v.sampleCTAs?.length > 0 || v.tagline) && (
+        <div className="mt-6 mb-6">
+          <h3 className="text-base font-bold mb-1">Voz da Marca em Ação</h3>
+          <p className="text-xs text-gray-500 mb-4">Como a identidade verbal se expressa em peças reais</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* Instagram post mock */}
+            {v.sampleHeadlines?.[0] && (
+              <div
+                className="rounded-[1.4rem] overflow-hidden shadow-lg aspect-square flex flex-col relative"
+                style={{ background: `var(--bb-primary, #1a1a1a)` }}
+              >
+                <div className="absolute inset-0 opacity-10" style={{
+                  backgroundImage: `radial-gradient(circle at 80% 20%, var(--bb-accent, #c0a060) 0%, transparent 55%)`,
+                }} />
+                <div className="flex-1 flex items-center justify-center p-7 relative">
+                  <p
+                    className="text-center leading-snug font-bold"
+                    style={{
+                      fontFamily: `var(--bb-heading-font, 'Georgia', serif)`,
+                      color: `var(--bb-bg, #ffffff)`,
+                      fontSize: "clamp(1rem, 3.5vw, 1.3rem)",
+                    }}
+                  >
+                    {v.sampleHeadlines[0]}
+                  </p>
+                </div>
+                {v.sampleCTAs?.[0] && (
+                  <div className="px-5 pb-5 relative">
+                    <div
+                      className="inline-block px-4 py-2 rounded-full text-xs font-bold"
+                      style={{
+                        background: `var(--bb-accent, #c0a060)`,
+                        color: `var(--bb-primary, #0a0a0a)`,
+                        fontFamily: `var(--bb-body-font, sans-serif)`,
+                      }}
+                    >
+                      {v.sampleCTAs[0]}
+                    </div>
+                  </div>
+                )}
+                <div className="px-4 py-2 border-t border-white/10">
+                  <span className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: `var(--bb-bg, #fff)` }}>
+                    Instagram Post
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Email subject line mock */}
+            {v.sampleHeadlines?.[1] && (
+              <div className="rounded-[1.4rem] border bg-white overflow-hidden shadow-sm flex flex-col">
+                <div className="px-4 py-3 bg-gray-50 border-b flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <div className="w-3 h-3 rounded-full bg-red-400" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <div className="w-3 h-3 rounded-full bg-green-400" />
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-mono flex-1 text-center">email</span>
+                </div>
+                <div className="flex-1 p-5 space-y-3">
+                  <div className="border-b pb-3">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Assunto</p>
+                    <p
+                      className="text-sm font-semibold text-gray-900 leading-snug"
+                      style={{ fontFamily: `var(--bb-body-font, sans-serif)` }}
+                    >
+                      {v.sampleHeadlines[1]}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-3" style={{ fontFamily: `var(--bb-body-font, sans-serif)` }}>
+                    {data.brandConcept?.purpose || v.messagingPillars[0]?.description || "Conteúdo do email alinhado com a voz da marca."}
+                  </p>
+                  {v.sampleCTAs?.[1] && (
+                    <div
+                      className="inline-block px-5 py-2.5 rounded-lg text-xs font-bold text-white mt-2"
+                      style={{ background: `var(--bb-primary, #1a1a1a)` }}
+                    >
+                      {v.sampleCTAs[1]}
+                    </div>
+                  )}
+                </div>
+                <div className="px-4 py-2 border-t">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300">E-mail</span>
+                </div>
+              </div>
+            )}
+
+            {/* Outdoor / headline mock */}
+            {v.tagline && (
+              <div
+                className="rounded-[1.4rem] overflow-hidden shadow-lg flex flex-col relative"
+                style={{ background: `var(--bb-accent, #D5A41D)`, minHeight: "200px" }}
+              >
+                <div className="flex-1 flex flex-col items-start justify-end p-7 relative">
+                  <div
+                    className="text-[9px] font-bold uppercase tracking-[0.3em] mb-3 opacity-70"
+                    style={{ color: `var(--bb-primary, #0a0a0a)` }}
+                  >
+                    Tagline — Outdoor
+                  </div>
+                  <p
+                    className="leading-tight font-black"
+                    style={{
+                      fontFamily: `var(--bb-heading-font, 'Georgia', serif)`,
+                      color: `var(--bb-primary, #0a0a0a)`,
+                      fontSize: "clamp(1.3rem, 4vw, 1.9rem)",
+                    }}
+                  >
+                    {v.tagline}
+                  </p>
+                </div>
+                <div className="px-4 py-2 border-t border-black/10">
+                  <span className="text-[9px] font-bold uppercase tracking-widest opacity-50" style={{ color: `var(--bb-primary, #0a0a0a)` }}>
+                    Outdoor / OOH
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {v.tonePerChannel && v.tonePerChannel.length > 0 && (
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">

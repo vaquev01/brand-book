@@ -4,6 +4,7 @@ import { BrandbookData, GeneratedAsset } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
+import { downloadJsonFile } from "@/lib/browserDownload";
 
 interface Props {
   data: BrandbookData;
@@ -278,6 +279,9 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   <button type="button" onClick={() => setPreviewImage({ url: generatedImages["hero_visual"], title: "Hero Visual" })} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Visualizar</button>
                   <button type="button" onClick={() => { if (onDownload) onDownload(generatedImages["hero_visual"], `${data.brandName}-hero-visual`); else downloadImageDirect(generatedImages["hero_visual"], `${data.brandName}-hero-visual`); }} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Baixar</button>
+                  {generatedAssets["hero_visual"] && (
+                    <button type="button" onClick={() => downloadJsonFile(generatedAssets["hero_visual"]!, `${data.brandName}-hero-visual-spec.json`)} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition" title="Exportar especificação de geração">JSON</button>
+                  )}
                 </div>
               )}
             </div>
@@ -296,6 +300,9 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   <button type="button" onClick={() => setPreviewImage({ url: generatedImages["hero_lifestyle"], title: "Lifestyle" })} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Visualizar</button>
                   <button type="button" onClick={() => { if (onDownload) onDownload(generatedImages["hero_lifestyle"], `${data.brandName}-lifestyle`); else downloadImageDirect(generatedImages["hero_lifestyle"], `${data.brandName}-lifestyle`); }} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition">Baixar</button>
+                  {generatedAssets["hero_lifestyle"] && (
+                    <button type="button" onClick={() => downloadJsonFile(generatedAssets["hero_lifestyle"]!, `${data.brandName}-hero-lifestyle-spec.json`)} className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition" title="Exportar especificação de geração">JSON</button>
+                  )}
                 </div>
               )}
             </div>

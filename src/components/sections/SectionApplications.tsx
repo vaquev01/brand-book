@@ -2,6 +2,7 @@
 import { BrandbookData, GeneratedAsset, Application } from "@/lib/types";
 import { ASSET_CATALOG, detectSizeVariants, type AssetKey } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
+import { downloadJsonFile } from "@/lib/browserDownload";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Props {
@@ -62,6 +63,66 @@ function downloadImage(url: string, name: string) {
   downloadImageUrl(url, name).catch(() => {
     window.open(url, "_blank");
   });
+}
+
+function MockupFrame({ appType }: { appType: string }) {
+  const lc = appType.toLowerCase();
+  if (/app|mobile|interface|tela|screen|story|stories|reels|vertical/.test(lc)) {
+    return (
+      <div className="absolute inset-0 pointer-events-none z-10">
+        <div
+          className="absolute inset-[6px] rounded-[22px] border-[5px] border-gray-900"
+          style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.12), 0 0 0 1px rgba(0,0,0,0.5)" }}
+        >
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-3 bg-gray-900 rounded-b-xl" />
+          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-900 rounded-full opacity-80" />
+        </div>
+      </div>
+    );
+  }
+  if (/site|web|landing|hero|banner|dashboard|browser|email|newsletter/.test(lc)) {
+    return (
+      <div className="absolute inset-0 pointer-events-none z-10">
+        <div className="absolute inset-[6px] rounded-lg border-2 border-gray-800 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[22px] bg-gray-900 flex items-center gap-1 px-2">
+            <span className="w-2 h-2 rounded-full bg-red-500/80" />
+            <span className="w-2 h-2 rounded-full bg-yellow-500/80" />
+            <span className="w-2 h-2 rounded-full bg-green-500/80" />
+            <span className="ml-2 flex-1 h-2.5 bg-gray-700 rounded-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (/outdoor|billboard|placa|fachada|totem/.test(lc)) {
+    const corners = ["top-2 left-2", "top-2 right-2", "bottom-2 left-2", "bottom-2 right-2"];
+    return (
+      <div className="absolute inset-0 pointer-events-none z-10">
+        {corners.map((pos, i) => (
+          <div
+            key={i}
+            className={`absolute ${pos} w-6 h-6`}
+            style={{
+              borderTop: i < 2 ? "3px solid rgba(255,255,255,0.65)" : "none",
+              borderBottom: i >= 2 ? "3px solid rgba(255,255,255,0.65)" : "none",
+              borderLeft: i % 2 === 0 ? "3px solid rgba(255,255,255,0.65)" : "none",
+              borderRight: i % 2 !== 0 ? "3px solid rgba(255,255,255,0.65)" : "none",
+            }}
+          />
+        ))}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-4 bg-gray-500/60" />
+      </div>
+    );
+  }
+  if (/card|cartão|visita|business/.test(lc)) {
+    return (
+      <div
+        className="absolute inset-4 pointer-events-none z-10 rounded border-2 border-white/20"
+        style={{ boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.25)" }}
+      />
+    );
+  }
+  return null;
 }
 
 function fileToDataUrl(file: File): Promise<string> {
@@ -242,7 +303,8 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={aiImage} alt={app.type} className="w-full h-full object-cover" />
-                    <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                    <MockupFrame appType={app.type} />
+                    <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow z-20">
                       IA
                     </span>
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
@@ -260,6 +322,16 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
                       >
                         Baixar
                       </button>
+                      {generatedAssets[activeKey] && (
+                        <button
+                          type="button"
+                          onClick={() => downloadJsonFile(generatedAssets[activeKey]!, `${data.brandName}-${app.type}-spec.json`)}
+                          className="no-print bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition"
+                          title="Exportar especificação de geração"
+                        >
+                          JSON
+                        </button>
+                      )}
                     </div>
                   </>
                 ) : (

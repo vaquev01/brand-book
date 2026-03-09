@@ -2,102 +2,223 @@
 import { BrandbookData, Typography } from "@/lib/types";
 import { EditableField } from "@/components/EditableField";
 
-function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo: Typography; typoKey: string; onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void }) {
+const WEIGHT_VALUES: Record<string, number> = {
+  Thin: 100, ExtraLight: 200, Light: 300, Regular: 400, Medium: 500,
+  SemiBold: 600, Bold: 700, ExtraBold: 800, Black: 900,
+  "100": 100, "200": 200, "300": 300, "400": 400, "500": 500,
+  "600": 600, "700": 700, "800": 800, "900": 900,
+};
+
+function resolveWeight(w: string): number {
+  return WEIGHT_VALUES[w] ?? (isNaN(Number(w)) ? 400 : Number(w));
+}
+
+const SPECIMEN_PANGRAM = "Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj 0123456789";
+const SPECIMEN_SENTENCE = "A marca existe para ser lembrada.";
+
+function WeightShowcase({ typo, name }: { typo: Typography; name: string }) {
+  if (!typo.weights || typo.weights.length === 0) return null;
   return (
-    <div className="bg-gray-50 p-4 rounded-[1.2rem] border relative group/typo">
-      <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1.5">{title}</h3>
-      <div className="text-[1.7rem] font-bold mb-1 leading-tight" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
-        <EditableField
-          value={typo.name}
-          onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], name: val } } }))}
-          readOnly={!onUpdateData}
-        />
-      </div>
-      {typo.category && (
-        <span className="inline-block text-[10px] font-semibold bg-gray-200 text-gray-600 px-2 py-0.5 rounded mb-2">
-          <EditableField
-            value={typo.category}
-            onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], category: val } } }))}
-            readOnly={!onUpdateData}
-          />
-        </span>
-      )}
-      <div className="text-gray-400 text-sm leading-tight mb-2.5">Aa Bb Cc 0123456789 !@#</div>
-      <div className="mb-3">
-        <span className="text-xs font-bold text-gray-500 uppercase">Uso: </span>
-        <span className="text-sm leading-6 text-gray-700">
-          <EditableField
-            value={typo.usage}
-            onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], usage: val } } }))}
-            readOnly={!onUpdateData}
-            multiline
-          />
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {typo.weights.map((w, i) => (
-          <span key={i} className="bg-gray-200 text-xs px-2 py-1 rounded flex items-stretch overflow-hidden group/item">
-            <EditableField
-              value={w}
-              onSave={(val) => onUpdateData?.(prev => {
-                const currentTypo = prev.typography[typoKey as keyof typeof prev.typography] as Typography;
-                const nextWeights = [...currentTypo.weights];
-                nextWeights[i] = val;
-                return { ...prev, typography: { ...prev.typography, [typoKey]: { ...currentTypo, weights: nextWeights } } };
-              })}
-              readOnly={!onUpdateData}
-            />
-            {onUpdateData && (
-              <button
-                onClick={() => onUpdateData(prev => {
-                  const currentTypo = prev.typography[typoKey as keyof typeof prev.typography] as Typography;
-                  return { ...prev, typography: { ...prev.typography, [typoKey]: { ...currentTypo, weights: currentTypo.weights.filter((_, idx) => idx !== i) } } };
-                })}
-                className="no-print ml-1 -mr-1 pl-1 border-l border-gray-300 text-gray-400 hover:text-red-500"
-              >
-                ×
-              </button>
-            )}
-          </span>
-        ))}
-        {onUpdateData && (
-          <button
-            onClick={() => onUpdateData(prev => {
-              const currentTypo = prev.typography[typoKey as keyof typeof prev.typography] as Typography;
-              return { ...prev, typography: { ...prev.typography, [typoKey]: { ...currentTypo, weights: [...currentTypo.weights, "Novo Peso"] } } };
-            })}
-            className="no-print text-[10px] font-bold text-gray-500 bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded transition"
+    <div className="mt-4 space-y-1">
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Pesos disponíveis</p>
+      {typo.weights.map((w, i) => (
+        <div key={i} className="flex items-baseline gap-3 py-1 border-b border-gray-50 last:border-0">
+          <span className="w-20 text-[10px] font-mono text-gray-400 shrink-0">{w}</span>
+          <span
+            className="text-gray-900 text-lg leading-tight truncate"
+            style={{ fontFamily: `'${name}', sans-serif`, fontWeight: resolveWeight(w) }}
           >
-            + Adicionar
-          </button>
-        )}
+            {SPECIMEN_SENTENCE}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo: Typography; typoKey: string; onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void }) {
+  const displayWeight = typo.weights?.find(w => /bold|black|700|800|900/i.test(w)) ?? typo.weights?.[0] ?? "700";
+  const bodyWeight = typo.weights?.find(w => /regular|medium|400|500/i.test(w)) ?? typo.weights?.[0] ?? "400";
+
+  return (
+    <div className="bg-white rounded-[1.4rem] border overflow-hidden shadow-sm group/typo">
+      {/* Specimen hero */}
+      <div className="bg-gray-950 px-6 pt-7 pb-5 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.04]" style={{
+          backgroundImage: `repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 28px)`,
+        }} />
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400 mb-3">{title}</p>
+        <div
+          className="text-white leading-[1.0] break-words"
+          style={{
+            fontFamily: `'${typo.name}', sans-serif`,
+            fontSize: "clamp(2.4rem, 8vw, 3.8rem)",
+            fontWeight: resolveWeight(displayWeight),
+            textTransform: typo.textTransform as React.CSSProperties["textTransform"] || "none",
+          }}
+        >
+          {typo.name}
+        </div>
+        <div
+          className="text-gray-300 mt-3 text-sm leading-relaxed"
+          style={{ fontFamily: `'${typo.name}', sans-serif`, fontWeight: resolveWeight(bodyWeight) }}
+        >
+          {SPECIMEN_SENTENCE}
+        </div>
       </div>
-      {(typo.fallbackFont || typo.textTransform) && (
-        <div className="border-t pt-2.5 space-y-1">
-          {typo.fallbackFont && (
-            <div className="text-xs text-gray-600 flex">
-              <span className="font-semibold text-gray-700 mr-1">Alternativa Google Fonts:</span>
+
+      {/* Alphabet specimen */}
+      <div className="px-5 py-3 bg-gray-50 border-b">
+        <span
+          className="text-gray-500 text-sm tracking-wide"
+          style={{ fontFamily: `'${typo.name}', sans-serif` }}
+        >
+          {SPECIMEN_PANGRAM}
+        </span>
+      </div>
+
+      {/* Metadata */}
+      <div className="p-5">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="flex-1">
+            <div className="text-[1.55rem] font-bold leading-tight mb-0.5" style={{ fontFamily: `'${typo.name}', sans-serif` }}>
               <EditableField
-                value={typo.fallbackFont}
-                onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], fallbackFont: val } } }))}
+                value={typo.name}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], name: val } } }))}
                 readOnly={!onUpdateData}
-                className="flex-1"
               />
             </div>
-          )}
-          {typo.textTransform && (
-            <div className="text-xs text-gray-600 flex">
-              <span className="font-semibold text-gray-700 mr-1">Transformação:</span>
+            {typo.category && (
+              <span className="inline-block text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                <EditableField
+                  value={typo.category}
+                  onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], category: val } } }))}
+                  readOnly={!onUpdateData}
+                />
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <span className="text-xs font-bold text-gray-500 uppercase">Uso: </span>
+          <span className="text-sm leading-6 text-gray-700">
+            <EditableField
+              value={typo.usage}
+              onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], usage: val } } }))}
+              readOnly={!onUpdateData}
+              multiline
+            />
+          </span>
+        </div>
+
+        {/* Weights */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {typo.weights.map((w, i) => (
+            <span key={i} className="bg-gray-100 text-xs px-2.5 py-1 rounded-full font-mono flex items-stretch overflow-hidden group/item">
               <EditableField
-                value={typo.textTransform}
-                onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], textTransform: val } } }))}
+                value={w}
+                onSave={(val) => onUpdateData?.(prev => {
+                  const currentTypo = prev.typography[typoKey as keyof typeof prev.typography] as Typography;
+                  const nextWeights = [...currentTypo.weights];
+                  nextWeights[i] = val;
+                  return { ...prev, typography: { ...prev.typography, [typoKey]: { ...currentTypo, weights: nextWeights } } };
+                })}
                 readOnly={!onUpdateData}
-                className="flex-1"
               />
-            </div>
+              {onUpdateData && (
+                <button
+                  onClick={() => onUpdateData(prev => {
+                    const currentTypo = prev.typography[typoKey as keyof typeof prev.typography] as Typography;
+                    return { ...prev, typography: { ...prev.typography, [typoKey]: { ...currentTypo, weights: currentTypo.weights.filter((_, idx) => idx !== i) } } };
+                  })}
+                  className="no-print ml-1 -mr-1 pl-1 border-l border-gray-300 text-gray-400 hover:text-red-500"
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))}
+          {onUpdateData && (
+            <button
+              onClick={() => onUpdateData(prev => {
+                const currentTypo = prev.typography[typoKey as keyof typeof prev.typography] as Typography;
+                return { ...prev, typography: { ...prev.typography, [typoKey]: { ...currentTypo, weights: [...currentTypo.weights, "Novo Peso"] } } };
+              })}
+              className="no-print text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full transition"
+            >
+              + Peso
+            </button>
           )}
         </div>
-      )}
+
+        {(typo.fallbackFont || typo.textTransform) && (
+          <div className="border-t pt-3 space-y-1">
+            {typo.fallbackFont && (
+              <div className="text-xs text-gray-600 flex gap-1">
+                <span className="font-semibold text-gray-500 shrink-0">Google Fonts:</span>
+                <EditableField
+                  value={typo.fallbackFont}
+                  onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], fallbackFont: val } } }))}
+                  readOnly={!onUpdateData}
+                  className="flex-1 text-gray-500"
+                />
+              </div>
+            )}
+            {typo.textTransform && (
+              <div className="text-xs text-gray-600 flex gap-1">
+                <span className="font-semibold text-gray-500 shrink-0">Transform:</span>
+                <EditableField
+                  value={typo.textTransform}
+                  onSave={(val) => onUpdateData?.(prev => ({ ...prev, typography: { ...prev.typography, [typoKey]: { ...prev.typography[typoKey as keyof typeof prev.typography], textTransform: val } } }))}
+                  readOnly={!onUpdateData}
+                  className="flex-1 text-gray-500"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Weight showcase */}
+        <WeightShowcase typo={typo} name={typo.name} />
+      </div>
+    </div>
+  );
+}
+
+function FontPairingPreview({ data }: { data: BrandbookData }) {
+  const marketing = data.typography.marketing || data.typography.primary;
+  const ui = data.typography.ui || data.typography.secondary;
+  if (!marketing || !ui || marketing.name === ui.name) return null;
+
+  const headingWeight = marketing.weights?.find(w => /bold|black|700|800|900/i.test(w)) ?? "700";
+  const bodyWeight = ui.weights?.find(w => /regular|medium|400|500/i.test(w)) ?? "400";
+
+  return (
+    <div className="mt-6 rounded-[1.4rem] border overflow-hidden shadow-sm">
+      <div className="px-5 py-3 bg-gray-50 border-b">
+        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Combinação Tipográfica</h3>
+        <p className="text-[11px] text-gray-400 mt-0.5">Como as fontes funcionam juntas num layout real</p>
+      </div>
+      <div className="p-6 bg-white space-y-3">
+        <div
+          className="text-[2rem] font-bold leading-tight text-gray-950"
+          style={{ fontFamily: `'${marketing.name}', sans-serif`, fontWeight: resolveWeight(headingWeight) }}
+        >
+          {data.brandName}
+        </div>
+        <div
+          className="text-[1.05rem] leading-7 text-gray-600 max-w-xl"
+          style={{ fontFamily: `'${ui.name}', sans-serif`, fontWeight: resolveWeight(bodyWeight) }}
+        >
+          {data.brandConcept?.purpose || data.brandConcept?.mission || "A marca que conecta pessoas e constrói experiências memoráveis a cada encontro."}
+        </div>
+        <div className="flex items-center gap-4 pt-1">
+          <span className="text-[11px] font-mono text-gray-400">{marketing.name} — headline</span>
+          <span className="text-gray-200">|</span>
+          <span className="text-[11px] font-mono text-gray-400">{ui.name} — body</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -116,13 +237,11 @@ export function SectionTypography({ data, num, onUpdateData }: { data: Brandbook
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Tipografia
       </h2>
-      <div className={`grid grid-cols-1 ${isAdvanced ? advancedCols : "md:grid-cols-2"} gap-4`}>
+      <div className={`grid grid-cols-1 ${isAdvanced ? advancedCols : "md:grid-cols-2"} gap-5`}>
         {isAdvanced ? (
-          <>
-            {advancedTypos.map(({ title, typo, key }) => (
-              <TypoCard key={title} title={title} typo={typo} typoKey={key} onUpdateData={onUpdateData} />
-            ))}
-          </>
+          advancedTypos.map(({ title, typo, key }) => (
+            <TypoCard key={title} title={title} typo={typo} typoKey={key} onUpdateData={onUpdateData} />
+          ))
         ) : (
           <>
             {data.typography.primary && <TypoCard title="Fonte Primária" typo={data.typography.primary} typoKey="primary" onUpdateData={onUpdateData} />}
@@ -130,6 +249,7 @@ export function SectionTypography({ data, num, onUpdateData }: { data: Brandbook
           </>
         )}
       </div>
+      <FontPairingPreview data={data} />
     </section>
   );
 }

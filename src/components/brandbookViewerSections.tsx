@@ -2,7 +2,9 @@ import { SectionApplications } from "./sections/SectionApplications";
 import { SectionAssetPack } from "./sections/SectionAssetPack";
 import { SectionAudiencePersonas } from "./sections/SectionAudiencePersonas";
 import { SectionBrandAssets } from "./sections/SectionBrandAssets";
+import { SectionBrandHealth } from "./sections/SectionBrandHealth";
 import { SectionBrandStory } from "./sections/SectionBrandStory";
+import { SectionBrandWorld } from "./sections/SectionBrandWorld";
 import { SectionColors } from "./sections/SectionColors";
 import { SectionDNA } from "./sections/SectionDNA";
 import { SectionGovernance } from "./sections/SectionGovernance";
@@ -172,6 +174,13 @@ export function buildSectionDefs({
       render: (num) => <SectionTypographyScale data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
+      id: "brand-world",
+      title: "Mundo da Marca",
+      category: "Sistema Visual",
+      when: true,
+      render: (num) => <SectionBrandWorld data={data} num={num} />,
+    },
+    {
       id: "key-visual",
       title: "Key Visual",
       category: "Sistema Visual",
@@ -298,6 +307,13 @@ export function buildSectionDefs({
       category: "Diretrizes de Uso",
       when: uploadedAssets.length > 0,
       render: (num) => <SectionBrandAssets num={num} uploadedAssets={uploadedAssets} />,
+    },
+    {
+      id: "brand-health",
+      title: "Brand Health Dashboard",
+      category: "Diretrizes de Uso",
+      when: true,
+      render: (num) => <SectionBrandHealth data={data} num={num} />,
     },
   ];
 }
