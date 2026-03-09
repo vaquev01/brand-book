@@ -10,12 +10,13 @@ export default auth((req) => {
   const protectedPaths = ["/dashboard"]
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
 
+  // Protected routes: redirect to landing if not logged in
   if (isProtected && !isLoggedIn) {
     return Response.redirect(new URL("/login", req.nextUrl))
   }
 
-  // If logged in and trying to access login, redirect to dashboard
-  if (isLoggedIn && pathname === "/login") {
+  // If logged in and on landing page or login, go to dashboard
+  if (isLoggedIn && (pathname === "/" || pathname === "/login")) {
     return Response.redirect(new URL("/dashboard", req.nextUrl))
   }
 })

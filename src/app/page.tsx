@@ -1,1152 +1,355 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { BrandbookViewer } from "@/components/BrandbookViewer";
-import { ExampleCard } from "@/components/ExampleCard";
-import { JsonBySectionPanel } from "@/components/JsonBySectionPanel";
-import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
-import { BrandbookEditor } from "@/components/BrandbookEditor";
-import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
-import { GenerateBriefingForm, type GenerateBriefingData } from "@/components/GenerateBriefingForm";
-import { GenerationProgress } from "@/components/GenerationProgress";
-import { RefinePanel } from "@/components/RefinePanel";
-import { ConsistencyPanel } from "@/components/ConsistencyPanel";
-import { ExportPanel } from "@/components/ExportPanel";
-import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
-import { SystemHealthBadge } from "@/components/SystemHealthBadge";
-import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackState } from "@/lib/types";
-import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
-import { generateProductionManifest } from "@/lib/productionExport";
-import { validateLooseBrandbook } from "@/lib/brandbookValidation";
-import { decompressBrandbook } from "@/lib/shareUtils";
-import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
-import { downloadBlob, downloadJsonFile } from "@/lib/browserDownload";
-import {
-  hasPromptOpsProviderKey,
-  refineImagePromptClient,
-} from "@/lib/imagePromptClient";
-import {
-  clearBrandbookGeneratedAssetSession,
-  loadBrandbookSessionAssets,
-  migrateLegacyLocalStorageToIndexedDB,
-  slugifyForStorage,
-} from "@/lib/brandbookLocalSession";
-import { readJsonResponse } from "@/lib/http";
-import { fetchImageDataUrl } from "@/lib/imageTransport";
-import {
-  getActiveSlug, setActiveSlug,
-  saveBrandbookData, loadBrandbookData,
-  saveGeneratedImage,
-  saveBrandAssets,
-  saveAssetPack,
-} from "@/lib/imageStorage";
-import {
-  Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
-  Image as ImageIcon, Wand2, ShieldCheck, Download,
-  Trash2, UploadCloud, FileJson, Hexagon, Undo2, Redo2,
-} from "lucide-react";
-import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
-import { getProtectedExportGuard } from "@/lib/brandbookQualityGate";
-import {
-  selectHasHydrated,
-  selectPromptOpsProvider,
-  selectSetPromptOpsProvider,
-  selectSetStrategyProvider,
-  selectStrategyProvider,
-  useAppPreferencesStore,
-} from "@/store/appPreferences";
+import { signIn, useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 
-type Tab = "generate" | "examples" | "viewer";
-type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
+/* ─── Typing animation hook ─── */
+function useTypingEffect(words: string[], speed = 80, pause = 2200) {
+  const [text, setText] = useState("")
+  const [wordIdx, setWordIdx] = useState(0)
+  const [charIdx, setCharIdx] = useState(0)
+  const [deleting, setDeleting] = useState(false)
 
-function isAiTextProvider(value: string | null | undefined): value is AiTextProvider {
-  return value === "openai" || value === "gemini";
+  useEffect(() => {
+    const word = words[wordIdx]
+    const timeout = deleting ? speed / 2 : speed
+
+    if (!deleting && charIdx === word.length) {
+      const t = setTimeout(() => setDeleting(true), pause)
+      return () => clearTimeout(t)
+    }
+    if (deleting && charIdx === 0) {
+      setDeleting(false)
+      setWordIdx((i) => (i + 1) % words.length)
+      return
+    }
+
+    const t = setTimeout(() => {
+      setText(word.substring(0, deleting ? charIdx - 1 : charIdx + 1))
+      setCharIdx((c) => (deleting ? c - 1 : c + 1))
+    }, timeout)
+    return () => clearTimeout(t)
+  }, [charIdx, deleting, wordIdx, words, speed, pause])
+
+  return text
 }
 
-function pickDefaultTextProvider(keys: ApiKeys): AiTextProvider {
-  if (keys.openai) return "openai";
-  if (keys.google) return "gemini";
-  return "openai";
-}
+const TYPING_WORDS = [
+  "restaurantes",
+  "startups",
+  "escritórios",
+  "e-commerces",
+  "clínicas",
+  "agências",
+  "marcas pessoais",
+  "cafeterias",
+]
 
-function resolveTextProviderPreference(rawValue: string | null | undefined, keys: ApiKeys): AiTextProvider {
-  const fallback = pickDefaultTextProvider(keys);
-  if (!isAiTextProvider(rawValue)) return fallback;
-  if (hasPromptOpsProviderKey(rawValue, keys) || (!keys.openai && !keys.google)) return rawValue;
-  return fallback;
-}
+const SHOWCASE_BRANDS = [
+  { name: "Kairo", industry: "Fintech", colors: ["#0f172a", "#6366f1", "#a5b4fc", "#f1f5f9"] },
+  { name: "Soleil", industry: "Cosmetics", colors: ["#78350f", "#f59e0b", "#fbbf24", "#fffbeb"] },
+  { name: "Vertex", industry: "Tech", colors: ["#0c0a09", "#ef4444", "#fca5a5", "#fef2f2"] },
+  { name: "Flora", industry: "Wellness", colors: ["#14532d", "#22c55e", "#86efac", "#f0fdf4"] },
+]
 
-function getTextProviderModel(provider: AiTextProvider, keys: ApiKeys): string {
-  return provider === "openai"
-    ? keys.openaiTextModel || "GPT-4o"
-    : keys.googleTextModel || "Gemini 1.5";
-}
+export default function LandingPage() {
+  const [loading, setLoading] = useState(false)
+  const [activeBrand, setActiveBrand] = useState(0)
+  const typedWord = useTypingEffect(TYPING_WORDS)
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
-export default function Home() {
-  const [tab, setTab] = useState<Tab>("examples");
-  const [loading, setLoading] = useState(false);
-  const [loadingShared, setLoadingShared] = useState(false);
-  const [generationPhase, setGenerationPhase] = useState("");
-  const [generationPct, setGenerationPct] = useState(0);
-  const [error, setError] = useState("");
-  const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
-  const brandbookRef = useRef<BrandbookData | null>(null);
-  const [jsonText, setJsonText] = useState("");
-  const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
-  const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
-  const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
-  const [assetPack, setAssetPack] = useState<AssetPackState>({ files: [] });
-  const [assetPackGenerating, setAssetPackGenerating] = useState(false);
-  const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
-  const strategyProvider = useAppPreferencesStore(selectStrategyProvider);
-  const promptOpsProvider = useAppPreferencesStore(selectPromptOpsProvider);
-  const hasHydratedPreferences = useAppPreferencesStore(selectHasHydrated);
-  const setStrategyProvider = useAppPreferencesStore(selectSetStrategyProvider);
-  const setPromptOpsProvider = useAppPreferencesStore(selectSetPromptOpsProvider);
-  const [showApiConfig, setShowApiConfig] = useState(false);
-  const [exportingPack, setExportingPack] = useState(false);
-  const [undoStack, setUndoStack] = useState<BrandbookData[]>([]);
-  const [redoStack, setRedoStack] = useState<BrandbookData[]>([]);
-  const assetPackFiles = assetPack.files;
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard")
+    }
+  }, [status, router])
 
   useEffect(() => {
-    brandbookRef.current = brandbookData;
-  }, [brandbookData]);
+    const i = setInterval(() => setActiveBrand((v) => (v + 1) % SHOWCASE_BRANDS.length), 3000)
+    return () => clearInterval(i)
+  }, [])
 
-  function resetHistory() {
-    setUndoStack([]);
-    setRedoStack([]);
+  async function handleAccess() {
+    setLoading(true)
+    await signIn("credentials", { callbackUrl: "/dashboard" })
   }
 
-  function updateBrandbook(updater: (prev: BrandbookData) => BrandbookData) {
-    setBrandbookData((prev) => {
-      if (!prev) return prev;
-      const next = updater(prev);
-      setUndoStack((s) => [...s.slice(-19), prev]);
-      setRedoStack([]);
-      return next;
-    });
+  const brand = SHOWCASE_BRANDS[activeBrand]
+
+  // Show nothing while checking auth
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="min-h-screen bg-[#08090c] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-xl bg-white/[0.08] border border-white/[0.06] flex items-center justify-center animate-pulse">
+          <span className="text-sm font-black text-white/60">B</span>
+        </div>
+      </div>
+    )
   }
-
-  function handleUndo() {
-    setUndoStack((s) => {
-      if (s.length === 0) return s;
-      const current = brandbookRef.current;
-      const prev = s[s.length - 1];
-      if (current) setRedoStack((r) => [...r.slice(-19), current]);
-      setBrandbookData(prev);
-      return s.slice(0, -1);
-    });
-  }
-
-  function handleRedo() {
-    setRedoStack((s) => {
-      if (s.length === 0) return s;
-      const current = brandbookRef.current;
-      const next = s[s.length - 1];
-      if (current) setUndoStack((u) => [...u.slice(-19), current]);
-      setBrandbookData(next);
-      return s.slice(0, -1);
-    });
-  }
-
-  const restoreBrandbookSession = useCallback(async (
-    nextBrandbook: BrandbookData,
-    options: { nextTab?: Tab; nextViewerTab?: ViewerTab } = {}
-  ) => {
-    resetHistory();
-    setBrandbookData(nextBrandbook);
-    const slug = slugifyForStorage(nextBrandbook.brandName);
-    const session = await loadBrandbookSessionAssets(slug);
-    setGeneratedAssets(session.generatedAssets);
-    setUploadedBrandAssets(session.uploadedBrandAssets);
-    setAssetPack(session.assetPack);
-    if (options.nextViewerTab) setViewerTab(options.nextViewerTab);
-    if (options.nextTab) setTab(options.nextTab);
-    setError("");
-  }, []);
-
-  async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, promptProvider: AiTextProvider) {
-    const providerKeyMap: Record<ImageProvider, keyof ApiKeys> = {
-      dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google",
-    };
-    const order: ImageProvider[] = ["imagen", "dalle3", "stability", "ideogram"];
-    const provider = order.find((p) => !!keys[providerKeyMap[p]]);
-    if (!provider) return;
-
-    const logoKeys: AssetKey[] = ["logo_primary", "logo_dark_bg"];
-    const slug = slugifyForStorage(bbData.brandName);
-    const session = await loadBrandbookSessionAssets(slug).catch((): {
-      assetPack: AssetPackState;
-      generatedAssets: Record<string, GeneratedAsset>;
-      uploadedBrandAssets: UploadedAsset[];
-    } => ({
-      assetPack: { files: [] },
-      generatedAssets: {},
-      uploadedBrandAssets: [],
-    }));
-    const merged = session.generatedAssets;
-    const toGenerate = logoKeys.filter((k) => !merged[k]);
-    if (toGenerate.length === 0) return;
-
-    setGenerationPhase("Gerando logos automaticamente...");
-    setGenerationPct(85);
-
-    for (let i = 0; i < toGenerate.length; i++) {
-      const assetKey = toGenerate[i];
-      const label = assetKey === "logo_primary" ? "Logo (Fundo Claro)" : "Logo (Versão Invertida)";
-      setGenerationPhase(`Gerando ${label}...`);
-      setGenerationPct(85 + Math.round(((i) / toGenerate.length) * 12));
-
-      try {
-        const basePrompt = buildImagePrompt(assetKey, bbData, provider);
-        let prompt = basePrompt;
-
-        const hasTextKey = hasPromptOpsProviderKey(promptProvider, keys);
-        if (hasTextKey) {
-          try {
-            const refinedPrompt = await refineImagePromptClient({
-              basePrompt,
-              imageProvider: provider,
-              assetKey,
-              promptProvider,
-              apiKeys: keys,
-            });
-            if (refinedPrompt) prompt = refinedPrompt;
-          } catch { /* use base prompt */ }
-        }
-
-        const res = await fetch("/api/generate-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt,
-            provider,
-            aspectRatio: "1:1",
-            openaiKey: keys.openai || undefined,
-            stabilityKey: keys.stability || undefined,
-            ideogramKey: keys.ideogram || undefined,
-            googleKey: keys.google || undefined,
-            openaiImageModel: keys.openaiImageModel || undefined,
-            stabilityModel: keys.stabilityModel || undefined,
-            ideogramModel: keys.ideogramModel || undefined,
-            googleImageModel: keys.googleImageModel || undefined,
-          }),
-        });
-        const result = await readJsonResponse<{ url?: string; error?: string }>(
-          res,
-          "/api/generate-image"
-        );
-        if (res.ok && result.url) {
-          const asset: GeneratedAsset = {
-            key: assetKey,
-            url: result.url,
-            provider,
-            prompt,
-            generatedAt: new Date().toISOString(),
-          };
-          setGeneratedAssets((prev) => ({ ...prev, [assetKey]: asset }));
-        }
-      } catch { /* skip silently, user can generate manually */ }
-    }
-
-    setGenerationPct(100);
-    setGenerationPhase("");
-  }
-
-  useEffect(() => {
-    const keys = loadApiKeys();
-    setApiKeys(keys);
-
-    void (async () => {
-      await migrateLegacyLocalStorageToIndexedDB().catch(() => {});
-
-      // Load shared brandbook from URL
-      const params = new URLSearchParams(window.location.search);
-      const bbParam = params.get("bb");
-      if (bbParam) {
-        setLoadingShared(true);
-        setTab("viewer");
-        setViewerTab("preview");
-        decompressBrandbook(bbParam)
-          .then(async (raw) => {
-            if (!raw) throw new Error("Link inválido");
-            const validated = validateLooseBrandbook(raw, {
-              action: "abrir link compartilhado",
-              subject: "Brandbook do link",
-            });
-            await restoreBrandbookSession(validated, {
-              nextTab: "viewer",
-              nextViewerTab: "preview",
-            });
-            window.history.replaceState({}, "", window.location.pathname);
-          })
-          .catch(() => {
-            setError("Link compartilhado inválido ou expirado.");
-            setTab("examples");
-          })
-          .finally(() => {
-            setLoadingShared(false);
-          });
-        return;
-      }
-
-      // Restore last active brandbook session from storage
-      const activeSlug = getActiveSlug();
-      if (activeSlug) {
-        const savedData = loadBrandbookData(activeSlug);
-        if (savedData) {
-          try {
-            const validated = validateLooseBrandbook(savedData, {
-              action: "restaurar a sessão salva",
-              subject: "Brandbook salvo",
-            });
-            void restoreBrandbookSession(validated, { nextTab: "viewer" });
-          } catch {
-            // Corrupt saved data — ignore and show default screen
-          }
-        }
-      }
-    })();
-  }, [restoreBrandbookSession]);
-
-  useEffect(() => {
-    if (!hasHydratedPreferences) return;
-
-    const nextStrategyProvider = resolveTextProviderPreference(strategyProvider, apiKeys);
-    const nextPromptOpsProvider = resolveTextProviderPreference(promptOpsProvider, apiKeys);
-
-    if (nextStrategyProvider !== strategyProvider) {
-      setStrategyProvider(nextStrategyProvider);
-    }
-
-    if (nextPromptOpsProvider !== promptOpsProvider) {
-      setPromptOpsProvider(nextPromptOpsProvider);
-    }
-  }, [
-    apiKeys,
-    hasHydratedPreferences,
-    promptOpsProvider,
-    setPromptOpsProvider,
-    setStrategyProvider,
-    strategyProvider,
-  ]);
-
-  async function handleGenerate(formData: GenerateBriefingData) {
-    setLoading(true);
-    setError("");
-    setBrandbookData(null);
-    resetHistory();
-    setGenerationPhase("Preparando geração...");
-    setGenerationPct(0);
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandName: formData.brandName,
-          industry: formData.industry,
-          briefing: formData.briefing,
-          externalUrls: formData.externalUrls,
-          projectMode: formData.projectMode,
-          provider: strategyProvider,
-          openaiKey: apiKeys.openai || undefined,
-          googleKey: apiKeys.google || undefined,
-          openaiModel: strategyProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-          googleModel: strategyProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-          referenceImages: formData.referenceImages.length > 0
-            ? formData.referenceImages.map((img) => img.dataUrl)
-            : undefined,
-          logoImage: formData.logoImage?.dataUrl ?? undefined,
-          scope: formData.scope,
-          creativityLevel: formData.creativityLevel,
-          intentionality: formData.intentionality,
-        }),
-      });
-
-      if (!res.body) throw new Error("Streaming não suportado pelo servidor.");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith("data: ")) continue;
-          try {
-            const event = JSON.parse(trimmed.slice(6)) as {
-              type: string;
-              phase?: string;
-              pct?: number;
-              data?: BrandbookData;
-              error?: string;
-            };
-
-            if (event.type === "progress") {
-              setGenerationPhase(event.phase ?? "");
-              setGenerationPct(event.pct ?? 0);
-            } else if (event.type === "complete" && event.data) {
-              const validated = validateLooseBrandbook(event.data, {
-                action: "gerar brandbook",
-                subject: "Brandbook gerado",
-              });
-              await restoreBrandbookSession(validated, { nextTab: "viewer" });
-
-              // Auto-generate logo images
-              const currentKeys = loadApiKeys();
-              autoGenerateLogos(validated, currentKeys, promptOpsProvider).catch(() => {});
-            } else if (event.type === "error") {
-              throw new Error(event.error ?? "Erro desconhecido");
-            }
-          } catch (parseErr) {
-            if (parseErr instanceof SyntaxError) continue;
-            throw parseErr;
-          }
-        }
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido";
-      setError(message);
-    } finally {
-      setLoading(false);
-      setGenerationPhase("");
-      setGenerationPct(0);
-    }
-  }
-
-  function handleLoadExample(example: BrandbookData) {
-    try {
-      const validated = validateLooseBrandbook(example, {
-        action: "carregar exemplo",
-        subject: "Brandbook de exemplo",
-      });
-      void restoreBrandbookSession(validated, {
-        nextTab: "viewer",
-        nextViewerTab: "preview",
-      });
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao carregar exemplo");
-      return;
-    }
-  }
-
-  async function handleExportPack() {
-    if (!brandbookData) return;
-    setExportingPack(true);
-    setError("");
-    try {
-      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
-        action: "exportar o pack completo",
-        subject: "Brandbook atual",
-      });
-      const lintReport = await fetchBrandbookLintReport(validatedBrandbook);
-      const guard = getProtectedExportGuard("pack", lintReport);
-      if (!guard.allowed) throw new Error(guard.reason ?? "Pack bloqueado pelo quality gate.");
-
-      const res = await fetch("/api/export-pack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandbookData: validatedBrandbook,
-          generatedAssets: Object.values(generatedAssets),
-          uploadedAssets: uploadedBrandAssets,
-          assetPackFiles,
-        }),
-      });
-      if (!res.ok) {
-        const j = await readJsonResponse<{ error?: string }>(res, "/api/export-pack").catch(() => ({}));
-        throw new Error((j as { error?: string }).error ?? "Erro ao exportar pack");
-      }
-      const blob = await res.blob();
-      const slug = slugifyForStorage(validatedBrandbook.brandName);
-      downloadBlob(blob, `${slug}-brandbook-pack.zip`, { rel: "noopener" });
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao exportar pack");
-    } finally {
-      setExportingPack(false);
-    }
-  }
-
-  function handleExportBrandbook() {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    downloadJsonFile(brandbookData, `${slug}-brandbook.json`);
-  }
-
-  async function handleExportProduction() {
-    if (!brandbookData) return;
-    setError("");
-    try {
-      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
-        action: "exportar o manifesto de produção",
-        subject: "Brandbook atual",
-      });
-      const lintReport = await fetchBrandbookLintReport(validatedBrandbook);
-      const guard = getProtectedExportGuard("production_manifest", lintReport);
-      if (!guard.allowed) throw new Error(guard.reason ?? "Manifesto de produção bloqueado pelo quality gate.");
-
-      const manifest = generateProductionManifest(validatedBrandbook);
-      const slug = slugifyForStorage(validatedBrandbook.brandName);
-      downloadJsonFile(manifest, `${slug}-production-manifest.json`);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao exportar manifesto de produção");
-    }
-  }
-
-  async function handleImportJson() {
-    try {
-      const parsed = JSON.parse(jsonText);
-      const validated = validateLooseBrandbook(parsed, {
-        action: "importar JSON",
-        subject: "JSON do brandbook",
-      });
-      await restoreBrandbookSession(validated, {
-        nextTab: "viewer",
-        nextViewerTab: "preview",
-      });
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "JSON inválido. Verifique a formatação.");
-    }
-  }
-
-  async function handleGenerateAssetPack() {
-    if (!brandbookData) return;
-
-    const hasKey = hasPromptOpsProviderKey(promptOpsProvider, apiKeys);
-    if (!hasKey) {
-      setError("Configure uma chave de IA (OpenAI ou Google) para gerar o Asset Pack.");
-      return;
-    }
-
-    setAssetPackGenerating(true);
-    setError("");
-    try {
-      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
-        action: "gerar o Asset Pack",
-        subject: "Brandbook atual",
-      });
-      const res = await fetch("/api/generate-asset-pack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandbookData: validatedBrandbook,
-          textProvider: promptOpsProvider,
-          openaiKey: apiKeys.openai || undefined,
-          googleKey: apiKeys.google || undefined,
-          openaiModel: promptOpsProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-          googleModel: promptOpsProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-        }),
-      });
-      const j = await readJsonResponse<(AssetPackState & { error?: string }) | { error?: string }>(
-        res,
-        "/api/generate-asset-pack"
-      ).catch((): { error?: string } => ({}));
-      if (!res.ok) throw new Error(j.error ?? "Erro ao gerar Asset Pack");
-      if (!("files" in j) || !Array.isArray(j.files)) throw new Error("Resposta inválida ao gerar Asset Pack");
-      setAssetPack({
-        files: j.files,
-        coverage: j.coverage ?? null,
-        quality: j.quality ?? null,
-        plan: j.plan ?? null,
-      });
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao gerar Asset Pack");
-    } finally {
-      setAssetPackGenerating(false);
-    }
-  }
-
-  // Persist brandbook JSON to localStorage whenever it changes
-  useEffect(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    saveBrandbookData(slug, brandbookData);
-    setActiveSlug(slug);
-  }, [brandbookData]);
-
-  useEffect(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    // Save each image to IndexedDB (primary — handles multi-MB base64 blobs)
-    for (const [key, asset] of Object.entries(generatedAssets)) {
-      saveGeneratedImage(slug, key, asset).catch(() => {});
-    }
-  }, [generatedAssets, brandbookData]);
-
-  useEffect(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    // Save to IndexedDB (handles large dataUrls)
-    saveBrandAssets(slug, uploadedBrandAssets).catch(() => {});
-  }, [uploadedBrandAssets, brandbookData]);
-
-  useEffect(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    saveAssetPack(slug, assetPack).catch(() => {});
-  }, [assetPack, brandbookData]);
-
-  function handleClearImageCache() {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    const ok = window.confirm("Remover imagens geradas salvas (cache) para este brandbook?");
-    if (!ok) return;
-    void clearBrandbookGeneratedAssetSession(slug);
-    setGeneratedAssets({});
-  }
-
-  async function handleAssetGenerated(key: string, asset: GeneratedAsset) {
-    let storedAsset = asset;
-    // For DALL-E 3 / Ideogram: external URLs expire — display immediately,
-    // then convert to permanent data URL in the background
-    if (asset.url.startsWith("https://")) {
-      storedAsset = { ...asset, originalUrl: asset.url };
-      setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
-      fetchImageDataUrl(asset.url)
-        .then((dataUrl) => {
-          const permanent = { ...storedAsset, url: dataUrl };
-          setGeneratedAssets((prev) => ({ ...prev, [key]: permanent }));
-          const current = brandbookRef.current;
-          if (current) {
-            const slug = slugifyForStorage(current.brandName);
-            saveGeneratedImage(slug, key, permanent).catch(() => {});
-          }
-        })
-        .catch(() => {}); // Keep external URL if conversion fails
-      return;
-    }
-    setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
-  }
-
-  const strategyProviderHasKey = hasPromptOpsProviderKey(strategyProvider, apiKeys);
-  const promptOpsProviderHasKey = hasPromptOpsProviderKey(promptOpsProvider, apiKeys);
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4 sm:pt-4">
-        {tab === "viewer" && brandbookData ? (
-          /* ── Viewer mode: single consolidated row ── */
-          <div className="app-shell mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 min-w-0">
-            {/* Logo — click to go back */}
-            <button
-              onClick={() => setTab("generate")}
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:bg-indigo-700"
-              title="Voltar ao gerador"
-            >
-              <Hexagon className="text-white w-3.5 h-3.5" fill="currentColor" />
-            </button>
+    <div className="min-h-screen bg-[#08090c] text-white overflow-x-hidden">
+      {/* Ambient background */}
+      <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full opacity-[0.07]"
+          style={{ background: `radial-gradient(circle, ${brand.colors[1]}, transparent 70%)`, transition: "background 1.5s ease" }} />
+        <div className="absolute bottom-[-10%] right-[-15%] w-[50vw] h-[50vw] rounded-full opacity-[0.05]"
+          style={{ background: `radial-gradient(circle, ${brand.colors[2]}, transparent 70%)`, transition: "background 1.5s ease" }} />
+        {/* Grid */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
+      </div>
 
-            {/* Brand name */}
-            <span className="text-sm font-extrabold text-gray-900 truncate flex-shrink-0 max-w-[120px] sm:max-w-[180px] hidden xs:block">
-              {brandbookData.brandName}
-            </span>
-
-            {/* Divider */}
-            <div className="hidden h-5 w-px flex-shrink-0 bg-slate-200 sm:block" />
-
-            {/* Sub-tabs — flex-1 with overflow scroll */}
-            <nav className="app-segmented flex-1 min-w-0 overflow-x-auto">
-              <button onClick={() => setViewerTab("preview")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "preview" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Brandbook</span>
-              </button>
-              <button onClick={() => setViewerTab("edit")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "edit" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                <Pencil className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Editar</span>
-              </button>
-              <button onClick={() => setViewerTab("assets")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "assets" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Ref. Assets</span>
-                {uploadedBrandAssets.length > 0 && <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-800">{uploadedBrandAssets.length}</span>}
-              </button>
-              <button onClick={() => setViewerTab("refine")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "refine" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                <Wand2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Refinar</span>
-              </button>
-              <button onClick={() => setViewerTab("consistency")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "consistency" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Consistência</span>
-              </button>
-              <button onClick={() => setViewerTab("export")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "export" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Exportar</span>
-              </button>
-            </nav>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button onClick={handleUndo} disabled={undoStack.length === 0} className="rounded-xl p-2 text-gray-500 transition hover:bg-white/80 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30" title="Desfazer">
-                <Undo2 className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={handleRedo} disabled={redoStack.length === 0} className="rounded-xl p-2 text-gray-500 transition hover:bg-white/80 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30" title="Refazer">
-                <Redo2 className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={handleClearImageCache} disabled={Object.keys(generatedAssets).length === 0} className="rounded-xl p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30" title="Limpar imagens geradas">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={() => setShowApiConfig(true)} className="rounded-xl p-2 text-gray-500 transition hover:bg-white/80 hover:text-gray-900" title="APIs">
-                <Settings className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={() => setViewerTab("export")} className="app-primary-button ml-1 px-3 py-2 text-xs font-bold">
-                <Download className="w-3 h-3" />
-                <span className="hidden sm:inline">Exportar</span>
-              </button>
-            </div>
+      {/* ─── Nav ─── */}
+      <nav className="relative z-10 flex items-center justify-between px-6 sm:px-10 lg:px-16 py-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-white/[0.08] border border-white/[0.06] flex items-center justify-center">
+            <span className="text-sm font-black bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">B</span>
           </div>
-        ) : (
-          /* ── Default mode ── */
-          <div className="app-shell mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gray-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
-                <Hexagon className="text-white w-4 h-4" fill="currentColor" />
+          <span className="text-sm font-bold tracking-tight text-white/80">brandbook</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:flex items-center gap-2 text-xs text-white/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            AI Engines Online
+          </span>
+        </div>
+      </nav>
+
+      {/* ─── Hero ─── */}
+      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pt-12 sm:pt-20 lg:pt-28 pb-16 sm:pb-24">
+        <div className="max-w-[76rem] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
+            {/* Left — Copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-1.5 mb-8">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Gerador IA de Manual de Marca</span>
               </div>
-              <div>
-                <h1 className="text-base font-extrabold tracking-tight text-gray-900 leading-tight sm:text-lg">Brandbook Builder</h1>
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-500">Gerador de Manual com IA</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-              <SystemHealthBadge />
-              {!hasHydratedPreferences && (
-                <span className="app-chip hidden lg:inline-flex">
-                  Sincronizando preferências
+
+              <h1 className="text-[clamp(2.4rem,5.2vw,4.8rem)] font-black leading-[0.95] tracking-[-0.04em] mb-6">
+                <span className="block text-white">Manuais de marca</span>
+                <span className="block text-white">que impressionam</span>
+                <span className="block mt-1 h-[1.15em] overflow-hidden">
+                  <span className="text-white/25">para </span>
+                  <span className="bg-gradient-to-r from-white via-white/90 to-white/40 bg-clip-text text-transparent">
+                    {typedWord}
+                    <span className="inline-block w-[2px] h-[0.85em] bg-white/50 ml-0.5 animate-pulse align-middle" />
+                  </span>
                 </span>
-              )}
-              <ApiKeyStatusBadge keys={apiKeys} />
-              <button onClick={() => setShowApiConfig(true)} className="app-secondary-button px-3 py-2 text-sm" title="Configurar chaves de API">
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">APIs</span>
-              </button>
-              <nav className="app-segmented">
-                <button onClick={() => setTab("generate")} className={`app-tab-button ${tab === "generate" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                  <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">Gerar com IA</span>
-                </button>
-                <button onClick={() => setTab("examples")} className={`app-tab-button ${tab === "examples" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                  <Library className="w-4 h-4" />
-                  <span className="hidden sm:inline">Exemplos</span>
-                </button>
-                {brandbookData && (
-                  <button onClick={() => setTab("viewer")} className={`app-tab-button ${tab === "viewer" ? "bg-white text-indigo-700 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
-                    <Eye className="w-4 h-4" />
-                    <span className="hidden sm:inline">Visualizar</span>
-                  </button>
-                )}
-              </nav>
-            </div>
-          </div>
-        )}
-      </header>
+              </h1>
 
-      <ApiKeyConfig
-        isOpen={showApiConfig}
-        onClose={() => setShowApiConfig(false)}
-        onSave={(keys) => {
-          setApiKeys(keys);
-          setShowApiConfig(false);
-        }}
-      />
+              <p className="text-base sm:text-lg text-white/40 max-w-xl leading-relaxed mb-10">
+                Do briefing ao brandbook completo em minutos. IA com Art Director integrado que pensa
+                como os melhores designers do mundo.
+              </p>
 
-      <main className={tab === "viewer" ? "w-full px-3 pb-8 pt-4 sm:px-4 sm:pb-10" : "mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8"}>
-        {/* Error Banner */}
-        {error && (
-          <div className="app-surface-soft mb-6 flex items-center justify-between gap-3 border-red-200 bg-red-50 px-4 py-3 text-red-800">
-            <span className="text-sm">{error}</span>
-            <button onClick={() => setError("")} className="text-red-600 hover:text-red-800 font-bold text-lg leading-none">&times;</button>
-          </div>
-        )}
-
-        {tab === "viewer" && !brandbookData && loadingShared && (
-          <div className="app-shell mx-auto max-w-xl p-8">
-            <div className="flex items-center justify-center gap-3">
-              <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
-              <span className="text-sm font-semibold text-gray-700">Carregando brandbook compartilhado...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Tab: Generate */}
-        {tab === "generate" && (
-          <div className="max-w-2xl mx-auto">
-            <div className="app-shell p-6 sm:p-8">
-              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <span className="app-chip mb-3">Fluxo guiado + geração premium</span>
-                  <h2 className="text-2xl font-extrabold tracking-tight text-gray-950 sm:text-[2rem]">Gerar Brandbook com IA</h2>
-                  <p className="mt-1 max-w-xl text-sm text-gray-500">Defina o briefing, escopo e nível de criatividade. A IA faz o resto com estrutura pronta para edição, auditoria e export.</p>
-                </div>
-              </div>
-
-              <div className="mt-6 mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="app-surface-soft p-4">
-                  <div className="mb-3">
-                    <h3 className="text-sm font-extrabold tracking-tight text-gray-900">Curador de Estratégia</h3>
-                    <p className="text-xs text-gray-500 mt-1">Usado para gerar o brandbook, refinar conteúdo, regenerar seções e auditar consistência.</p>
-                  </div>
-                  <div className="app-segmented inline-flex w-full p-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setStrategyProvider("openai")}
-                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
-                        strategyProvider === "openai"
-                          ? "bg-white shadow-sm text-gray-900 ring-1 ring-gray-200"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                      }`}
-                    >
-                      <span className="font-bold text-sm">{getTextProviderModel("openai", apiKeys)}</span>
-                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.openai ? "text-green-600" : "text-red-500"}`}>
-                        {apiKeys.openai ? "OpenAI" : "Sem Chave"}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStrategyProvider("gemini")}
-                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
-                        strategyProvider === "gemini"
-                          ? "bg-white shadow-sm text-blue-700 ring-1 ring-blue-200"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                      }`}
-                    >
-                      <span className="font-bold text-sm">{getTextProviderModel("gemini", apiKeys)}</span>
-                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.google ? "text-blue-600" : "text-red-500"}`}>
-                        {apiKeys.google ? "Google" : "Sem Chave"}
-                      </span>
-                    </button>
-                  </div>
-                  {!strategyProviderHasKey && (
-                    <p className="mt-3 text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 flex items-center gap-2">
-                      <Settings className="w-4 h-4" /> Configure a chave do provider estratégico nas configurações.
-                    </p>
-                  )}
-                </div>
-
-                <div className="app-surface-soft p-4">
-                  <div className="mb-3">
-                    <h3 className="text-sm font-extrabold tracking-tight text-gray-900">Prompts & Arquivos</h3>
-                    <p className="text-xs text-gray-500 mt-1">Usado para refinar prompts de imagem, gerar logos automáticos e montar arquivos do asset pack.</p>
-                  </div>
-                  <div className="app-segmented inline-flex w-full p-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setPromptOpsProvider("openai")}
-                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
-                        promptOpsProvider === "openai"
-                          ? "bg-white shadow-sm text-gray-900 ring-1 ring-gray-200"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                      }`}
-                    >
-                      <span className="font-bold text-sm">{getTextProviderModel("openai", apiKeys)}</span>
-                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.openai ? "text-green-600" : "text-red-500"}`}>
-                        {apiKeys.openai ? "OpenAI" : "Sem Chave"}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPromptOpsProvider("gemini")}
-                      className={`flex-1 flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
-                        promptOpsProvider === "gemini"
-                          ? "bg-white shadow-sm text-blue-700 ring-1 ring-blue-200"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-                      }`}
-                    >
-                      <span className="font-bold text-sm">{getTextProviderModel("gemini", apiKeys)}</span>
-                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${apiKeys.google ? "text-blue-600" : "text-red-500"}`}>
-                        {apiKeys.google ? "Google" : "Sem Chave"}
-                      </span>
-                    </button>
-                  </div>
-                  {!promptOpsProviderHasKey && (
-                    <p className="mt-3 text-xs text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-100 flex items-center gap-2">
-                      <Settings className="w-4 h-4" /> Sem este provider, o app não conseguirá refinar prompts nem gerar arquivos assistidos por IA.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="app-surface-soft mb-6 px-4 py-3 text-xs text-gray-500">
-                Imagens & assets continuam com provider próprio dentro do viewer, no painel de geração visual.
-              </div>
-
-              {loading && generationPhase ? (
-                <GenerationProgress phase={generationPhase} pct={generationPct} />
-              ) : (
-                <GenerateBriefingForm
-                  onSubmit={handleGenerate}
-                  loading={loading}
-                  error={error}
-                />
-              )}
-
-              <div className="mt-8 border-t border-slate-200/80 pt-8">
-                <div className="flex items-center gap-2 mb-4 text-gray-500">
-                  <FileJson className="w-4 h-4" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Ou importe um JSON existente</h3>
-                </div>
-                <textarea
-                  rows={4}
-                  value={jsonText}
-                  onChange={(e) => setJsonText(e.target.value)}
-                  placeholder="Cole aqui o conteúdo do brandbook.json..."
-                  className="app-textarea font-mono text-xs shadow-inner"
-                  aria-label="JSON do brandbook para importar"
-                />
+              {/* CTA group */}
+              <div className="flex flex-col sm:flex-row items-start gap-4 mb-12">
                 <button
-                  onClick={handleImportJson}
-                  disabled={!jsonText.trim()}
-                  className="app-primary-button mt-3 px-5 py-2.5 text-sm"
+                  onClick={handleAccess}
+                  disabled={loading}
+                  className="group relative flex items-center gap-3 bg-white text-black px-7 py-4 rounded-2xl font-bold text-base transition-all duration-300 hover:shadow-[0_20px_60px_rgba(255,255,255,0.12)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait"
                 >
-                  <UploadCloud className="w-4 h-4" />
-                  Importar JSON
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeLinecap="round" />
+                      </svg>
+                      Entrando...
+                    </>
+                  ) : (
+                    <>
+                      Criar Brandbook Grátis
+                      <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                      </svg>
+                    </>
+                  )}
                 </button>
+                <span className="text-xs text-white/20 self-center">Sem cadastro. Acesso direto.</span>
+              </div>
+
+              {/* Tech badges */}
+              <div className="flex flex-wrap gap-2">
+                {["GPT-4o", "Gemini", "DALL-E 3", "Stability AI", "Ideogram", "Imagen 3"].map((t) => (
+                  <span key={t} className="text-[10px] font-semibold text-white/25 border border-white/[0.06] rounded-lg px-2.5 py-1">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Right — Brand Preview Card */}
+            <div className="relative">
+              <div className="absolute -inset-8 rounded-3xl opacity-20 blur-3xl"
+                style={{ background: brand.colors[1], transition: "background 1.5s ease" }} />
+
+              <div className="relative rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl overflow-hidden">
+                <div className="px-6 pt-6 pb-4 border-b border-white/[0.06]">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: brand.colors[1] }} />
+                      <span className="text-xs font-bold text-white/50">Brand Preview</span>
+                    </div>
+                    <span className="text-[10px] text-white/20 font-mono">{brand.industry}</span>
+                  </div>
+                  <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-white"
+                    style={{ transition: "all 0.5s ease" }}>
+                    {brand.name}
+                  </h3>
+                </div>
+
+                <div className="flex">
+                  {brand.colors.map((c, i) => (
+                    <div key={i} className="flex-1 h-16 transition-all duration-700" style={{ background: c }} />
+                  ))}
+                </div>
+
+                <div className="p-6 space-y-3">
+                  {["DNA & Estratégia", "Identidade Visual", "Tipografia", "Aplicações", "Social Media"].map((s, i) => (
+                    <div key={s} className="flex items-center gap-3 py-2 border-b border-white/[0.04] last:border-0">
+                      <span className="text-[10px] font-bold text-white/15 tabular-nums w-6">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-sm text-white/40 font-medium">{s}</span>
+                      <div className="ml-auto w-8 h-1 rounded-full bg-white/[0.06]">
+                        <div className="h-full rounded-full transition-all duration-1000"
+                          style={{ width: `${70 + i * 6}%`, background: brand.colors[1], opacity: 0.5 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-6 pb-5 flex items-center justify-center gap-2">
+                  {SHOWCASE_BRANDS.map((b, i) => (
+                    <button
+                      key={b.name}
+                      onClick={() => setActiveBrand(i)}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${i === activeBrand ? "w-6 opacity-100" : "opacity-30 hover:opacity-60"}`}
+                      style={{ background: b.colors[1] }}
+                      aria-label={b.name}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* Tab: Examples */}
-        {tab === "examples" && (
-          <div className="space-y-8">
-            <div className="app-shell px-6 py-7 sm:px-8 sm:py-8">
-              <span className="app-chip mb-4">Galeria curada</span>
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 sm:text-[2.4rem]">Exemplos de Brandbooks</h2>
-              <p className="mt-2 max-w-3xl text-base text-gray-500 sm:text-lg">Explore manuais gerados pela IA para entender o potencial estrutural, o nível de acabamento visual e a profundidade estratégica que o produto já suporta.</p>
+      {/* ─── Stats bar ─── */}
+      <section className="relative z-10 border-y border-white/[0.04] bg-white/[0.015]">
+        <div className="max-w-[76rem] mx-auto px-6 sm:px-10 lg:px-16 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
+          {[
+            { value: "24", label: "Seções no Manual", sub: "DNA, cores, tipografia, logos..." },
+            { value: "6", label: "Motores de IA", sub: "Text + Image generation" },
+            { value: "28", label: "Assets Gerados", sub: "Business cards, social, packaging" },
+            { value: "<2min", label: "Tempo de Geração", sub: "Do briefing ao manual completo" },
+          ].map((s) => (
+            <div key={s.label} className="group">
+              <div className="text-2xl sm:text-3xl font-black text-white/90 mb-1 tabular-nums">{s.value}</div>
+              <div className="text-xs font-bold text-white/40 mb-0.5">{s.label}</div>
+              <div className="text-[11px] text-white/15">{s.sub}</div>
             </div>
+          ))}
+        </div>
+      </section>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-              <ExampleCard
-                title="CloudFlow"
-                subtitle="SaaS / B2B Software"
-                description="Brandbook avançado com Design Tokens, A11y, Microcopy, Motion e UX Patterns."
-                badge="Avançado"
-                color="blue"
-                onClick={() => handleLoadExample(saasExample)}
-              />
-              <ExampleCard
-                title="Neon Tokyo Bar"
-                subtitle="Nightlife & Bar"
-                description="Identidade visual cyberpunk com neon, tipografia bold e fotografia noturna."
-                color="pink"
-                onClick={() => handleLoadExample(barExample)}
-              />
-              <ExampleCard
-                title="Kansai Sushi"
-                subtitle="Restaurante Japonês"
-                description="Manual tradicional japonês com Sumi-e, Washi e tipografia Noto Serif JP."
-                color="red"
-                onClick={() => handleLoadExample(sushiExample)}
-              />
-              <ExampleCard
-                title="Caraca! Bar"
-                subtitle="Bar & Gastronomia — Boteco Tropical Premium"
-                description="Identidade botânica tropical com 4 sistemas de pattern, paleta Kraft + Verde Noturno e gravura brasileira."
-                badge="Projeto Real"
-                color="amber"
-                onClick={() => handleLoadExample(caracaBarExample)}
-              />
+      {/* ─── Features ─── */}
+      <section className="relative z-10 px-6 sm:px-10 lg:px-16 py-20 sm:py-28">
+        <div className="max-w-[76rem] mx-auto">
+          <div className="mb-14">
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/20 mb-3">Capacidades</div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white/90 tracking-tight">
+              Tudo que um brandbook profissional precisa.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { title: "Art Director IA", desc: "O sistema pensa como Paula Scher, Sagmeister e David Carson. Cada prompt avaliado com scorecard de coerência.", accent: "#6366f1" },
+              { title: "Modo Imersivo", desc: "O brandbook se veste da marca: cores, tipografia, texturas e linguagem em primeira pessoa.", accent: "#f59e0b" },
+              { title: "Apresentação Cinematográfica", desc: "Modo fullscreen com transições suaves para apresentar ao cliente como um keynote.", accent: "#ef4444" },
+              { title: "24 Seções Editoriais", desc: "DNA, posicionamento, personas, verbal identity, logo, cores, tipografia, aplicações e mais.", accent: "#22c55e" },
+              { title: "Multi-Provider", desc: "DALL-E 3, Stability AI, Ideogram e Imagen 3 geram assets visuais coerentes com a proposta.", accent: "#3b82f6" },
+              { title: "Exportação Pro", desc: "PDF multi-página, ZIP com assets, Design Tokens (CSS/W3C/Tailwind) e share link.", accent: "#a855f7" },
+            ].map((f) => (
+              <div
+                key={f.title}
+                className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.10]"
+              >
+                <div className="w-1 h-8 rounded-full mb-4 transition-all duration-300 group-hover:h-10"
+                  style={{ background: f.accent }} />
+                <h3 className="text-base font-bold text-white/80 mb-2">{f.title}</h3>
+                <p className="text-sm text-white/30 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Process ─── */}
+      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20 sm:pb-28">
+        <div className="max-w-[76rem] mx-auto">
+          <div className="rounded-3xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+            <div className="p-8 sm:p-12">
+              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/20 mb-3">Processo</div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white/90 tracking-tight mb-10">
+                3 passos. Resultado profissional.
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+                {[
+                  { n: "01", title: "Briefing", desc: "Nome, setor, descrição e referências. A IA extrai os fundamentos da identidade." },
+                  { n: "02", title: "Geração IA", desc: "O Art Director cria cores, tipografia, logos, aplicações e 24 seções completas." },
+                  { n: "03", title: "Refine & Exporte", desc: "Edite cada campo inline. Gere assets visuais. Exporte PDF ou compartilhe link." },
+                ].map((step) => (
+                  <div key={step.n}>
+                    <div className="text-4xl font-black text-white/[0.06] mb-4">{step.n}</div>
+                    <h3 className="text-lg font-bold text-white/80 mb-2">{step.title}</h3>
+                    <p className="text-sm text-white/30 leading-relaxed">{step.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
+            <div className="h-1 bg-gradient-to-r from-violet-600 via-blue-500 to-emerald-400 opacity-40" />
           </div>
-        )}
+        </div>
+      </section>
 
-        {/* Tab: Viewer */}
-        {tab === "viewer" && brandbookData && (
-          <div>
-
-            {/* Sub-tab: Brandbook Preview */}
-            {viewerTab === "preview" && (
-              <BrandbookViewer
-                data={brandbookData}
-                generatedImages={Object.fromEntries(
-                  Object.entries(generatedAssets).map(([k, v]) => [k, v.url])
-                )}
-                uploadedAssets={uploadedBrandAssets}
-                assetPack={assetPack}
-                assetPackGenerating={assetPackGenerating}
-                onGenerateAssetPack={handleGenerateAssetPack}
-                generatedAssets={generatedAssets}
-                apiKeys={apiKeys}
-                promptProvider={promptOpsProvider}
-                onAssetGenerated={handleAssetGenerated}
-                onSaveToAssets={(asset) =>
-                  setUploadedBrandAssets((prev) => [...prev, asset])
-                }
-                onUpdateColors={(colors) => {
-                  updateBrandbook((prev) => ({ ...prev, colors }));
-                }}
-                onUpdateApplicationImageKey={(index: number, imageKey: AssetKey | undefined) => {
-                  updateBrandbook((prev) => {
-                    const nextApplications = prev.applications.map((a, i) =>
-                      i === index ? { ...a, imageKey } : a
-                    );
-                    return { ...prev, applications: nextApplications };
-                  });
-                }}
-                onUpdateData={(updater) => updateBrandbook(updater)}
-              />
+      {/* ─── Final CTA ─── */}
+      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20">
+        <div className="max-w-[76rem] mx-auto text-center">
+          <h2 className="text-2xl sm:text-4xl font-black text-white/90 tracking-tight mb-4">
+            Pronto para criar seu brandbook?
+          </h2>
+          <p className="text-sm text-white/30 mb-8 max-w-md mx-auto">
+            Acesso direto. Sem cadastro. Seu manual de marca profissional em minutos.
+          </p>
+          <button
+            onClick={handleAccess}
+            disabled={loading}
+            className="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-bold transition-all duration-300 hover:shadow-[0_20px_60px_rgba(255,255,255,0.12)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60"
+          >
+            {loading ? "Entrando..." : "Começar Agora"}
+            {!loading && (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
             )}
+          </button>
+        </div>
+      </section>
 
-            {/* Sub-tab: Edit Brandbook */}
-            {viewerTab === "edit" && (
-              <BrandbookEditor
-                data={brandbookData}
-                onUpdate={(updated) => {
-                  updateBrandbook(() => updated);
-                }}
-                onCancel={() => setViewerTab("preview")}
-              />
-            )}
-
-            {/* Sub-tab: Referência Assets */}
-            {viewerTab === "assets" && (
-              <div className="mx-auto max-w-6xl space-y-6">
-                <div className="app-panel-intro border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-blue-900">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ImageIcon className="w-5 h-5 text-blue-700" />
-                    <h3 className="font-bold text-blue-900 text-lg">Referência Assets</h3>
-                  </div>
-                  <p className="text-sm text-blue-800">
-                    Faça upload de logos, mascotes, elementos gráficos e padrões de referência.
-                    Eles contribuem para a construção da marca como um todo e aparecem automaticamente
-                    nas seções correspondentes do brandbook.
-                  </p>
-                </div>
-                <UploadedAssetsPanel
-                  assets={uploadedBrandAssets}
-                  onChange={setUploadedBrandAssets}
-                />
-              </div>
-            )}
-
-            {/* Sub-tab: Refinar */}
-            {viewerTab === "refine" && (
-              <div className="mx-auto max-w-3xl space-y-6">
-                <div className="app-panel-intro border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 text-amber-900">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Wand2 className="w-5 h-5 text-amber-700" />
-                    <h3 className="font-bold text-amber-900 text-lg">Refinar com IA</h3>
-                  </div>
-                  <p className="text-sm text-amber-800 leading-relaxed">
-                    <strong>Refinar brandbook</strong> — aplica um ajuste em todo o brandbook de uma vez (ex: &quot;torne mais luxuoso&quot;, &quot;mude o tom para mais jovem&quot;).
-                    <br />
-                    <strong>Regenerar seção</strong> — reescreve apenas uma seção específica, com instrução opcional.
-                  </p>
-                </div>
-                <div className="app-shell p-6 sm:p-8">
-                  <RefinePanel
-                    brandbook={brandbookData}
-                    apiKeys={apiKeys}
-                    strategyProvider={strategyProvider}
-                    onRefined={(updated) => {
-                      updateBrandbook(() => updated);
-                      setViewerTab("preview");
-                    }}
-                  />
-                </div>
-                <div className="app-shell p-6 sm:p-8">
-                  <RegenerateSectionsPanel
-                    brandbook={brandbookData}
-                    apiKeys={apiKeys}
-                    strategyProvider={strategyProvider}
-                    onUpdated={(updated) => updateBrandbook(() => updated)}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Sub-tab: Consistência */}
-            {viewerTab === "consistency" && (
-              <div className="app-shell mx-auto max-w-3xl p-6 sm:p-8">
-                <ConsistencyPanel
-                  brandbook={brandbookData}
-                  apiKeys={apiKeys}
-                  strategyProvider={strategyProvider}
-                />
-              </div>
-            )}
-
-            {/* Sub-tab: Exportar */}
-            {viewerTab === "export" && (
-              <div className="mx-auto max-w-3xl space-y-6">
-                <div className="app-shell p-6 sm:p-8">
-                  <ExportPanel
-                    brandbook={brandbookData}
-                    viewerElementId="brandbook-content"
-                  />
-                </div>
-                <div className="app-shell p-6 sm:p-8">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FileJson className="w-5 h-5 text-gray-700" />
-                    <h3 className="font-bold text-lg text-gray-900">Arquivos JSON</h3>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-6">Downloads do brandbook em formato JSON para integração ou backup</p>
-                  <div className="space-y-3">
-                    <button
-                      onClick={handleExportBrandbook}
-                      className="app-card-button group flex items-center gap-4 p-4"
-                    >
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors group-hover:border-indigo-100 group-hover:bg-indigo-50">
-                        <BookOpen className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">Brandbook JSON</div>
-                        <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">Exporta todos os dados do brandbook — útil para backup ou reimportar depois</div>
-                      </div>
-                      <Download className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 mr-2 transition-colors" />
-                    </button>
-                    <button
-                      onClick={handleExportProduction}
-                      className="app-card-button group flex items-center gap-4 p-4"
-                    >
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors group-hover:border-indigo-100 group-hover:bg-indigo-50">
-                        <Settings className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">Manifesto de Produção JSON</div>
-                        <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">JSON técnico com especificações de impressão, digital, social, CSS vars e tokens</div>
-                      </div>
-                      <Download className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 mr-2 transition-colors" />
-                    </button>
-                    <button
-                      onClick={handleExportPack}
-                      disabled={exportingPack}
-                      className="app-card-button group flex items-center gap-4 p-4 disabled:opacity-50 disabled:hover:transform-none disabled:hover:border-slate-200 disabled:hover:shadow-none"
-                    >
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 transition-colors group-hover:border-indigo-100 group-hover:bg-indigo-50">
-                        <UploadCloud className="w-6 h-6 text-gray-500 group-hover:text-indigo-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-900 transition-colors">Pack Completo (.zip)</div>
-                        <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">Tudo em um ZIP: brandbook JSON, manifesto de produção e imagens geradas</div>
-                      </div>
-                      {exportingPack ? (
-                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md animate-pulse">Preparando...</span>
-                      ) : (
-                        <Download className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 mr-2 transition-colors" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="app-shell p-6 sm:p-8">
-                  <JsonBySectionPanel
-                    data={brandbookData}
-                    onDownload={downloadJsonFile}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+      {/* ─── Footer ─── */}
+      <footer className="relative z-10 border-t border-white/[0.04] px-6 sm:px-10 lg:px-16 py-6">
+        <div className="max-w-[76rem] mx-auto flex items-center justify-between">
+          <span className="text-xs text-white/15">brandbook &copy; {new Date().getFullYear()}</span>
+          <span className="text-xs text-white/10">Powered by AI</span>
+        </div>
+      </footer>
     </div>
-  );
+  )
 }
