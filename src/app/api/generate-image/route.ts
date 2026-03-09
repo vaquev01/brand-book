@@ -5,6 +5,7 @@ import {
   GenerateImageInputError,
 } from "@/lib/services/generateImage";
 import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,16 @@ export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
   const startedAt = Date.now();
   const memBefore = captureMem();
+
+  // Rate limiting
+  const clientId = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anon";
+  const rl = await checkRateLimit(clientId, "free");
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded", remaining: rl.remaining, reset: rl.reset },
+      { status: 429, headers: { "X-RateLimit-Limit": String(rl.limit), "X-RateLimit-Remaining": String(rl.remaining) } }
+    );
+  }
   let providerName: string | undefined;
   let assetKeyName: string | undefined;
 

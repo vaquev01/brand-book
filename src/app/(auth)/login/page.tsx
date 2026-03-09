@@ -77,21 +77,7 @@ function LoginContent() {
 
         {/* Footer */}
         <p className="text-center text-xs leading-relaxed text-slate-500">
-          Ao entrar, você concorda com nossos{" "}
-          <a
-            href="/terms"
-            className="text-slate-400 underline-offset-2 hover:text-slate-300 hover:underline"
-          >
-            Termos de Uso
-          </a>
-          {" "}e{" "}
-          <a
-            href="/privacy"
-            className="text-slate-400 underline-offset-2 hover:text-slate-300 hover:underline"
-          >
-            Política de Privacidade
-          </a>
-          .
+          Uso interno — ao entrar, você aceita as diretrizes de uso da plataforma.
         </p>
       </div>
 

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
+import { ShareBrandbookClient } from "./ShareBrandbookClient"
 
 export default async function SharePage({ params }: { params: { token: string } }) {
   const shareLink = await prisma.shareLink.findUnique({
@@ -8,6 +9,7 @@ export default async function SharePage({ params }: { params: { token: string } 
       project: {
         include: {
           brandbookVersions: { orderBy: { createdAt: "desc" }, take: 1 },
+          assets: true,
         },
       },
     },
@@ -35,60 +37,25 @@ export default async function SharePage({ params }: { params: { token: string } 
 
   const latestVersion = shareLink.project.brandbookVersions[0]
   const brandbook = latestVersion?.brandbookJson as any
+  const generatedImages: Record<string, string> = {}
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-black text-violet-600">✦</span>
-          <span className="font-semibold text-gray-800">{shareLink.project.name}</span>
-          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Brandbook</span>
+  // Collect asset URLs for viewer (use publicUrl or sourceUrl)
+  for (const asset of shareLink.project.assets ?? []) {
+    const url = asset.publicUrl ?? asset.sourceUrl
+    if (asset.key && url) {
+      generatedImages[asset.key] = url
+    }
+  }
+
+  if (!brandbook) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center py-16">
+          <p className="text-gray-500">Brandbook não encontrado</p>
         </div>
-        <div className="text-xs text-gray-400">
-          Gerado com ✦ brandbook
-        </div>
-      </header>
-      <main className="max-w-4xl mx-auto py-8 px-4">
-        {brandbook ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-            <h1 className="text-3xl font-black text-gray-900 mb-2">
-              {brandbook.brandName ?? shareLink.project.name}
-            </h1>
-            {brandbook.brandConcept?.mission && (
-              <p className="text-gray-500 text-lg mb-8">{brandbook.brandConcept.mission}</p>
-            )}
-            {brandbook.colors?.primary && (
-              <section className="mb-8">
-                <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-4">
-                  Paleta de Cores
-                </h2>
-                <div className="flex gap-3">
-                  {[
-                    ...(brandbook.colors.primary ?? []),
-                    ...(brandbook.colors.secondary ?? []),
-                  ].map((c: any, i: number) => (
-                    <div key={i} className="flex-1 min-w-0">
-                      <div className="h-16 rounded-xl mb-2" style={{ background: c.hex }} />
-                      <p className="text-xs font-mono text-gray-500 truncate">{c.hex}</p>
-                      <p className="text-xs text-gray-400 truncate">{c.name}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-            <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
-              <p className="text-xs text-gray-400">Gerado com ✦ brandbook AI</p>
-              <a href="/" className="text-xs font-semibold text-violet-600 hover:underline">
-                Criar seu brandbook →
-              </a>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <p className="text-gray-500">Brandbook não encontrado</p>
-          </div>
-        )}
-      </main>
-    </div>
-  )
+      </div>
+    )
+  }
+
+  return <ShareBrandbookClient brandbook={brandbook} generatedImages={generatedImages} projectName={shareLink.project.name} />
 }

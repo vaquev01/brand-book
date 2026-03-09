@@ -37,7 +37,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           { label: "Projetos", value: projects.length, icon: "📁" },
           { label: "Brandbooks gerados", value: projects.filter((p) => p.brandbookVersions.length > 0).length, icon: "✦" },
@@ -68,7 +68,7 @@ export default async function DashboardPage() {
       ) : (
         <div>
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Projetos recentes</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}

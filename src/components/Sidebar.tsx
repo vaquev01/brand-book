@@ -9,9 +9,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "⬛" },
-  { href: "/dashboard/projects", label: "Projetos", icon: "📁" },
-  { href: "/dashboard/projects/new", label: "Novo Projeto", icon: "✦" },
-  { href: "/dashboard/analytics", label: "Analytics", icon: "📊" },
+  { href: "/dashboard/projects/new", label: "Novo Brandbook", icon: "✦" },
   { href: "/dashboard/billing", label: "Plano & Billing", icon: "💳" },
 ]
 

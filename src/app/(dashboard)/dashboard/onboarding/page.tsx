@@ -76,7 +76,7 @@ export default function OnboardingPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">Qual é o setor da marca?</h2>
               <p className="text-slate-400 mb-6">Isso ajuda a IA a personalizar o brandbook</p>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {SECTORS.map(s => (
                   <button
                     key={s.id}

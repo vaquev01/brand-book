@@ -6,6 +6,7 @@ import {
   parseGenerateInput,
 } from "@/lib/services/generate";
 import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,17 @@ export async function POST(request: NextRequest) {
   const startedAt = Date.now();
   const memBefore = captureMem();
   const encoder = new TextEncoder();
+
+  // Rate limiting (uses IP as identifier when no auth)
+  const clientId = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anon";
+  const rl = await checkRateLimit(clientId, "free");
+  if (!rl.success) {
+    return new Response(JSON.stringify({ error: "Rate limit exceeded", remaining: rl.remaining, reset: rl.reset }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "X-RateLimit-Limit": String(rl.limit), "X-RateLimit-Remaining": String(rl.remaining) },
+    });
+  }
+
   const body = await request.json() as GenerateRequestPayload;
 
   bbLog("info", "api.generate.start", {
