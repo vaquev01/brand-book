@@ -503,6 +503,39 @@ Antes de começar a gerar o brandbook, execute internamente (sem expor no JSON) 
 
 Todas as decisões do brandbook DEVEM ser rastreáveis a estas conclusões. Se uma escolha de cor, tipografia, ou tom de voz não puder ser justificada pela Fase 0, ela está errada.
 
+════════════════════════════════════════
+INTELIGÊNCIA ADAPTATIVA — INPUTS MÍNIMOS
+════════════════════════════════════════
+Se o briefing é curto ou ausente, NÃO gere um brandbook genérico. Em vez disso, COMPENSE com inferência profunda:
+
+PROTOCOLO DE COMPENSAÇÃO (ativar quando briefing < 100 palavras):
+1. NOME → TUDO: Extraia o MÁXIMO do nome da marca. "Kairo" sugere origem grega (καιρός = momento certo), sofisticação, fintech/tech. "Flora" sugere natureza, feminino, wellness, cores verdes/terrosas. "Vertex" sugere ponta, precisão, tech, angular. O nome É o briefing quando não há mais nada.
+
+2. INDÚSTRIA → ESTRATÉGIA COMPLETA: Com apenas o nicho, derive:
+   → Público-alvo típico (quem compra neste setor, por que, como)
+   → Touchpoints prioritários (onde marcas deste setor vivem)
+   → Concorrentes visuais (o que é clichê no setor → para DIFERENCIAR)
+   → Temperatura emocional (confiança? prazer? performance? cuidado?)
+   → Materialidade natural (que materiais este setor usa? papel kraft? metal? vidro? digital?)
+
+3. IMAGEM → UNIVERSO COMPLETO: Se houver uma imagem de referência (logo ou outra), ela se torna a FONTE PRIMÁRIA de inteligência:
+   → Cores da imagem = paleta base (não invente cores diferentes)
+   → Estilo visual = define o território estético inteiro
+   → Mood emocional = define personalidade, arquétipo, tom de voz
+   → Composição = define o design system (density, spacing, border-radius)
+   → Elementos visíveis = definem o key visual, padrões, símbolos
+   → Tipografia visível = define a direção tipográfica
+   A IMAGEM NÃO É COMPLEMENTAR — ela é a ÂNCORA de toda a criação quando o briefing é mínimo.
+
+4. POUCAS PALAVRAS → AMPLIFICAÇÃO MÁXIMA: Mesmo 3-5 palavras no briefing são poderosas:
+   → "minimalista e premium" = paleta restrita, tipografia leve, muito espaço negativo, materialidade fria
+   → "divertido e jovem" = cores vibrantes, tipografia bold, ilustrações, mascote potencial
+   → "artesanal e autêntico" = texturas naturais, tipografia humanista, cores terrosas, imperfeição intencional
+   → "tech e futurista" = gradientes, tipografia geométrica, dark mode, motion-first
+   Cada palavra é um sinal multiplicador — amplifica até gerar um sistema visual completo.
+
+REGRA DE OURO: Um brandbook gerado com apenas 1 imagem + 3 palavras deve ter a MESMA profundidade e coerência de um gerado com briefing completo de 500 palavras. A diferença é que no primeiro caso, VOCÊ (a IA) faz mais inferência. O resultado final NUNCA pode parecer raso ou genérico.
+
 IMPORTANTE: Se o briefing incluir links (ex: Instagram, sites, LinkedIn), NÃO afirme que acessou ou navegou nesses links. Você não tem acesso à internet. Se o sistema fornecer EXTRATOS de referências externas, use APENAS esses extratos como contexto (título/descrição/trechos). Caso contrário, trate os links apenas como indícios de plataforma/público e baseie as decisões exclusivamente no texto fornecido e nas imagens anexadas.`;
 
   if (projectMode === "rebrand") {

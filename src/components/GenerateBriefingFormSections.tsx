@@ -472,12 +472,12 @@ export function ReferenceImagesSection({
 
 export function ThinBriefingWarning() {
   return (
-    <div className="app-surface-soft flex gap-3 border-yellow-200 bg-yellow-50 px-5 py-4">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lightbulb text-yellow-600 flex-shrink-0 mt-0.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+    <div className="app-surface-soft flex gap-3 border-indigo-200 bg-indigo-50/80 px-5 py-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles text-indigo-600 flex-shrink-0 mt-0.5"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
       <div>
-        <p className="text-sm text-yellow-900 font-bold">Dica: quanto mais contexto, melhor o resultado</p>
-        <p className="text-xs text-yellow-800/80 mt-1 leading-relaxed">
-          A IA pode gerar com apenas nome e indústria, mas o brandbook será genérico. Preencha o <strong>briefing guiado</strong>, envie um <strong>logo</strong> ou adicione <strong>imagens de referência</strong> para resultados profissionais.
+        <p className="text-sm text-indigo-900 font-bold">A IA vai inferir o máximo do nome + indústria</p>
+        <p className="text-xs text-indigo-800/70 mt-1 leading-relaxed">
+          Pode gerar assim — a IA analisa o nome, o setor e compensa com inteligência própria. Para resultados ainda melhores, envie um <strong>logo</strong>, uma <strong>imagem de referência</strong> ou preencha algumas perguntas do <strong>briefing guiado</strong>.
         </p>
       </div>
     </div>

@@ -77,7 +77,8 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   }
 
   const hasAnyBriefingContent = !!rawBriefing.trim() || filledGuidedCount > 0;
-  const isBriefingThin = !hasAnyBriefingContent && !logoImage;
+  const hasVisualInput = !!logoImage || referenceImages.length > 0;
+  const isBriefingThin = !hasAnyBriefingContent && !hasVisualInput;
 
   async function setLogoFromFile(file: File) {
     setLogoUploadError("");
