@@ -191,30 +191,9 @@ export function CreativitySection({
   );
 }
 
-export function IntentionalityToggle({ intentionality, onToggle }: { intentionality: boolean; onToggle: () => void }) {
-  return (
-    <div className="app-surface-soft flex items-start gap-4 border-amber-200 bg-amber-50/90 p-5">
-      <button
-        type="button"
-        role="switch"
-        aria-checked={intentionality}
-        aria-label="Alternar intenção e simbolismo"
-        onClick={onToggle}
-        className={`mt-0.5 flex-shrink-0 w-12 h-6 rounded-full transition-colors relative ${intentionality ? "bg-amber-600" : "bg-gray-300"}`}
-      >
-        <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${intentionality ? "translate-x-6" : "translate-x-0"}`} />
-      </button>
-      <div>
-        <h4 className="font-bold text-amber-900 text-sm flex items-center gap-1.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book-open-text"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M6 8h2"/><path d="M6 12h2"/><path d="M16 8h2"/><path d="M16 12h2"/></svg>
-          Justificar simbolismo?
-        </h4>
-        <p className="text-xs text-amber-800/80 mt-1 leading-relaxed">
-          Se ativado, a IA escreverá parágrafos mais longos explicando <strong>por que</strong> escolheu cada cor, tipografia ou elemento, criando narrativas sobre como isso se conecta ao posicionamento. <em>(Aumenta o tempo de geração e o tamanho dos textos)</em>
-        </p>
-      </div>
-    </div>
-  );
+/** @deprecated IntentionalityToggle is no longer used — semiotic analysis is always active */
+export function IntentionalityToggle(_props: { intentionality: boolean; onToggle: () => void }) {
+  return null;
 }
 
 export function GuidedField({
@@ -283,13 +262,17 @@ export function GuidedBriefingSection({
       {showGuided && (
         <div className="space-y-4 border-t border-slate-200/80 p-5">
           <GuidedField label="O que a marca faz?" hint="Descreva o produto/serviço em 1-3 frases" placeholder="Ex: Plataforma de gestão de tarefas para times remotos. Foca em simplicidade e foco, não em features." value={guided.whatItDoes} onChange={(value) => onUpdate("whatItDoes", value)} />
-          <GuidedField label="Quem é o público-alvo?" hint="Contexto de vida, faixa etária, comportamento, valores" placeholder="Ex: Profissionais 28-42 anos, altamente digitais, que valorizam produtividade e detestam burocracia" value={guided.targetAudience} onChange={(value) => onUpdate("targetAudience", value)} />
-          <GuidedField label="Posicionamento desejado" hint="Como a marca deve ser percebida versus a concorrência" placeholder='Ex: A alternativa premium e minimalista ao Trello — menos features, mais foco. "O Notion para quem tem TDAH."' value={guided.positioning} onChange={(value) => onUpdate("positioning", value)} />
-          <GuidedField label="Referências de marcas" hint="Marcas que você admira esteticamente ou estrategicamente (não precisam ser do mesmo setor)" placeholder="Ex: Visualmente: Notion, Linear, Arc Browser. Estrategicamente: Apple, Supreme. Tom de voz: Oatly." value={guided.references} onChange={(value) => onUpdate("references", value)} />
-          <GuidedField label="Instagram / links oficiais" hint="Cole perfis e links que representem a essência (ex: instagram.com/suaMarca)" placeholder="Ex: https://instagram.com/suaMarca\nhttps://site.com\nhttps://linkedin.com/company/suaMarca" value={guided.instagramLinks} onChange={(value) => onUpdate("instagramLinks", value)} rows={3} />
-          <GuidedField label="Essência da marca (referências)" hint="Cultura, estética, vibe, arquétipos, filmes, artistas, lugares, décadas, movimentos" placeholder="Ex: Arquétipo: Rebelde elegante. Estética: brutalismo + luxo discreto. Referências: Blade Runner, Dieter Rams, Tadao Ando." value={guided.essenceReferences} onChange={(value) => onUpdate("essenceReferences", value)} rows={3} />
-          <GuidedField label="O que a marca NÃO deve transmitir" hint="Evite, proibições, o que seria fora do tom" placeholder="Ex: Corporativo demais, genérico, alegre/colorido em excesso, complexo, intimidador" value={guided.avoidances} onChange={(value) => onUpdate("avoidances", value)} />
-          <GuidedField label="Preferências de cores" hint="Restrições, preferências, o que inspira — ou o que evitar" placeholder="Ex: Evitar azul corporativo. Prefiro paleta escura com um acento vibrante. Referência: Figma." value={guided.colorPreferences} onChange={(value) => onUpdate("colorPreferences", value)} />
+          <GuidedField label="Quem é o público-alvo?" hint="Quanto mais detalhes (idade, estilo de vida, dores, sonhos), melhor o resultado" placeholder="Ex: Profissionais 28-42 anos, altamente digitais, que valorizam produtividade e detestam burocracia. Ganham entre 8-20k/mês. Moram em capitais." value={guided.targetAudience} onChange={(value) => onUpdate("targetAudience", value)} />
+          <GuidedField label="Posicionamento desejado" hint="A frase que diferencia sua marca de todas as outras. Como quer ser percebido?" placeholder='Ex: A alternativa premium e minimalista ao Trello — menos features, mais foco. "O Notion para quem tem TDAH." Queremos ser vistos como a opção mais inteligente, não a mais barata.' value={guided.positioning} onChange={(value) => onUpdate("positioning", value)} />
+          <GuidedField label="Valores e crenças da marca" hint="O que a marca defende? No que acredita? Qual a visão de mundo?" placeholder='Ex: Acreditamos que simplicidade é sofisticação. Que foco vale mais que features. Que design bom é invisível. Que tempo é o recurso mais precioso.' value={guided.brandValues} onChange={(value) => onUpdate("brandValues", value)} rows={3} />
+          <GuidedField label="Território emocional" hint="O que as pessoas devem SENTIR ao interagir com a marca?" placeholder='Ex: Alívio + confiança. Como entrar num espaço onde tudo foi pensado pra você. Não é hype — é competência tranquila. A sensação de "isso funciona e eu nem percebi".' value={guided.emotionalTerritory} onChange={(value) => onUpdate("emotionalTerritory", value)} rows={3} />
+          <GuidedField label="Referências de marcas" hint="Marcas que você admira (estética, estratégia ou tom) — não precisam ser do mesmo setor" placeholder="Ex: Visualmente: Notion, Linear, Arc Browser. Estrategicamente: Apple, Supreme. Tom de voz: Oatly. Materialidade: Aesop." value={guided.references} onChange={(value) => onUpdate("references", value)} />
+          <GuidedField label="Essência da marca (referências culturais)" hint="Cultura, estética, vibe, arquétipos, filmes, artistas, lugares, décadas, movimentos" placeholder="Ex: Arquétipo: Rebelde elegante. Estética: brutalismo + luxo discreto. Referências: Blade Runner, Dieter Rams, Tadao Ando. Décadas: anos 70 (tons terrosos) + futuro próximo." value={guided.essenceReferences} onChange={(value) => onUpdate("essenceReferences", value)} rows={3} />
+          <GuidedField label="Fraquezas da concorrência" hint="O que seus concorrentes fazem mal? Onde está a oportunidade visual/estratégica?" placeholder="Ex: Todos os concorrentes usam azul corporativo e linguagem genérica de startup. Ninguém fala de forma humana. Sites parecem templates. Oportunidade: ser a marca com personalidade num mar de genéricos." value={guided.competitorWeaknesses} onChange={(value) => onUpdate("competitorWeaknesses", value)} rows={3} />
+          <GuidedField label="Onde a marca vive (touchpoints)" hint="Digital? Físico? Redes sociais? PDV? Embalagens? Fachada? App?" placeholder="Ex: 80% digital (site, app iOS, Instagram, LinkedIn). 20% físico (eventos, adesivos, camisetas da equipe). Touchpoint principal: dashboard do produto. Secundário: Instagram feed + stories." value={guided.physicalTouchpoints} onChange={(value) => onUpdate("physicalTouchpoints", value)} rows={3} />
+          <GuidedField label="O que a marca NÃO deve transmitir" hint="Proibições visuais e de tom — o que seria fora da marca?" placeholder="Ex: Corporativo demais, genérico, alegre/colorido em excesso, complexo, intimidador. Nada que pareça banco, consultoria ou startup genérica de Vale do Silício." value={guided.avoidances} onChange={(value) => onUpdate("avoidances", value)} />
+          <GuidedField label="Preferências de cores" hint="Cores que gosta, odeia ou que representam algo para a marca" placeholder="Ex: Evitar azul corporativo. Prefiro paleta escura com um acento vibrante (laranja ou verde neon). Referência: Figma (roxo + gradientes). Preto absoluto é permitido." value={guided.colorPreferences} onChange={(value) => onUpdate("colorPreferences", value)} />
+          <GuidedField label="Instagram / links oficiais" hint="Cole perfis e links que representem a marca" placeholder="Ex: https://instagram.com/suaMarca\nhttps://site.com\nhttps://linkedin.com/company/suaMarca" value={guided.instagramLinks} onChange={(value) => onUpdate("instagramLinks", value)} rows={3} />
 
           <div className="flex items-center gap-3">
             <button

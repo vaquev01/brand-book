@@ -8,7 +8,6 @@ import {
   ExternalUrlsSection,
   FormErrorMessage,
   GuidedBriefingSection,
-  IntentionalityToggle,
   LogoUploadSection,
   ProjectModeSection,
   ReferenceImagesSection,
@@ -44,7 +43,7 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
   const [projectMode, setProjectMode] = useState<ProjectMode>("new_brand");
   const [scope, setScope] = useState<GenerateScope>("full");
   const [creativity, setCreativity] = useState<CreativityLevel>("balanced");
-  const [intentionality, setIntentionality] = useState(false);
+  const intentionality = true; // Always-on: semiotic analysis is now always active
   const [showGuided, setShowGuided] = useState(false);
   const [referenceImages, setReferenceImages] = useState<UploadedAsset[]>([]);
   const [logoImage, setLogoImage] = useState<UploadedAsset | null>(null);
@@ -138,9 +137,6 @@ export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
 
       {/* Creativity Level */}
       <CreativitySection creativity={creativity} onChange={setCreativity} />
-
-      {/* Intentionality Toggle */}
-      <IntentionalityToggle intentionality={intentionality} onToggle={() => setIntentionality(!intentionality)} />
 
       {/* Guided Briefing */}
       <GuidedBriefingSection

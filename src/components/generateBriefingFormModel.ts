@@ -12,6 +12,11 @@ export interface GuidedBriefing {
   hasMascot: boolean;
   mascotDescription: string;
   extraContext: string;
+  // New strategic fields
+  brandValues: string;
+  emotionalTerritory: string;
+  physicalTouchpoints: string;
+  competitorWeaknesses: string;
 }
 
 export type ProjectMode = "new_brand" | "rebrand";
@@ -100,19 +105,39 @@ export function createEmptyGuidedBriefing(): GuidedBriefing {
     hasMascot: false,
     mascotDescription: "",
     extraContext: "",
+    brandValues: "",
+    emotionalTerritory: "",
+    physicalTouchpoints: "",
+    competitorWeaknesses: "",
   };
 }
 
 export function composeBriefing(guided: GuidedBriefing, rawBriefing: string): string {
   const parts: string[] = [];
+
+  // Core identity signals — highest priority for Phase 0 dissection
   if (guided.whatItDoes) parts.push(`══ O QUE A MARCA FAZ ══\n${guided.whatItDoes}`);
   if (guided.targetAudience) parts.push(`══ PÚBLICO-ALVO ══\n${guided.targetAudience}`);
   if (guided.positioning) parts.push(`══ POSICIONAMENTO DESEJADO ══\n${guided.positioning}`);
+  if (guided.brandValues) parts.push(`══ VALORES E CRENÇAS DA MARCA ══\n${guided.brandValues}`);
+  if (guided.emotionalTerritory) parts.push(`══ TERRITÓRIO EMOCIONAL ══\n${guided.emotionalTerritory}`);
+
+  // Strategic intelligence
+  if (guided.competitorWeaknesses) parts.push(`══ FRAQUEZAS DA CONCORRÊNCIA (OPORTUNIDADE) ══\n${guided.competitorWeaknesses}`);
+
+  // Visual & aesthetic direction
   if (guided.references) parts.push(`══ REFERÊNCIAS DE MARCAS ══\n${guided.references}`);
-  if (guided.instagramLinks) parts.push(`══ INSTAGRAM / LINKS OFICIAIS ══\n${guided.instagramLinks}`);
   if (guided.essenceReferences) parts.push(`══ ESSÊNCIA DA MARCA (CULTURA, ESTÉTICA, ARQUÉTIPOS) ══\n${guided.essenceReferences}`);
-  if (guided.avoidances) parts.push(`══ O QUE EVITAR / NÃO TRANSMITIR ══\n${guided.avoidances}`);
   if (guided.colorPreferences) parts.push(`══ PREFERÊNCIAS DE CORES ══\n${guided.colorPreferences}`);
+  if (guided.avoidances) parts.push(`══ O QUE EVITAR / NÃO TRANSMITIR ══\n${guided.avoidances}`);
+
+  // Touchpoints & execution context
+  if (guided.physicalTouchpoints) parts.push(`══ ONDE A MARCA VIVE (TOUCHPOINTS PRIORITÁRIOS) ══\n${guided.physicalTouchpoints}`);
+
+  // External references
+  if (guided.instagramLinks) parts.push(`══ INSTAGRAM / LINKS OFICIAIS ══\n${guided.instagramLinks}`);
+
+  // Character & extras
   if (guided.hasMascot) {
     parts.push(`══ MASCOTE / PERSONAGEM ══\n${guided.mascotDescription || "Sim, criar um personagem único para a marca"}`);
   }
@@ -133,6 +158,10 @@ export function countFilledGuidedFields(guided: GuidedBriefing): number {
     guided.colorPreferences,
     guided.hasMascot ? "yes" : "",
     guided.extraContext,
+    guided.brandValues,
+    guided.emotionalTerritory,
+    guided.physicalTouchpoints,
+    guided.competitorWeaknesses,
   ].filter(Boolean).length;
 }
 
