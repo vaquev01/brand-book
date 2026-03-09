@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 
 // Edge-safe config: no Prisma/pg imports — used by middleware
 export const authConfig = {
+  trustHost: true,
   providers: [
     Credentials({
       name: "Acesso Direto",
