@@ -334,110 +334,148 @@ export function BrandbookViewer({
       <FontLoader data={data} />
       <SectionCover data={data} visualSummary={coverVisualSummary} />
 
-      {/* Presentation Mode overlay */}
+      {/* Presentation Mode — Cinematic Overlay */}
       {presentationMode && (() => {
         const slide = sections[currentSlide];
         const progress = sections.length > 1 ? (currentSlide / (sections.length - 1)) * 100 : 100;
         return (
           <div className="bb-presentation-overlay" style={immersiveStyle}>
-            <div className="bb-presentation-slide">
+            {/* Progress bar at top */}
+            <div
+              className="bb-presentation-progress"
+              style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${theme.primaryHex}, ${theme.accentHex})` }}
+            />
+
+            {/* Slide content */}
+            <div className="bb-presentation-slide" key={currentSlide}>
               {slide && slide.render(slide.num)}
             </div>
+
+            {/* Controls */}
             <div className="bb-presentation-controls">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-5">
                 <button
                   type="button"
                   onClick={exitPresentation}
-                  className="text-xs font-bold text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/30 transition"
+                  className="text-[11px] font-bold text-white/30 hover:text-white/80 px-3 py-1.5 rounded-lg border border-white/[0.06] hover:border-white/20 bg-white/[0.03] transition-all"
                 >
-                  Esc — Sair
+                  ESC
                 </button>
-                <span className="text-xs text-white/30">
-                  {String(currentSlide + 1).padStart(2, "0")} / {String(sections.length).padStart(2, "0")}
-                </span>
-                <span className="text-xs text-white/40 hidden sm:block">{slide?.title}</span>
+                <div className="hidden sm:flex items-center gap-2.5">
+                  <span className="text-[11px] font-black text-white/20 tabular-nums">
+                    {String(currentSlide + 1).padStart(2, "0")}
+                  </span>
+                  <div className="w-12 h-[2px] rounded-full bg-white/[0.06] overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${progress}%`, background: theme.accentHex }}
+                    />
+                  </div>
+                  <span className="text-[11px] font-bold text-white/10 tabular-nums">
+                    {String(sections.length).padStart(2, "0")}
+                  </span>
+                </div>
+                <span className="text-[11px] text-white/20 hidden md:block truncate max-w-[200px]">{slide?.title}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCurrentSlide((s) => Math.max(s - 1, 0))}
-                  disabled={currentSlide === 0}
-                  className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white border border-white/10 rounded-lg disabled:opacity-25 transition"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrentSlide((s) => Math.min(s + 1, sections.length - 1))}
-                  disabled={currentSlide === sections.length - 1}
-                  className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white border border-white/10 rounded-lg disabled:opacity-25 transition"
-                >
-                  ›
-                </button>
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-white/10"
+                  style={{ fontFamily: `'${theme.headingFont}', sans-serif` }}>
+                  {data.brandName}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((s) => Math.max(s - 1, 0))}
+                    disabled={currentSlide === 0}
+                    className="w-9 h-9 flex items-center justify-center text-white/40 hover:text-white border border-white/[0.08] hover:border-white/20 rounded-xl disabled:opacity-15 transition-all bg-white/[0.02] hover:bg-white/[0.05]"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentSlide((s) => Math.min(s + 1, sections.length - 1))}
+                    disabled={currentSlide === sections.length - 1}
+                    className="w-9 h-9 flex items-center justify-center text-white/40 hover:text-white border border-white/[0.08] hover:border-white/20 rounded-xl disabled:opacity-15 transition-all bg-white/[0.02] hover:bg-white/[0.05]"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-            <div
-              className="bb-presentation-progress"
-              style={{ width: `${progress}%`, background: theme.accentHex }}
-            />
           </div>
         );
       })()}
 
-      {/* Immersive Mode Toggle — always visible */}
-      <div className="no-print flex items-center justify-end gap-2 mb-4 flex-wrap">
-        {/* Ambientar Brandbook — generate decorative assets */}
-        {immersive && hasGeneration && imgGen.currentProviderHasKey && imgGen.immersiveMissing > 0 && !immersiveGenerating && (
+      {/* ─── Viewer Controls ─── */}
+      <div className="no-print flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(180deg, ${theme.primaryHex}, ${theme.accentHex})` }} />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: rgba(theme.primaryHex, 0.35) }}>
+            {data.brandName}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Ambientar Brandbook */}
+          {immersive && hasGeneration && imgGen.currentProviderHasKey && imgGen.immersiveMissing > 0 && !immersiveGenerating && (
+            <button
+              type="button"
+              onClick={async () => {
+                setImmersiveGenerating(true);
+                try { await imgGen.generateImmersiveAssets(); } finally { setImmersiveGenerating(false); }
+              }}
+              disabled={imgGen.loadingKey !== null}
+              className="text-[11px] font-bold px-3.5 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 transition-all disabled:opacity-40"
+            >
+              Ambientar ({imgGen.immersiveMissing})
+            </button>
+          )}
           <button
             type="button"
-            onClick={async () => {
-              setImmersiveGenerating(true);
-              try { await imgGen.generateImmersiveAssets(); } finally { setImmersiveGenerating(false); }
-            }}
-            disabled={imgGen.loadingKey !== null}
-            className="text-xs font-bold px-4 py-2.5 rounded-xl border transition-all shadow-sm bg-white hover:bg-gray-50 border-gray-200 text-gray-700 disabled:opacity-40"
-          >
-            Ambientar Brandbook ({imgGen.immersiveMissing} assets)
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => {
-            setImmersive((v) => {
-              const next = !v;
-              if (next && hasGeneration && imgGen.currentProviderHasKey && imgGen.immersiveMissing > 0 && !immersiveTriggered.current) {
-                immersiveTriggered.current = true;
-                setImmersiveGenerating(true);
-                imgGen.generateImmersiveAssets().finally(() => setImmersiveGenerating(false));
-              }
-              return next;
-            });
-          }}
-          className={`text-xs font-bold px-4 py-2.5 rounded-xl border transition-all shadow-sm ${
-            immersive
-              ? "text-white shadow-md"
-              : "text-gray-700 bg-white hover:bg-gray-50 border-gray-200"
-          }`}
-          style={
-            immersive
-              ? {
-                  background: theme.primaryHex,
-                  borderColor: theme.primaryHex,
+            onClick={() => {
+              setImmersive((v) => {
+                const next = !v;
+                if (next && hasGeneration && imgGen.currentProviderHasKey && imgGen.immersiveMissing > 0 && !immersiveTriggered.current) {
+                  immersiveTriggered.current = true;
+                  setImmersiveGenerating(true);
+                  imgGen.generateImmersiveAssets().finally(() => setImmersiveGenerating(false));
                 }
-              : undefined
-          }
-          title="Ativa uma apresentação imersiva: o brandbook se veste da marca com cores, tipografia e linguagem em primeira pessoa"
-        >
-          🎨 Modo Imersivo{immersive ? " ✓" : ""}
-        </button>
-        <button
-          type="button"
-          onClick={() => { setCurrentSlide(0); setPresentationMode(true); }}
-          className="text-xs font-bold px-4 py-2.5 rounded-xl border transition-all shadow-sm text-gray-700 bg-white hover:bg-gray-50 border-gray-200"
-          title="Apresentar o brandbook em tela cheia, seção por seção (←→ para navegar, Esc para sair)"
-        >
-          ▶ Apresentar
-        </button>
+                return next;
+              });
+            }}
+            className={`text-[11px] font-bold px-4 py-2.5 rounded-xl border transition-all duration-300 ${
+              immersive
+                ? "text-white shadow-lg"
+                : "text-gray-600 bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+            }`}
+            style={
+              immersive
+                ? {
+                    background: `linear-gradient(135deg, ${theme.primaryHex} 0%, ${theme.accentHex} 100%)`,
+                    borderColor: "transparent",
+                    boxShadow: `0 8px 24px ${rgba(theme.primaryHex, 0.3)}`,
+                  }
+                : undefined
+            }
+          >
+            {immersive ? "Imersivo Ativo" : "Modo Imersivo"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setCurrentSlide(0); setPresentationMode(true); }}
+            className="text-[11px] font-bold px-4 py-2.5 rounded-xl border transition-all duration-300 bg-gray-900 hover:bg-gray-800 text-white border-gray-900 hover:shadow-lg"
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M6.3 2.84A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.27l9.344-5.891a1.5 1.5 0 0 0 0-2.538L6.3 2.841z" />
+              </svg>
+              Apresentar
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Immersive generation progress banner */}
