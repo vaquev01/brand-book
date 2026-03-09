@@ -186,8 +186,96 @@ export function parseGenerateInput(body: GenerateRequestPayload): GenerateInput 
     logoImage,
     scope: body.scope || "full",
     creativityLevel: body.creativityLevel || "balanced",
-    intentionality: body.intentionality || false,
+    intentionality: body.intentionality !== false,
   };
+}
+
+/**
+ * Post-generation coherence enforcement.
+ * Patches small structural issues the LLM may leave:
+ * - Ensures typographyScale fontRoles reference actual typography keys
+ * - Ensures imageGenerationBriefing.negativePrompt is never empty
+ * - Ensures accessibility.contrastRules references actual palette color names
+ */
+function enforceCoherence(data: BrandbookData): BrandbookData {
+  // 1. Fix typographyScale fontRoles that don't match actual typography keys
+  if (data.typographyScale && data.typography) {
+    const validRoles = new Set<string>();
+    if (data.typography.marketing) validRoles.add("marketing");
+    if (data.typography.ui) validRoles.add("ui");
+    if (data.typography.monospace) validRoles.add("monospace");
+    if (data.typography.primary) validRoles.add("primary");
+    if (data.typography.secondary) validRoles.add("secondary");
+
+    for (const item of data.typographyScale) {
+      if (!validRoles.has(item.fontRole)) {
+        // Map to closest valid role
+        if (validRoles.has("marketing") && /display|h1|h2/i.test(item.name)) {
+          item.fontRole = "marketing";
+        } else if (validRoles.has("ui")) {
+          item.fontRole = "ui";
+        } else if (validRoles.has("primary")) {
+          item.fontRole = "primary";
+        }
+      }
+    }
+  }
+
+  // 2. Ensure negativePrompt is populated from archetype if empty
+  if (data.imageGenerationBriefing && !data.imageGenerationBriefing.negativePrompt?.trim()) {
+    const archetype = (data.brandConcept?.brandArchetype ?? "").toLowerCase();
+    const archetypeNegatives: Record<string, string> = {
+      "sábio": "caótico, desordenado, superficial, infantil, barulhento, clip art, stock genérico",
+      "sage": "caótico, desordenado, superficial, infantil, barulhento, clip art, stock genérico",
+      "criador": "genérico, template, corporativo frio, sem personalidade, clip art, stock photo",
+      "creator": "genérico, template, corporativo frio, sem personalidade, clip art, stock photo",
+      "herói": "passivo, fraco, hesitante, desbotado, sem energia, estático",
+      "hero": "passivo, fraco, hesitante, desbotado, sem energia, estático",
+      "explorador": "confinado, claustrofóbico, estático, previsível, doméstico, repetitivo",
+      "explorer": "confinado, claustrofóbico, estático, previsível, doméstico, repetitivo",
+      "rebelde": "convencional, burocrático, suave, conformista, pasteurizado, corporate",
+      "outlaw": "convencional, burocrático, suave, conformista, pasteurizado, corporate",
+      "mago": "mundano, literal, sem mistério, flat, prosaico, genérico",
+      "magician": "mundano, literal, sem mistério, flat, prosaico, genérico",
+      "cuidador": "agressivo, frio, distante, impessoal, cortante, duro",
+      "caregiver": "agressivo, frio, distante, impessoal, cortante, duro",
+      "amante": "ascético, duro, industrial, descuidado, mecânico, sem textura",
+      "lover": "ascético, duro, industrial, descuidado, mecânico, sem textura",
+      "bobo": "sério demais, rígido, sem humor, austero, monótono, pesado",
+      "jester": "sério demais, rígido, sem humor, austero, monótono, pesado",
+      "inocente": "cínico, sombrio, complexo demais, ambíguo, pesado, dark",
+      "innocent": "cínico, sombrio, complexo demais, ambíguo, pesado, dark",
+      "cara comum": "elitista, pretensioso, inacessível, ostentoso, artificial",
+      "everyman": "elitista, pretensioso, inacessível, ostentoso, artificial",
+      "governante": "desorganizado, amador, improvisado, barato, descuidado",
+      "ruler": "desorganizado, amador, improvisado, barato, descuidado",
+    };
+
+    let negPrompt = "watermark, text overlay, blurry, low quality, distorted, stock photo genérico, clip art";
+    for (const [key, val] of Object.entries(archetypeNegatives)) {
+      if (archetype.includes(key)) {
+        negPrompt = val + ", " + negPrompt;
+        break;
+      }
+    }
+    data.imageGenerationBriefing.negativePrompt = negPrompt;
+  }
+
+  // 3. Ensure accessibility contrastRules references actual color names
+  if (data.accessibility && data.colors?.primary?.length) {
+    const colorNames = [
+      ...data.colors.primary.map((c) => c.name),
+      ...(data.colors.secondary ?? []).map((c) => c.name),
+    ];
+    const rules = data.accessibility.contrastRules;
+    const hasColorRef = colorNames.some((name) => rules.includes(name));
+    if (!hasColorRef && colorNames.length >= 2) {
+      data.accessibility.contrastRules +=
+        ` Verificar contraste específico: ${colorNames[0]} sobre branco (#FFFFFF), ${colorNames[1] ?? colorNames[0]} sobre ${colorNames[0]}.`;
+    }
+  }
+
+  return data;
 }
 
 export async function generateBrandbook(
@@ -217,7 +305,7 @@ export async function generateBrandbook(
   const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
   const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
   const useGemini = provider === "gemini";
-  const estimatedChars = 25000;
+  const estimatedChars = 45000;
 
   onProgress(hasLogoImage ? "Analisando logo da marca..." : "Preparando geração...", 2);
 
@@ -339,7 +427,7 @@ export async function generateBrandbook(
       model: resolvedModel,
       stream: true,
       temperature,
-      max_tokens: 16384,
+      max_tokens: 32768,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
@@ -396,7 +484,7 @@ export async function generateBrandbook(
       const completion = await openai.chat.completions.create({
         model: openaiModel?.trim() || "gpt-4o",
         temperature: 0.2,
-        max_tokens: 16384,
+        max_tokens: 32768,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
@@ -416,8 +504,9 @@ export async function generateBrandbook(
   const migrated1 = migrateBrandbook(parsed);
   const validated1 = BrandbookSchemaV2.safeParse(migrated1);
   if (validated1.success) {
+    const coherent = enforceCoherence(validated1.data);
     onProgress("Brandbook pronto! ✓", 100);
-    return validated1.data;
+    return coherent;
   }
 
   onProgress("Corrigindo e refinando brandbook...", 94);
@@ -456,7 +545,7 @@ export async function generateBrandbook(
     const completion = await openai.chat.completions.create({
       model: openaiModel?.trim() || "gpt-4o",
       temperature: 0.2,
-      max_tokens: 16384,
+      max_tokens: 32768,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: buildSystemPrompt(scope, creativityLevel, intentionality) },
@@ -479,6 +568,7 @@ export async function generateBrandbook(
     throw new Error("Brandbook gerado mas inválido. Erros:\n" + formatZodIssues(validated2.error.issues));
   }
 
+  const coherent2 = enforceCoherence(validated2.data);
   onProgress("Brandbook pronto! ✓", 100);
-  return validated2.data;
+  return coherent2;
 }
