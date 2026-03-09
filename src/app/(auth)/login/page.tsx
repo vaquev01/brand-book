@@ -1,0 +1,112 @@
+"use client"
+
+import { signIn } from "next-auth/react"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
+
+function LoginContent() {
+  const searchParams = useSearchParams()
+  const error = searchParams.get("error")
+
+  const errorMessages: Record<string, string> = {
+    OAuthSignin: "Erro ao iniciar autenticação com GitHub.",
+    OAuthCallback: "Erro no retorno do GitHub. Tente novamente.",
+    OAuthCreateAccount: "Não foi possível criar sua conta.",
+    EmailCreateAccount: "Não foi possível criar sua conta.",
+    Callback: "Erro no processo de autenticação.",
+    OAuthAccountNotLinked:
+      "Este e-mail já está vinculado a outro método de login.",
+    default: "Ocorreu um erro ao entrar. Tente novamente.",
+  }
+
+  const errorMessage = error
+    ? (errorMessages[error] ?? errorMessages.default)
+    : null
+
+  return (
+    <div className="w-full max-w-md">
+      {/* Card */}
+      <div className="relative rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        {/* Subtle glow */}
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/10 via-transparent to-blue-500/5" />
+
+        {/* Logo / Brand */}
+        <div className="relative mb-8 text-center">
+          <div className="mb-3 inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-600 p-3 shadow-lg shadow-violet-500/30">
+            <span className="text-2xl font-bold text-white select-none">✦</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            brandbook
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-400">
+            Crie identidades visuais incríveis com IA
+          </p>
+        </div>
+
+        {/* Error message */}
+        {errorMessage && (
+          <div className="relative mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <span className="mr-2">⚠</span>
+            {errorMessage}
+          </div>
+        )}
+
+        {/* GitHub button */}
+        <button
+          onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+          className="group relative flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/10 px-5 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:border-white/20 hover:bg-white/15 hover:shadow-xl active:scale-[0.98]"
+        >
+          {/* GitHub icon */}
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-5 w-5 flex-shrink-0 fill-current"
+          >
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z" />
+          </svg>
+          Entrar com GitHub
+          <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/0 transition-all duration-200 group-hover:ring-white/10" />
+        </button>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/10" />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs leading-relaxed text-slate-500">
+          Ao entrar, você concorda com nossos{" "}
+          <a
+            href="/terms"
+            className="text-slate-400 underline-offset-2 hover:text-slate-300 hover:underline"
+          >
+            Termos de Uso
+          </a>
+          {" "}e{" "}
+          <a
+            href="/privacy"
+            className="text-slate-400 underline-offset-2 hover:text-slate-300 hover:underline"
+          >
+            Política de Privacidade
+          </a>
+          .
+        </p>
+      </div>
+
+      {/* Bottom tagline */}
+      <p className="mt-6 text-center text-xs text-slate-600">
+        brandbook &copy; {new Date().getFullYear()} — Powered by AI
+      </p>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
+  )
+}

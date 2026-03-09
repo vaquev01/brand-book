@@ -1,0 +1,150 @@
+{
+  "app": {
+    "name": "brandbook",
+    "tagline": "Crie identidades de marca incríveis com IA",
+    "description": "Plataforma de identidade de marca com IA"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projetos",
+    "new_project": "Novo Projeto",
+    "analytics": "Analytics",
+    "billing": "Plano & Cobrança",
+    "settings": "Configurações",
+    "logout": "Sair da conta"
+  },
+  "auth": {
+    "login_title": "Bem-vindo de volta",
+    "login_subtitle": "Entre na sua conta para continuar",
+    "sign_in_github": "Entrar com GitHub",
+    "sign_in_google": "Entrar com Google",
+    "logout": "Sair",
+    "errors": {
+      "OAuthSignin": "Erro ao iniciar autenticação. Tente novamente.",
+      "OAuthCallback": "Erro no callback OAuth. Tente novamente.",
+      "OAuthCreateAccount": "Não foi possível criar conta. Tente outro método.",
+      "EmailCreateAccount": "Não foi possível criar conta com este e-mail.",
+      "Callback": "Erro de callback de autenticação.",
+      "Default": "Ocorreu um erro de autenticação."
+    }
+  },
+  "dashboard": {
+    "welcome": "Olá, {name}",
+    "subtitle": "Seus brandbooks e projetos de marca",
+    "new_brandbook": "Novo Brandbook",
+    "recent_projects": "Projetos recentes",
+    "no_projects_title": "Nenhum projeto ainda",
+    "no_projects_subtitle": "Crie seu primeiro brandbook com IA em minutos",
+    "create_first": "Criar primeiro brandbook",
+    "stats": {
+      "projects": "Projetos",
+      "generated": "Brandbooks gerados",
+      "in_review": "Em revisão",
+      "approved": "Aprovados"
+    }
+  },
+  "generate": {
+    "title": "Gerar Brandbook",
+    "subtitle": "Descreva sua marca e a IA cria tudo automaticamente",
+    "brand_name": "Nome da marca",
+    "brand_name_placeholder": "ex. Minha Marca",
+    "industry": "Setor",
+    "briefing": "Briefing da marca",
+    "briefing_placeholder": "Descreva sua marca, valores, público-alvo...",
+    "generate_button": "Gerar com IA",
+    "generating": "Gerando...",
+    "progress": {
+      "strategy": "Analisando estratégia de marca...",
+      "identity": "Criando identidade visual...",
+      "content": "Escrevendo conteúdo da marca...",
+      "assets": "Preparando assets...",
+      "done": "Brandbook pronto!"
+    }
+  },
+  "sections": {
+    "cover": "Capa",
+    "dna": "DNA da Marca",
+    "brand_story": "História da Marca",
+    "positioning": "Posicionamento",
+    "audience": "Público & Personas",
+    "verbal_identity": "Identidade Verbal",
+    "logo": "Logo",
+    "logo_variants": "Variações do Logo",
+    "colors": "Paleta de Cores",
+    "typography": "Tipografia",
+    "typography_scale": "Escala Tipográfica",
+    "key_visual": "Key Visual",
+    "mascots": "Mascotes",
+    "brand_world": "Mundo da Marca",
+    "ui_guidelines": "Diretrizes de UI",
+    "tokens_a11y": "Tokens & Acessibilidade",
+    "ux_motion": "UX & Motion",
+    "applications": "Aplicações",
+    "social_media": "Mídias Sociais",
+    "asset_pack": "Pacote de Assets",
+    "brand_assets": "Assets da Marca",
+    "brand_health": "Saúde da Marca",
+    "production": "Diretrizes de Produção",
+    "governance": "Governança"
+  },
+  "export": {
+    "pdf": "Exportar PDF",
+    "tokens": "Design Tokens",
+    "json": "Exportar JSON",
+    "css": "Variáveis CSS",
+    "download": "Baixar",
+    "share": "Link de compartilhamento"
+  },
+  "billing": {
+    "current_plan": "Plano atual",
+    "upgrade": "Fazer upgrade",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Para projetos pessoais",
+        "price": "R$ 0/mês",
+        "features": ["1 projeto", "Export PDF básico", "Suporte da comunidade"]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Para profissionais",
+        "price": "R$ 149/mês",
+        "features": ["5 projetos", "PDF sem marca d'água", "Design tokens", "Suporte prioritário"]
+      },
+      "team": {
+        "name": "Team",
+        "description": "Para equipes de design",
+        "price": "R$ 499/mês",
+        "features": ["20 projetos", "Colaboração em equipe", "Domínio personalizado", "Analytics"]
+      },
+      "agency": {
+        "name": "Agency",
+        "description": "Para agências",
+        "price": "R$ 1.499/mês",
+        "features": ["Projetos ilimitados", "White-label", "Acesso à API", "Webhooks", "Suporte dedicado"]
+      }
+    }
+  },
+  "errors": {
+    "generic": "Ocorreu um erro. Tente novamente.",
+    "auth": "Autenticação necessária.",
+    "not_found": "Não encontrado.",
+    "generation_failed": "Geração falhou. Tente novamente.",
+    "export_failed": "Exportação falhou.",
+    "plan_limit": "Limite do plano atingido. Faça upgrade para continuar."
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "loading": "Carregando...",
+    "success": "Salvo!",
+    "back": "Voltar",
+    "close": "Fechar",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "retry": "Tentar novamente",
+    "learn_more": "Saiba mais"
+  }
+}

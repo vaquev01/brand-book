@@ -1,0 +1,150 @@
+{
+  "app": {
+    "name": "brandbook",
+    "tagline": "Create stunning brand identities with AI",
+    "description": "AI-powered brand identity platform"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "new_project": "New Project",
+    "analytics": "Analytics",
+    "billing": "Billing",
+    "settings": "Settings",
+    "logout": "Sign out"
+  },
+  "auth": {
+    "login_title": "Welcome back",
+    "login_subtitle": "Sign in to your account to continue",
+    "sign_in_github": "Continue with GitHub",
+    "sign_in_google": "Continue with Google",
+    "logout": "Sign out",
+    "errors": {
+      "OAuthSignin": "Error starting OAuth sign in. Please try again.",
+      "OAuthCallback": "Error during OAuth callback. Please try again.",
+      "OAuthCreateAccount": "Could not create account. Try a different provider.",
+      "EmailCreateAccount": "Could not create account with this email.",
+      "Callback": "Authentication callback error.",
+      "Default": "An authentication error occurred."
+    }
+  },
+  "dashboard": {
+    "welcome": "Hello, {name}",
+    "subtitle": "Your brand books and identity projects",
+    "new_brandbook": "New Brandbook",
+    "recent_projects": "Recent projects",
+    "no_projects_title": "No projects yet",
+    "no_projects_subtitle": "Create your first brandbook with AI in minutes",
+    "create_first": "Create first brandbook",
+    "stats": {
+      "projects": "Projects",
+      "generated": "Brandbooks generated",
+      "in_review": "In review",
+      "approved": "Approved"
+    }
+  },
+  "generate": {
+    "title": "Generate Brandbook",
+    "subtitle": "Describe your brand and AI creates everything automatically",
+    "brand_name": "Brand name",
+    "brand_name_placeholder": "e.g. Acme Corp",
+    "industry": "Industry",
+    "briefing": "Brand briefing",
+    "briefing_placeholder": "Describe your brand, values, target audience...",
+    "generate_button": "Generate with AI",
+    "generating": "Generating...",
+    "progress": {
+      "strategy": "Analyzing brand strategy...",
+      "identity": "Creating visual identity...",
+      "content": "Writing brand content...",
+      "assets": "Preparing assets...",
+      "done": "Brandbook ready!"
+    }
+  },
+  "sections": {
+    "cover": "Cover",
+    "dna": "Brand DNA",
+    "brand_story": "Brand Story",
+    "positioning": "Positioning",
+    "audience": "Audience & Personas",
+    "verbal_identity": "Verbal Identity",
+    "logo": "Logo",
+    "logo_variants": "Logo Variants",
+    "colors": "Color Palette",
+    "typography": "Typography",
+    "typography_scale": "Type Scale",
+    "key_visual": "Key Visual",
+    "mascots": "Brand Mascots",
+    "brand_world": "Brand World",
+    "ui_guidelines": "UI Guidelines",
+    "tokens_a11y": "Tokens & Accessibility",
+    "ux_motion": "UX & Motion",
+    "applications": "Applications",
+    "social_media": "Social Media",
+    "asset_pack": "Asset Pack",
+    "brand_assets": "Brand Assets",
+    "brand_health": "Brand Health",
+    "production": "Production Guidelines",
+    "governance": "Governance"
+  },
+  "export": {
+    "pdf": "Export PDF",
+    "tokens": "Design Tokens",
+    "json": "Export JSON",
+    "css": "CSS Variables",
+    "download": "Download",
+    "share": "Share link"
+  },
+  "billing": {
+    "current_plan": "Current plan",
+    "upgrade": "Upgrade plan",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "For personal projects",
+        "price": "$0/month",
+        "features": ["1 project", "Basic PDF export", "Community support"]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For professionals",
+        "price": "$29/month",
+        "features": ["5 projects", "PDF without watermark", "Design tokens", "Priority support"]
+      },
+      "team": {
+        "name": "Team",
+        "description": "For design teams",
+        "price": "$99/month",
+        "features": ["20 projects", "Team collaboration", "Custom domain", "Analytics"]
+      },
+      "agency": {
+        "name": "Agency",
+        "description": "For agencies",
+        "price": "$299/month",
+        "features": ["Unlimited projects", "White-label", "API access", "Webhooks", "Dedicated support"]
+      }
+    }
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "auth": "Authentication required.",
+    "not_found": "Not found.",
+    "generation_failed": "Generation failed. Please try again.",
+    "export_failed": "Export failed.",
+    "plan_limit": "Plan limit reached. Upgrade to continue."
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "success": "Saved!",
+    "back": "Back",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "retry": "Retry",
+    "learn_more": "Learn more"
+  }
+}
