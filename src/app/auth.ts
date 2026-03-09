@@ -1,25 +1,42 @@
 import NextAuth from "next-auth"
-import GitHub from "next-auth/providers/github"
+import Credentials from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // prisma as never: silences PrismaPg adapter type mismatch — runtime is correct
   adapter: PrismaAdapter(prisma as never),
   providers: [
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    Credentials({
+      name: "Acesso Direto",
+      credentials: {},
+      async authorize() {
+        // Upsert a demo user for mock access
+        const user = await prisma.user.upsert({
+          where: { email: "demo@brandbook.app" },
+          update: { updatedAt: new Date() },
+          create: {
+            email: "demo@brandbook.app",
+            name: "Brandbook User",
+            role: "editor",
+            subscriptionTier: "pro",
+          },
+        })
+        return { id: user.id, email: user.email, name: user.name }
+      },
     }),
   ],
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
     error: "/login",
   },
   callbacks: {
-    session({ session, user }) {
-      session.user.id = user.id
+    jwt({ token, user }) {
+      if (user) token.id = user.id
+      return token
+    },
+    session({ session, token }) {
+      if (token.id) session.user.id = token.id as string
       return session
     },
   },

@@ -1,98 +1,181 @@
 "use client"
 
 import { signIn } from "next-auth/react"
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { useState } from "react"
 
-function LoginContent() {
-  const searchParams = useSearchParams()
-  const error = searchParams.get("error")
+const FEATURES = [
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+      </svg>
+    ),
+    title: "IA Generativa Premium",
+    desc: "GPT-4o, Gemini, DALL-E 3, Stability, Ideogram e Imagen 3 trabalhando em conjunto",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+      </svg>
+    ),
+    title: "Modo Imersivo",
+    desc: "Apresentação que se veste da marca — cores, tipografia e linguagem da identidade",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
+      </svg>
+    ),
+    title: "24 Seções Completas",
+    desc: "DNA, cores, tipografia, logos, mascotes, aplicações, social media e muito mais",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-7.5a2.25 2.25 0 0 1 2.25-2.25h.75" />
+      </svg>
+    ),
+    title: "Exportação Profissional",
+    desc: "PDF, ZIP com assets, JSON estruturado e compartilhamento por link",
+  },
+]
 
-  const errorMessages: Record<string, string> = {
-    OAuthSignin: "Erro ao iniciar autenticação com GitHub.",
-    OAuthCallback: "Erro no retorno do GitHub. Tente novamente.",
-    OAuthCreateAccount: "Não foi possível criar sua conta.",
-    EmailCreateAccount: "Não foi possível criar sua conta.",
-    Callback: "Erro no processo de autenticação.",
-    OAuthAccountNotLinked:
-      "Este e-mail já está vinculado a outro método de login.",
-    default: "Ocorreu um erro ao entrar. Tente novamente.",
+const STATS = [
+  { value: "24", label: "Seções do Manual" },
+  { value: "4", label: "Provedores de IA" },
+  { value: "28", label: "Tipos de Asset" },
+  { value: "16", label: "Indústrias" },
+]
+
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false)
+
+  async function handleAccess() {
+    setLoading(true)
+    await signIn("credentials", { callbackUrl: "/dashboard" })
   }
 
-  const errorMessage = error
-    ? (errorMessages[error] ?? errorMessages.default)
-    : null
-
   return (
-    <div className="w-full max-w-md">
-      {/* Card */}
-      <div className="relative rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
-        {/* Subtle glow */}
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/10 via-transparent to-blue-500/5" />
-
-        {/* Logo / Brand */}
-        <div className="relative mb-8 text-center">
-          <div className="mb-3 inline-flex items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-blue-600 p-3 shadow-lg shadow-violet-500/30">
-            <span className="text-2xl font-bold text-white select-none">✦</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            brandbook
-          </h1>
-          <p className="mt-1.5 text-sm text-slate-400">
-            Crie identidades visuais incríveis com IA
-          </p>
+    <div className="w-full max-w-6xl mx-auto">
+      {/* Hero */}
+      <div className="text-center mb-16">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5 mb-8">
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-xs font-medium text-violet-300">Plataforma ativa</span>
         </div>
 
-        {/* Error message */}
-        {errorMessage && (
-          <div className="relative mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            <span className="mr-2">⚠</span>
-            {errorMessage}
-          </div>
-        )}
+        {/* Logo */}
+        <div className="mb-6 inline-flex items-center justify-center rounded-3xl bg-gradient-to-br from-violet-500 to-blue-600 p-4 shadow-2xl shadow-violet-500/30">
+          <span className="text-4xl font-bold text-white select-none">✦</span>
+        </div>
 
-        {/* GitHub button */}
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4">
+          brand
+          <span className="bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">book</span>
+        </h1>
+
+        <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
+          Gere manuais de marca profissionais com inteligência artificial.
+          <br className="hidden sm:block" />
+          Do briefing ao brandbook completo em minutos.
+        </p>
+
+        <p className="text-sm text-slate-500 max-w-lg mx-auto mb-10">
+          Sistema com Art Director IA que pensa como Paula Scher, Sagmeister e David Carson.
+          Cada prompt avaliado com scorecard de coerência de marca.
+        </p>
+
+        {/* CTA */}
         <button
-          onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
-          className="group relative flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/10 px-5 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:border-white/20 hover:bg-white/15 hover:shadow-xl active:scale-[0.98]"
+          onClick={handleAccess}
+          disabled={loading}
+          className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl shadow-violet-500/25 hover:shadow-2xl hover:shadow-violet-500/40 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait"
         >
-          {/* GitHub icon */}
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="h-5 w-5 flex-shrink-0 fill-current"
-          >
-            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z" />
-          </svg>
-          Entrar com GitHub
-          <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/0 transition-all duration-200 group-hover:ring-white/10" />
+          {loading ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeLinecap="round" />
+              </svg>
+              Entrando...
+            </>
+          ) : (
+            <>
+              Acessar Plataforma
+              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </>
+          )}
         </button>
 
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/10" />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <p className="text-center text-xs leading-relaxed text-slate-500">
-          Uso interno — ao entrar, você aceita as diretrizes de uso da plataforma.
+        <p className="text-xs text-slate-600 mt-4">
+          Acesso direto — sem cadastro necessário
         </p>
       </div>
 
-      {/* Bottom tagline */}
-      <p className="mt-6 text-center text-xs text-slate-600">
-        brandbook &copy; {new Date().getFullYear()} — Powered by AI
-      </p>
-    </div>
-  )
-}
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-16">
+        {STATS.map((s) => (
+          <div
+            key={s.label}
+            className="text-center p-5 rounded-2xl border border-white/5 bg-white/[0.02]"
+          >
+            <div className="text-3xl font-black bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+              {s.value}
+            </div>
+            <div className="text-xs text-slate-500 mt-1 font-medium">{s.label}</div>
+          </div>
+        ))}
+      </div>
 
-export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginContent />
-    </Suspense>
+      {/* Features */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-16">
+        {FEATURES.map((f) => (
+          <div
+            key={f.title}
+            className="group p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-blue-500/10 flex items-center justify-center text-violet-400 mb-4 group-hover:scale-110 transition-transform">
+              {f.icon}
+            </div>
+            <h3 className="text-base font-bold text-white mb-1.5">{f.title}</h3>
+            <p className="text-sm text-slate-400 leading-relaxed">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* How it works */}
+      <div className="mb-16">
+        <h2 className="text-center text-sm font-black uppercase tracking-[0.2em] text-slate-500 mb-8">
+          Como funciona
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[
+            { step: "01", title: "Descreva sua marca", desc: "Nome, setor e briefing — a IA cuida do resto" },
+            { step: "02", title: "Gere com IA", desc: "O sistema cria cores, tipografia, logos, aplicações e mais" },
+            { step: "03", title: "Refine e exporte", desc: "Ajuste cada seção, gere imagens e exporte o manual completo" },
+          ].map((s) => (
+            <div key={s.step} className="text-center">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-violet-500/30 text-violet-400 text-sm font-black mb-3">
+                {s.step}
+              </div>
+              <h3 className="text-base font-bold text-white mb-1">{s.title}</h3>
+              <p className="text-sm text-slate-400">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="text-center pb-8">
+        <p className="text-xs text-slate-600">
+          brandbook &copy; {new Date().getFullYear()} — Powered by AI
+        </p>
+      </div>
+    </div>
   )
 }

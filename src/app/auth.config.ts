@@ -1,12 +1,16 @@
 import type { NextAuthConfig } from "next-auth"
-import GitHub from "next-auth/providers/github"
+import Credentials from "next-auth/providers/credentials"
 
 // Edge-safe config: no Prisma/pg imports — used by middleware
 export const authConfig = {
   providers: [
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    Credentials({
+      name: "Acesso Direto",
+      credentials: {},
+      async authorize() {
+        // Mock auth — always authorize. Real user upsert happens in auth.ts
+        return { id: "mock", email: "demo@brandbook.app", name: "Demo" }
+      },
     }),
   ],
   pages: {
