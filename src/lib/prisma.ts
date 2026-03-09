@@ -5,8 +5,14 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
+function cleanUrl(url: string): string {
+  // PrismaPg uses raw pg driver — strip Prisma-specific ?schema= param
+  return url.replace(/([?&])schema=[^&]*(&|$)/, (_, pre, post) => post === "&" ? pre : "").replace(/[?&]$/, "")
+}
+
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/brandbook_app?schema=public";
+  const raw = process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/brandbook_app"
+  const connectionString = cleanUrl(raw)
   const adapter = new PrismaPg({ connectionString });
 
   return new PrismaClient({ adapter });
