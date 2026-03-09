@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { BrandbookData, UploadedAsset, GeneratedAsset, Mascot, BrandPattern } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset, Mascot, BrandPattern, ImageProvider } from "@/lib/types";
+import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
@@ -10,7 +11,7 @@ interface Props {
   num: number;
   uploadedAssets?: UploadedAsset[];
   generatedImages?: Record<string, string>;
-  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
+  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -66,6 +67,10 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
   const [linkInput, setLinkInput] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [sectionGenerating, setSectionGenerating] = useState(false);
+  const [providerOverrides, setProviderOverrides] = useState<Record<string, ImageProvider | null>>({});
+  const setAssetProvider = useCallback((key: string, val: ImageProvider | null) => {
+    setProviderOverrides((prev) => ({ ...prev, [key]: val }));
+  }, []);
 
   const [editingMascot, setEditingMascot] = useState<number | null>(null);
   const [mascotDraft, setMascotDraft] = useState<Partial<Mascot>>({});
@@ -134,8 +139,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
     if (b.referenceLinks.length > 0) parts.push(`Reference links: ${b.referenceLinks.join(", ")}`);
     const customInstruction = parts.length > 0 ? parts.join(". ") : extraContext;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs, storageKey });
-  }, [onGenerate, getBriefing]);
+    const providerOverride = providerOverrides[briefingKey] ?? undefined;
+    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs, storageKey, providerOverride });
+  }, [onGenerate, getBriefing, providerOverrides]);
 
   const handleGenerateSection = useCallback(async () => {
     if (!onGenerate) return;
@@ -388,9 +394,15 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                 </div>
               )}
             </div>
-            <button type="button" onClick={() => handleGenerateWithDirection(ak, briefingKey !== ak ? briefingKey : undefined, extraContext)} disabled={loadingKey !== null} className="w-full text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
-              {isLoadingThis ? "Gerando..." : `\u2726 Gerar ${label} com direcionamento`}
-            </button>
+            <div className="flex items-center justify-between gap-2">
+              <PerImageProviderSelect
+                value={providerOverrides[briefingKey] ?? null}
+                onChange={(val) => setAssetProvider(briefingKey, val)}
+              />
+              <button type="button" onClick={() => handleGenerateWithDirection(ak, briefingKey !== ak ? briefingKey : undefined, extraContext)} disabled={loadingKey !== null} className="flex-1 text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                {isLoadingThis ? "Gerando..." : `✦ Gerar ${label}`}
+              </button>
+            </div>
           </div>
         )}
       </div>

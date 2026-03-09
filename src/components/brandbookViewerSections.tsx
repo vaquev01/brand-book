@@ -62,7 +62,7 @@ export type BrandbookViewerImageGenerationControls = {
   downloadImage: (url: string, name: string) => void;
   generate: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
   generateAllApplications: () => void | Promise<void>;
-  generateApplication: (index: number, aspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "21:9", customInstruction?: string, userReferenceImages?: string[]) => void | Promise<void>;
+  generateApplication: (index: number, aspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "21:9", customInstruction?: string, userReferenceImages?: string[], providerOverride?: import("@/lib/types").ImageProvider) => void | Promise<void>;
   loadingKey: string | null;
   saveGeneratedToAssets: (asset: GeneratedAsset, label: string, key?: AssetKey) => void | Promise<void>;
 };
@@ -255,7 +255,7 @@ export function buildSectionDefs({
           num={num}
           generatedImages={generatedImages}
           onUpdateApplicationImageKey={onUpdateApplicationImageKey}
-          onGenerateApplication={hasGeneration ? (index: number, aspectRatio: string, customInstruction?: string, refs?: string[]) => imgGen.generateApplication(index, aspectRatio as "1:1" | "16:9" | "9:16" | "4:3" | "21:9", customInstruction, refs) : undefined}
+          onGenerateApplication={hasGeneration ? (index: number, aspectRatio: string, customInstruction?: string, refs?: string[], providerOverride?) => imgGen.generateApplication(index, aspectRatio as "1:1" | "16:9" | "9:16" | "4:3" | "21:9", customInstruction, refs, providerOverride) : undefined}
           onGenerateAllApplications={hasGeneration ? () => imgGen.generateAllApplications() : undefined}
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}

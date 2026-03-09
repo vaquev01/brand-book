@@ -203,12 +203,13 @@ export function useImageGeneration({
   }
 
   const generate = useCallback(
-    async (assetKey: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => {
-      const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
+    async (assetKey: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => {
+      const activeProvider = options?.providerOverride ?? provider;
+      const providerKey = apiKeys[PROVIDER_KEY_MAP[activeProvider]];
       if (!providerKey) {
-        const p = PROVIDERS.find((x) => x.id === provider);
+        const p = PROVIDERS.find((x) => x.id === activeProvider);
         setError(
-          `Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? provider}.`
+          `Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? activeProvider}.`
         );
         return;
       }
@@ -217,7 +218,7 @@ export function useImageGeneration({
       setLoadingKey(effectiveKey);
       setError(null);
       try {
-        const basePromptRaw = buildImagePrompt(assetKey, data, provider);
+        const basePromptRaw = buildImagePrompt(assetKey, data, activeProvider);
         const userDirectionBlock = options?.customInstruction
           ? [
               "MANDATORY USER DIRECTION:",
@@ -237,13 +238,13 @@ export function useImageGeneration({
 
         if (refineBeforeGenerate) {
           const canRefine =
-            (provider !== "stability" || prompt.includes(" --neg "));
+            (activeProvider !== "stability" || prompt.includes(" --neg "));
           const hasTextKey = hasPromptOpsProviderKey(promptProvider, apiKeys);
           if (canRefine && hasTextKey) {
             try {
               const refinedPrompt = await refineImagePromptClient({
                 basePrompt,
-                imageProvider: provider,
+                imageProvider: activeProvider,
                 assetKey,
                 promptProvider,
                 apiKeys,
@@ -256,7 +257,7 @@ export function useImageGeneration({
         }
 
         const canUseRefImages =
-          provider === "imagen" && !!apiKeys.google && useReferenceImages;
+          activeProvider === "imagen" && !!apiKeys.google && useReferenceImages;
 
         const autoRefs = canUseRefImages
           ? isStrictLogoAsset(assetKey)
@@ -270,7 +271,7 @@ export function useImageGeneration({
         const referenceImages = allRefs.length > 0 ? allRefs : undefined;
 
         if (isStrictLogoAsset(assetKey) && assetKey !== "logo_primary") {
-          if (provider !== "imagen") {
+          if (activeProvider !== "imagen") {
             throw new Error(
               "Para garantir consistência do logo, use o provider Google Image e gere primeiro o Logo — Fundo Claro (ou faça upload do logo em Assets)."
             );
@@ -287,7 +288,7 @@ export function useImageGeneration({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt,
-            provider,
+            provider: activeProvider,
             assetKey,
             referenceImages,
             openaiKey: apiKeys.openai || undefined,
@@ -309,7 +310,7 @@ export function useImageGeneration({
         onAssetGenerated(effectiveKey, {
           key: effectiveKey,
           url: result.url,
-          provider,
+          provider: activeProvider,
           prompt,
           generatedAt: new Date().toISOString(),
         });
@@ -332,23 +333,24 @@ export function useImageGeneration({
   );
 
   const generateApplication = useCallback(
-    async (appIndex: number, aspectRatio: AspectRatioOption, customInstruction?: string, userReferenceImages?: string[]) => {
+    async (appIndex: number, aspectRatio: AspectRatioOption, customInstruction?: string, userReferenceImages?: string[], providerOverride?: ImageProvider) => {
+      const activeProvider = providerOverride ?? provider;
       const app = data.applications[appIndex];
       const appKey = `app_${appIndex}_${aspectRatio}`;
       setLoadingKey(appKey);
       setError(null);
       try {
-        const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
+        const providerKey = apiKeys[PROVIDER_KEY_MAP[activeProvider]];
         if (!providerKey) {
-          const p = PROVIDERS.find((x) => x.id === provider);
+          const p = PROVIDERS.find((x) => x.id === activeProvider);
           throw new Error(
-            `Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? provider}.`
+            `Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? activeProvider}.`
           );
         }
         const basePrompt = buildApplicationPrompt(
           app,
           data,
-          provider,
+          activeProvider,
           aspectRatio,
           customInstruction
         );
@@ -359,7 +361,7 @@ export function useImageGeneration({
             try {
               const refinedPrompt = await refineImagePromptClient({
                 basePrompt,
-                imageProvider: provider,
+                imageProvider: activeProvider,
                 assetKey: "brand_collateral",
                 promptProvider,
                 apiKeys,
@@ -371,7 +373,7 @@ export function useImageGeneration({
           }
         }
         const canUseRefImages =
-          provider === "imagen" && !!apiKeys.google && useReferenceImages;
+          activeProvider === "imagen" && !!apiKeys.google && useReferenceImages;
         const autoRefs = canUseRefImages
           ? pickReferenceImages(6)
           : [];
@@ -385,7 +387,7 @@ export function useImageGeneration({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt,
-            provider,
+            provider: activeProvider,
             aspectRatio,
             referenceImages,
             openaiKey: apiKeys.openai || undefined,
@@ -407,7 +409,7 @@ export function useImageGeneration({
         onAssetGenerated(appKey, {
           key: appKey,
           url: result.url,
-          provider,
+          provider: activeProvider,
           prompt,
           generatedAt: new Date().toISOString(),
         });

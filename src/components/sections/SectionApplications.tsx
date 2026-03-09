@@ -1,5 +1,6 @@
 "use client";
-import { BrandbookData, GeneratedAsset, Application } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, Application, ImageProvider } from "@/lib/types";
+import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
 import { ASSET_CATALOG, detectSizeVariants, type AssetKey } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
@@ -10,7 +11,7 @@ interface Props {
   num: number;
   generatedImages?: Record<string, string>;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
-  onGenerateApplication?: (index: number, aspectRatio: string, customInstruction?: string, referenceImages?: string[]) => void;
+  onGenerateApplication?: (index: number, aspectRatio: string, customInstruction?: string, referenceImages?: string[], providerOverride?: ImageProvider) => void;
   onGenerateAllApplications?: () => void;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
@@ -145,6 +146,10 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<Application>>({});
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [providerOverrides, setProviderOverrides] = useState<Record<number, ImageProvider | null>>({});
+  const setAppProvider = useCallback((i: number, val: ImageProvider | null) => {
+    setProviderOverrides((prev) => ({ ...prev, [i]: val }));
+  }, []);
 
   useEffect(() => {
     if (!previewImage) return;
@@ -208,8 +213,9 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
     if (b.referenceLinks.length > 0) parts.push(`Reference links: ${b.referenceLinks.join(", ")}`);
     const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-    onGenerateApplication(i, aspectRatio, customInstruction, refs);
-  }, [onGenerateApplication, getBriefing]);
+    const providerOverride = providerOverrides[i] ?? undefined;
+    onGenerateApplication(i, aspectRatio, customInstruction, refs, providerOverride);
+  }, [onGenerateApplication, getBriefing, providerOverrides]);
 
   const startEditing = useCallback((i: number) => {
     setEditingIndex(i);
@@ -590,30 +596,36 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
                       </div>
                     )}
 
-                    <div className="flex flex-wrap gap-1.5">
-                      {variants.map((v) => {
-                        const vKey = `app_${i}_${v.aspectRatio}`;
-                        const hasGen = !!generatedAssets[vKey];
-                        const isLoadingV = loadingKey === vKey;
-                        return (
-                          <button
-                            key={v.aspectRatio}
-                            type="button"
-                            onClick={() => {
-                              setActiveAppVariant((prev) => ({ ...prev, [i]: v.aspectRatio }));
-                              handleGenerate(i, v.aspectRatio);
-                            }}
-                            disabled={loadingKey !== null}
-                            className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                              hasGen
-                                ? "border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
-                                : "border-gray-900 bg-gray-900 text-white hover:bg-gray-800"
-                            }`}
-                          >
-                            {isLoadingV ? "..." : hasGen ? "↺ " + v.label : "✦ " + v.label}
-                          </button>
-                        );
-                      })}
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <PerImageProviderSelect
+                        value={providerOverrides[i] ?? null}
+                        onChange={(val) => setAppProvider(i, val)}
+                      />
+                      <div className="flex flex-wrap gap-1.5">
+                        {variants.map((v) => {
+                          const vKey = `app_${i}_${v.aspectRatio}`;
+                          const hasGen = !!generatedAssets[vKey];
+                          const isLoadingV = loadingKey === vKey;
+                          return (
+                            <button
+                              key={v.aspectRatio}
+                              type="button"
+                              onClick={() => {
+                                setActiveAppVariant((prev) => ({ ...prev, [i]: v.aspectRatio }));
+                                handleGenerate(i, v.aspectRatio);
+                              }}
+                              disabled={loadingKey !== null}
+                              className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                                hasGen
+                                  ? "border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+                                  : "border-gray-900 bg-gray-900 text-white hover:bg-gray-800"
+                              }`}
+                            >
+                              {isLoadingV ? "..." : hasGen ? "↺ " + v.label : "✦ " + v.label}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}

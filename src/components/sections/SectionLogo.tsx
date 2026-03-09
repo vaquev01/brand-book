@@ -1,17 +1,18 @@
 "use client";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { BrandbookData, UploadedAsset, GeneratedAsset } from "@/lib/types";
+import { BrandbookData, UploadedAsset, GeneratedAsset, ImageProvider } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
+import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
 
 interface Props {
   data: BrandbookData;
   num: number;
   generatedImages?: Record<string, string>;
   uploadedAssets?: UploadedAsset[];
-  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
+  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
   loadingKey?: string | null;
   onDownload?: (url: string, name: string) => void;
   onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
@@ -53,7 +54,7 @@ function LogoCard({
   placeholderText: string;
   bgClass: string;
   assetKey?: AssetKey;
-  onGenerate?: (key: AssetKey) => void;
+  onGenerate?: (key: AssetKey, opts?: { providerOverride?: ImageProvider }) => void;
   isLoading?: boolean;
   generated?: GeneratedAsset | null;
   onDownload?: (url: string, name: string) => void;
@@ -61,6 +62,7 @@ function LogoCard({
   onPreview?: (url: string, title: string) => void;
   brandName?: string;
 }) {
+  const [providerOverride, setProviderOverride] = useState<ImageProvider | null>(null);
   return (
     <div className="bg-white border rounded-xl overflow-hidden shadow-sm group">
       <div className="px-5 py-4 bg-gray-50 border-b flex items-center justify-between">
@@ -138,21 +140,25 @@ function LogoCard({
               <span className="text-4xl">✦</span>
               <span className="text-xs font-medium text-center px-4">{placeholderText}</span>
               {onGenerate && assetKey && (
-                <button
-                  onClick={() => onGenerate(assetKey)}
-                  className="no-print mt-1 text-xs font-bold text-white bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg transition-all"
-                >
-                  ✦ Gerar com IA
-                </button>
+                <div className="flex flex-col items-center gap-2 mt-1">
+                  <PerImageProviderSelect value={providerOverride} onChange={setProviderOverride} />
+                  <button
+                    onClick={() => onGenerate(assetKey, providerOverride ? { providerOverride } : undefined)}
+                    className="no-print text-xs font-bold text-white bg-gray-900 hover:bg-gray-800 px-4 py-2 rounded-lg transition-all"
+                  >
+                    ✦ Gerar com IA
+                  </button>
+                </div>
               )}
             </>
           )}
         </div>
       )}
       {image && onGenerate && assetKey && !isLoading && (
-        <div className="no-print px-5 py-2 border-t bg-gray-50 flex justify-end">
+        <div className="no-print px-5 py-2 border-t bg-gray-50 flex items-center justify-between gap-2">
+          <PerImageProviderSelect value={providerOverride} onChange={setProviderOverride} />
           <button
-            onClick={() => onGenerate(assetKey)}
+            onClick={() => onGenerate(assetKey, providerOverride ? { providerOverride } : undefined)}
             className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 transition"
           >
             ↺ Regerar

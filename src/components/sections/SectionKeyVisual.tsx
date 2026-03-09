@@ -1,16 +1,17 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { BrandbookData, GeneratedAsset } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, ImageProvider } from "@/lib/types";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
+import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
 
 interface Props {
   data: BrandbookData;
   num: number;
   generatedImages?: Record<string, string>;
-  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
+  onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -51,6 +52,10 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
   const [linkInput, setLinkInput] = useState<Record<string, string>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [sectionGenerating, setSectionGenerating] = useState(false);
+  const [providerOverrides, setProviderOverrides] = useState<Record<string, ImageProvider | null>>({});
+  const setAssetProvider = useCallback((key: string, val: ImageProvider | null) => {
+    setProviderOverrides((prev) => ({ ...prev, [key]: val }));
+  }, []);
 
   const [editingElement, setEditingElement] = useState<number | null>(null);
   const [elementDraft, setElementDraft] = useState("");
@@ -139,8 +144,9 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
     if (b.referenceLinks.length > 0) parts.push(`Reference links: ${b.referenceLinks.join(", ")}`);
     const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
-  }, [onGenerate, getBriefing]);
+    const providerOverride = providerOverrides[assetKey] ?? undefined;
+    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs, providerOverride });
+  }, [onGenerate, getBriefing, providerOverrides]);
 
   const handleGenerateSection = useCallback(async () => {
     if (!onGenerate) return;
@@ -217,9 +223,15 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
                 </div>
               )}
             </div>
-            <button type="button" onClick={() => handleGenerateWithDirection(assetKey)} disabled={loadingKey !== null} className="w-full text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
-              {loadingKey === assetKey ? "Gerando..." : `\u2726 Gerar ${label} com direcionamento`}
-            </button>
+            <div className="flex items-center justify-between gap-2">
+              <PerImageProviderSelect
+                value={providerOverrides[assetKey] ?? null}
+                onChange={(val) => setAssetProvider(assetKey, val)}
+              />
+              <button type="button" onClick={() => handleGenerateWithDirection(assetKey)} disabled={loadingKey !== null} className="flex-1 text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                {loadingKey === assetKey ? "Gerando..." : `✦ Gerar ${label}`}
+              </button>
+            </div>
           </div>
         )}
       </div>
