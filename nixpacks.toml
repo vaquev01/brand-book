@@ -1,6 +1,7 @@
 [variables]
 NIXPACKS_NODE_VERSION = "22"
 AUTH_TRUST_HOST = "true"
+AUTH_URL = "https://brand-book-production.up.railway.app"
 
 [phases.setup]
 nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"
