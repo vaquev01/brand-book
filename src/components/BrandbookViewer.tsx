@@ -236,6 +236,16 @@ export function BrandbookViewer({
   useEffect(() => {
     const els = document.querySelectorAll<HTMLElement>("[data-reveal]");
     if (els.length === 0) return;
+
+    // Immediately reveal sections already in viewport (handles anchor-link navigation)
+    els.forEach((el) => {
+      if (el.classList.contains("revealed")) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        el.classList.add("revealed");
+      }
+    });
+
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -247,7 +257,8 @@ export function BrandbookViewer({
       },
       { threshold: 0.07, rootMargin: "0px 0px -40px 0px" }
     );
-    els.forEach((el) => obs.observe(el));
+    // Only observe sections not yet revealed
+    els.forEach((el) => { if (!el.classList.contains("revealed")) obs.observe(el); });
     return () => obs.disconnect();
   });
 
@@ -675,8 +686,8 @@ export function BrandbookViewer({
                     <a
                       key={s.id}
                       href={`#${s.id}`}
-                      className="block rounded-xl px-3 py-2 transition"
-                      style={immersive ? undefined : { background: "transparent" }}
+                      className={`block rounded-xl px-3 py-2 transition ${immersive ? "" : "hover:bg-gray-50"}`}
+                      style={immersive ? undefined : undefined}
                     >
                       <div className="flex items-start gap-3">
                         <span

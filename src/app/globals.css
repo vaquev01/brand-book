@@ -4,6 +4,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Smooth anchor navigation ─────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
 /* ── Scroll reveal animations ─────────────────────────────────── */
 [data-reveal] {
   opacity: 0;
