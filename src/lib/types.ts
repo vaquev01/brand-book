@@ -79,6 +79,7 @@ export interface Colors {
     info: Color;
   };
   dataViz?: Color[];
+  approvedCombinations?: Array<{ bg: string; fg: string }>;
 }
 
 export interface TypographySet {
