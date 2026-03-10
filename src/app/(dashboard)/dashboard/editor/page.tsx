@@ -15,6 +15,7 @@ import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
 import { SystemHealthBadge } from "@/components/SystemHealthBadge";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackState } from "@/lib/types";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
@@ -109,6 +110,9 @@ export default function Home() {
   const setPromptOpsProvider = useAppPreferencesStore(selectSetPromptOpsProvider);
   const [showApiConfig, setShowApiConfig] = useState(false);
   const [exportingPack, setExportingPack] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description?: string; variant?: "danger" | "default"; onConfirm: () => void;
+  } | null>(null);
   const [undoStack, setUndoStack] = useState<BrandbookData[]>([]);
   const [redoStack, setRedoStack] = useState<BrandbookData[]>([]);
   const assetPackFiles = assetPack.files;
@@ -682,11 +686,17 @@ export default function Home() {
 
   function handleClearImageCache() {
     if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    const ok = window.confirm("Remover imagens geradas salvas (cache) para este brandbook?");
-    if (!ok) return;
-    void clearBrandbookGeneratedAssetSession(slug);
-    setGeneratedAssets({});
+    setConfirmDialog({
+      title: "Limpar cache de imagens",
+      description: "Todas as imagens geradas salvas para este brandbook serão removidas. Essa ação não pode ser desfeita.",
+      variant: "danger",
+      onConfirm: () => {
+        const slug = slugifyForStorage(brandbookData.brandName);
+        void clearBrandbookGeneratedAssetSession(slug);
+        setGeneratedAssets({});
+        toast.success("Cache de imagens limpo");
+      },
+    });
   }
 
   async function handleAssetGenerated(key: string, asset: GeneratedAsset) {
@@ -1235,6 +1245,20 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      <ConfirmDialog
+        open={!!confirmDialog}
+        title={confirmDialog?.title ?? ""}
+        description={confirmDialog?.description}
+        variant={confirmDialog?.variant}
+        confirmLabel="Confirmar"
+        cancelLabel="Cancelar"
+        onConfirm={() => {
+          confirmDialog?.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
   );
 }

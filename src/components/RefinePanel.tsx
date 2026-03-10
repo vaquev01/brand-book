@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { AiTextProvider, BrandbookData } from "@/lib/types";
 import type { ApiKeys } from "./ApiKeyConfig";
 import { Wand2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface Props {
   brandbook: BrandbookData;
@@ -29,8 +30,10 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingRefine, setPendingRefine] = useState<{ instruction: string; externalUrls: string[] } | null>(null);
 
-  async function handleRefine() {
+  function handleRefineClick() {
     if (!instruction.trim()) return;
 
     const externalUrls = externalUrlsRaw
@@ -41,14 +44,15 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
       .map((s) => (s.startsWith("www.") ? `https://${s}` : s))
       .filter((s) => /^https?:\/\//i.test(s));
 
-    const preview = instruction.trim().slice(0, 240);
-    const ok = window.confirm(
-      "Aplicar este refinamento em TODO o brandbook?\n\n" +
-        "Instrução:\n" +
-        preview +
-        (instruction.trim().length > preview.length ? "..." : "")
-    );
-    if (!ok) return;
+    setPendingRefine({ instruction: instruction.trim(), externalUrls });
+    setShowConfirm(true);
+  }
+
+  async function handleRefine() {
+    if (!pendingRefine) return;
+    setShowConfirm(false);
+    const { instruction: refineInstruction, externalUrls } = pendingRefine;
+    setPendingRefine(null);
 
     setLoading(true);
     setError("");
@@ -60,7 +64,7 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandbook,
-          instruction,
+          instruction: refineInstruction,
           externalUrls: externalUrls.length > 0 ? externalUrls : undefined,
           provider: strategyProvider,
           openaiKey: apiKeys.openai || undefined,
@@ -150,7 +154,7 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
 
       <button
         type="button"
-        onClick={handleRefine}
+        onClick={handleRefineClick}
         disabled={loading || !instruction.trim()}
         className="app-primary-button w-full px-6 py-3"
       >
@@ -166,6 +170,16 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
           </>
         )}
       </button>
+
+      <ConfirmDialog
+        open={showConfirm}
+        title="Aplicar refinamento"
+        description={`Isso vai alterar todo o brandbook com a instrução: "${pendingRefine?.instruction.slice(0, 120) ?? ""}${(pendingRefine?.instruction.length ?? 0) > 120 ? "..." : ""}"`}
+        confirmLabel="Aplicar"
+        cancelLabel="Cancelar"
+        onConfirm={() => void handleRefine()}
+        onCancel={() => { setShowConfirm(false); setPendingRefine(null); }}
+      />
     </div>
   );
 }
