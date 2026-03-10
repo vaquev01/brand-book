@@ -2,10 +2,10 @@
 
 import { signIn, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 /* ─── Typing animation hook ─── */
-function useTypingEffect(words: string[], speed = 80, pause = 2200) {
+function useTypingEffect(words: string[], speed = 70, pause = 2400) {
   const [text, setText] = useState("")
   const [wordIdx, setWordIdx] = useState(0)
   const [charIdx, setCharIdx] = useState(0)
@@ -35,6 +35,36 @@ function useTypingEffect(words: string[], speed = 80, pause = 2200) {
   return text
 }
 
+/* ─── Scroll reveal hook ─── */
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("revealed")
+          observer.unobserve(el)
+        }
+      },
+      { threshold: 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
+function RevealSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useReveal()
+  return (
+    <div ref={ref} data-reveal className={className}>
+      {children}
+    </div>
+  )
+}
+
 const TYPING_WORDS = [
   "restaurantes",
   "startups",
@@ -47,29 +77,99 @@ const TYPING_WORDS = [
 ]
 
 const SHOWCASE_BRANDS = [
-  { name: "Kairo", industry: "Fintech", colors: ["#0f172a", "#6366f1", "#a5b4fc", "#f1f5f9"] },
-  { name: "Soleil", industry: "Cosmetics", colors: ["#78350f", "#f59e0b", "#fbbf24", "#fffbeb"] },
-  { name: "Vertex", industry: "Tech", colors: ["#0c0a09", "#ef4444", "#fca5a5", "#fef2f2"] },
-  { name: "Flora", industry: "Wellness", colors: ["#14532d", "#22c55e", "#86efac", "#f0fdf4"] },
+  { name: "Kairo", industry: "Fintech", tagline: "O futuro das finanças", colors: ["#0f172a", "#6366f1", "#a5b4fc", "#f1f5f9"], font: "Inter" },
+  { name: "Soleil", industry: "Cosmetics", tagline: "Beleza consciente", colors: ["#78350f", "#f59e0b", "#fbbf24", "#fffbeb"], font: "Playfair Display" },
+  { name: "Vertex", industry: "Tech", tagline: "Engenharia de ponta", colors: ["#0c0a09", "#ef4444", "#fca5a5", "#fef2f2"], font: "Space Grotesk" },
+  { name: "Flora", industry: "Wellness", tagline: "Natureza que cuida", colors: ["#14532d", "#22c55e", "#86efac", "#f0fdf4"], font: "DM Serif Display" },
+]
+
+const FEATURES = [
+  {
+    title: "Art Director IA",
+    desc: "Pensa como os melhores designers — Paula Scher, Sagmeister, David Carson. Cada decisao visual é fundamentada em semiótica e estratégia.",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+      </svg>
+    ),
+    accent: "#6366f1",
+  },
+  {
+    title: "Imersão Total",
+    desc: "O brandbook se veste da marca — cores, tipografia, linguagem. Cada página é uma experiência de identidade visual completa.",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    ),
+    accent: "#f59e0b",
+  },
+  {
+    title: "24 Seções Editoriais",
+    desc: "DNA, posicionamento, personas, identidade verbal, logo, cores, tipografia, aplicações, social media e muito mais.",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>
+      </svg>
+    ),
+    accent: "#22c55e",
+  },
+  {
+    title: "Multi-Provider",
+    desc: "GPT-4o, Gemini, DALL-E 3, Stability AI, Ideogram e Imagen 3 trabalham juntos para criar assets visuais coerentes.",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="14" y="14" width="8" height="8" rx="2"/><rect x="2" y="2" width="8" height="8" rx="2"/>
+        <path d="M7 14v1a2 2 0 0 0 2 2h1"/><path d="M14 7h1a2 2 0 0 1 2 2v1"/>
+      </svg>
+    ),
+    accent: "#3b82f6",
+  },
+  {
+    title: "Apresentação Cinematográfica",
+    desc: "Modo fullscreen com transições suaves, barra de progresso e ambientação. Apresente ao cliente como um keynote.",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>
+      </svg>
+    ),
+    accent: "#ef4444",
+  },
+  {
+    title: "Exportação Profissional",
+    desc: "PDF multi-página, ZIP com assets, Design Tokens (CSS, W3C, Tailwind), share link público e manifesto de produção.",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+      </svg>
+    ),
+    accent: "#a855f7",
+  },
 ]
 
 export default function LandingPage() {
   const [loading, setLoading] = useState(false)
   const [activeBrand, setActiveBrand] = useState(0)
   const typedWord = useTypingEffect(TYPING_WORDS)
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
+  const [scrollY, setScrollY] = useState(0)
 
-  // If already logged in, redirect to dashboard
   useEffect(() => {
-    if (status === "authenticated") {
-      router.replace("/dashboard")
-    }
+    if (status === "authenticated") router.replace("/dashboard")
   }, [status, router])
 
   useEffect(() => {
-    const i = setInterval(() => setActiveBrand((v) => (v + 1) % SHOWCASE_BRANDS.length), 3000)
+    const i = setInterval(() => setActiveBrand((v) => (v + 1) % SHOWCASE_BRANDS.length), 3500)
     return () => clearInterval(i)
+  }, [])
+
+  useEffect(() => {
+    function onScroll() { setScrollY(window.scrollY) }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   async function handleAccess() {
@@ -79,79 +179,99 @@ export default function LandingPage() {
 
   const brand = SHOWCASE_BRANDS[activeBrand]
 
-  // Show nothing while checking auth
   if (status === "loading" || status === "authenticated") {
     return (
-      <div className="min-h-screen bg-[#08090c] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-xl bg-white/[0.08] border border-white/[0.06] flex items-center justify-center animate-pulse">
-          <span className="text-sm font-black text-white/60">B</span>
+      <div className="min-h-screen bg-[#07080b] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/[0.04] flex items-center justify-center">
+          <span className="text-sm font-black text-white/40">B</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#08090c] text-white overflow-x-hidden">
-      {/* Ambient background */}
+    <div className="min-h-screen bg-[#07080b] text-white overflow-x-hidden selection:bg-violet-500/20">
+      {/* ─── Ambient Background ─── */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full opacity-[0.07]"
-          style={{ background: `radial-gradient(circle, ${brand.colors[1]}, transparent 70%)`, transition: "background 1.5s ease" }} />
-        <div className="absolute bottom-[-10%] right-[-15%] w-[50vw] h-[50vw] rounded-full opacity-[0.05]"
-          style={{ background: `radial-gradient(circle, ${brand.colors[2]}, transparent 70%)`, transition: "background 1.5s ease" }} />
-        {/* Grid */}
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
+        <div
+          className="absolute top-[-30%] left-[-15%] w-[80vw] h-[80vw] rounded-full opacity-[0.06] blur-[1px]"
+          style={{ background: `radial-gradient(circle, ${brand.colors[1]}, transparent 65%)`, transition: "background 2s ease" }}
+        />
+        <div
+          className="absolute bottom-[-20%] right-[-20%] w-[60vw] h-[60vw] rounded-full opacity-[0.04]"
+          style={{ background: `radial-gradient(circle, ${brand.colors[2]}, transparent 65%)`, transition: "background 2s ease" }}
+        />
+        <div className="absolute inset-0 opacity-[0.025]"
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)", backgroundSize: "72px 72px" }}
+        />
       </div>
 
       {/* ─── Nav ─── */}
-      <nav className="relative z-10 flex items-center justify-between px-6 sm:px-10 lg:px-16 py-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-white/[0.08] border border-white/[0.06] flex items-center justify-center">
-            <span className="text-sm font-black bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">B</span>
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+        style={{
+          background: scrollY > 60 ? "rgba(7,8,11,0.85)" : "transparent",
+          backdropFilter: scrollY > 60 ? "blur(20px) saturate(1.4)" : "none",
+          borderBottom: scrollY > 60 ? "1px solid rgba(255,255,255,0.04)" : "1px solid transparent",
+        }}
+      >
+        <div className="max-w-[80rem] mx-auto px-6 sm:px-10 lg:px-16 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/[0.07] border border-white/[0.06] flex items-center justify-center">
+              <span className="text-sm font-black bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">B</span>
+            </div>
+            <span className="text-[15px] font-bold tracking-tight text-white/70">brandbook</span>
           </div>
-          <span className="text-sm font-bold tracking-tight text-white/80">brandbook</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="hidden sm:flex items-center gap-2 text-xs text-white/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            AI Engines Online
-          </span>
+          <div className="flex items-center gap-5">
+            <span className="hidden sm:flex items-center gap-2 text-[11px] text-white/25 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              AI Online
+            </span>
+            <button
+              onClick={handleAccess}
+              disabled={loading}
+              className="text-[13px] font-semibold text-white/70 hover:text-white bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] px-5 py-2 rounded-xl transition-all duration-200 disabled:opacity-50"
+            >
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* ─── Hero ─── */}
-      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pt-12 sm:pt-20 lg:pt-28 pb-16 sm:pb-24">
-        <div className="max-w-[76rem] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
+      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pt-32 sm:pt-40 lg:pt-48 pb-16 sm:pb-24">
+        <div className="max-w-[80rem] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-14 lg:gap-20 items-center">
             {/* Left — Copy */}
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-1.5 mb-8">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Gerador IA de Manual de Marca</span>
+              <div className="inline-flex items-center gap-2.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-2 mb-10">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">AI Brand Studio</span>
               </div>
 
-              <h1 className="text-[clamp(2.4rem,5.2vw,4.8rem)] font-black leading-[0.95] tracking-[-0.04em] mb-6">
-                <span className="block text-white">Manuais de marca</span>
-                <span className="block text-white">que impressionam</span>
-                <span className="block mt-1 h-[1.15em] overflow-hidden">
-                  <span className="text-white/25">para </span>
-                  <span className="bg-gradient-to-r from-white via-white/90 to-white/40 bg-clip-text text-transparent">
+              <h1 className="text-[clamp(2.6rem,5.5vw,5.2rem)] font-black leading-[0.92] tracking-[-0.045em] mb-7">
+                <span className="block text-white">Identidade visual</span>
+                <span className="block text-white/90">com alma.</span>
+                <span className="block mt-2 h-[1.15em] overflow-hidden">
+                  <span className="text-white/20">Para </span>
+                  <span className="bg-gradient-to-r from-white via-white/90 to-white/50 bg-clip-text text-transparent">
                     {typedWord}
-                    <span className="inline-block w-[2px] h-[0.85em] bg-white/50 ml-0.5 animate-pulse align-middle" />
+                    <span className="inline-block w-[2px] h-[0.8em] bg-white/40 ml-0.5 animate-pulse align-middle" />
                   </span>
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg text-white/40 max-w-xl leading-relaxed mb-10">
-                Do briefing ao brandbook completo em minutos. IA com Art Director integrado que pensa
-                como os melhores designers do mundo.
+              <p className="text-[17px] text-white/35 max-w-lg leading-[1.7] mb-12">
+                Do briefing ao manual de marca completo em minutos.
+                Uma IA que pensa como art director, com sensibilidade estética
+                e fundamento estratégico.
               </p>
 
-              {/* CTA group */}
-              <div className="flex flex-col sm:flex-row items-start gap-4 mb-12">
+              <div className="flex flex-col sm:flex-row items-start gap-4 mb-14">
                 <button
                   onClick={handleAccess}
                   disabled={loading}
-                  className="group relative flex items-center gap-3 bg-white text-black px-7 py-4 rounded-2xl font-bold text-base transition-all duration-300 hover:shadow-[0_20px_60px_rgba(255,255,255,0.12)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-wait"
+                  className="group relative flex items-center gap-3 bg-white text-[#07080b] px-8 py-[18px] rounded-2xl font-bold text-[15px] transition-all duration-300 hover:shadow-[0_24px_80px_rgba(255,255,255,0.10)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-wait"
                 >
                   {loading ? (
                     <>
@@ -163,19 +283,19 @@ export default function LandingPage() {
                   ) : (
                     <>
                       Criar Brandbook Grátis
-                      <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                       </svg>
                     </>
                   )}
                 </button>
-                <span className="text-xs text-white/20 self-center">Sem cadastro. Acesso direto.</span>
+                <span className="text-[12px] text-white/15 self-center leading-relaxed">Sem cadastro. Acesso direto.<br className="sm:hidden" /> Resultado em menos de 2 minutos.</span>
               </div>
 
-              {/* Tech badges */}
+              {/* AI Engine badges */}
               <div className="flex flex-wrap gap-2">
-                {["GPT-4o", "Gemini", "DALL-E 3", "Stability AI", "Ideogram", "Imagen 3"].map((t) => (
-                  <span key={t} className="text-[10px] font-semibold text-white/25 border border-white/[0.06] rounded-lg px-2.5 py-1">
+                {["GPT-4o", "Gemini 2.0", "DALL-E 3", "Stability AI", "Ideogram", "Imagen 3"].map((t) => (
+                  <span key={t} className="text-[10px] font-medium text-white/20 border border-white/[0.05] rounded-lg px-2.5 py-1.5 backdrop-blur-sm">
                     {t}
                   </span>
                 ))}
@@ -183,54 +303,60 @@ export default function LandingPage() {
             </div>
 
             {/* Right — Brand Preview Card */}
-            <div className="relative">
-              <div className="absolute -inset-8 rounded-3xl opacity-20 blur-3xl"
-                style={{ background: brand.colors[1], transition: "background 1.5s ease" }} />
+            <div className="relative hidden lg:block">
+              <div className="absolute -inset-12 rounded-[2rem] opacity-15 blur-3xl transition-all duration-2000"
+                style={{ background: brand.colors[1] }}
+              />
 
-              <div className="relative rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl overflow-hidden">
-                <div className="px-6 pt-6 pb-4 border-b border-white/[0.06]">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ background: brand.colors[1] }} />
-                      <span className="text-xs font-bold text-white/50">Brand Preview</span>
+              <div className="relative rounded-[1.5rem] border border-white/[0.07] bg-white/[0.025] backdrop-blur-2xl overflow-hidden shadow-2xl">
+                {/* Card header */}
+                <div className="px-7 pt-7 pb-5 border-b border-white/[0.05]">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3.5 h-3.5 rounded-full transition-all duration-700" style={{ background: brand.colors[1] }} />
+                      <span className="text-[11px] font-bold text-white/40">Brand Preview</span>
                     </div>
-                    <span className="text-[10px] text-white/20 font-mono">{brand.industry}</span>
+                    <span className="text-[10px] text-white/15 font-mono tracking-wider">{brand.industry}</span>
                   </div>
-                  <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-white"
-                    style={{ transition: "all 0.5s ease" }}>
+                  <h3 className="text-4xl font-black tracking-tight text-white transition-all duration-500">
                     {brand.name}
                   </h3>
+                  <p className="text-sm text-white/25 mt-1.5 transition-all duration-500">{brand.tagline}</p>
                 </div>
 
+                {/* Color strip */}
                 <div className="flex">
                   {brand.colors.map((c, i) => (
-                    <div key={i} className="flex-1 h-16 transition-all duration-700" style={{ background: c }} />
+                    <div key={i} className="flex-1 h-14 transition-all duration-700" style={{ background: c }} />
                   ))}
                 </div>
 
-                <div className="p-6 space-y-3">
-                  {["DNA & Estratégia", "Identidade Visual", "Tipografia", "Aplicações", "Social Media"].map((s, i) => (
-                    <div key={s} className="flex items-center gap-3 py-2 border-b border-white/[0.04] last:border-0">
-                      <span className="text-[10px] font-bold text-white/15 tabular-nums w-6">
+                {/* Sections preview */}
+                <div className="p-7 space-y-1">
+                  {["DNA & Estratégia", "Identidade Visual", "Sistema Tipográfico", "Aplicações", "Social Media Kit"].map((s, i) => (
+                    <div key={s} className="flex items-center gap-3 py-2.5 border-b border-white/[0.03] last:border-0">
+                      <span className="text-[10px] font-bold text-white/10 tabular-nums w-6">
                         {String(i + 1).padStart(2, "0")}
                       </span>
-                      <span className="text-sm text-white/40 font-medium">{s}</span>
-                      <div className="ml-auto w-8 h-1 rounded-full bg-white/[0.06]">
+                      <span className="text-[13px] text-white/35 font-medium">{s}</span>
+                      <div className="ml-auto w-10 h-1 rounded-full bg-white/[0.05] overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-1000"
-                          style={{ width: `${70 + i * 6}%`, background: brand.colors[1], opacity: 0.5 }} />
+                          style={{ width: `${65 + i * 7}%`, background: brand.colors[1], opacity: 0.4 }}
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="px-6 pb-5 flex items-center justify-center gap-2">
+                {/* Brand selector dots */}
+                <div className="px-7 pb-6 flex items-center justify-center gap-2">
                   {SHOWCASE_BRANDS.map((b, i) => (
                     <button
                       key={b.name}
                       onClick={() => setActiveBrand(i)}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${i === activeBrand ? "w-6 opacity-100" : "opacity-30 hover:opacity-60"}`}
+                      className={`rounded-full transition-all duration-300 ${i === activeBrand ? "w-7 h-2.5" : "w-2.5 h-2.5 opacity-25 hover:opacity-50"}`}
                       style={{ background: b.colors[1] }}
-                      aria-label={b.name}
+                      aria-label={`Ver marca ${b.name}`}
                     />
                   ))}
                 </div>
@@ -240,114 +366,208 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Stats bar ─── */}
-      <section className="relative z-10 border-y border-white/[0.04] bg-white/[0.015]">
-        <div className="max-w-[76rem] mx-auto px-6 sm:px-10 lg:px-16 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
-          {[
-            { value: "24", label: "Seções no Manual", sub: "DNA, cores, tipografia, logos..." },
-            { value: "6", label: "Motores de IA", sub: "Text + Image generation" },
-            { value: "28", label: "Assets Gerados", sub: "Business cards, social, packaging" },
-            { value: "<2min", label: "Tempo de Geração", sub: "Do briefing ao manual completo" },
-          ].map((s) => (
-            <div key={s.label} className="group">
-              <div className="text-2xl sm:text-3xl font-black text-white/90 mb-1 tabular-nums">{s.value}</div>
-              <div className="text-xs font-bold text-white/40 mb-0.5">{s.label}</div>
-              <div className="text-[11px] text-white/15">{s.sub}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── Features ─── */}
-      <section className="relative z-10 px-6 sm:px-10 lg:px-16 py-20 sm:py-28">
-        <div className="max-w-[76rem] mx-auto">
-          <div className="mb-14">
-            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/20 mb-3">Capacidades</div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white/90 tracking-tight">
-              Tudo que um brandbook profissional precisa.
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* ─── Social Proof Bar ─── */}
+      <RevealSection>
+        <section className="relative z-10 border-y border-white/[0.03] bg-white/[0.01]">
+          <div className="max-w-[80rem] mx-auto px-6 sm:px-10 lg:px-16 py-12 grid grid-cols-2 sm:grid-cols-4 gap-10">
             {[
-              { title: "Art Director IA", desc: "O sistema pensa como Paula Scher, Sagmeister e David Carson. Cada prompt avaliado com scorecard de coerência.", accent: "#6366f1" },
-              { title: "Modo Imersivo", desc: "O brandbook se veste da marca: cores, tipografia, texturas e linguagem em primeira pessoa.", accent: "#f59e0b" },
-              { title: "Apresentação Cinematográfica", desc: "Modo fullscreen com transições suaves para apresentar ao cliente como um keynote.", accent: "#ef4444" },
-              { title: "24 Seções Editoriais", desc: "DNA, posicionamento, personas, verbal identity, logo, cores, tipografia, aplicações e mais.", accent: "#22c55e" },
-              { title: "Multi-Provider", desc: "DALL-E 3, Stability AI, Ideogram e Imagen 3 geram assets visuais coerentes com a proposta.", accent: "#3b82f6" },
-              { title: "Exportação Pro", desc: "PDF multi-página, ZIP com assets, Design Tokens (CSS/W3C/Tailwind) e share link.", accent: "#a855f7" },
-            ].map((f) => (
-              <div
-                key={f.title}
-                className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.10]"
-              >
-                <div className="w-1 h-8 rounded-full mb-4 transition-all duration-300 group-hover:h-10"
-                  style={{ background: f.accent }} />
-                <h3 className="text-base font-bold text-white/80 mb-2">{f.title}</h3>
-                <p className="text-sm text-white/30 leading-relaxed">{f.desc}</p>
+              { value: "24", label: "Seções", sub: "Manual completo" },
+              { value: "6", label: "Motores IA", sub: "Text + Image" },
+              { value: "28+", label: "Assets", sub: "Cards, social, packaging" },
+              { value: "<2min", label: "Geração", sub: "Briefing ao manual" },
+            ].map((s, i) => (
+              <div key={s.label} data-stagger className="group">
+                <div className="text-3xl sm:text-4xl font-black text-white/85 mb-1.5 tabular-nums tracking-tight">{s.value}</div>
+                <div className="text-xs font-bold text-white/35 mb-0.5">{s.label}</div>
+                <div className="text-[11px] text-white/15">{s.sub}</div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      </RevealSection>
+
+      {/* ─── Showcase / Output Preview ─── */}
+      <RevealSection>
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 py-24 sm:py-32">
+          <div className="max-w-[80rem] mx-auto">
+            <div className="text-center mb-16">
+              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/15 mb-4">Resultado</div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white/90 tracking-tight leading-[1.1] max-w-2xl mx-auto">
+                Manuais de marca que agências cobram milhares para criar.
+              </h2>
+              <p className="text-base text-white/25 mt-5 max-w-lg mx-auto leading-relaxed">
+                Cada brandbook é único, estratégico e visualmente coerente. Construído com fundamento semiótico e sensibilidade de design.
+              </p>
+            </div>
+
+            {/* Output preview grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {SHOWCASE_BRANDS.map((b, i) => (
+                <button
+                  key={b.name}
+                  onClick={() => setActiveBrand(i)}
+                  data-stagger
+                  className={`group relative rounded-2xl border p-5 sm:p-6 text-left transition-all duration-300 ${
+                    i === activeBrand
+                      ? "border-white/[0.12] bg-white/[0.04]"
+                      : "border-white/[0.04] bg-white/[0.01] hover:border-white/[0.08] hover:bg-white/[0.03]"
+                  }`}
+                >
+                  <div className="flex gap-1.5 mb-4">
+                    {b.colors.map((c, j) => (
+                      <div key={j} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full transition-transform duration-200 group-hover:scale-110" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <h4 className="text-base sm:text-lg font-black text-white/80 mb-0.5">{b.name}</h4>
+                  <p className="text-[11px] text-white/20 font-medium">{b.industry}</p>
+                  <p className="text-[11px] text-white/12 mt-1 hidden sm:block">{b.tagline}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      </RevealSection>
+
+      {/* ─── Features ─── */}
+      <RevealSection>
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
+          <div className="max-w-[80rem] mx-auto">
+            <div className="mb-16">
+              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/15 mb-4">Capacidades</div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white/90 tracking-tight max-w-xl">
+                Cada detalhe pensado.
+                <br />
+                <span className="text-white/40">Nada é genérico.</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {FEATURES.map((f, i) => (
+                <div
+                  key={f.title}
+                  data-stagger
+                  className="group relative rounded-2xl border border-white/[0.05] bg-white/[0.015] p-7 transition-all duration-300 hover:bg-white/[0.035] hover:border-white/[0.10]"
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-105"
+                    style={{ background: `${f.accent}15`, color: f.accent }}
+                  >
+                    {f.icon}
+                  </div>
+                  <h3 className="text-[15px] font-bold text-white/80 mb-2.5">{f.title}</h3>
+                  <p className="text-[13px] text-white/25 leading-[1.7]">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </RevealSection>
 
       {/* ─── Process ─── */}
-      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20 sm:pb-28">
-        <div className="max-w-[76rem] mx-auto">
-          <div className="rounded-3xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-            <div className="p-8 sm:p-12">
-              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/20 mb-3">Processo</div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white/90 tracking-tight mb-10">
-                3 passos. Resultado profissional.
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
-                {[
-                  { n: "01", title: "Briefing", desc: "Nome, setor, descrição e referências. A IA extrai os fundamentos da identidade." },
-                  { n: "02", title: "Geração IA", desc: "O Art Director cria cores, tipografia, logos, aplicações e 24 seções completas." },
-                  { n: "03", title: "Refine & Exporte", desc: "Edite cada campo inline. Gere assets visuais. Exporte PDF ou compartilhe link." },
-                ].map((step) => (
-                  <div key={step.n}>
-                    <div className="text-4xl font-black text-white/[0.06] mb-4">{step.n}</div>
-                    <h3 className="text-lg font-bold text-white/80 mb-2">{step.title}</h3>
-                    <p className="text-sm text-white/30 leading-relaxed">{step.desc}</p>
-                  </div>
-                ))}
+      <RevealSection>
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
+          <div className="max-w-[80rem] mx-auto">
+            <div className="rounded-[1.5rem] border border-white/[0.05] bg-white/[0.015] overflow-hidden">
+              <div className="p-8 sm:p-14">
+                <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/15 mb-4">Processo</div>
+                <h2 className="text-3xl sm:text-4xl font-black text-white/90 tracking-tight mb-14">
+                  3 passos. Resultado de agência.
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-16">
+                  {[
+                    {
+                      n: "01",
+                      title: "Briefing Inteligente",
+                      desc: "Nome, setor, descrição. Ou apenas uma imagem de referência. A IA disseca a intenção e extrai os fundamentos da identidade.",
+                    },
+                    {
+                      n: "02",
+                      title: "Geração Estratégica",
+                      desc: "Art Director IA cria 24 seções: DNA, cores, tipografia, logos, aplicações. Tudo com análise semiótica e coerência entre seções.",
+                    },
+                    {
+                      n: "03",
+                      title: "Refine & Apresente",
+                      desc: "Edite cada campo inline. Gere assets visuais. Exporte PDF profissional. Compartilhe link imersivo com seu cliente.",
+                    },
+                  ].map((step, i) => (
+                    <div key={step.n} data-stagger>
+                      <div className="text-5xl font-black text-white/[0.04] mb-5">{step.n}</div>
+                      <h3 className="text-lg font-bold text-white/80 mb-3">{step.title}</h3>
+                      <p className="text-[13px] text-white/25 leading-[1.7]">{step.desc}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
+              <div className="h-[2px] bg-gradient-to-r from-violet-600/60 via-blue-500/40 to-emerald-400/60" />
             </div>
-            <div className="h-1 bg-gradient-to-r from-violet-600 via-blue-500 to-emerald-400 opacity-40" />
           </div>
-        </div>
-      </section>
+        </section>
+      </RevealSection>
+
+      {/* ─── Testimonial / Philosophy ─── */}
+      <RevealSection>
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
+          <div className="max-w-[80rem] mx-auto">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-auto mb-10" />
+              <blockquote className="text-xl sm:text-2xl lg:text-3xl font-bold text-white/60 leading-[1.5] tracking-tight">
+                &ldquo;Um bom manual de marca não é um documento.
+                É a <span className="text-white/90">tradução visual da alma</span> de um negócio.
+                Cada cor, cada tipo, cada espaçamento conta uma história.&rdquo;
+              </blockquote>
+              <div className="mt-8 text-[12px] text-white/20 font-semibold uppercase tracking-[0.2em]">
+                Filosofia Brandbook
+              </div>
+              <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-auto mt-10" />
+            </div>
+          </div>
+        </section>
+      </RevealSection>
 
       {/* ─── Final CTA ─── */}
-      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20">
-        <div className="max-w-[76rem] mx-auto text-center">
-          <h2 className="text-2xl sm:text-4xl font-black text-white/90 tracking-tight mb-4">
-            Pronto para criar seu brandbook?
-          </h2>
-          <p className="text-sm text-white/30 mb-8 max-w-md mx-auto">
-            Acesso direto. Sem cadastro. Seu manual de marca profissional em minutos.
-          </p>
-          <button
-            onClick={handleAccess}
-            disabled={loading}
-            className="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-bold transition-all duration-300 hover:shadow-[0_20px_60px_rgba(255,255,255,0.12)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60"
-          >
-            {loading ? "Entrando..." : "Começar Agora"}
-            {!loading && (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            )}
-          </button>
-        </div>
-      </section>
+      <RevealSection>
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
+          <div className="max-w-[80rem] mx-auto">
+            <div className="relative rounded-[1.5rem] border border-white/[0.06] overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-blue-900/10" />
+              <div className="relative text-center py-16 sm:py-24 px-6">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white/90 tracking-tight mb-5 max-w-2xl mx-auto leading-[1.1]">
+                  Pronto para criar uma identidade visual que impressiona?
+                </h2>
+                <p className="text-[15px] text-white/30 mb-10 max-w-md mx-auto leading-relaxed">
+                  Acesso direto. Sem cadastro. Seu manual de marca profissional em menos de 2 minutos.
+                </p>
+                <button
+                  onClick={handleAccess}
+                  disabled={loading}
+                  className="group inline-flex items-center gap-3 bg-white text-[#07080b] px-9 py-[18px] rounded-2xl font-bold text-[15px] transition-all duration-300 hover:shadow-[0_24px_80px_rgba(255,255,255,0.10)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50"
+                >
+                  {loading ? "Entrando..." : "Começar Agora"}
+                  {!loading && (
+                    <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </RevealSection>
 
       {/* ─── Footer ─── */}
-      <footer className="relative z-10 border-t border-white/[0.04] px-6 sm:px-10 lg:px-16 py-6">
-        <div className="max-w-[76rem] mx-auto flex items-center justify-between">
-          <span className="text-xs text-white/15">brandbook &copy; {new Date().getFullYear()}</span>
-          <span className="text-xs text-white/10">Powered by AI</span>
+      <footer className="relative z-10 border-t border-white/[0.03] px-6 sm:px-10 lg:px-16 py-8">
+        <div className="max-w-[80rem] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-lg bg-white/[0.05] border border-white/[0.04] flex items-center justify-center">
+              <span className="text-[8px] font-black text-white/30">B</span>
+            </div>
+            <span className="text-[12px] text-white/15 font-medium">brandbook &copy; {new Date().getFullYear()}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] text-white/10">AI-Powered Brand Identity Studio</span>
+          </div>
         </div>
       </footer>
     </div>
