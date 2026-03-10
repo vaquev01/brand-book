@@ -247,16 +247,9 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName }
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative">
             <div className="text-center">
-              {/* Color dots */}
-              <div className="flex items-center justify-center gap-2 mb-6">
-                {allColors.slice(0, 5).map((c, i) => (
-                  <div key={i} className="w-2.5 h-2.5 rounded-full border border-white/20" style={{ background: c }} />
-                ))}
-              </div>
-
               <h1
                 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-4"
-                style={{ color: isDark ? "#ffffff" : "#ffffff" }}
+                style={{ color: "#ffffff" }}
               >
                 {brandName}
               </h1>
@@ -267,22 +260,12 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName }
                 </p>
               )}
 
-              <div className="flex items-center justify-center gap-3">
-                {industry && (
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-white/15"
-                    style={{ color: "rgba(255,255,255,0.5)" }}
-                  >
-                    {industry}
-                  </span>
-                )}
-                <span
-                  className="text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-white/15"
-                  style={{ color: "rgba(255,255,255,0.5)" }}
-                >
-                  Manual de Identidade
-                </span>
-              </div>
+              <span
+                className="text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border border-white/15"
+                style={{ color: "rgba(255,255,255,0.5)" }}
+              >
+                Manual de Identidade{industry ? ` · ${industry}` : ""}
+              </span>
             </div>
           </div>
 
@@ -306,32 +289,10 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName }
             backgroundSize: "20px 20px",
           }} />
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
             <div className="flex flex-col items-center text-center">
-              {/* Color strip */}
-              <div className="flex items-center gap-1.5 mb-6">
-                {allColors.slice(0, 5).map((c, i) => (
-                  <div key={i} className="w-3 h-3 rounded-full border border-white/10" style={{ background: c }} />
-                ))}
-              </div>
-
-              <h3
-                className="text-2xl sm:text-3xl font-black tracking-tight mb-2"
-                style={{ color: isDark ? "#ffffff" : "rgba(255,255,255,0.95)" }}
-              >
-                {brandName}
-              </h3>
-
-              {tagline && (
-                <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  {tagline}
-                </p>
-              )}
-
-              <div className="w-12 h-px bg-white/10 mb-6" />
-
-              <p className="text-[11px] mb-6" style={{ color: "rgba(255,255,255,0.2)" }}>
-                Manual de Identidade Visual &middot; {new Date().getFullYear()}
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] mb-4" style={{ color: "rgba(255,255,255,0.25)" }}>
+                {brandName} &middot; {new Date().getFullYear()}
               </p>
 
               <a

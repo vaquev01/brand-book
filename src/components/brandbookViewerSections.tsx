@@ -24,17 +24,12 @@ import type { AssetPackState, BrandbookData, Colors, GeneratedAsset, UploadedAss
 import type { AssetKey } from "@/lib/imagePrompts";
 
 export type Category =
-  | "Essência da Marca"
-  | "Público-Alvo"
-  | "Identidade Verbal"
+  | "Estratégia"
+  | "Linguagem"
   | "Identidade Visual"
-  | "Paleta de Cores"
-  | "Tipografia"
   | "Sistema Visual"
-  | "Padrões Gráficos"
-  | "Design System"
-  | "Aplicações da Marca"
-  | "Diretrizes de Uso";
+  | "Aplicações"
+  | "Operacional";
 
 export type SectionDef = {
   id: string;
@@ -45,18 +40,33 @@ export type SectionDef = {
 };
 
 export const CATEGORIES: Category[] = [
-  "Essência da Marca",
-  "Público-Alvo",
-  "Identidade Verbal",
+  "Estratégia",
+  "Linguagem",
   "Identidade Visual",
-  "Paleta de Cores",
-  "Tipografia",
   "Sistema Visual",
-  "Padrões Gráficos",
-  "Design System",
-  "Aplicações da Marca",
-  "Diretrizes de Uso",
+  "Aplicações",
+  "Operacional",
 ];
+
+/** Icon per category for UI display */
+export const CATEGORY_ICONS: Record<Category, string> = {
+  "Estratégia": "🧭",
+  "Linguagem": "🗣️",
+  "Identidade Visual": "🎨",
+  "Sistema Visual": "✦",
+  "Aplicações": "🖨️",
+  "Operacional": "📋",
+};
+
+/** Short description per category */
+export const CATEGORY_DESCRIPTIONS: Record<Category, string> = {
+  "Estratégia": "Quem somos, para quem e por quê",
+  "Linguagem": "Como a marca fala e se expressa",
+  "Identidade Visual": "Logo, cores e tipografia",
+  "Sistema Visual": "Mundo visual, key visuals e elementos",
+  "Aplicações": "UI, mockups, redes sociais e uso real",
+  "Operacional": "Produção, entrega e governança",
+};
 
 export type BrandbookViewerImageGenerationControls = {
   downloadImage: (url: string, name: string) => void;
@@ -100,35 +110,35 @@ export function buildSectionDefs({
     {
       id: "dna",
       title: "DNA & Estratégia",
-      category: "Essência da Marca",
+      category: "Estratégia",
       when: true,
       render: (num) => <SectionDNA data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "brand-story",
       title: "Brand Story & Manifesto",
-      category: "Essência da Marca",
+      category: "Estratégia",
       when: !!data.brandStory,
       render: (num) => <SectionBrandStory data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "positioning",
       title: "Posicionamento",
-      category: "Essência da Marca",
+      category: "Estratégia",
       when: !!data.positioning,
       render: (num) => <SectionPositioning data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "personas",
       title: "Personas",
-      category: "Público-Alvo",
+      category: "Estratégia",
       when: !!data.audiencePersonas && data.audiencePersonas.length > 0,
       render: (num) => <SectionAudiencePersonas data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "verbal-identity",
       title: "Identidade Verbal",
-      category: "Identidade Verbal",
+      category: "Linguagem",
       when: !!data.verbalIdentity,
       render: (num) => <SectionVerbalIdentity data={data} num={num} onUpdateData={onUpdateData} />,
     },
@@ -155,21 +165,21 @@ export function buildSectionDefs({
     {
       id: "colors",
       title: "Cores",
-      category: "Paleta de Cores",
+      category: "Identidade Visual",
       when: true,
       render: (num) => <SectionColors data={data} num={num} onUpdateColors={onUpdateColors} />,
     },
     {
       id: "typography",
       title: "Tipografia",
-      category: "Tipografia",
+      category: "Identidade Visual",
       when: true,
       render: (num) => <SectionTypography data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "typography-scale",
       title: "Escala Tipográfica",
-      category: "Tipografia",
+      category: "Identidade Visual",
       when: !!data.typographyScale && data.typographyScale.length > 0,
       render: (num) => <SectionTypographyScale data={data} num={num} onUpdateData={onUpdateData} />,
     },
@@ -201,7 +211,7 @@ export function buildSectionDefs({
     {
       id: "mascots",
       title: "Mascotes & Símbolos",
-      category: "Padrões Gráficos",
+      category: "Sistema Visual",
       when: !!(
         (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
         (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
@@ -226,28 +236,28 @@ export function buildSectionDefs({
     {
       id: "ui-guidelines",
       title: "Guidelines de UI",
-      category: "Design System",
+      category: "Aplicações",
       when: !!data.uiGuidelines,
       render: (num) => <SectionUiGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "tokens-a11y",
       title: "Design Tokens & Acessibilidade",
-      category: "Design System",
+      category: "Aplicações",
       when: isAdvanced && !!data.designTokens && !!data.accessibility,
       render: (num) => <SectionTokensA11y data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "ux-microcopy-motion",
       title: "UX Patterns, Microcopy & Motion",
-      category: "Design System",
+      category: "Aplicações",
       when: isAdvanced && !!data.uxPatterns && !!data.microcopy && !!data.motion,
       render: (num) => <SectionUxMicrocopyMotion data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "applications",
       title: "Aplicações",
-      category: "Aplicações da Marca",
+      category: "Aplicações",
       when: true,
       render: (num) => (
         <SectionApplications
@@ -266,28 +276,28 @@ export function buildSectionDefs({
     {
       id: "production-guidelines",
       title: "Produção & Handoff",
-      category: "Diretrizes de Uso",
+      category: "Operacional",
       when: !!data.productionGuidelines,
       render: (num) => <SectionProductionGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "social-media",
       title: "Guia de Redes Sociais",
-      category: "Aplicações da Marca",
+      category: "Aplicações",
       when: !!data.socialMediaGuidelines && data.socialMediaGuidelines.platforms.length > 0,
       render: (num) => <SectionSocialMedia data={data} num={num} />,
     },
     {
       id: "governance",
       title: "Governança do Design System",
-      category: "Diretrizes de Uso",
+      category: "Operacional",
       when: !!data.governance,
       render: (num) => <SectionGovernance data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "asset-pack",
       title: "Entrega — Asset Pack",
-      category: "Diretrizes de Uso",
+      category: "Operacional",
       when: true,
       render: (num) => (
         <SectionAssetPack
@@ -304,14 +314,14 @@ export function buildSectionDefs({
     {
       id: "brand-assets",
       title: "Ativos de Marca",
-      category: "Diretrizes de Uso",
+      category: "Operacional",
       when: uploadedAssets.length > 0,
       render: (num) => <SectionBrandAssets num={num} uploadedAssets={uploadedAssets} />,
     },
     {
       id: "brand-health",
       title: "Brand Health Dashboard",
-      category: "Diretrizes de Uso",
+      category: "Operacional",
       when: true,
       render: (num) => <SectionBrandHealth data={data} num={num} />,
     },

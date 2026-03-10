@@ -11,9 +11,12 @@ function svgForPath(path: string): string {
   if (path.startsWith("vectors/elements/")) {
     return [
       '<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">',
-      '<rect x="48" y="48" width="180" height="180" rx="40" fill="none" stroke="#111"/>',
-      '<circle cx="320" cy="160" r="72" fill="none" stroke="#111"/>',
-      '<path d="M96 352C180 280 284 280 392 400" fill="none" stroke="#111"/>',
+      '<circle cx="256" cy="256" r="200" fill="#f5f5f5"/>',
+      '<path d="M128 256L256 128L384 256L256 384Z" fill="none" stroke="#111"/>',
+      '<rect x="200" y="200" width="112" height="112" rx="16" fill="#333"/>',
+      '<ellipse cx="256" cy="256" rx="80" ry="40" fill="none" stroke="#666"/>',
+      '<polygon points="256,56 296,176 416,176 316,248 356,368 256,296 156,368 196,248 96,176 216,176" fill="none" stroke="#444"/>',
+      '<path d="M180 180L332 332M332 180L180 332" stroke="#999" stroke-width="2"/>',
       '</svg>',
     ].join("");
   }
@@ -50,6 +53,7 @@ function svgForPath(path: string): string {
     '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">',
     `<title>${path}</title>`,
     '<path d="M4 12L12 4L20 12" fill="none" stroke="#111"/>',
+    '<circle cx="12" cy="16" r="3" fill="#111"/>',
     '</svg>',
   ].join("");
 }

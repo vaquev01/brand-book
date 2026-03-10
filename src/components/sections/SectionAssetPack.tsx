@@ -208,7 +208,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
             </div>
             {quality.strengths.length > 0 && (
               <div className="lg:max-w-xs">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Pontos fortes</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Pontos fortes</div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {quality.strengths.slice(0, 4).map((strength) => (
                     <span key={strength} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/80 border border-white text-gray-700">
@@ -224,7 +224,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
             <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
               {quality.warnings.length > 0 && (
                 <div className="rounded-lg border border-white bg-white/70 p-3">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Warnings</div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Warnings</div>
                   <div className="mt-2 space-y-1">
                     {quality.warnings.slice(0, 4).map((warning) => (
                       <div key={warning} className="text-xs text-gray-700">{warning}</div>
@@ -234,7 +234,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
               )}
               {quality.issues.length > 0 && (
                 <div className="rounded-lg border border-white bg-white/70 p-3">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Issues críticos</div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Issues críticos</div>
                   <div className="mt-2 space-y-1">
                     {quality.issues.slice(0, 4).map((issue) => (
                       <div key={issue} className="text-xs text-gray-700">{issue}</div>
@@ -251,7 +251,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
         <div className="mb-4 rounded-xl border bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 lg:max-w-2xl">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Plano criativo</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Plano criativo</div>
               <div className="mt-2 text-sm font-semibold text-gray-900">{plan.creativeThesis}</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {plan.shapeLanguage.slice(0, 5).map((item) => (
@@ -263,7 +263,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:w-[26rem]">
               <div className="rounded-lg border bg-gray-50 p-3">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Motivos centrais</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Motivos centrais</div>
                 <div className="mt-2 space-y-1">
                   {plan.coreMotifs.slice(0, 4).map((item) => (
                     <div key={item} className="text-xs text-gray-700">{item}</div>
@@ -271,7 +271,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
                 </div>
               </div>
               <div className="rounded-lg border bg-gray-50 p-3">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Evitar</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Evitar</div>
                 <div className="mt-2 space-y-1">
                   {plan.avoidMotifs.slice(0, 4).map((item) => (
                     <div key={item} className="text-xs text-gray-700">{item}</div>
@@ -283,11 +283,11 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
 
           <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div className="rounded-lg border bg-gray-50 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Diretriz de ícones</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Diretriz de ícones</div>
               <div className="mt-2 text-xs text-gray-700 leading-relaxed">{plan.bucketDirectives.icons}</div>
             </div>
             <div className="rounded-lg border bg-gray-50 p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Diretriz de elementos e motion</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Diretriz de elementos e motion</div>
               <div className="mt-2 text-xs text-gray-700 leading-relaxed">
                 {plan.bucketDirectives.elements}
                 <div className="mt-2">{plan.bucketDirectives.motion}</div>
@@ -329,7 +329,7 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
                 <div className={`mb-3 rounded-lg border p-3 ${bucketTone.panel}`}>
                   {bucketQuality.strengths.length > 0 && (
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Fortes</div>
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Fortes</div>
                       <div className="mt-1 flex flex-wrap gap-2">
                         {bucketQuality.strengths.slice(0, 3).map((strength) => (
                           <span key={strength} className="text-[11px] font-semibold px-2 py-1 rounded-full bg-white/80 border border-white text-gray-700">
@@ -382,9 +382,19 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
       )}
 
       {emptyBuckets.length > 0 && (
-        <p className="text-xs text-gray-400 mt-3">
-          Aguardando Asset Pack: {emptyBuckets.join(" · ")}
-        </p>
+        <div className="flex items-center gap-3 mt-3">
+          <p className="text-xs text-gray-400">
+            Faltam: {emptyBuckets.join(" · ")}
+          </p>
+          {onGenerate && !generating && (
+            <button
+              onClick={onGenerate}
+              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              Gerar agora →
+            </button>
+          )}
+        </div>
       )}
 
       {previewFile && (

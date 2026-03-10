@@ -27,7 +27,7 @@ const PROVIDERS: { id: ImageProvider; name: string; desc: string; envKey: string
   {
     id: "dalle3",
     name: "DALL-E 3",
-    desc: "OpenAI · Altíssima qualidade, fotorrealista e artístico",
+    desc: "OpenAI · Fotorrealista e artístico",
     envKey: "OPENAI_API_KEY",
     color: "bg-green-50 border-green-200 text-green-800",
   },
@@ -48,7 +48,7 @@ const PROVIDERS: { id: ImageProvider; name: string; desc: string; envKey: string
   {
     id: "imagen",
     name: "Google Image",
-    desc: "Google · Imagen 3 por padrão, Gemini com referências · alta qualidade e velocidade",
+    desc: "Google · Imagen 3 / Gemini · alta qualidade",
     envKey: "GOOGLE_API_KEY",
     color: "bg-blue-50 border-blue-200 text-blue-800",
   },

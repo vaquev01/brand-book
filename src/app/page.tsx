@@ -35,34 +35,20 @@ function useTypingEffect(words: string[], speed = 70, pause = 2400) {
   return text
 }
 
-/* ─── Scroll reveal hook ─── */
-function useReveal() {
+/* ─── Scroll reveal ─── */
+function RevealSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add("revealed")
-          observer.unobserve(el)
-        }
-      },
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add("revealed"); observer.unobserve(el) } },
       { threshold: 0.15 }
     )
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
-  return ref
-}
-
-function RevealSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  const ref = useReveal()
-  return (
-    <div ref={ref} data-reveal className={className}>
-      {children}
-    </div>
-  )
+  return <div ref={ref} data-reveal className={className}>{children}</div>
 }
 
 const TYPING_WORDS = [
@@ -77,74 +63,47 @@ const TYPING_WORDS = [
 ]
 
 const SHOWCASE_BRANDS = [
-  { name: "Kairo", industry: "Fintech", tagline: "O futuro das finanças", colors: ["#0f172a", "#6366f1", "#a5b4fc", "#f1f5f9"], font: "Inter" },
-  { name: "Soleil", industry: "Cosmetics", tagline: "Beleza consciente", colors: ["#78350f", "#f59e0b", "#fbbf24", "#fffbeb"], font: "Playfair Display" },
-  { name: "Vertex", industry: "Tech", tagline: "Engenharia de ponta", colors: ["#0c0a09", "#ef4444", "#fca5a5", "#fef2f2"], font: "Space Grotesk" },
-  { name: "Flora", industry: "Wellness", tagline: "Natureza que cuida", colors: ["#14532d", "#22c55e", "#86efac", "#f0fdf4"], font: "DM Serif Display" },
+  { name: "Kairo", industry: "Fintech", tagline: "O futuro das finanças", colors: ["#0f172a", "#6366f1", "#a5b4fc", "#f1f5f9"] },
+  { name: "Soleil", industry: "Cosmetics", tagline: "Beleza consciente", colors: ["#78350f", "#f59e0b", "#fbbf24", "#fffbeb"] },
+  { name: "Vertex", industry: "Tech", tagline: "Engenharia de ponta", colors: ["#0c0a09", "#ef4444", "#fca5a5", "#fef2f2"] },
+  { name: "Flora", industry: "Wellness", tagline: "Natureza que cuida", colors: ["#14532d", "#22c55e", "#86efac", "#f0fdf4"] },
 ]
 
 const FEATURES = [
   {
     title: "Art Director IA",
-    desc: "Pensa como os melhores designers — Paula Scher, Sagmeister, David Carson. Cada decisao visual é fundamentada em semiótica e estratégia.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
-      </svg>
-    ),
+    desc: "Cada decisão visual fundamentada em semiótica e estratégia.",
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>,
     accent: "#6366f1",
   },
   {
     title: "Imersão Total",
-    desc: "O brandbook se veste da marca — cores, tipografia, linguagem. Cada página é uma experiência de identidade visual completa.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>
-    ),
+    desc: "O brandbook se veste da marca — cores, tipografia, voz.",
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>,
     accent: "#f59e0b",
   },
   {
-    title: "24 Seções Editoriais",
-    desc: "DNA, posicionamento, personas, identidade verbal, logo, cores, tipografia, aplicações, social media e muito mais.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>
-      </svg>
-    ),
+    title: "24 Seções Completas",
+    desc: "DNA, personas, verbal, logo, cores, tipo, aplicações e social media.",
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg>,
     accent: "#22c55e",
   },
   {
-    title: "Multi-Provider",
-    desc: "GPT-4o, Gemini, DALL-E 3, Stability AI, Ideogram e Imagen 3 trabalham juntos para criar assets visuais coerentes.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="14" y="14" width="8" height="8" rx="2"/><rect x="2" y="2" width="8" height="8" rx="2"/>
-        <path d="M7 14v1a2 2 0 0 0 2 2h1"/><path d="M14 7h1a2 2 0 0 1 2 2v1"/>
-      </svg>
-    ),
+    title: "6 Motores de IA",
+    desc: "GPT-4o, Gemini, DALL-E 3, Stability, Ideogram e Imagen 3.",
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="14" y="14" width="8" height="8" rx="2"/><rect x="2" y="2" width="8" height="8" rx="2"/><path d="M7 14v1a2 2 0 0 0 2 2h1"/><path d="M14 7h1a2 2 0 0 1 2 2v1"/></svg>,
     accent: "#3b82f6",
   },
   {
-    title: "Apresentação Cinematográfica",
-    desc: "Modo fullscreen com transições suaves, barra de progresso e ambientação. Apresente ao cliente como um keynote.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>
-      </svg>
-    ),
+    title: "Apresentação Cinematic",
+    desc: "Fullscreen com transições e ambientação. Um keynote para o cliente.",
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>,
     accent: "#ef4444",
   },
   {
-    title: "Exportação Profissional",
-    desc: "PDF multi-página, ZIP com assets, Design Tokens (CSS, W3C, Tailwind), share link público e manifesto de produção.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
-      </svg>
-    ),
+    title: "Exportação Pro",
+    desc: "PDF, Design Tokens (CSS/W3C/Tailwind) e link público.",
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
     accent: "#a855f7",
   },
 ]
@@ -157,25 +116,11 @@ export default function LandingPage() {
   const router = useRouter()
   const [scrollY, setScrollY] = useState(0)
 
-  useEffect(() => {
-    if (status === "authenticated") router.replace("/dashboard")
-  }, [status, router])
+  useEffect(() => { if (status === "authenticated") router.replace("/dashboard") }, [status, router])
+  useEffect(() => { const i = setInterval(() => setActiveBrand((v) => (v + 1) % SHOWCASE_BRANDS.length), 3500); return () => clearInterval(i) }, [])
+  useEffect(() => { function onScroll() { setScrollY(window.scrollY) }; window.addEventListener("scroll", onScroll, { passive: true }); return () => window.removeEventListener("scroll", onScroll) }, [])
 
-  useEffect(() => {
-    const i = setInterval(() => setActiveBrand((v) => (v + 1) % SHOWCASE_BRANDS.length), 3500)
-    return () => clearInterval(i)
-  }, [])
-
-  useEffect(() => {
-    function onScroll() { setScrollY(window.scrollY) }
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  async function handleAccess() {
-    setLoading(true)
-    await signIn("credentials", { callbackUrl: "/dashboard" })
-  }
+  async function handleAccess() { setLoading(true); await signIn("credentials", { callbackUrl: "/dashboard" }) }
 
   const brand = SHOWCASE_BRANDS[activeBrand]
 
@@ -191,30 +136,23 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#07080b] text-white overflow-x-hidden selection:bg-violet-500/20">
-      {/* ─── Ambient Background ─── */}
+      {/* Ambient */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
-        <div
-          className="absolute top-[-30%] left-[-15%] w-[80vw] h-[80vw] rounded-full opacity-[0.06] blur-[1px]"
-          style={{ background: `radial-gradient(circle, ${brand.colors[1]}, transparent 65%)`, transition: "background 2s ease" }}
-        />
-        <div
-          className="absolute bottom-[-20%] right-[-20%] w-[60vw] h-[60vw] rounded-full opacity-[0.04]"
-          style={{ background: `radial-gradient(circle, ${brand.colors[2]}, transparent 65%)`, transition: "background 2s ease" }}
-        />
+        <div className="absolute top-[-30%] left-[-15%] w-[80vw] h-[80vw] rounded-full opacity-[0.06]"
+          style={{ background: `radial-gradient(circle, ${brand.colors[1]}, transparent 65%)`, transition: "background 2s ease" }} />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[60vw] h-[60vw] rounded-full opacity-[0.04]"
+          style={{ background: `radial-gradient(circle, ${brand.colors[2]}, transparent 65%)`, transition: "background 2s ease" }} />
         <div className="absolute inset-0 opacity-[0.025]"
-          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)", backgroundSize: "72px 72px" }}
-        />
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)", backgroundSize: "72px 72px" }} />
       </div>
 
-      {/* ─── Nav ─── */}
-      <nav
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
         style={{
           background: scrollY > 60 ? "rgba(7,8,11,0.85)" : "transparent",
           backdropFilter: scrollY > 60 ? "blur(20px) saturate(1.4)" : "none",
           borderBottom: scrollY > 60 ? "1px solid rgba(255,255,255,0.04)" : "1px solid transparent",
-        }}
-      >
+        }}>
         <div className="max-w-[80rem] mx-auto px-6 sm:px-10 lg:px-16 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/[0.07] border border-white/[0.06] flex items-center justify-center">
@@ -225,13 +163,10 @@ export default function LandingPage() {
           <div className="flex items-center gap-5">
             <span className="hidden sm:flex items-center gap-2 text-[11px] text-white/25 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              AI Online
+              Online
             </span>
-            <button
-              onClick={handleAccess}
-              disabled={loading}
-              className="text-[13px] font-semibold text-white/70 hover:text-white bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] px-5 py-2 rounded-xl transition-all duration-200 disabled:opacity-50"
-            >
+            <button onClick={handleAccess} disabled={loading}
+              className="text-[13px] font-semibold text-white/70 hover:text-white bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] px-5 py-2 rounded-xl transition-all duration-200 disabled:opacity-50">
               {loading ? "Entrando..." : "Entrar"}
             </button>
           </div>
@@ -239,10 +174,9 @@ export default function LandingPage() {
       </nav>
 
       {/* ─── Hero ─── */}
-      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pt-32 sm:pt-40 lg:pt-48 pb-16 sm:pb-24">
+      <section className="relative z-10 px-6 sm:px-10 lg:px-16 pt-32 sm:pt-40 lg:pt-48 pb-16 sm:pb-20">
         <div className="max-w-[80rem] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-14 lg:gap-20 items-center">
-            {/* Left — Copy */}
             <div>
               <div className="inline-flex items-center gap-2.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-2 mb-10">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
@@ -262,54 +196,26 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-[17px] text-white/35 max-w-lg leading-[1.7] mb-12">
-                Do briefing ao manual de marca completo em minutos.
-                Uma IA que pensa como art director, com sensibilidade estética
-                e fundamento estratégico.
+                Do briefing ao manual de marca completo em minutos. IA com sensibilidade estética e fundamento estratégico.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-start gap-4 mb-14">
-                <button
-                  onClick={handleAccess}
-                  disabled={loading}
-                  className="group relative flex items-center gap-3 bg-white text-[#07080b] px-8 py-[18px] rounded-2xl font-bold text-[15px] transition-all duration-300 hover:shadow-[0_24px_80px_rgba(255,255,255,0.10)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-wait"
-                >
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <button onClick={handleAccess} disabled={loading}
+                  className="group relative flex items-center gap-3 bg-white text-[#07080b] px-8 py-[18px] rounded-2xl font-bold text-[15px] transition-all duration-300 hover:shadow-[0_24px_80px_rgba(255,255,255,0.10)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-wait">
                   {loading ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeLinecap="round" />
-                      </svg>
-                      Entrando...
-                    </>
+                    <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeLinecap="round" /></svg>Entrando...</>
                   ) : (
-                    <>
-                      Criar Brandbook Grátis
-                      <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                      </svg>
-                    </>
+                    <>Criar Brandbook Grátis<svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg></>
                   )}
                 </button>
-                <span className="text-[12px] text-white/15 self-center leading-relaxed">Sem cadastro. Acesso direto.<br className="sm:hidden" /> Resultado em menos de 2 minutos.</span>
-              </div>
-
-              {/* AI Engine badges */}
-              <div className="flex flex-wrap gap-2">
-                {["GPT-4o", "Gemini 2.0", "DALL-E 3", "Stability AI", "Ideogram", "Imagen 3"].map((t) => (
-                  <span key={t} className="text-[10px] font-medium text-white/20 border border-white/[0.05] rounded-lg px-2.5 py-1.5 backdrop-blur-sm">
-                    {t}
-                  </span>
-                ))}
+                <span className="text-[12px] text-white/15 self-center">Sem cadastro. Resultado em &lt;2 minutos.</span>
               </div>
             </div>
 
-            {/* Right — Brand Preview Card */}
+            {/* Brand Preview Card */}
             <div className="relative hidden lg:block">
-              <div className="absolute -inset-12 rounded-[2rem] opacity-15 blur-3xl transition-all duration-2000"
-                style={{ background: brand.colors[1] }}
-              />
-
+              <div className="absolute -inset-12 rounded-[2rem] opacity-15 blur-3xl transition-all duration-2000" style={{ background: brand.colors[1] }} />
               <div className="relative rounded-[1.5rem] border border-white/[0.07] bg-white/[0.025] backdrop-blur-2xl overflow-hidden shadow-2xl">
-                {/* Card header */}
                 <div className="px-7 pt-7 pb-5 border-b border-white/[0.05]">
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2.5">
@@ -318,46 +224,30 @@ export default function LandingPage() {
                     </div>
                     <span className="text-[10px] text-white/15 font-mono tracking-wider">{brand.industry}</span>
                   </div>
-                  <h3 className="text-4xl font-black tracking-tight text-white transition-all duration-500">
-                    {brand.name}
-                  </h3>
+                  <h3 className="text-4xl font-black tracking-tight text-white transition-all duration-500">{brand.name}</h3>
                   <p className="text-sm text-white/25 mt-1.5 transition-all duration-500">{brand.tagline}</p>
                 </div>
-
-                {/* Color strip */}
                 <div className="flex">
                   {brand.colors.map((c, i) => (
                     <div key={i} className="flex-1 h-14 transition-all duration-700" style={{ background: c }} />
                   ))}
                 </div>
-
-                {/* Sections preview */}
                 <div className="p-7 space-y-1">
-                  {["DNA & Estratégia", "Identidade Visual", "Sistema Tipográfico", "Aplicações", "Social Media Kit"].map((s, i) => (
+                  {["DNA & Estratégia", "Identidade Visual", "Tipografia", "Aplicações", "Social Media"].map((s, i) => (
                     <div key={s} className="flex items-center gap-3 py-2.5 border-b border-white/[0.03] last:border-0">
-                      <span className="text-[10px] font-bold text-white/10 tabular-nums w-6">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
+                      <span className="text-[10px] font-bold text-white/10 tabular-nums w-6">{String(i + 1).padStart(2, "0")}</span>
                       <span className="text-[13px] text-white/35 font-medium">{s}</span>
                       <div className="ml-auto w-10 h-1 rounded-full bg-white/[0.05] overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-1000"
-                          style={{ width: `${65 + i * 7}%`, background: brand.colors[1], opacity: 0.4 }}
-                        />
+                        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${65 + i * 7}%`, background: brand.colors[1], opacity: 0.4 }} />
                       </div>
                     </div>
                   ))}
                 </div>
-
-                {/* Brand selector dots */}
                 <div className="px-7 pb-6 flex items-center justify-center gap-2">
                   {SHOWCASE_BRANDS.map((b, i) => (
-                    <button
-                      key={b.name}
-                      onClick={() => setActiveBrand(i)}
+                    <button key={b.name} onClick={() => setActiveBrand(i)}
                       className={`rounded-full transition-all duration-300 ${i === activeBrand ? "w-7 h-2.5" : "w-2.5 h-2.5 opacity-25 hover:opacity-50"}`}
-                      style={{ background: b.colors[1] }}
-                      aria-label={`Ver marca ${b.name}`}
-                    />
+                      style={{ background: b.colors[1] }} aria-label={`Ver marca ${b.name}`} />
                   ))}
                 </div>
               </div>
@@ -366,95 +256,25 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Social Proof Bar ─── */}
-      <RevealSection>
-        <section className="relative z-10 border-y border-white/[0.03] bg-white/[0.01]">
-          <div className="max-w-[80rem] mx-auto px-6 sm:px-10 lg:px-16 py-12 grid grid-cols-2 sm:grid-cols-4 gap-10">
-            {[
-              { value: "24", label: "Seções", sub: "Manual completo" },
-              { value: "6", label: "Motores IA", sub: "Text + Image" },
-              { value: "28+", label: "Assets", sub: "Cards, social, packaging" },
-              { value: "<2min", label: "Geração", sub: "Briefing ao manual" },
-            ].map((s, i) => (
-              <div key={s.label} data-stagger className="group">
-                <div className="text-3xl sm:text-4xl font-black text-white/85 mb-1.5 tabular-nums tracking-tight">{s.value}</div>
-                <div className="text-xs font-bold text-white/35 mb-0.5">{s.label}</div>
-                <div className="text-[11px] text-white/15">{s.sub}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </RevealSection>
-
-      {/* ─── Showcase / Output Preview ─── */}
-      <RevealSection>
-        <section className="relative z-10 px-6 sm:px-10 lg:px-16 py-24 sm:py-32">
-          <div className="max-w-[80rem] mx-auto">
-            <div className="text-center mb-16">
-              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/15 mb-4">Resultado</div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white/90 tracking-tight leading-[1.1] max-w-2xl mx-auto">
-                Manuais de marca que agências cobram milhares para criar.
-              </h2>
-              <p className="text-base text-white/25 mt-5 max-w-lg mx-auto leading-relaxed">
-                Cada brandbook é único, estratégico e visualmente coerente. Construído com fundamento semiótico e sensibilidade de design.
-              </p>
-            </div>
-
-            {/* Output preview grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              {SHOWCASE_BRANDS.map((b, i) => (
-                <button
-                  key={b.name}
-                  onClick={() => setActiveBrand(i)}
-                  data-stagger
-                  className={`group relative rounded-2xl border p-5 sm:p-6 text-left transition-all duration-300 ${
-                    i === activeBrand
-                      ? "border-white/[0.12] bg-white/[0.04]"
-                      : "border-white/[0.04] bg-white/[0.01] hover:border-white/[0.08] hover:bg-white/[0.03]"
-                  }`}
-                >
-                  <div className="flex gap-1.5 mb-4">
-                    {b.colors.map((c, j) => (
-                      <div key={j} className="w-4 h-4 sm:w-5 sm:h-5 rounded-full transition-transform duration-200 group-hover:scale-110" style={{ background: c }} />
-                    ))}
-                  </div>
-                  <h4 className="text-base sm:text-lg font-black text-white/80 mb-0.5">{b.name}</h4>
-                  <p className="text-[11px] text-white/20 font-medium">{b.industry}</p>
-                  <p className="text-[11px] text-white/12 mt-1 hidden sm:block">{b.tagline}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      </RevealSection>
-
       {/* ─── Features ─── */}
       <RevealSection>
-        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 py-20 sm:py-28">
           <div className="max-w-[80rem] mx-auto">
-            <div className="mb-16">
-              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/15 mb-4">Capacidades</div>
+            <div className="mb-14">
               <h2 className="text-3xl sm:text-4xl font-black text-white/90 tracking-tight max-w-xl">
-                Cada detalhe pensado.
-                <br />
+                Cada detalhe pensado.<br />
                 <span className="text-white/40">Nada é genérico.</span>
               </h2>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {FEATURES.map((f, i) => (
-                <div
-                  key={f.title}
-                  data-stagger
-                  className="group relative rounded-2xl border border-white/[0.05] bg-white/[0.015] p-7 transition-all duration-300 hover:bg-white/[0.035] hover:border-white/[0.10]"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-105"
-                    style={{ background: `${f.accent}15`, color: f.accent }}
-                  >
+              {FEATURES.map((f) => (
+                <div key={f.title} data-stagger
+                  className="group rounded-2xl border border-white/[0.05] bg-white/[0.015] p-7 transition-all duration-300 hover:bg-white/[0.035] hover:border-white/[0.10]">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-105"
+                    style={{ background: `${f.accent}15`, color: f.accent }}>
                     {f.icon}
                   </div>
-                  <h3 className="text-[15px] font-bold text-white/80 mb-2.5">{f.title}</h3>
+                  <h3 className="text-[15px] font-bold text-white/80 mb-2">{f.title}</h3>
                   <p className="text-[13px] text-white/25 leading-[1.7]">{f.desc}</p>
                 </div>
               ))}
@@ -465,32 +285,19 @@ export default function LandingPage() {
 
       {/* ─── Process ─── */}
       <RevealSection>
-        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20 sm:pb-28">
           <div className="max-w-[80rem] mx-auto">
             <div className="rounded-[1.5rem] border border-white/[0.05] bg-white/[0.015] overflow-hidden">
               <div className="p-8 sm:p-14">
-                <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/15 mb-4">Processo</div>
-                <h2 className="text-3xl sm:text-4xl font-black text-white/90 tracking-tight mb-14">
+                <h2 className="text-3xl sm:text-4xl font-black text-white/90 tracking-tight mb-12">
                   3 passos. Resultado de agência.
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-16">
                   {[
-                    {
-                      n: "01",
-                      title: "Briefing Inteligente",
-                      desc: "Nome, setor, descrição. Ou apenas uma imagem de referência. A IA disseca a intenção e extrai os fundamentos da identidade.",
-                    },
-                    {
-                      n: "02",
-                      title: "Geração Estratégica",
-                      desc: "Art Director IA cria 24 seções: DNA, cores, tipografia, logos, aplicações. Tudo com análise semiótica e coerência entre seções.",
-                    },
-                    {
-                      n: "03",
-                      title: "Refine & Apresente",
-                      desc: "Edite cada campo inline. Gere assets visuais. Exporte PDF profissional. Compartilhe link imersivo com seu cliente.",
-                    },
-                  ].map((step, i) => (
+                    { n: "01", title: "Descreva", desc: "Nome, setor e briefing. A IA extrai os fundamentos da identidade." },
+                    { n: "02", title: "Gere", desc: "24 seções com coerência semiótica — cores, tipo, logos e aplicações." },
+                    { n: "03", title: "Apresente", desc: "Edite inline, exporte PDF e compartilhe com link imersivo." },
+                  ].map((step) => (
                     <div key={step.n} data-stagger>
                       <div className="text-5xl font-black text-white/[0.04] mb-5">{step.n}</div>
                       <h3 className="text-lg font-bold text-white/80 mb-3">{step.title}</h3>
@@ -505,50 +312,35 @@ export default function LandingPage() {
         </section>
       </RevealSection>
 
-      {/* ─── Testimonial / Philosophy ─── */}
+      {/* ─── Philosophy (compact) ─── */}
       <RevealSection>
-        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
-          <div className="max-w-[80rem] mx-auto">
-            <div className="max-w-3xl mx-auto text-center">
-              <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-auto mb-10" />
-              <blockquote className="text-xl sm:text-2xl lg:text-3xl font-bold text-white/60 leading-[1.5] tracking-tight">
-                &ldquo;Um bom manual de marca não é um documento.
-                É a <span className="text-white/90">tradução visual da alma</span> de um negócio.
-                Cada cor, cada tipo, cada espaçamento conta uma história.&rdquo;
-              </blockquote>
-              <div className="mt-8 text-[12px] text-white/20 font-semibold uppercase tracking-[0.2em]">
-                Filosofia Brandbook
-              </div>
-              <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-auto mt-10" />
-            </div>
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20 sm:pb-28">
+          <div className="max-w-3xl mx-auto text-center">
+            <blockquote className="text-xl sm:text-2xl lg:text-[1.75rem] font-bold text-white/50 leading-[1.5] tracking-tight">
+              &ldquo;Um bom manual de marca não é um documento.
+              É a <span className="text-white/90">tradução visual da alma</span> de um negócio.&rdquo;
+            </blockquote>
           </div>
         </section>
       </RevealSection>
 
       {/* ─── Final CTA ─── */}
       <RevealSection>
-        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-24 sm:pb-32">
+        <section className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20 sm:pb-28">
           <div className="max-w-[80rem] mx-auto">
             <div className="relative rounded-[1.5rem] border border-white/[0.06] overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-blue-900/10" />
-              <div className="relative text-center py-16 sm:py-24 px-6">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white/90 tracking-tight mb-5 max-w-2xl mx-auto leading-[1.1]">
-                  Pronto para criar uma identidade visual que impressiona?
+              <div className="relative text-center py-14 sm:py-20 px-6">
+                <h2 className="text-3xl sm:text-4xl font-black text-white/90 tracking-tight mb-5 max-w-xl mx-auto leading-[1.1]">
+                  Pronto para criar?
                 </h2>
-                <p className="text-[15px] text-white/30 mb-10 max-w-md mx-auto leading-relaxed">
-                  Acesso direto. Sem cadastro. Seu manual de marca profissional em menos de 2 minutos.
+                <p className="text-[14px] text-white/30 mb-8 max-w-sm mx-auto">
+                  Acesso direto. Manual profissional em &lt;2 minutos.
                 </p>
-                <button
-                  onClick={handleAccess}
-                  disabled={loading}
-                  className="group inline-flex items-center gap-3 bg-white text-[#07080b] px-9 py-[18px] rounded-2xl font-bold text-[15px] transition-all duration-300 hover:shadow-[0_24px_80px_rgba(255,255,255,0.10)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50"
-                >
+                <button onClick={handleAccess} disabled={loading}
+                  className="group inline-flex items-center gap-3 bg-white text-[#07080b] px-9 py-[18px] rounded-2xl font-bold text-[15px] transition-all duration-300 hover:shadow-[0_24px_80px_rgba(255,255,255,0.10)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50">
                   {loading ? "Entrando..." : "Começar Agora"}
-                  {!loading && (
-                    <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                    </svg>
-                  )}
+                  {!loading && <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>}
                 </button>
               </div>
             </div>
@@ -556,7 +348,7 @@ export default function LandingPage() {
         </section>
       </RevealSection>
 
-      {/* ─── Footer ─── */}
+      {/* Footer */}
       <footer className="relative z-10 border-t border-white/[0.03] px-6 sm:px-10 lg:px-16 py-8">
         <div className="max-w-[80rem] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -565,9 +357,7 @@ export default function LandingPage() {
             </div>
             <span className="text-[12px] text-white/15 font-medium">brandbook &copy; {new Date().getFullYear()}</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] text-white/10">AI-Powered Brand Identity Studio</span>
-          </div>
+          <span className="text-[11px] text-white/10">AI-Powered Brand Identity Studio</span>
         </div>
       </footer>
     </div>

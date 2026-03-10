@@ -350,7 +350,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
         {isExpanded && (
           <div className="space-y-3 bg-gray-50 rounded-lg p-3 border">
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                 Como voc&ecirc; espera esta imagem?
               </label>
               <textarea
@@ -362,7 +362,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Fotos de refer&ecirc;ncia</label>
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Fotos de refer&ecirc;ncia</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {briefing.referenceImages.map((img, idx) => (
                   <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden border bg-white group/thumb">
@@ -378,7 +378,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Links de refer&ecirc;ncia</label>
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Links de refer&ecirc;ncia</label>
               <div className="flex gap-1.5">
                 <input type="url" value={linkInput[briefingKey] ?? ""} onChange={(e) => setLinkInput((prev) => ({ ...prev, [briefingKey]: e.target.value }))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddLink(briefingKey); } }} placeholder="https://..." className="flex-1 bg-white border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
                 <button type="button" onClick={() => handleAddLink(briefingKey)} className="bg-gray-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-gray-800 transition">+</button>

@@ -68,7 +68,7 @@ export function ProjectModeSection({
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw text-gray-400"><path d="M3 2v6h6"/><path d="M21 12A9 9 0 0 0 6 5.3L3 8"/><path d="M21 22v-6h-6"/><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"/></svg>
         <div>
           <h3 className="font-bold text-gray-900">Tipo de projeto</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Define se a IA parte do zero ou se deve preservar equity existente</p>
+          <p className="text-xs text-gray-500 mt-0.5">Do zero ou preservando equity existente</p>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -85,7 +85,7 @@ export function ProjectModeSection({
             Marca nova
           </div>
           <div className={`text-xs mt-1.5 leading-relaxed ${projectMode === "new_brand" ? "text-indigo-700/80" : "text-gray-500"}`}>
-            A IA cria a identidade do zero, sem obrigação de preservar equity anterior.
+            Identidade criada do zero, sem equity anterior.
           </div>
         </button>
         <button
@@ -101,7 +101,7 @@ export function ProjectModeSection({
             Renovação / evolução
           </div>
           <div className={`text-xs mt-1.5 leading-relaxed ${projectMode === "rebrand" ? "text-indigo-700/80" : "text-gray-500"}`}>
-            A IA deve extrair o que já funciona hoje, preservar equity e evoluir a marca com mais sistema e coerência.
+            Preserva o que funciona e evolui com mais sistema e coerência.
           </div>
         </button>
       </div>
@@ -160,7 +160,7 @@ export function CreativitySection({
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-palette text-gray-400"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
         <div>
           <h3 className="font-bold text-gray-900">Nível de criatividade</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Como a IA deve se posicionar criativamente</p>
+          <p className="text-xs text-gray-500 mt-0.5">Posicionamento criativo da IA</p>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -182,9 +182,9 @@ export function CreativitySection({
       {creativity !== "balanced" && (
         <div className={`app-surface-soft mt-3 px-4 py-3 text-xs ${selectedCreativity.color}`}>
           <strong>{selectedCreativity.icon} {selectedCreativity.label}:</strong>{" "}
-          {creativity === "conservative" && "Paleta de no máximo 3 cores, formas limpas, tipografia com autoridade. Estilo IBM, Rolex, McKinsey."}
-          {creativity === "creative" && "Cores inesperadas mas coesas, tipografia com personalidade forte. Estilo Spotify, Oatly, MailChimp."}
-          {creativity === "experimental" && "Quebra de convenções intencional. Cult brand potential. Estilo Saul Bass, Paula Scher, Stefan Sagmeister."}
+          {creativity === "conservative" && "Até 3 cores, formas limpas, tipografia com autoridade. Ref: IBM, Rolex."}
+          {creativity === "creative" && "Cores inesperadas, tipografia expressiva. Ref: Spotify, Oatly."}
+          {creativity === "experimental" && "Quebra de convenções. Cult brand. Ref: Saul Bass, Sagmeister."}
         </div>
       )}
     </div>
@@ -261,18 +261,18 @@ export function GuidedBriefingSection({
 
       {showGuided && (
         <div className="space-y-4 border-t border-slate-200/80 p-5">
-          <GuidedField label="O que a marca faz?" hint="Descreva o produto/serviço em 1-3 frases" placeholder="Ex: Plataforma de gestão de tarefas para times remotos. Foca em simplicidade e foco, não em features." value={guided.whatItDoes} onChange={(value) => onUpdate("whatItDoes", value)} />
-          <GuidedField label="Quem é o público-alvo?" hint="Quanto mais detalhes (idade, estilo de vida, dores, sonhos), melhor o resultado" placeholder="Ex: Profissionais 28-42 anos, altamente digitais, que valorizam produtividade e detestam burocracia. Ganham entre 8-20k/mês. Moram em capitais." value={guided.targetAudience} onChange={(value) => onUpdate("targetAudience", value)} />
-          <GuidedField label="Posicionamento desejado" hint="A frase que diferencia sua marca de todas as outras. Como quer ser percebido?" placeholder='Ex: A alternativa premium e minimalista ao Trello — menos features, mais foco. "O Notion para quem tem TDAH." Queremos ser vistos como a opção mais inteligente, não a mais barata.' value={guided.positioning} onChange={(value) => onUpdate("positioning", value)} />
-          <GuidedField label="Valores e crenças da marca" hint="O que a marca defende? No que acredita? Qual a visão de mundo?" placeholder='Ex: Acreditamos que simplicidade é sofisticação. Que foco vale mais que features. Que design bom é invisível. Que tempo é o recurso mais precioso.' value={guided.brandValues} onChange={(value) => onUpdate("brandValues", value)} rows={3} />
-          <GuidedField label="Território emocional" hint="O que as pessoas devem SENTIR ao interagir com a marca?" placeholder='Ex: Alívio + confiança. Como entrar num espaço onde tudo foi pensado pra você. Não é hype — é competência tranquila. A sensação de "isso funciona e eu nem percebi".' value={guided.emotionalTerritory} onChange={(value) => onUpdate("emotionalTerritory", value)} rows={3} />
-          <GuidedField label="Referências de marcas" hint="Marcas que você admira (estética, estratégia ou tom) — não precisam ser do mesmo setor" placeholder="Ex: Visualmente: Notion, Linear, Arc Browser. Estrategicamente: Apple, Supreme. Tom de voz: Oatly. Materialidade: Aesop." value={guided.references} onChange={(value) => onUpdate("references", value)} />
-          <GuidedField label="Essência da marca (referências culturais)" hint="Cultura, estética, vibe, arquétipos, filmes, artistas, lugares, décadas, movimentos" placeholder="Ex: Arquétipo: Rebelde elegante. Estética: brutalismo + luxo discreto. Referências: Blade Runner, Dieter Rams, Tadao Ando. Décadas: anos 70 (tons terrosos) + futuro próximo." value={guided.essenceReferences} onChange={(value) => onUpdate("essenceReferences", value)} rows={3} />
-          <GuidedField label="Fraquezas da concorrência" hint="O que seus concorrentes fazem mal? Onde está a oportunidade visual/estratégica?" placeholder="Ex: Todos os concorrentes usam azul corporativo e linguagem genérica de startup. Ninguém fala de forma humana. Sites parecem templates. Oportunidade: ser a marca com personalidade num mar de genéricos." value={guided.competitorWeaknesses} onChange={(value) => onUpdate("competitorWeaknesses", value)} rows={3} />
-          <GuidedField label="Onde a marca vive (touchpoints)" hint="Digital? Físico? Redes sociais? PDV? Embalagens? Fachada? App?" placeholder="Ex: 80% digital (site, app iOS, Instagram, LinkedIn). 20% físico (eventos, adesivos, camisetas da equipe). Touchpoint principal: dashboard do produto. Secundário: Instagram feed + stories." value={guided.physicalTouchpoints} onChange={(value) => onUpdate("physicalTouchpoints", value)} rows={3} />
-          <GuidedField label="O que a marca NÃO deve transmitir" hint="Proibições visuais e de tom — o que seria fora da marca?" placeholder="Ex: Corporativo demais, genérico, alegre/colorido em excesso, complexo, intimidador. Nada que pareça banco, consultoria ou startup genérica de Vale do Silício." value={guided.avoidances} onChange={(value) => onUpdate("avoidances", value)} />
-          <GuidedField label="Preferências de cores" hint="Cores que gosta, odeia ou que representam algo para a marca" placeholder="Ex: Evitar azul corporativo. Prefiro paleta escura com um acento vibrante (laranja ou verde neon). Referência: Figma (roxo + gradientes). Preto absoluto é permitido." value={guided.colorPreferences} onChange={(value) => onUpdate("colorPreferences", value)} />
-          <GuidedField label="Instagram / links oficiais" hint="Cole perfis e links que representem a marca" placeholder="Ex: https://instagram.com/suaMarca\nhttps://site.com\nhttps://linkedin.com/company/suaMarca" value={guided.instagramLinks} onChange={(value) => onUpdate("instagramLinks", value)} rows={3} />
+          <GuidedField label="O que a marca faz?" hint="Produto/serviço em 1-3 frases" placeholder="Ex: Plataforma de gestão para times remotos. Foco em simplicidade." value={guided.whatItDoes} onChange={(value) => onUpdate("whatItDoes", value)} />
+          <GuidedField label="Público-alvo" hint="Idade, estilo de vida, dores, aspirações" placeholder="Ex: Profissionais 28-42, digitais, valorizam produtividade. 8-20k/mês, capitais." value={guided.targetAudience} onChange={(value) => onUpdate("targetAudience", value)} />
+          <GuidedField label="Posicionamento" hint="Como quer ser percebido? O que diferencia?" placeholder='Ex: Alternativa premium ao Trello — menos features, mais foco. "O Notion para quem tem TDAH."' value={guided.positioning} onChange={(value) => onUpdate("positioning", value)} />
+          <GuidedField label="Valores e crenças" hint="O que a marca defende?" placeholder="Ex: Simplicidade é sofisticação. Foco vale mais que features. Design bom é invisível." value={guided.brandValues} onChange={(value) => onUpdate("brandValues", value)} rows={3} />
+          <GuidedField label="Território emocional" hint="O que devem SENTIR ao interagir?" placeholder='Ex: Alívio + confiança. Competência tranquila. "Isso funciona e eu nem percebi."' value={guided.emotionalTerritory} onChange={(value) => onUpdate("emotionalTerritory", value)} rows={3} />
+          <GuidedField label="Referências de marcas" hint="Marcas que admira (estética, estratégia ou tom)" placeholder="Ex: Visual: Notion, Linear. Estratégia: Apple. Tom: Oatly. Material: Aesop." value={guided.references} onChange={(value) => onUpdate("references", value)} />
+          <GuidedField label="Essência cultural" hint="Vibe, arquétipos, filmes, artistas, décadas" placeholder="Ex: Rebelde elegante. Brutalismo + luxo. Blade Runner, Dieter Rams. Anos 70 + futuro." value={guided.essenceReferences} onChange={(value) => onUpdate("essenceReferences", value)} rows={3} />
+          <GuidedField label="Fraquezas da concorrência" hint="O que fazem mal? Onde está a oportunidade?" placeholder="Ex: Todos usam azul corporativo e linguagem genérica. Oportunidade: personalidade real." value={guided.competitorWeaknesses} onChange={(value) => onUpdate("competitorWeaknesses", value)} rows={3} />
+          <GuidedField label="Touchpoints" hint="Digital? Físico? Redes? PDV? App?" placeholder="Ex: 80% digital (site, app, Instagram). 20% físico (eventos, adesivos)." value={guided.physicalTouchpoints} onChange={(value) => onUpdate("physicalTouchpoints", value)} rows={3} />
+          <GuidedField label="O que NÃO transmitir" hint="Proibições visuais e de tom" placeholder="Ex: Corporativo, genérico, colorido demais. Nada que pareça banco ou startup genérica." value={guided.avoidances} onChange={(value) => onUpdate("avoidances", value)} />
+          <GuidedField label="Preferências de cores" hint="Cores que gosta, odeia ou representam a marca" placeholder="Ex: Evitar azul corporativo. Paleta escura + acento vibrante. Ref: Figma." value={guided.colorPreferences} onChange={(value) => onUpdate("colorPreferences", value)} />
+          <GuidedField label="Links oficiais" hint="Perfis e sites da marca" placeholder="Ex: https://instagram.com/suaMarca\nhttps://site.com" value={guided.instagramLinks} onChange={(value) => onUpdate("instagramLinks", value)} rows={3} />
 
           <div className="flex items-center gap-3">
             <button
@@ -285,14 +285,14 @@ export function GuidedBriefingSection({
             >
               <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${guided.hasMascot ? "translate-x-5" : "translate-x-0.5"}`} />
             </button>
-            <span className="text-sm font-medium">A marca deve ter mascote ou personagem?</span>
+            <span className="text-sm font-medium">Incluir mascote ou personagem?</span>
           </div>
 
           {guided.hasMascot && (
-            <GuidedField label="Descreva o mascote" hint="Personalidade, aparência, referências visuais" placeholder="Ex: Um robô rechonchudo e amigável, como o Michelin mas tech. Personalidade: nerd entusiasmado que simplifica o complexo." value={guided.mascotDescription} onChange={(value) => onUpdate("mascotDescription", value)} />
+            <GuidedField label="Descreva o mascote" hint="Aparência, personalidade, referências" placeholder="Ex: Robô amigável estilo Michelin mas tech. Nerd que simplifica o complexo." value={guided.mascotDescription} onChange={(value) => onUpdate("mascotDescription", value)} />
           )}
 
-          <GuidedField label="Contexto adicional" hint="Qualquer outra informação relevante para a IA" placeholder="Ex: A marca já tem um logo que não pode mudar, mas tudo mais pode evoluir. Budget para produção é alto." value={guided.extraContext} onChange={(value) => onUpdate("extraContext", value)} rows={3} />
+          <GuidedField label="Contexto adicional" hint="Outras informações relevantes" placeholder="Ex: Logo não pode mudar, mas tudo mais pode evoluir." value={guided.extraContext} onChange={(value) => onUpdate("extraContext", value)} rows={3} />
         </div>
       )}
     </div>
@@ -306,7 +306,7 @@ export function RawBriefingSection({ value, onChange }: { value: string; onChang
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-align-left text-gray-400"><line x1="21" x2="3" y1="6" y2="6"/><line x1="15" x2="3" y1="12" y2="12"/><line x1="17" x2="3" y1="18" y2="18"/></svg>
         <div>
           <h3 className="font-bold text-gray-900">Briefing Livre</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Complementa o briefing guiado acima</p>
+          <p className="text-xs text-gray-500 mt-0.5">Complementa o briefing guiado</p>
         </div>
       </div>
       <textarea
@@ -314,7 +314,7 @@ export function RawBriefingSection({ value, onChange }: { value: string; onChang
         rows={4}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Qualquer detalhe extra, contexto histórico, inspirações, restrições, objetivos de negócio..."
+        placeholder="Detalhes extras, inspirações, restrições, objetivos..."
         className="app-textarea placeholder:text-gray-400"
       />
     </div>
@@ -328,7 +328,7 @@ export function ExternalUrlsSection({ value, onChange }: { value: string; onChan
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-link-2 text-gray-400"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/></svg>
         <div>
           <h3 className="font-bold text-gray-900">Referências Externas (URLs)</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Opcional — o sistema tenta extrair título/descrição/trechos para usar como contexto</p>
+          <p className="text-xs text-gray-500 mt-0.5">Opcional — extrai metadados para contexto</p>
         </div>
       </div>
       <textarea
@@ -340,7 +340,7 @@ export function ExternalUrlsSection({ value, onChange }: { value: string; onChan
         className="app-textarea placeholder:text-gray-400"
       />
       <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-        Alguns sites (ex: Instagram) podem bloquear leitura automática. Se isso acontecer, envie screenshots ou imagens de referência.
+        Alguns sites podem bloquear leitura. Nesse caso, envie screenshots.
       </p>
     </div>
   );
@@ -387,7 +387,7 @@ export function LogoUploadSection({
                 <img src={logoImage.dataUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
               </div>
               <p className="font-bold text-gray-900 text-sm">{logoImage.name}</p>
-              <p className="text-xs text-gray-500 mt-1">A IA vai analisar e construir o brandbook a partir deste logo</p>
+              <p className="text-xs text-gray-500 mt-1">A IA vai construir o brandbook a partir deste logo</p>
               <button
                 type="button"
                 onClick={(event) => {
@@ -405,7 +405,7 @@ export function LogoUploadSection({
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-image-up"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21"/><path d="m14 19.5 3-3 3 3"/><path d="M17 22v-5.5"/><circle cx="9" cy="9" r="2"/></svg>
               </div>
               <p className="font-extrabold text-gray-900 text-lg">Faça upload do seu Logo</p>
-              <p className="text-sm text-gray-500 mt-1 max-w-sm">A IA extrai cores, estilo e personalidade do seu logo atual (PNG, SVG, JPG)</p>
+              <p className="text-sm text-gray-500 mt-1 max-w-sm">Extrai cores, estilo e personalidade do logo (PNG, SVG, JPG)</p>
               <span className="app-primary-button mt-5 inline-flex px-5 py-2.5 text-sm">
                 Selecionar arquivo
               </span>
@@ -437,7 +437,7 @@ export function LogoUploadSection({
           <div>
             <p className="text-sm text-indigo-900 font-bold">Modo &quot;Logo-First&quot; Ativado</p>
             <p className="text-xs text-indigo-800/80 mt-1 leading-relaxed">
-              A IA fará uma análise visual forense do seu logo extraindo cores exatas, estilo tipográfico, geometria e mood para construir um brandbook perfeitamente coerente.
+              Análise forense do logo: cores, tipografia, geometria e mood para um brandbook coerente.
             </p>
           </div>
         </div>
@@ -459,12 +459,12 @@ export function ReferenceImagesSection({
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-images text-gray-400"><path d="M18 22H4a2 2 0 0 1-2-2V6"/><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18"/><circle cx="12" cy="8" r="2"/><rect width="16" height="16" x="6" y="2" rx="2"/></svg>
         <div>
           <h3 className="font-bold text-gray-900">Imagens de Referência</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Opcional — envie tanto capturas da marca atual quanto imagens aspiracionais para a IA separar equity atual de direção futura</p>
+          <p className="text-xs text-gray-500 mt-0.5">Opcional — capturas atuais e/ou imagens aspiracionais</p>
         </div>
       </div>
       <BriefingImageUpload images={images} onChange={onChange} />
       <p className="text-xs text-gray-500 mt-3 leading-relaxed">
-        Dica: para <strong>rebrand</strong>, misture screenshots do Instagram/feed/fachada/embalagens atuais com referências do conceito desejado. A IA deve entender o que já existe hoje e o que deve evoluir.
+        Para <strong>rebrand</strong>: misture capturas atuais com referências do conceito desejado.
       </p>
     </div>
   );
@@ -475,9 +475,9 @@ export function ThinBriefingWarning() {
     <div className="app-surface-soft flex gap-3 border-indigo-200 bg-indigo-50/80 px-5 py-4">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles text-indigo-600 flex-shrink-0 mt-0.5"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
       <div>
-        <p className="text-sm text-indigo-900 font-bold">A IA vai inferir o máximo do nome + indústria</p>
+        <p className="text-sm text-indigo-900 font-bold">A IA infere o máximo do nome + indústria</p>
         <p className="text-xs text-indigo-800/70 mt-1 leading-relaxed">
-          Pode gerar assim — a IA analisa o nome, o setor e compensa com inteligência própria. Para resultados ainda melhores, envie um <strong>logo</strong>, uma <strong>imagem de referência</strong> ou preencha algumas perguntas do <strong>briefing guiado</strong>.
+          Pode gerar assim. Para mais precisão, envie um <strong>logo</strong>, <strong>imagem</strong> ou preencha o <strong>briefing guiado</strong>.
         </p>
       </div>
     </div>

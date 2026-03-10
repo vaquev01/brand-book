@@ -313,8 +313,7 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
           <div>
             <h2 className="text-lg font-bold">Configurar APIs</h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              Chaves salvas <strong>apenas no seu navegador</strong>. Após inserir a chave, clique em{" "}
-              <strong>Buscar modelos</strong> para ver os modelos disponíveis.
+              Salvas <strong>no navegador</strong>. Insira a chave e clique <strong>Buscar modelos</strong>.
             </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition ml-4 mt-0.5" aria-label="Fechar"><X className="w-5 h-5" /></button>
@@ -425,8 +424,7 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
             <Lock className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-gray-500 leading-relaxed">
-              <strong>Segurança:</strong> Chaves armazenadas no <code>localStorage</code> do seu navegador e enviadas
-              via requisições server-side do Next.js. Nenhum dado armazenado em servidor externo.
+              <strong>Segurança:</strong> Chaves no <code>localStorage</code>, enviadas via server-side. Nada em servidor externo.
             </p>
           </div>
         </div>

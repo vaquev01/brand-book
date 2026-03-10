@@ -215,7 +215,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
       <div>
         <h3 className="font-bold text-base mb-1">Auditoria de Consistência</h3>
         <p className="text-sm text-gray-500">
-          A IA analisa o brandbook e identifica inconsistências, oportunidades e pontos fortes.
+          Identifica inconsistências, oportunidades e pontos fortes.
         </p>
       </div>
 
@@ -254,7 +254,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
           <div>
             <h4 className="font-bold text-sm">Lint determinístico do Brandbook</h4>
             <p className="text-xs text-gray-500 mt-1">
-              Verifica regras objetivas de handoff, cross-section, produção e prontidão operacional.
+              Regras de handoff, produção e prontidão operacional.
             </p>
           </div>
           <button
@@ -306,7 +306,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
           <div>
             <h4 className="font-bold text-sm">Saúde do Sistema (sem IA)</h4>
             <p className="text-xs text-gray-500 mt-1">
-              Verifica se catálogo de assets, schema e regras internas estão sincronizados.
+              Assets, schema e regras internas sincronizados.
             </p>
           </div>
           <button
@@ -368,7 +368,7 @@ export function ConsistencyPanel({ brandbook, apiKeys, strategyProvider }: Props
       {loading && (
         <div className="app-surface-soft flex flex-col items-center gap-3 py-8">
           <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Auditando brandbook... pode levar 20-30s</p>
+          <p className="text-sm text-gray-500">Auditando... (20-30s)</p>
         </div>
       )}
 

@@ -750,29 +750,29 @@ export default function Home() {
             <div className="hidden h-5 w-px flex-shrink-0 bg-slate-200 sm:block" />
 
             {/* Sub-tabs — flex-1 with overflow scroll */}
-            <nav className="app-segmented flex-1 min-w-0 overflow-x-auto">
-              <button onClick={() => setViewerTab("preview")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "preview" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
+            <nav className="app-segmented flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+              <button onClick={() => setViewerTab("preview")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "preview" ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-900/5" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <LayoutDashboard className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Brandbook</span>
               </button>
-              <button onClick={() => setViewerTab("edit")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "edit" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
+              <button onClick={() => setViewerTab("edit")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "edit" ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-900/5" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <Pencil className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Editar</span>
               </button>
-              <button onClick={() => setViewerTab("assets")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "assets" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
+              <button onClick={() => setViewerTab("assets")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "assets" ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-900/5" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <ImageIcon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Ref. Assets</span>
+                <span className="hidden sm:inline">Assets</span>
                 {uploadedBrandAssets.length > 0 && <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-800">{uploadedBrandAssets.length}</span>}
               </button>
-              <button onClick={() => setViewerTab("refine")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "refine" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
+              <button onClick={() => setViewerTab("refine")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "refine" ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-900/5" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <Wand2 className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Refinar</span>
               </button>
-              <button onClick={() => setViewerTab("consistency")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "consistency" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
+              <button onClick={() => setViewerTab("consistency")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "consistency" ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-900/5" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Consistência</span>
+                <span className="hidden sm:inline">Checar</span>
               </button>
-              <button onClick={() => setViewerTab("export")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "export" ? "bg-white text-gray-900 shadow-sm ring-1 ring-white/80" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
+              <button onClick={() => setViewerTab("export")} className={`app-tab-button whitespace-nowrap flex-shrink-0 px-2.5 py-1.5 text-xs font-bold ${viewerTab === "export" ? "bg-white text-gray-900 shadow-md ring-1 ring-gray-900/5" : "text-gray-500 hover:bg-white/70 hover:text-gray-900"}`}>
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Exportar</span>
               </button>

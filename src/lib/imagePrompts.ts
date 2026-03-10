@@ -29,14 +29,100 @@ export const ASSET_CATALOG = [
   { key: "uniform_tshirt",     label: "Uniforme (Camiseta)",          description: "Uniforme da equipe com logo e aplicação de padrão — fotografia realista",   aspectRatio: "4:3",  category: "mockup"  },
   { key: "uniform_apron",      label: "Uniforme (Avental)",           description: "Avental bordado/serigrafado com marca — look premium e coerente",           aspectRatio: "4:3",  category: "mockup"  },
   { key: "materials_board",    label: "Materiais & Texturas (Board)", description: "Moodboard de materiais (papel, tecido, metal, textura) com paleta da marca", aspectRatio: "1:1",  category: "mockup"  },
-  // ─── PRINT ─────────────────────────────────────────────────────────────────
+  // ─── PRINT / OOH ──────────────────────────────────────────────────────────
   { key: "outdoor_billboard",  label: "Outdoor Urbano / OOH",         description: "Billboard em contexto urbano real — impacto máximo em 3 segundos",          aspectRatio: "16:9", category: "print"   },
+  { key: "poster_print",      label: "Pôster / Cartaz",              description: "Cartaz A3/A2 para vitrine, mural ou evento — visual impactante e direto",    aspectRatio: "9:16", category: "print"   },
+  { key: "flyer_leaflet",     label: "Flyer / Panfleto",             description: "Material de distribuição A5/DL — frente e verso com hierarquia clara",       aspectRatio: "4:3",  category: "print"   },
+  { key: "brochure_catalog",  label: "Folder / Catálogo",            description: "Folder tri-fold ou catálogo de produto — editorial premium",                 aspectRatio: "4:3",  category: "print"   },
+  { key: "bus_shelter_ad",    label: "Abrigo de Ônibus (Mobiliário)", description: "Peça para abrigo de ônibus/metrô — formato retrato, alto impacto urbano",   aspectRatio: "9:16", category: "print"   },
+  { key: "banner_rollup",     label: "Banner Roll-up / X-Banner",    description: "Banner vertical para eventos, recepção, PDV — portátil e marcante",         aspectRatio: "9:16", category: "print"   },
+  // ─── RETAIL / PDV ────────────────────────────────────────────────────────
+  { key: "storefront_facade", label: "Fachada da Loja",              description: "Fachada realista com letreiro, vitrine e identidade aplicada ao espaço",     aspectRatio: "16:9", category: "retail"  },
+  { key: "window_display",    label: "Vitrine",                      description: "Composição de vitrine com produtos e identidade — convida a entrar",         aspectRatio: "16:9", category: "retail"  },
+  { key: "neon_sign",         label: "Letreiro Neon / Luminoso",     description: "Letreiro luminoso com logo — noturno, atmosférico, marcante",               aspectRatio: "16:9", category: "retail"  },
+  { key: "menu_board",        label: "Quadro de Menu / Cardápio",    description: "Quadro de parede ou digital com menu — tipografia clara e identidade",       aspectRatio: "4:3",  category: "retail"  },
+  { key: "trade_show_booth",  label: "Estande de Feira / Expo",      description: "Stand de exposição completo com painéis, balcão e sinalização de marca",     aspectRatio: "16:9", category: "retail"  },
+  { key: "digital_signage",   label: "Sinalização Digital (Totem)",   description: "Totem ou painel digital interativo em PDV ou recepção",                     aspectRatio: "9:16", category: "retail"  },
+  // ─── VEHICLE ─────────────────────────────────────────────────────────────
+  { key: "vehicle_wrap",      label: "Envelopamento Veículo",        description: "Van, carro ou caminhão envelopado com identidade — frota na rua",           aspectRatio: "16:9", category: "vehicle" },
+  { key: "food_truck",        label: "Food Truck",                   description: "Food truck completo com identidade, menu lateral e janela de atendimento",   aspectRatio: "16:9", category: "vehicle" },
+  // ─── PACKAGING ───────────────────────────────────────────────────────────
+  { key: "beverage_bottle",   label: "Garrafa (Rótulo)",             description: "Garrafa com rótulo premium — cerveja, suco, água, vinho, destilado",        aspectRatio: "4:3",  category: "packaging" },
+  { key: "beverage_can",      label: "Lata de Bebida",               description: "Lata 350ml com arte completa — shelf-ready, impactante na gôndola",         aspectRatio: "4:3",  category: "packaging" },
+  { key: "cup_sleeve",        label: "Copo + Luva (Sleeve)",         description: "Copo térmico com sleeve de papel e tampa — café, chá, smoothie",            aspectRatio: "4:3",  category: "packaging" },
+  { key: "food_label",        label: "Rótulo de Produto",            description: "Rótulo adesivo ou wrap para pote, frasco ou embalagem — shelf appeal",      aspectRatio: "4:3",  category: "packaging" },
+  { key: "product_box",       label: "Caixa de Produto",             description: "Caixa estrutural com arte e informações — unboxing premium",                aspectRatio: "4:3",  category: "packaging" },
+  { key: "shopping_bag",      label: "Sacola de Compras",            description: "Sacola de loja (papel/plástico/tecido) com logo e padrão — na rua",         aspectRatio: "4:3",  category: "packaging" },
+  { key: "gift_box",          label: "Caixa Presente / Kit",         description: "Embalagem especial para presente ou kit — experiência de unboxing",          aspectRatio: "4:3",  category: "packaging" },
+  { key: "hang_tag",          label: "Tag de Produto",               description: "Etiqueta pendurada em produto — papel premium, detalhes de marca",          aspectRatio: "1:1",  category: "packaging" },
+  { key: "napkin_placemat",   label: "Guardanapo / Jogo Americano",  description: "Material de mesa com identidade sutil — guardanapo, jogo americano, toalha", aspectRatio: "1:1",  category: "packaging" },
+  { key: "bowl_pot",          label: "Pote / Bowl / Tigela",         description: "Pote descartável ou bowl com tampa — açaí, sorvete, salada, poke, iogurte",    aspectRatio: "4:3",  category: "packaging" },
+  { key: "tray_liner",        label: "Bandeja / Forração",           description: "Bandeja de servir ou papel de forração com identidade da marca",               aspectRatio: "4:3",  category: "packaging" },
+  { key: "wrapper_sleeve",    label: "Wrapper / Invólucro",          description: "Papel de embrulho, wrapper de sanduíche, sleeve de produto — branded",         aspectRatio: "4:3",  category: "packaging" },
+  { key: "coaster",           label: "Porta-Copos / Bolacha",        description: "Porta-copos de papelão ou cortiça com identidade — bar, restaurante, café",    aspectRatio: "1:1",  category: "packaging" },
+  { key: "menu_printed",      label: "Cardápio / Menu Impresso",     description: "Cardápio impresso premium — pasta, lâmina ou booklet com identidade visual",   aspectRatio: "4:3",  category: "packaging" },
+  { key: "price_tag_shelf",   label: "Etiqueta de Preço / Wobbler",  description: "Etiqueta de gôndola, wobbler ou shelf talker — PDV com identidade",            aspectRatio: "4:3",  category: "retail"  },
+  { key: "tent_card",         label: "Display de Mesa / Tent Card",  description: "Tent card triangular para mesa — promoção, QR code ou informação",             aspectRatio: "4:3",  category: "retail"  },
+  { key: "standee_display",   label: "Totem / Standee / Display",    description: "Display de chão recortado, standee ou totem impresso — PDV de alto impacto",   aspectRatio: "9:16", category: "retail"  },
+  // ─── MERCH / WEARABLE ───────────────────────────────────────────────────
+  { key: "polo_uniform",      label: "Polo Uniforme",                description: "Polo com bordado ou silk — look corporativo premium e coerente",             aspectRatio: "4:3",  category: "merch"   },
+  { key: "cap_hat",           label: "Boné / Chapéu",               description: "Boné estruturado com logo bordado — merchandising ou uniforme",              aspectRatio: "4:3",  category: "merch"   },
+  { key: "tote_bag",          label: "Ecobag / Tote Bag",           description: "Sacola reutilizável de algodão com arte da marca — brinde ou venda",         aspectRatio: "4:3",  category: "merch"   },
+  { key: "hoodie",            label: "Moletom / Hoodie",            description: "Moletom com aplicação de marca — merchandising premium",                     aspectRatio: "4:3",  category: "merch"   },
+  { key: "jacket_coat",       label: "Jaqueta / Casaco",            description: "Jaqueta ou casaco com bordado ou patch de marca — outerwear branded",           aspectRatio: "4:3",  category: "merch"   },
+  { key: "vest_colete",       label: "Colete",                      description: "Colete corporativo ou operacional com identidade visual",                      aspectRatio: "4:3",  category: "merch"   },
+  { key: "suit_formal",       label: "Terno / Roupa Formal",        description: "Terno ou roupa formal com detalhes de marca — forro, botão, etiqueta",         aspectRatio: "4:3",  category: "merch"   },
+  { key: "sneakers_shoes",    label: "Tênis / Calçado",             description: "Tênis ou sapato personalizado com cores e detalhes da marca",                  aspectRatio: "4:3",  category: "merch"   },
+  { key: "sunglasses",        label: "Óculos de Sol",               description: "Óculos de sol com identidade — haste personalizada, cores da marca",           aspectRatio: "4:3",  category: "merch"   },
+  { key: "phone_case",        label: "Capa de Celular",             description: "Case de celular com arte da marca — acessório premium",                        aspectRatio: "9:16", category: "merch"   },
+  { key: "branded_purse",     label: "Bolsa de Marca",              description: "Bolsa, necessaire ou clutch com identidade visual — fashion branded",           aspectRatio: "4:3",  category: "merch"   },
+  { key: "pen_branded",       label: "Caneta Personalizada",        description: "Caneta premium com logo gravado ou impresso — brinde corporativo",              aspectRatio: "4:3",  category: "merch"   },
+  { key: "notebook_planner",  label: "Caderno / Agenda",            description: "Caderno ou agenda com capa e miolo branded — papelaria premium",                aspectRatio: "4:3",  category: "merch"   },
+  { key: "keychain",          label: "Chaveiro",                    description: "Chaveiro de metal, couro ou acrílico com logo — brinde compacto",               aspectRatio: "1:1",  category: "merch"   },
+  { key: "umbrella",          label: "Guarda-Chuva",                description: "Guarda-chuva com padrão e logo da marca — brinde premium grande",               aspectRatio: "4:3",  category: "merch"   },
+  { key: "water_bottle",      label: "Squeeze / Garrafa Térmica",   description: "Garrafa reutilizável com identidade visual — wellness branded",                 aspectRatio: "4:3",  category: "merch"   },
+  { key: "mouse_pad",         label: "Mouse Pad",                   description: "Mouse pad com arte da marca — desk branding para equipe ou brinde",             aspectRatio: "4:3",  category: "merch"   },
+  { key: "lanyard_badge",     label: "Crachá + Cordão",             description: "Crachá com foto e cordão branded — identidade corporativa",                     aspectRatio: "4:3",  category: "merch"   },
+  { key: "pin_button",        label: "Pin / Botton",                description: "Pin, botton ou broche com logo ou arte da marca — merchandising compacto",       aspectRatio: "1:1",  category: "merch"   },
+  { key: "pillow_cushion",    label: "Almofada",                    description: "Almofada decorativa com padrão ou logo — decor branded",                        aspectRatio: "1:1",  category: "merch"   },
+  { key: "towel_branded",     label: "Toalha",                      description: "Toalha de praia, banho ou mão com identidade visual — lifestyle branded",       aspectRatio: "4:3",  category: "merch"   },
+  { key: "skateboard_deck",   label: "Skate / Prancha",             description: "Shape de skate ou prancha com arte da marca — street/surf culture",              aspectRatio: "9:16", category: "merch"   },
+  // ─── FURNITURE / AMBIENTE ──────────────────────────────────────────────
+  { key: "chair_furniture",   label: "Cadeira / Mesa Branded",      description: "Móvel (cadeira, mesa, banco) com identidade — restaurante, café, coworking",    aspectRatio: "4:3",  category: "retail"  },
+  { key: "fridge_wrap",       label: "Geladeira Envelopada",        description: "Geladeira ou freezer com envelopamento de marca — PDV, bar, conveniência",       aspectRatio: "4:3",  category: "retail"  },
+  { key: "flag_banner_fabric",label: "Bandeira / Estandarte",       description: "Bandeira de tecido, wind banner ou galhardete com logo — evento, loja, sede",   aspectRatio: "9:16", category: "retail"  },
+  { key: "doormat",           label: "Capacho",                     description: "Capacho com logo ou mensagem de marca — entrada de loja ou escritório",          aspectRatio: "4:3",  category: "retail"  },
+  { key: "wall_clock",        label: "Relógio de Parede",           description: "Relógio de parede com identidade visual — escritório, loja, restaurante",        aspectRatio: "1:1",  category: "retail"  },
+  // ─── PACKAGING FOOD ──────────────────────────────────────────────────
+  { key: "grease_proof_paper",label: "Papel Anti-Gordura / Manteiga", description: "Papel de forração anti-gordura com padrão da marca — food service",          aspectRatio: "1:1",  category: "packaging" },
+  { key: "napkin_holder",     label: "Guardanapeira / Porta-Guardanapo", description: "Porta-guardanapo ou dispensador com identidade — mesa ou balcão",          aspectRatio: "4:3",  category: "packaging" },
+  { key: "cup_mug",           label: "Caneca / Xícara",             description: "Caneca de cerâmica ou xícara com logo e arte — café, escritório, brinde",        aspectRatio: "4:3",  category: "packaging" },
+  { key: "pizza_box",         label: "Caixa de Pizza",              description: "Caixa de pizza com arte da marca — clássico food delivery",                      aspectRatio: "4:3",  category: "packaging" },
+  { key: "candy_wrapper",     label: "Embalagem de Doce / Bala",    description: "Wrapper de chocolate, bala ou bombom com arte — brinde ou produto",              aspectRatio: "4:3",  category: "packaging" },
+  { key: "packaging_tape",    label: "Fita Adesiva Branded",        description: "Fita adesiva de embalagem com padrão ou logo — detalhe de envio",                aspectRatio: "21:9", category: "packaging" },
+  { key: "matchbox",          label: "Caixa de Fósforo",            description: "Caixinha de fósforo com arte da marca — bar, restaurante, hotel",                aspectRatio: "4:3",  category: "packaging" },
+  // ─── SOCIAL / DIGITAL TEMPLATES ───────────────────────────────────────
+  { key: "weekly_agenda_post",label: "Post Agenda da Semana",       description: "Post Instagram com agenda/programação semanal — grid organizado, on-brand",      aspectRatio: "1:1",  category: "social"  },
+  { key: "credit_debit_card", label: "Cartão de Crédito / Débito",  description: "Cartão de crédito ou débito co-branded com identidade visual",                   aspectRatio: "16:9", category: "stationery" },
+  { key: "ticket_event",      label: "Ingresso / Ticket",           description: "Ingresso de evento, voucher ou ticket com identidade premium",                   aspectRatio: "16:9", category: "stationery" },
+  { key: "wristband",         label: "Pulseira de Evento",          description: "Pulseira de evento (tyvek, tecido, silicone) com identidade da marca",           aspectRatio: "21:9", category: "merch"   },
+  // ─── STATIONERY EXTENDED ─────────────────────────────────────────────────
+  { key: "gift_card",         label: "Vale Presente",               description: "Cartão presente com design premium — físico ou digital",                     aspectRatio: "16:9", category: "stationery" },
+  { key: "loyalty_card",      label: "Cartão Fidelidade",           description: "Cartão fidelidade ou membro VIP com identidade forte",                       aspectRatio: "16:9", category: "stationery" },
+  { key: "sticker_sheet",     label: "Cartela de Adesivos",         description: "Conjunto de adesivos com ícones, logo e elementos da marca",                 aspectRatio: "1:1",  category: "stationery" },
+  { key: "wax_seal_stamp",    label: "Selo / Carimbo / Wax Seal",   description: "Selo de cera, carimbo ou stamp com símbolo da marca — toque artesanal",      aspectRatio: "1:1",  category: "stationery" },
+  { key: "invoice_receipt",   label: "Nota Fiscal / Recibo",        description: "Documento fiscal ou recibo com identidade aplicada — profissionalismo",       aspectRatio: "4:3",  category: "stationery" },
+  { key: "envelope_letterhead", label: "Envelope + Papel Timbrado", description: "Envelope e papel timbrado com identidade — correspondência premium",          aspectRatio: "4:3",  category: "stationery" },
+  // ─── DIGITAL EXTENDED ────────────────────────────────────────────────────
+  { key: "landing_page",      label: "Landing Page",                description: "Mockup de landing page completa em browser — conversão e identidade",         aspectRatio: "9:16", category: "digital" },
+  { key: "podcast_cover",     label: "Capa de Podcast",             description: "Capa quadrada para podcast — marcante no feed de áudio",                     aspectRatio: "1:1",  category: "digital" },
+  { key: "app_icon",          label: "Ícone do App",                description: "Ícone de app com símbolo da marca — reconhecível em 64px",                   aspectRatio: "1:1",  category: "digital" },
  ] as const satisfies ReadonlyArray<{
   key: string;
   label: string;
   description: string;
   aspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
-  category: "logo" | "digital" | "social" | "print" | "mockup";
+  category: "logo" | "digital" | "social" | "print" | "mockup" | "retail" | "vehicle" | "packaging" | "merch" | "stationery";
 }>;
 
 export type AssetKey = (typeof ASSET_CATALOG)[number]["key"];
@@ -1872,6 +1958,1243 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       );
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRINT / OOH — EXPANDED
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "poster_print": {
+      return parts(
+        prefix,
+        `PLATFORM: Brand poster / cartaz — A3 or A2 vertical print (9:16 portrait), for window display, event wall, or in-store mural.`,
+        soul, journey,
+        `MARKETING INTENT: Dominate the wall. One image, one emotion, unforgettable at 2 meters.`,
+        `BRAND: ${B} (${data.industry}). Core message: ${ctx.messagingPillar}.`,
+        ctx.tagline,
+        `VISUAL SUBJECT: ${ctx.visualMetaphor} — rendered as a bold graphic statement. Full-bleed color, no empty space.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `COLOR: Dominant ${ctx.primaryColor} field, ${ctx.accentColor} graphic accent. Palette: ${ctx.allPrimaryColors}.`,
+        `COMPOSITION: Strong vertical hierarchy. Hero element top 60%, breathing space, brand zone bottom 20%.`,
+        `STYLE: ${ctx.marketingArch}. ${ctx.visualStyle}. Art direction: ${ctx.photoStyle}.`,
+        `TYPOGRAPHY ZONE: Reserve lower 20% for headline overlay (not rendered). Clean flat strip.`,
+        idAssets, tree, humanLayer,
+        `MOOD: ${ctx.moodWords}. Gallery-quality print, collectible, pin-it-on-the-wall desirable.`,
+        sTags, q, neg(ctx, provider, "landscape orientation, cluttered, multiple focal points, text, low-res quality, generic stock"),
+      );
+    }
+
+    case "flyer_leaflet": {
+      return parts(
+        prefix,
+        `PLATFORM: Promotional flyer / panfleto — A5 or DL format, 4:3 aspect, front side visual.`,
+        soul, journey,
+        `MARKETING INTENT: Street-level distribution piece that people keep instead of toss. Premium enough to earn attention.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}.`,
+        `VISUAL DESIGN: ${ctx.marketingArch}. Bold top half with hero visual, clean bottom half for info overlay.`,
+        `HERO VISUAL: ${ctx.visualMetaphor} — close crop, maximum visual impact in compact format.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `COLOR: ${ctx.primaryColor} dominant, ${ctx.secondaryColor} structure, ${ctx.accentColor} CTA highlight.`,
+        `COMPOSITION: Top 55% — full-bleed brand visual. Bottom 45% — clean zone for text overlay (not rendered).`,
+        idAssets, humanLayer,
+        `PRINT QUALITY: CMYK-ready, bleed edges, premium paper stock feel. ${ctx.visualStyle}.`,
+        `MOOD: ${ctx.moodWords}. Approachable yet premium — someone picks this up off a counter and keeps it.`,
+        sTags, q, neg(ctx, provider, "cheap print look, cluttered layout, text, low contrast, generic clip art"),
+      );
+    }
+
+    case "brochure_catalog": {
+      return parts(
+        prefix,
+        `PLATFORM: Tri-fold brochure or product catalog — 4:3 editorial flat-lay showing cover and inner spread.`,
+        soul, journey, sensory,
+        `MARKETING INTENT: Premium printed piece for sales meetings, trade shows, or luxury retail counter.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
+        `MOCKUP: Open brochure or catalog on premium surface showing cover + one inside spread. Editorial photography angle.`,
+        `COVER: Bold ${ctx.primaryColor} with centered ${ctx.logoPrimary}, minimal. Inside: editorial layout suggestion with brand pattern (${ctx.patternStyle}).`,
+        `VISUAL DESIGN: ${ctx.marketingArch}. ${ctx.visualStyle}. Photography direction: ${ctx.photoStyle}.`,
+        `COLOR: strict palette ${ctx.allColors}.`,
+        `SURFACE: marble, dark wood, or linen — consistent with brand world: ${ctx.visualStyle}.`,
+        `LIGHTING: soft directional studio light, paper texture visible, premium print quality feel.`,
+        idAssets, humanLayer,
+        `MOOD: ${ctx.moodWords}. Editorial, tactile, the viewer should want to pick it up and read.`,
+        sTags, q, neg(ctx, provider, "flat illustration, cheap paper, harsh lighting, text, lorem ipsum, generic template"),
+      );
+    }
+
+    case "bus_shelter_ad": {
+      return parts(
+        prefix,
+        `PLATFORM: Bus shelter / metro station ad — vertical portrait format (9:16), backlit display in urban transit context.`,
+        soul, journey,
+        `MARKETING INTENT: Capture attention during the 30-second wait. Compete against phone screens with pure visual magnetism.`,
+        `BRAND: ${B} (${data.industry}). Core message: ${ctx.messagingPillar}.`,
+        ctx.tagline,
+        `VISUAL SUBJECT: ${ctx.visualMetaphor} — dominant, bold, backlit for maximum luminosity.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `COLOR: ${ctx.primaryColor} dominant background, ${ctx.accentColor} focal highlight. Strict palette: ${ctx.allPrimaryColors}.`,
+        `MOCKUP SCENE: Realistic glass bus shelter or metro panel, evening/night urban setting, wet pavement reflections.`,
+        `Backlit panel glow creating atmospheric light spill on surroundings. Blurred commuters or pedestrians for scale.`,
+        `COMPOSITION: Vertical zones — hero visual top 65%, brand zone bottom 35% (clean, no text rendered).`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Urban, magnetic, unmissable in the peripheral vision.`,
+        sTags, q, neg(ctx, provider, "daytime flat lighting, empty street, cartoon, dark unlit panel, text overlays"),
+      );
+    }
+
+    case "banner_rollup": {
+      return parts(
+        prefix,
+        `PLATFORM: Roll-up banner / X-banner — vertical 9:16 (85×200cm), for events, reception, trade show, or retail POS.`,
+        soul, journey,
+        `MARKETING INTENT: Standing brand beacon — instant identification at 10 meters, detailed engagement at 1 meter.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
+        `VISUAL DESIGN: Full-height vertical banner with strong brand hierarchy.`,
+        `Top 30%: brand symbol and visual (${ctx.logoSymbol}), bold and large. Middle 40%: key visual or brand pattern (${ctx.patternStyle}). Bottom 30%: brand zone for logo/info (clean, no text rendered).`,
+        `COLOR: ${ctx.primaryColor} dominant, ${ctx.secondaryColor} structure, ${ctx.accentColor} highlights. Strict palette.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `MOCKUP: Realistic roll-up stand in modern lobby, event space, or retail entrance. Clean floor, ambient light.`,
+        idAssets, humanLayer,
+        `MOOD: ${ctx.moodWords}. Professional, premium, physically imposing.`,
+        sTags, q, neg(ctx, provider, "flat illustration, landscape, cluttered, cheap print, text, bad perspective"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // RETAIL / PDV
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "storefront_facade": {
+      return parts(
+        prefix,
+        `PLATFORM: Storefront facade / fachada — realistic architectural mockup showing complete branded exterior (16:9).`,
+        soul, journey, sensory,
+        `MARKETING INTENT: First physical impression. The facade IS the brand promise made tangible in architecture.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
+        `FACADE ELEMENTS: main signage with logo (${ctx.logoPrimary}), window graphics, door handle branding, awning or canopy in brand color, exterior lighting.`,
+        `ARCHITECTURE STYLE: Modern ${data.industry} storefront — clean lines, premium materials (glass, wood, metal, stone).`,
+        `SIGNAGE: Channel letters or backlit box sign with brand wordmark. Warm illumination at night.`,
+        `VITRINE: Subtle product display or lifestyle visual visible through glass. Brand pattern (${ctx.patternStyle}) as window film accent.`,
+        `COLOR APPLICATION: exterior walls or accents in ${ctx.primaryColor}, metalwork in neutral, accent details in ${ctx.accentColor}.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `SCENE: Eye-level street perspective, golden hour or blue hour lighting, slight pedestrian blur for life.`,
+        `MATERIALS: real architectural finishes — brushed steel, timber, exposed brick, polished concrete, terrazzo. ${ctx.visualStyle}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Inviting, aspirational, the kind of place you photograph and share.`,
+        sTags, q, neg(ctx, provider, "flat illustration, miniature model, cartoon, cheap signage, empty dead street, harsh noon light"),
+      );
+    }
+
+    case "window_display": {
+      return parts(
+        prefix,
+        `PLATFORM: Window display / vitrine composition — 16:9 through-glass perspective showing curated brand world.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `CONCEPT: The window is a stage — it tells a brand story in one visual tableau, no words needed.`,
+        `DISPLAY ELEMENTS: hero product or visual centerpiece, brand colors (${ctx.primaryColor}, ${ctx.accentColor}), props, lighting.`,
+        `BRAND APPLICATIONS: logo decal on glass (${ctx.logoPrimary}), brand pattern as backdrop (${ctx.patternStyle}), spot-lit hero element.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `COLOR: strict palette ${ctx.allColors}. Backdrop in ${ctx.primaryColor} or neutral. Accent lighting in ${ctx.accentColor}.`,
+        `SCENE: Shot through glass with subtle reflections of street. Evening lighting — warm interior glow vs cool exterior.`,
+        `LIGHTING: Theatrical spot lights creating drama and depth, ambient warm fill.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Curated, theatrical, makes you stop on the sidewalk.`,
+        sTags, q, neg(ctx, provider, "flat, no depth, daytime harsh light, empty window, cluttered mess, cartoon"),
+      );
+    }
+
+    case "neon_sign": {
+      return parts(
+        prefix,
+        `PLATFORM: Neon sign / luminous signage — 16:9 atmospheric night photograph of branded neon or LED sign.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `SIGN: Logo wordmark or brand symbol (${ctx.logoSymbol}) rendered as neon/LED tube sign. Clean lettering, consistent tube width.`,
+        `NEON COLOR: ${ctx.accentColor} or ${ctx.primaryColor} — warm glow, realistic tube bends, gas-filled luminosity.`,
+        `MOUNTING: Dark brick wall, concrete wall, or dark matte surface — the sign is the only light source.`,
+        `SCENE: Interior bar/café/studio wall or exterior night scene. Dark ambient, sign as hero light.`,
+        `LIGHTING: Neon glow casts colored light on surrounding wall and surfaces. Subtle halo. Realistic glass tube reflections.`,
+        `ATMOSPHERE: Moody, intimate, instagrammable. The kind of sign everyone photographs.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Magnetic, warm, iconic.`,
+        sTags, q, neg(ctx, provider, "bright daytime, flat illustration, cheap LED strip, plastic sign, blurry text, cartoon"),
+      );
+    }
+
+    case "menu_board": {
+      return parts(
+        prefix,
+        `PLATFORM: Menu board / cardápio de parede — 4:3 format, wall-mounted in-store menu with brand identity applied.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `BOARD TYPE: chalkboard, digital screen, printed acrylic, or painted wood panel — choose what fits ${ctx.visualStyle}.`,
+        `LAYOUT: Clear typographic hierarchy — category headers in ${ctx.displayFont} Bold, items in ${ctx.bodyFont}, prices aligned right.`,
+        `BRAND APPLICATION: logo at top (${ctx.logoPrimary}), brand pattern border or accent (${ctx.patternStyle}), color palette strict (${ctx.allColors}).`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `SCENE: Mounted on textured wall (brick, concrete, wood) behind counter. Warm ambient light, shallow DOF.`,
+        `STYLE: ${ctx.visualStyle}. Not a flat design comp — real physical menu board in situ with material texture.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Readable, appetizing, on-brand, the kind of menu you trust.`,
+        sTags, q, neg(ctx, provider, "flat digital mockup, lorem ipsum, messy handwriting, illegible, harsh lighting, off-brand colors"),
+      );
+    }
+
+    case "trade_show_booth": {
+      return parts(
+        prefix,
+        `PLATFORM: Trade show booth / exhibition stand — 16:9 wide view of complete branded booth environment.`,
+        soul, journey,
+        `MARKETING INTENT: Stand out in a convention hall of 200+ booths. Draw visitors from 20 meters away.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
+        `BOOTH ELEMENTS: back wall with large-format brand graphic, reception counter, display shelves/screens, hanging header sign, floor mat, pop-up banners.`,
+        `BRAND APPLICATION: ${ctx.logoPrimary} on back wall (large), brand pattern (${ctx.patternStyle}) on side panels, ${ctx.primaryColor} dominant, ${ctx.accentColor} accents.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `LIGHTING: Spot lights, LED strips in ${ctx.accentColor}, backlit panels, ambient hall lighting.`,
+        `SCENE: Realistic convention hall with neighboring booths blurred. Polished concrete floor. A few blurred visitors for scale.`,
+        `DESIGN: Modern modular booth system, not cheap pop-up tent. Premium materials, clean geometry.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Authoritative, inviting, clearly the best booth on the floor.`,
+        sTags, q, neg(ctx, provider, "empty hall, cartoon, cheap pop-up, flat, no depth, messy, text overlays"),
+      );
+    }
+
+    case "digital_signage": {
+      return parts(
+        prefix,
+        `PLATFORM: Digital signage totem / interactive kiosk — vertical 9:16 format, in retail or reception context.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `SCREEN CONTENT: Brand visual with hero image (${ctx.visualMetaphor}), logo (${ctx.logoPrimary}), and brand colors. No actual text.`,
+        `DESIGN: ${ctx.marketingArch}. Bold vertical composition, ${ctx.primaryColor} dominant, ${ctx.accentColor} CTA zones.`,
+        `MOCKUP: Sleek modern totem/kiosk in retail space, lobby, or restaurant entrance. Realistic device frame.`,
+        `LIGHTING: Screen glow illuminating surrounding space, ambient light, premium setting.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Modern, interactive, premium technology presence.`,
+        sTags, q, neg(ctx, provider, "old CRT screen, flat illustration, dark unlit, cheap plastic frame, text"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // VEHICLE
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "vehicle_wrap": {
+      return parts(
+        prefix,
+        `PLATFORM: Vehicle wrap / fleet branding — 16:9 showing branded vehicle (van, car, or truck) in urban context.`,
+        soul, journey,
+        `MARKETING INTENT: Moving billboard. The vehicle IS a brand touchpoint that reaches thousands of eyes daily.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}.`,
+        `VEHICLE: Modern white van or delivery truck with full wrap application.`,
+        `WRAP DESIGN: logo lockup (${ctx.logoPrimary}) prominent on side panel, brand pattern (${ctx.patternStyle}) as accent wrap, brand symbol (${ctx.logoSymbol}) on rear.`,
+        `COLOR APPLICATION: ${ctx.primaryColor} dominant wrap, ${ctx.secondaryColor} structural panels, ${ctx.accentColor} accent stripe or detail.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `SCENE: Urban street, daylight, slight angle showing side + front quarter panel. Clean asphalt, buildings in background.`,
+        `LIGHTING: Bright overcast or golden hour — paint reflects light, colors are vibrant and true.`,
+        `QUALITY: Automotive-grade vinyl wrap, matte or gloss finish matching brand (${ctx.visualStyle}), precise contour cuts.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Professional fleet, proud to park anywhere.`,
+        sTags, q, neg(ctx, provider, "toy car, miniature, cartoon, cheap magnet sign, dirty vehicle, night scene, flat illustration"),
+      );
+    }
+
+    case "food_truck": {
+      return parts(
+        prefix,
+        `PLATFORM: Food truck mockup — 16:9 showing complete branded food truck in urban/event context.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `TRUCK: Modern food truck with service window open, menu board visible, branded awning/canopy.`,
+        `BRANDING: Full exterior wrap with logo (${ctx.logoPrimary}), brand pattern (${ctx.patternStyle}), menu highlights, and brand symbol (${ctx.logoSymbol}).`,
+        `COLOR: ${ctx.primaryColor} dominant, ${ctx.secondaryColor} panels, ${ctx.accentColor} highlights. Strict palette: ${ctx.allColors}.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `SCENE: Outdoor event, park, or urban food market. Golden hour light, string lights optional, blurred queue of customers for atmosphere.`,
+        `LIGHTING: Warm ambient + interior truck glow from service window. Steam wisps optional.`,
+        `MATERIALS: Aluminum body, vinyl wrap, chalkboard menu accent, branded napkin holder visible.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Vibrant, appetizing, the truck everyone lines up for.`,
+        sTags, q, neg(ctx, provider, "old rusty truck, flat illustration, empty parking lot, night darkness, cartoon, cheap signage"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PACKAGING — EXPANDED
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "beverage_bottle": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded beverage bottle with premium label — 4:3 product photography.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `PRODUCT: Glass or premium PET bottle (beer, juice, water, wine, or spirits — contextual to ${data.industry}).`,
+        `LABEL DESIGN: front label with logo (${ctx.logoPrimary}), brand pattern accent (${ctx.patternStyle}), color palette strict (${ctx.allColors}).`,
+        `LABEL STYLE: ${ctx.visualStyle}. Typography: ${ctx.displayFont} for brand, ${ctx.bodyFont} for details. ${ctx.marketingArch}.`,
+        `SCENE: Studio product shot — bottle hero-lit on dark or neutral surface. Water condensation droplets for freshness (if cold beverage).`,
+        `LIGHTING: Dramatic rim light in ${ctx.accentColor} tint, front fill soft, background gradient dark to ${ctx.primaryColor}.`,
+        `CAMERA: 3/4 angle, slight below eye level for authority. Macro detail on label texture.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Shelf-stopping, premium, the bottle you pick up because it looks better than everything around it.`,
+        sTags, q, neg(ctx, provider, "flat illustration, generic stock bottle, cheap plastic, blurry label, cartoon, bad perspective"),
+      );
+    }
+
+    case "beverage_can": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded beverage can (350ml) — 4:3 product photography with complete can art.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `CAN: Standard 350ml aluminum can with full-wrap art. Premium shelf-ready design.`,
+        `ART DESIGN: ${ctx.primaryColor} dominant, logo (${ctx.logoPrimary}) centered, brand pattern wrap (${ctx.patternStyle}), ${ctx.accentColor} accent details.`,
+        `STYLE: ${ctx.marketingArch}. ${ctx.visualStyle}. Bold, shelf-stopping graphic design that works 360°.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `SCENE: Studio hero shot — can at slight angle, condensation droplets, dramatic lighting. Splash or pour optional.`,
+        `LIGHTING: Hard rim light for metallic sheen, soft front fill, dark background with ${ctx.primaryColor} gradient glow.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Collectible, instagrammable, the can design you save and repost.`,
+        sTags, q, neg(ctx, provider, "flat mockup, cheap generic can, no condensation, cartoon, blurry art, plastic bottle"),
+      );
+    }
+
+    case "cup_sleeve": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded coffee/drink cup with sleeve — 4:3 product photography.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEMS: Paper or ceramic cup with branded paper sleeve (kraft or colored), branded lid, branded cup surface.`,
+        `BRANDING: logo on sleeve (${ctx.logoPrimary}), brand symbol on cup (${ctx.logoSymbol}), brand pattern as sleeve texture (${ctx.patternStyle}).`,
+        `COLOR: strict palette ${ctx.allColors}. Sleeve in ${ctx.primaryColor} or kraft with ${ctx.accentColor} print.`,
+        `SCENE: In-hand shot (hand visible, no face) or on café counter with beans/pastry props. Shallow DOF.`,
+        `LIGHTING: Warm natural café light, steam wisps from top, lifestyle editorial feel.`,
+        `MATERIALS: Matte paper sleeve, glossy cup, realistic print texture. ${ctx.visualStyle}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The cup everyone holds for their Instagram story.`,
+        sTags, q, neg(ctx, provider, "flat illustration, generic white cup, no branding visible, plastic, harsh lighting, cartoon"),
+      );
+    }
+
+    case "food_label": {
+      return parts(
+        prefix,
+        `PLATFORM: Product label / rótulo — 4:3 close-up showing branded label applied to jar, bottle, or container.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `LABEL: Adhesive label or wrap label on glass jar, bottle, or container. Premium die-cut or full wrap.`,
+        `DESIGN: Logo (${ctx.logoPrimary}), brand pattern accent (${ctx.patternStyle}), product info hierarchy.`,
+        `STYLE: ${ctx.marketingArch}. ${ctx.visualStyle}. Typography: ${ctx.displayFont} headlines, ${ctx.bodyFont} body.`,
+        `COLOR: strict palette ${ctx.allColors}. Label background ${ctx.primaryColor} or white/cream.`,
+        `SCENE: Product on styled surface (wood, marble, linen) with complementary props. Macro label detail visible.`,
+        `LIGHTING: Soft directional studio light, label texture and emboss detail visible, premium product photography.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Artisanal yet professional — shelf appeal that communicates quality.`,
+        sTags, q, neg(ctx, provider, "blurry label, cheap generic jar, flat illustration, bad typography, off-brand colors, cartoon"),
+      );
+    }
+
+    case "product_box": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded product box — 4:3 premium unboxing photography showing structural box with brand identity.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `BOX: Rigid or tuck-end box with full brand art. Show closed + one slightly open for unboxing hint.`,
+        `DESIGN: Logo (${ctx.logoPrimary}) on lid, brand pattern (${ctx.patternStyle}) on sides, ${ctx.logoSymbol} embossed on interior.`,
+        `COLOR: ${ctx.primaryColor} exterior, ${ctx.accentColor} interior reveal, strict palette ${ctx.allColors}.`,
+        `FINISHING: Spot UV, foil stamp, emboss, soft-touch matte — premium tactile finishes visible in render.`,
+        `SCENE: Styled surface (marble, dark wood, linen). Tissue paper peek from open box. Premium editorial.`,
+        `LIGHTING: Soft studio light, crisp shadows, material texture visible. ${ctx.photoStyle}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The unboxing moment that gets filmed and shared. Luxury experience.`,
+        sTags, q, neg(ctx, provider, "cheap cardboard, flat illustration, generic box, harsh lighting, off-brand, cartoon, no finishing"),
+      );
+    }
+
+    case "shopping_bag": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded shopping bag — 4:3 lifestyle product photography, bag in urban or retail context.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `BAG: Premium paper bag (kraft or coated), cotton/canvas tote, or luxury plastic bag — contextual to ${data.industry}.`,
+        `BRANDING: large logo (${ctx.logoPrimary}) on front, brand pattern (${ctx.patternStyle}) on sides, ${ctx.logoSymbol} on bottom gusset.`,
+        `COLOR: ${ctx.primaryColor} dominant, rope/ribbon handles in ${ctx.secondaryColor} or neutral. Strict palette: ${ctx.allColors}.`,
+        `SCENE: In-hand walking (face cropped out) on city street, OR standing on shop counter with tissue paper peek.`,
+        `LIGHTING: Natural daylight, lifestyle editorial, realistic shadows and bag structure.`,
+        `MATERIAL: Visible paper grain or fabric weave, matte/gloss print quality, premium handle material.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The bag you keep and reuse. Walking brand advertisement.`,
+        sTags, q, neg(ctx, provider, "cheap plastic, flat illustration, empty background, generic white bag, cartoon, blurry print"),
+      );
+    }
+
+    case "gift_box": {
+      return parts(
+        prefix,
+        `PLATFORM: Gift box / kit — 4:3 premium flat-lay or 3/4 shot showing branded gift packaging.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `ITEMS: Outer box + inner tissue paper + ribbon/band + seal sticker + card. Complete gift experience.`,
+        `BRAND APPLICATION: box exterior in ${ctx.primaryColor}, ribbon in ${ctx.accentColor}, wax seal with ${ctx.logoSymbol}, pattern liner (${ctx.patternStyle}).`,
+        `COLOR: strict palette ${ctx.allColors}. Luxurious minimal color use — let materials speak.`,
+        `SCENE: Styled on premium surface, partially open to reveal interior, scattered elements for editorial feel.`,
+        `LIGHTING: Soft warm studio light, emphasis on material texture and finishing detail.`,
+        `FINISHING: Emboss, foil, soft-touch, textured paper. ${ctx.visualStyle}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The gift that's already special before opening. Shareworthy.`,
+        sTags, q, neg(ctx, provider, "cheap wrapping, generic box, flat, no texture, cartoon, harsh lighting, off-brand"),
+      );
+    }
+
+    case "hang_tag": {
+      return parts(
+        prefix,
+        `PLATFORM: Product hang tag / etiqueta — 1:1 macro close-up showing premium branded tag.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `TAG: Die-cut or standard rectangle hang tag with string/ribbon attachment. Both sides visible.`,
+        `FRONT: logo (${ctx.logoPrimary}), brand symbol (${ctx.logoSymbol}). BACK: brand pattern (${ctx.patternStyle}).`,
+        `COLOR: ${ctx.primaryColor} base, ${ctx.accentColor} accent, strict palette ${ctx.allColors}.`,
+        `MATERIAL: Thick cotton paper, kraft, or premium coated stock. Visible texture and edge quality.`,
+        `FINISHING: Letterpress, foil stamp, or clean print. Grommeted hole with waxed cord or ribbon.`,
+        `SCENE: Macro shot on fabric or product surface, shallow DOF, single tag hero.`,
+        `LIGHTING: Soft macro light, paper fiber texture visible. Premium editorial detail.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The detail that signals quality. Small but powerful.`,
+        sTags, q, neg(ctx, provider, "blurry, cheap paper, flat digital mockup, cartoon, plastic, off-brand colors"),
+      );
+    }
+
+    case "napkin_placemat": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded napkin and/or placemat — 1:1 overhead table setting photography.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEMS: Cloth or paper napkin with brand mark, placemat/jogo americano with subtle brand pattern, optional coaster.`,
+        `BRANDING: ${ctx.logoSymbol} subtle emboss or print on napkin, brand pattern (${ctx.patternStyle}) on placemat.`,
+        `COLOR: ${ctx.primaryColor} and neutral tones. Strict palette: ${ctx.allColors}. Subtle, not loud.`,
+        `SCENE: Set on dining table with cutlery, glass, and partial plate — editorial food photography styling.`,
+        `LIGHTING: Warm overhead or 45° natural light, soft shadows, texture emphasis.`,
+        `MATERIAL: Linen, cotton, premium paper — visible fabric weave or paper texture. ${ctx.visualStyle}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The table detail that elevates the entire dining experience.`,
+        sTags, q, neg(ctx, provider, "cheap paper, flat illustration, empty table, harsh lighting, off-brand, cartoon, plastic"),
+      );
+    }
+
+    case "bowl_pot": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded bowl / pot / tigela — 4:3 product photography of branded container with lid.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `PRODUCT: Premium paper/plastic bowl or pot with branded lid and body. Context: ${data.industry} (açaí, sorvete, poke, salada, iogurte, or similar).`,
+        `BRANDING: Logo on lid top (${ctx.logoPrimary}), brand symbol on body side (${ctx.logoSymbol}), brand pattern as accent band (${ctx.patternStyle}).`,
+        `COLOR: strict palette ${ctx.allColors}. ${ctx.primaryColor} lid or accent, body in white/kraft or ${ctx.secondaryColor}.`,
+        `ITEMS: One main bowl closed with lid + one open showing interior (optional). Branded spoon or seal sticker.`,
+        `SCENE: Styled surface matching brand world. Clean, appetizing, zero food mess. Focus on packaging design, not food content.`,
+        `LIGHTING: Soft studio light with rim highlight, shadows showing form and depth, premium product photography.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Premium takeaway that elevates the brand. Instagram-worthy packaging.`,
+        sTags, q, neg(ctx, provider, "messy food, spills, generic white container, flat illustration, cartoon, blurry, low-res print"),
+      );
+    }
+
+    case "tray_liner": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded tray / tray liner — 4:3 overhead product photography.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEMS: Serving tray with branded paper liner. Brand pattern (${ctx.patternStyle}) as liner art, logo (${ctx.logoPrimary}) corner placement.`,
+        `COLOR: strict palette ${ctx.allColors}. Liner on kraft/white base, brand colors as print.`,
+        `SCENE: Overhead on counter or table, partially with food arrangement props (clean, styled, not messy).`,
+        `LIGHTING: Warm overhead, editorial food photography aesthetic, paper texture visible.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Functional branding that turns a tray into a brand touchpoint.`,
+        sTags, q, neg(ctx, provider, "messy food spills, blurry, generic tray, cartoon, flat illustration, off-brand"),
+      );
+    }
+
+    case "wrapper_sleeve": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded wrapper / sleeve / papel de embrulho — 4:3 product photography.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `PRODUCT: Paper wrapper for sandwich/burger/product, sleeve for cup/bottle, or wrapping paper — with full brand art.`,
+        `DESIGN: Brand pattern (${ctx.patternStyle}) as all-over print, logo (${ctx.logoPrimary}) stamp or seal, ${ctx.accentColor} accent details.`,
+        `COLOR: strict palette ${ctx.allColors}. Pattern on kraft/white/colored base.`,
+        `SCENE: Product partially wrapped showing both wrapper design and wrapped product shape. Studio or lifestyle.`,
+        `LIGHTING: Soft natural or studio light, paper texture and print quality visible.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The wrap that makes the product feel premium before it's even opened.`,
+        sTags, q, neg(ctx, provider, "messy unwrapped food, flat illustration, blurry print, cartoon, generic plain paper"),
+      );
+    }
+
+    case "coaster": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded coaster / porta-copos — 1:1 macro product photography.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `COASTER: Round or square coaster (cardboard, cork, rubber, or leather). Printed or embossed brand identity.`,
+        `DESIGN: Front: brand symbol (${ctx.logoSymbol}) centered or brand pattern (${ctx.patternStyle}). Back: logo (${ctx.logoPrimary}).`,
+        `COLOR: strict palette ${ctx.allColors}. ${ctx.primaryColor} dominant, ${ctx.accentColor} details.`,
+        `SCENE: On bar/restaurant counter or table, next to a glass or cup for context. Macro focus on coaster detail.`,
+        `LIGHTING: Warm ambient or spot light, material texture (cork grain, cardboard fiber) visible, shallow DOF.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The detail that makes a drink feel like a brand experience.`,
+        sTags, q, neg(ctx, provider, "blurry, cheap generic, flat illustration, cartoon, off-brand colors, no texture"),
+      );
+    }
+
+    case "menu_printed": {
+      return parts(
+        prefix,
+        `PLATFORM: Printed menu / cardápio — 4:3 editorial photography of premium branded menu.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `MENU FORMAT: Premium printed menu — folder, booklet, single sheet in holder, or clipboard. Material matches brand world.`,
+        `DESIGN: Cover with logo (${ctx.logoPrimary}), brand pattern accent (${ctx.patternStyle}), interior with clear typographic hierarchy.`,
+        `TYPOGRAPHY: ${ctx.displayFont} for headers/sections, ${ctx.bodyFont} for items. Color accents in ${ctx.accentColor}.`,
+        `COLOR: strict palette ${ctx.allColors}. Cover in ${ctx.primaryColor} or neutral, interior accents.`,
+        `SCENE: Open on table or in-hand, restaurant/café context, warm ambient light, editorial style.`,
+        `LIGHTING: Warm natural light, paper stock quality visible, soft shadows, shallow DOF on background.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The menu that people photograph before they order.`,
+        sTags, q, neg(ctx, provider, "cheap laser print, flat illustration, lorem ipsum, cartoon, blurry, off-brand, generic template"),
+      );
+    }
+
+    case "price_tag_shelf": {
+      return parts(
+        prefix,
+        `PLATFORM: Price tag / shelf talker / wobbler — 4:3 close-up in retail/PDV context.`,
+        soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEMS: Shelf price tag, wobbler, or shelf talker with brand identity. Small format, high impact at point of sale.`,
+        `DESIGN: ${ctx.primaryColor} background or border, logo (${ctx.logoSymbol}) small, clear price/info hierarchy.`,
+        `COLOR: strict palette ${ctx.allColors}. ${ctx.accentColor} for price/CTA highlight.`,
+        `SCENE: Attached to retail shelf edge, product context blurred behind, macro focus on the tag.`,
+        `LIGHTING: Retail fluorescent + accent light, realistic shelf context.`,
+        humanLayer,
+        `MOOD: Eye-catching at shelf level, branded consistency across all POS materials.`,
+        sTags, q, neg(ctx, provider, "blurry, generic white tag, cartoon, flat illustration, off-brand, no context"),
+      );
+    }
+
+    case "tent_card": {
+      return parts(
+        prefix,
+        `PLATFORM: Table tent card / display de mesa — 4:3 product photography on dining or retail table.`,
+        soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `FORMAT: Triangular tent card or A-frame mini display for table use — promo, QR code, or menu highlight.`,
+        `DESIGN: Both sides branded with logo (${ctx.logoPrimary}), ${ctx.primaryColor} background, clear call-to-action zone.`,
+        `COLOR: strict palette ${ctx.allColors}.`,
+        `SCENE: On restaurant/café table or retail counter, with contextual props. Natural setting, editorial.`,
+        `LIGHTING: Warm ambient, realistic table context, tent card as focal point, soft background blur.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Small format, big brand presence at the moment of decision.`,
+        sTags, q, neg(ctx, provider, "flat illustration, generic template, blurry, cartoon, empty void background"),
+      );
+    }
+
+    case "standee_display": {
+      return parts(
+        prefix,
+        `PLATFORM: Floor standee / display de chão — 9:16 vertical, life-size or near-life-size POS display.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `FORMAT: Die-cut floor standee, corrugated display, or totem in retail/restaurant entrance.`,
+        `DESIGN: Full brand visual with logo (${ctx.logoPrimary}), hero imagery, brand pattern (${ctx.patternStyle}), ${ctx.accentColor} CTA zone.`,
+        `COLOR: ${ctx.primaryColor} dominant, strict palette ${ctx.allColors}.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        `SCENE: In-store or entrance context, realistic perspective, blurred people walking by for scale.`,
+        `LIGHTING: Retail/ambient lighting, realistic shadows, display structure visible.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Impossible to walk past without looking.`,
+        sTags, q, neg(ctx, provider, "flat illustration, tiny scale model, cartoon, dark empty room, off-brand"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MERCH / WEARABLE
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "polo_uniform": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded polo shirt uniform — 4:3 editorial product photography.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium piqué cotton polo with embroidered logo. Corporate or staff uniform application.`,
+        `BRANDING: left chest logo embroidery (${ctx.logoPrimary}), optional right sleeve symbol (${ctx.logoSymbol}).`,
+        `COLOR: polo in ${ctx.primaryColor} or white with ${ctx.primaryColor} embroidery. Strict palette: ${ctx.allColors}.`,
+        `SCENE: On person torso (face out of frame) in work context, OR flat-lay with folded precision.`,
+        `LIGHTING: Soft editorial light, fabric texture visible, premium cotton quality feel.`,
+        `STYLE: ${ctx.visualStyle}. Professional, not casual. The polo that makes the team look unified.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Professional pride, team identity, quality you can feel.`,
+        sTags, q, neg(ctx, provider, "visible face, cheap polyester, distorted logo, wrinkled mess, cartoon, flat illustration"),
+      );
+    }
+
+    case "cap_hat": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded cap / hat — 4:3 product photography showing structured cap with embroidered brand.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Structured 6-panel cap with front logo embroidery and optional side/back detail.`,
+        `BRANDING: front center logo (${ctx.logoPrimary}) embroidered, back strap detail with ${ctx.logoSymbol}.`,
+        `COLOR: cap body in ${ctx.primaryColor}, visor in ${ctx.secondaryColor} or matching, embroidery in contrasting color.`,
+        `SCENE: 3/4 angle floating or on minimal stand. Crisp studio shot, cap structure visible.`,
+        `LIGHTING: Soft studio light, embroidery texture detail visible, fabric grain.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The cap everyone asks "where did you get that?"`,
+        sTags, q, neg(ctx, provider, "flat logo, cheap trucker hat, cartoon, blurry embroidery, distorted shape, worn-out"),
+      );
+    }
+
+    case "tote_bag": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded tote bag / ecobag — 4:3 lifestyle product photography.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Natural cotton canvas tote with screen-printed or embroidered brand art.`,
+        `DESIGN: Logo (${ctx.logoPrimary}) centered, brand pattern (${ctx.patternStyle}) as print or all-over. ${ctx.marketingArch}.`,
+        `COLOR: Natural canvas with ${ctx.primaryColor} print, or ${ctx.primaryColor} dyed canvas with white/cream print.`,
+        `SCENE: Over shoulder (face cropped) walking urban, OR flat-lay with styled props (notebook, sunglasses, plant).`,
+        `LIGHTING: Natural daylight, lifestyle editorial, soft shadows.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The bag that replaces all other bags. Daily brand exposure.`,
+        sTags, q, neg(ctx, provider, "cheap plastic bag, flat illustration, generic canvas, cartoon, blurry print, empty void"),
+      );
+    }
+
+    case "hoodie": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded hoodie / moletom — 4:3 product photography, premium merchandise.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium heavyweight hoodie with brand application — embroidery, print, or puff print.`,
+        `BRANDING: chest logo (${ctx.logoPrimary}), optional back print with brand pattern (${ctx.patternStyle}) or large symbol.`,
+        `COLOR: hoodie in ${ctx.primaryColor} or neutral (black/heather gray) with contrasting brand print.`,
+        `SCENE: On person (face cropped at chin or above) in urban/lifestyle context, OR styled flat-lay.`,
+        `LIGHTING: Moody editorial light, fabric texture and weight visible, premium garment feel.`,
+        `STYLE: ${ctx.visualStyle}. Streetwear-meets-brand, not corporate. Merch people actually want to wear.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Cozy, premium, the hoodie that becomes someone's favorite.`,
+        sTags, q, neg(ctx, provider, "cheap thin fabric, flat illustration, distorted logo, cartoon, wrinkled mess, fast fashion"),
+      );
+    }
+
+    case "jacket_coat": {
+      return parts(
+        prefix, `PLATFORM: Branded jacket/coat — 4:3 editorial product photography.`, soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium jacket, bomber, or coat with brand details — embroidered chest logo (${ctx.logoPrimary}), inner lining in brand pattern (${ctx.patternStyle}), zipper pull with ${ctx.logoSymbol}.`,
+        `COLOR: strict palette ${ctx.allColors}. Body in ${ctx.primaryColor} or neutral with ${ctx.accentColor} accents.`,
+        `SCENE: On person (face cropped) in urban/lifestyle context, or hung on premium hanger. Editorial lighting, fabric texture visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Premium outerwear that represents the brand lifestyle.`,
+        sTags, q, neg(ctx, provider, "visible face, cheap fabric, flat illustration, cartoon, wrinkled mess"),
+      );
+    }
+
+    case "vest_colete": {
+      return parts(
+        prefix, `PLATFORM: Branded vest/colete — 4:3 product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Corporate or operational vest with logo embroidery (${ctx.logoPrimary}), reflective details optional, brand color body.`,
+        `COLOR: ${ctx.primaryColor} body, ${ctx.accentColor} details. Strict palette: ${ctx.allColors}.`,
+        `SCENE: On person torso (face cropped) in work context, or precision flat-lay. Professional, not construction-site.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Team identity, quality, professional pride.`,
+        sTags, q, neg(ctx, provider, "visible face, cheap polyester, cartoon, flat illustration, safety vest generic"),
+      );
+    }
+
+    case "suit_formal": {
+      return parts(
+        prefix, `PLATFORM: Branded formal wear — 4:3 editorial fashion photography.`, soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Tailored suit, blazer, or formal outfit with brand details — custom lining (${ctx.patternStyle}), logo on inner label, branded cufflinks or pin (${ctx.logoSymbol}).`,
+        `COLOR: Neutral suit (charcoal/navy) with ${ctx.accentColor} lining reveal. Pocket square in ${ctx.primaryColor}. Strict palette.`,
+        `SCENE: Detail shots — lapel pin close-up, lining reveal, cuff detail. Premium tailoring visible. Editorial fashion.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Executive elegance with brand DNA in the details.`,
+        sTags, q, neg(ctx, provider, "full body visible face, cheap fabric, cartoon, off-the-rack generic, flat illustration"),
+      );
+    }
+
+    case "sneakers_shoes": {
+      return parts(
+        prefix, `PLATFORM: Branded sneakers/shoes — 4:3 product photography.`, soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Custom sneakers or shoes with brand colors, logo on tongue/heel tab (${ctx.logoPrimary}), pattern on insole (${ctx.patternStyle}).`,
+        `COLOR: ${ctx.primaryColor} dominant, ${ctx.accentColor} accents, ${ctx.secondaryColor} sole. Strict palette.`,
+        `SCENE: Hero product shot — shoe at 3/4 angle on clean surface, dramatic rim lighting, premium sneaker photography.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Streetwear premium, the collab drop everyone wants.`,
+        sTags, q, neg(ctx, provider, "worn out, dirty, flat illustration, cartoon, blurry, cheap material"),
+      );
+    }
+
+    case "sunglasses": {
+      return parts(
+        prefix, `PLATFORM: Branded sunglasses — 4:3 product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium sunglasses with brand details — ${ctx.logoSymbol} on temple/arm, ${ctx.accentColor} lens tint or frame accent.`,
+        `COLOR: Frame in neutral or ${ctx.primaryColor}. ${ctx.accentColor} temple accent. Strict palette.`,
+        `SCENE: Clean studio shot on reflective surface, or styled flat-lay with case. Dramatic lighting, lens reflection.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Fashion-forward accessory, premium lifestyle.`,
+        sTags, q, neg(ctx, provider, "cheap plastic, blurry, cartoon, flat illustration, visible face wearing them"),
+      );
+    }
+
+    case "phone_case": {
+      return parts(
+        prefix, `PLATFORM: Branded phone case — 9:16 product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium phone case (iPhone/Samsung) with brand art — logo (${ctx.logoPrimary}), pattern (${ctx.patternStyle}), or full-wrap graphic.`,
+        `COLOR: strict palette ${ctx.allColors}. ${ctx.primaryColor} dominant, ${ctx.accentColor} accents.`,
+        `SCENE: Case on phone at slight angle, clean surface, or in-hand (face cropped). Studio lighting, material texture visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Premium accessory, daily brand exposure.`,
+        sTags, q, neg(ctx, provider, "cheap silicone, blurry print, cartoon, flat illustration, cracked phone"),
+      );
+    }
+
+    case "branded_purse": {
+      return parts(
+        prefix, `PLATFORM: Branded bag/purse — 4:3 fashion product photography.`, soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium bag, clutch, or necessaire with brand identity — logo hardware (${ctx.logoSymbol}), brand pattern lining (${ctx.patternStyle}), color blocking.`,
+        `COLOR: ${ctx.primaryColor} body, ${ctx.accentColor} hardware, ${ctx.secondaryColor} strap. Strict palette.`,
+        `SCENE: Styled on surface with lifestyle props, or over shoulder (face cropped). Fashion editorial lighting.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Fashion accessory that IS the brand in public.`,
+        sTags, q, neg(ctx, provider, "cheap fake leather, blurry, cartoon, flat illustration, off-brand colors"),
+      );
+    }
+
+    case "pen_branded": {
+      return parts(
+        prefix, `PLATFORM: Branded pen — 4:3 macro product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium metal or resin pen with engraved/printed logo (${ctx.logoPrimary}), clip detail in ${ctx.accentColor}.`,
+        `COLOR: Pen body in ${ctx.primaryColor}, silver/gold clip, ${ctx.accentColor} accent. Premium finish.`,
+        `SCENE: Macro on notebook or desk, shallow DOF, metal reflection visible, pen cap details. Gift box optional.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Premium corporate gift, the pen you don't lend.`,
+        sTags, q, neg(ctx, provider, "cheap plastic pen, blurry, cartoon, flat illustration, generic bic"),
+      );
+    }
+
+    case "notebook_planner": {
+      return parts(
+        prefix, `PLATFORM: Branded notebook/planner — 4:3 editorial product photography.`, soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium hardcover notebook or planner with brand identity — embossed cover logo (${ctx.logoPrimary}), brand pattern endpapers (${ctx.patternStyle}), ribbon marker in ${ctx.accentColor}.`,
+        `COLOR: Cover in ${ctx.primaryColor}, spine in ${ctx.secondaryColor}, details in ${ctx.accentColor}. Strict palette.`,
+        `SCENE: Styled desk flat-lay or 3/4 angle, partially open showing endpapers. Premium paper quality visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. The notebook that organizes your life with brand style.`,
+        sTags, q, neg(ctx, provider, "cheap spiral notebook, flat illustration, cartoon, blurry, generic moleskin clone"),
+      );
+    }
+
+    case "keychain": {
+      return parts(
+        prefix, `PLATFORM: Branded keychain — 1:1 macro product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium keychain (metal, leather, acrylic, or enamel) with brand symbol (${ctx.logoSymbol}).`,
+        `COLOR: ${ctx.primaryColor} enamel or body, ${ctx.accentColor} hardware. Strict palette.`,
+        `SCENE: Macro on textured surface, keys optional, shallow DOF, material detail visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Small object, big brand presence.`,
+        sTags, q, neg(ctx, provider, "cheap plastic, blurry, cartoon, flat illustration, generic"),
+      );
+    }
+
+    case "umbrella": {
+      return parts(
+        prefix, `PLATFORM: Branded umbrella — 4:3 lifestyle product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Full-size or compact umbrella with brand pattern canopy (${ctx.patternStyle}), logo on panel (${ctx.logoPrimary}), wooden or branded handle.`,
+        `COLOR: ${ctx.primaryColor} canopy, ${ctx.accentColor} pattern, ${ctx.secondaryColor} handle. Strict palette.`,
+        `SCENE: Open umbrella from above showing pattern, OR in-hand in rain setting (face cropped). Dramatic rainy mood.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Premium rain accessory that turns bad weather into brand exposure.`,
+        sTags, q, neg(ctx, provider, "cheap plastic umbrella, flat illustration, cartoon, broken umbrella, generic"),
+      );
+    }
+
+    case "water_bottle": {
+      return parts(
+        prefix, `PLATFORM: Branded water bottle/squeeze — 4:3 product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Stainless steel or premium plastic bottle with brand identity — logo wrap (${ctx.logoPrimary}), brand pattern band (${ctx.patternStyle}), custom lid.`,
+        `COLOR: Body in ${ctx.primaryColor} matte/gloss, cap in ${ctx.accentColor}. Strict palette: ${ctx.allColors}.`,
+        `SCENE: Studio hero shot with condensation, OR in gym/office lifestyle context. Premium material finish visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Wellness meets brand lifestyle, daily companion.`,
+        sTags, q, neg(ctx, provider, "cheap plastic bottle, blurry, cartoon, flat illustration, generic"),
+      );
+    }
+
+    case "mouse_pad": {
+      return parts(
+        prefix, `PLATFORM: Branded mouse pad — 4:3 desk photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium desk mat or mouse pad with brand pattern (${ctx.patternStyle}) or subtle logo (${ctx.logoSymbol}).`,
+        `COLOR: ${ctx.primaryColor} base, ${ctx.secondaryColor} pattern. Strict palette.`,
+        `SCENE: On styled desk with keyboard and mouse, overhead or 3/4 angle. Modern workspace aesthetic.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Desk real estate = brand real estate.`,
+        sTags, q, neg(ctx, provider, "cheap foam, blurry, cartoon, generic, off-brand, empty void"),
+      );
+    }
+
+    case "lanyard_badge": {
+      return parts(
+        prefix, `PLATFORM: Branded badge + lanyard — 4:3 product photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: ID badge with photo placeholder + branded lanyard. Logo on badge (${ctx.logoPrimary}), pattern on lanyard (${ctx.patternStyle}).`,
+        `COLOR: Badge border ${ctx.accentColor}, lanyard in ${ctx.primaryColor}, metal clip silver/gold. Strict palette.`,
+        `SCENE: Flat-lay or hanging, clean background, badge detail visible. Corporate identity system.`,
+        humanLayer, `MOOD: Professional team identity. Belonging and brand pride.`,
+        sTags, q, neg(ctx, provider, "generic visitor badge, cheap ribbon, cartoon, flat illustration, blurry"),
+      );
+    }
+
+    case "pin_button": {
+      return parts(
+        prefix, `PLATFORM: Branded pin/button — 1:1 macro product photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Enamel pin, metal pin, or button badge with brand symbol (${ctx.logoSymbol}) or creative brand art.`,
+        `COLOR: ${ctx.primaryColor} enamel, ${ctx.accentColor} metal border, ${ctx.secondaryColor} detail. Strict palette.`,
+        `SCENE: Macro on fabric (denim, canvas) or collection display, pin detail visible, shallow DOF.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Collectible micro-branding.`,
+        sTags, q, neg(ctx, provider, "cheap plastic, blurry, cartoon, flat illustration, generic"),
+      );
+    }
+
+    case "pillow_cushion": {
+      return parts(
+        prefix, `PLATFORM: Branded cushion/pillow — 1:1 lifestyle product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Decorative cushion with brand pattern (${ctx.patternStyle}) or logo embroidery (${ctx.logoSymbol}).`,
+        `COLOR: Fabric in ${ctx.primaryColor}, embroidery in ${ctx.accentColor}. Strict palette.`,
+        `SCENE: On couch, chair, or bed in styled interior. Warm ambient light, textile texture visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Brand presence in domestic spaces.`,
+        sTags, q, neg(ctx, provider, "cheap polyester, flat illustration, cartoon, generic, harsh lighting"),
+      );
+    }
+
+    case "towel_branded": {
+      return parts(
+        prefix, `PLATFORM: Branded towel — 4:3 lifestyle product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Beach, bath, or hand towel with woven/printed brand pattern (${ctx.patternStyle}), logo detail (${ctx.logoSymbol}).`,
+        `COLOR: ${ctx.primaryColor} dominant, ${ctx.accentColor} stripes. Strict palette.`,
+        `SCENE: Folded on surface, draped over chair, or beach context. Cotton texture visible, lifestyle editorial.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Lifestyle branding, premium textile.`,
+        sTags, q, neg(ctx, provider, "cheap thin towel, cartoon, flat illustration, generic hotel towel"),
+      );
+    }
+
+    case "skateboard_deck": {
+      return parts(
+        prefix, `PLATFORM: Branded skateboard deck or surfboard — 9:16 product photography.`, soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Skateboard deck with full bottom art — brand pattern (${ctx.patternStyle}), logo (${ctx.logoPrimary}), custom graphic.`,
+        `COLOR: ${ctx.primaryColor} dominant, ${ctx.accentColor} graphic accents. Strict palette.`,
+        `SCENE: Deck leaning on wall or mounted, grip tape visible, urban/studio setting. Art side as hero.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Street culture meets brand identity. Collectible art piece.`,
+        sTags, q, neg(ctx, provider, "worn out, dirty, cartoon generic, flat illustration, blurry art"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FURNITURE / AMBIENTE
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "chair_furniture": {
+      return parts(
+        prefix, `PLATFORM: Branded furniture (chair/table/bench) — 4:3 interior photography.`, soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Custom furniture piece — upholstery in brand color (${ctx.primaryColor}), logo embossed or laser-cut (${ctx.logoSymbol}), brand pattern on cushion (${ctx.patternStyle}).`,
+        `SCENE: In-situ restaurant, café, or office interior. Warm ambient light, architectural context, premium materials visible.`,
+        `DESIGN: Modern design language matching ${ctx.visualStyle}. Wood, metal, leather, or fabric in brand colors.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Every surface is a brand touchpoint.`,
+        sTags, q, neg(ctx, provider, "cheap plastic chair, flat illustration, empty void, cartoon, generic office"),
+      );
+    }
+
+    case "fridge_wrap": {
+      return parts(
+        prefix, `PLATFORM: Branded fridge/freezer wrap — 4:3 in-store photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Commercial fridge or freezer with vinyl wrap — full brand art, logo (${ctx.logoPrimary}), product imagery hints, brand pattern (${ctx.patternStyle}).`,
+        `COLOR: ${ctx.primaryColor} dominant wrap, ${ctx.accentColor} accent panels. Strict palette.`,
+        `SCENE: In-store or bar context, fridge slightly open with interior glow, products partially visible. Realistic PDV setting.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Cold storage = warm brand impression.`,
+        sTags, q, neg(ctx, provider, "generic white fridge, flat illustration, cartoon, empty room, dirty"),
+      );
+    }
+
+    case "flag_banner_fabric": {
+      return parts(
+        prefix, `PLATFORM: Branded flag/wind banner — 9:16 outdoor photography.`, soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Fabric flag, wind banner (feather flag), or pennant with brand art — logo (${ctx.logoPrimary}), brand colors, pattern accent.`,
+        `COLOR: ${ctx.primaryColor} background, ${ctx.accentColor} logo/art. Strict palette.`,
+        `SCENE: Outdoor event, storefront, or corporate entrance. Flag rippling in wind, blue sky, dynamic energy.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Brand presence in motion, visible from a distance.`,
+        sTags, q, neg(ctx, provider, "still flat flag, cartoon, flat illustration, dark indoor, generic country flag"),
+      );
+    }
+
+    case "doormat": {
+      return parts(
+        prefix, `PLATFORM: Branded doormat — 4:3 entrance photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Custom doormat with brand logo (${ctx.logoPrimary}) or welcome message. Coir, rubber, or textile.`,
+        `COLOR: Natural coir with ${ctx.primaryColor} print, or ${ctx.primaryColor} mat with white/cream logo.`,
+        `SCENE: At entrance of store, office, or home. Door frame visible, welcoming perspective.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. First step into the brand world.`,
+        sTags, q, neg(ctx, provider, "dirty worn doormat, flat illustration, cartoon, generic, dark"),
+      );
+    }
+
+    case "wall_clock": {
+      return parts(
+        prefix, `PLATFORM: Branded wall clock — 1:1 product photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Wall clock with brand design — logo as center (${ctx.logoSymbol}), brand colors for markers, brand pattern face.`,
+        `COLOR: Face in white or ${ctx.secondaryColor}, markers in ${ctx.primaryColor}, hands in ${ctx.accentColor}.`,
+        `SCENE: Mounted on textured wall (brick, concrete, wood), interior context, warm ambient light.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Time branded, every glance is brand exposure.`,
+        sTags, q, neg(ctx, provider, "cheap plastic clock, flat illustration, cartoon, generic, blurry"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PACKAGING FOOD — EXPANDED
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "grease_proof_paper": {
+      return parts(
+        prefix, `PLATFORM: Branded grease-proof paper / butter paper — 1:1 food photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Grease-proof or wax paper with repeating brand pattern (${ctx.patternStyle}) or logo stamp (${ctx.logoSymbol}) print.`,
+        `COLOR: Pattern in ${ctx.primaryColor} on white/kraft paper. Strict palette.`,
+        `SCENE: Wrapping food item (sandwich, pastry, burger), or lining a basket/tray. Food photography style, warm light.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Every bite comes with brand identity.`,
+        sTags, q, neg(ctx, provider, "plain white paper, flat illustration, cartoon, messy food spill, generic"),
+      );
+    }
+
+    case "napkin_holder": {
+      return parts(
+        prefix, `PLATFORM: Branded napkin holder / dispenser — 4:3 in-situ photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Table napkin holder or counter dispenser with brand identity — logo panel (${ctx.logoPrimary}), brand colors, material matching brand style.`,
+        `MATERIAL: Metal, wood, acrylic, or ceramic matching ${ctx.visualStyle}.`,
+        `COLOR: ${ctx.primaryColor} body or accent, branded panel. Strict palette: ${ctx.allColors}.`,
+        `SCENE: On restaurant/café table or counter with branded napkins, contextual setting, warm ambient light.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Table furniture that works as brand signage.`,
+        sTags, q, neg(ctx, provider, "cheap plastic dispenser, cartoon, flat illustration, empty void, generic"),
+      );
+    }
+
+    case "cup_mug": {
+      return parts(
+        prefix, `PLATFORM: Branded mug/cup — 4:3 lifestyle product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Ceramic mug or porcelain cup with brand identity — logo (${ctx.logoPrimary}) on body, pattern on interior rim (${ctx.patternStyle}), branded coaster optional.`,
+        `COLOR: White ceramic with ${ctx.primaryColor} logo, or ${ctx.primaryColor} mug with white logo. ${ctx.accentColor} interior detail.`,
+        `SCENE: Lifestyle desk/café context with coffee/tea, steam wisps, warm natural light. Or styled product shot on clean surface.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Morning ritual meets brand identity.`,
+        sTags, q, neg(ctx, provider, "cheap printed mug, blurry logo, cartoon, flat illustration, generic corporate"),
+      );
+    }
+
+    case "pizza_box": {
+      return parts(
+        prefix, `PLATFORM: Branded pizza box — 4:3 product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Pizza box (top and inside lid) with full brand art — logo (${ctx.logoPrimary}), brand pattern (${ctx.patternStyle}), fun interior art or messaging zone.`,
+        `COLOR: Kraft exterior with ${ctx.primaryColor} art, ${ctx.accentColor} accents. Strict palette: ${ctx.allColors}.`,
+        `SCENE: Stack of boxes or single box half-open showing interior art. Counter/table context, warm light.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. The box that's too cool to throw away.`,
+        sTags, q, neg(ctx, provider, "generic white box, flat illustration, cartoon, messy grease, blurry, generic pizza chain"),
+      );
+    }
+
+    case "candy_wrapper": {
+      return parts(
+        prefix, `PLATFORM: Branded candy/chocolate wrapper — 4:3 product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Small product wrapper (chocolate bar, candy, bombom, cookie) with full brand art. Premium finish foil or matte.`,
+        `DESIGN: Logo (${ctx.logoPrimary}), brand pattern (${ctx.patternStyle}), ${ctx.primaryColor} dominant. ${ctx.marketingArch}.`,
+        `COLOR: Strict palette ${ctx.allColors}. Foil accent optional.`,
+        `SCENE: Macro product shot, multiple pieces artfully arranged, foil texture and print quality visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Premium confectionery branding, giftable presentation.`,
+        sTags, q, neg(ctx, provider, "cheap plastic wrap, blurry, cartoon, generic, off-brand, messy"),
+      );
+    }
+
+    case "packaging_tape": {
+      return parts(
+        prefix, `PLATFORM: Branded packaging tape — 21:9 product photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Custom printed packaging tape with repeating logo (${ctx.logoPrimary}) and pattern (${ctx.patternStyle}).`,
+        `COLOR: Tape in ${ctx.primaryColor} with white/${ctx.accentColor} print. Strict palette.`,
+        `SCENE: Tape sealing a branded box or unrolling from dispenser, close-up showing print quality.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Every shipment is a brand moment.`,
+        sTags, q, neg(ctx, provider, "generic brown tape, blurry, cartoon, flat illustration"),
+      );
+    }
+
+    case "matchbox": {
+      return parts(
+        prefix, `PLATFORM: Branded matchbox — 4:3 macro product photography.`, soul, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Small matchbox with full brand art — logo (${ctx.logoPrimary}), pattern (${ctx.patternStyle}), brand symbol (${ctx.logoSymbol}).`,
+        `COLOR: ${ctx.primaryColor} body, ${ctx.accentColor} striker, white match heads. Strict palette.`,
+        `SCENE: Macro on bar counter or table, candle context optional, warm ambient light, vintage-premium feel.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. The detail nobody expects but everyone remembers.`,
+        sTags, q, neg(ctx, provider, "generic safety matches, flat illustration, cartoon, blurry, cheap"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SOCIAL / DIGITAL TEMPLATES
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "weekly_agenda_post": {
+      return parts(
+        prefix,
+        `PLATFORM: Instagram weekly agenda/schedule post — 1:1 square format for feed.`, soul,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `DESIGN: Weekly schedule/agenda grid layout — 7 days with time slots or event highlights. Clean typographic hierarchy.`,
+        `TYPOGRAPHY: ${ctx.displayFont} for day headers, ${ctx.bodyFont} for details. Bold ${ctx.primaryColor} headers.`,
+        `COLOR: ${ctx.primaryColor} header bar, white/light content area, ${ctx.accentColor} for highlights/today marker. Strict palette: ${ctx.allColors}.`,
+        `LAYOUT: Clean grid or list layout, logo watermark (${ctx.logoSymbol}) bottom corner, brand pattern (${ctx.patternStyle}) subtle background.`,
+        `STYLE: ${ctx.marketingArch}. On-brand, not generic Canva template. ${ctx.visualStyle}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Organized, professional, the weekly post followers save and screenshot.`,
+        `No actual text content — show layout structure with placeholder blocks. Pure design template.`,
+        sTags, q, neg(ctx, provider, "generic canva template, clipart, rainbow colors, messy layout, hard to read, off-brand"),
+      );
+    }
+
+    case "credit_debit_card": {
+      return parts(
+        prefix, `PLATFORM: Co-branded credit/debit card — 16:9 premium product photography.`, soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `CARD: Premium metal or plastic card with brand art — logo (${ctx.logoPrimary}) upper left, brand pattern (${ctx.patternStyle}) as subtle background texture.`,
+        `DESIGN: ${ctx.marketingArch}. Clean chip placement, contactless symbol, minimal card number zone. ${ctx.visualStyle}.`,
+        `COLOR: ${ctx.primaryColor} dominant, ${ctx.accentColor} chip surround, metallic foil accents. Strict palette.`,
+        `SCENE: Slight angle on dark surface, dramatic lighting, metallic edge reflection, premium banking photography.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. The card people choose for the design, not just the benefits.`,
+        sTags, q, neg(ctx, provider, "cheap plastic, flat illustration, generic visa card, blurry, cartoon, real card numbers"),
+      );
+    }
+
+    case "ticket_event": {
+      return parts(
+        prefix, `PLATFORM: Event ticket/voucher — 16:9 product photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Premium event ticket, voucher, or admission pass with brand identity and die-cut perforated edge.`,
+        `DESIGN: Logo (${ctx.logoPrimary}), brand pattern border (${ctx.patternStyle}), event info zone, QR code placeholder.`,
+        `COLOR: ${ctx.primaryColor} header, ${ctx.accentColor} accent details, clean white info zone. Strict palette.`,
+        `SCENE: Flat on surface or in-hand, editorial style, premium paper stock visible.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. The ticket that becomes a keepsake.`,
+        sTags, q, neg(ctx, provider, "generic ticket stub, blurry, cartoon, flat illustration, off-brand"),
+      );
+    }
+
+    case "wristband": {
+      return parts(
+        prefix, `PLATFORM: Event wristband — 21:9 macro product photography.`, soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEM: Tyvek, fabric, or silicone wristband with brand art — logo (${ctx.logoPrimary}), pattern (${ctx.patternStyle}), event branding.`,
+        `COLOR: ${ctx.primaryColor} band, ${ctx.accentColor} print. Strict palette.`,
+        `SCENE: On wrist (hand visible, face not), or flat collection of different designs. Event atmosphere hint.`,
+        humanLayer, `MOOD: ${ctx.moodWords}. Wearable brand memory from an event.`,
+        sTags, q, neg(ctx, provider, "cheap hospital band, blurry, cartoon, flat illustration, generic"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STATIONERY EXTENDED
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "gift_card": {
+      return parts(
+        prefix,
+        `PLATFORM: Gift card / vale presente — 16:9 showing premium branded gift card with packaging.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `CARD: Credit-card sized gift card with brand art. Premium finish.`,
+        `DESIGN: Logo (${ctx.logoPrimary}), brand pattern (${ctx.patternStyle}), ${ctx.primaryColor} dominant, ${ctx.accentColor} details.`,
+        `PACKAGING: Card in branded envelope or sleeve. ${ctx.visualStyle}.`,
+        `SCENE: Styled on premium surface, card slightly angled, envelope partially open. Gift-ready.`,
+        `LIGHTING: Soft studio light, foil stamp or spot UV detail visible, premium material feel.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The gift card that feels like a gift itself.`,
+        sTags, q, neg(ctx, provider, "flat digital mockup, generic white card, cheap plastic, cartoon, no finishing"),
+      );
+    }
+
+    case "loyalty_card": {
+      return parts(
+        prefix,
+        `PLATFORM: Loyalty card / VIP membership card — 16:9 showing branded retention card with premium finish.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `CARD: VIP/loyalty card with brand identity. Front: logo + membership tier. Back: stamp grid or QR code zone.`,
+        `DESIGN: ${ctx.primaryColor} dominant, ${ctx.accentColor} tier accent, logo (${ctx.logoPrimary}), metallic foil detail.`,
+        `STYLE: ${ctx.marketingArch}. ${ctx.visualStyle}. Premium card stock or PVC.`,
+        `SCENE: On premium surface alongside product or coffee cup for context. Slight angle.`,
+        `LIGHTING: Soft directional light, foil/emboss detail visible, premium material texture.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Exclusive, worth carrying in the wallet, status symbol.`,
+        sTags, q, neg(ctx, provider, "cheap paper, generic stamp card, flat illustration, cartoon, blurry, off-brand"),
+      );
+    }
+
+    case "sticker_sheet": {
+      return parts(
+        prefix,
+        `PLATFORM: Brand sticker sheet — 1:1 flat-lay showing die-cut sticker collection.`,
+        soul, journey,
+        `BRAND: ${B} (${data.industry}).`,
+        `COLLECTION: 8–12 die-cut stickers with logo variations, brand symbol (${ctx.logoSymbol}), pattern swatches, icons, tagline badges.`,
+        `DESIGN: ${ctx.marketingArch}. Each sticker uses strict palette (${ctx.allColors}). Mix of sizes and shapes.`,
+        `STYLE: ${ctx.visualStyle}. Premium vinyl or paper stickers with kiss-cut borders.`,
+        `SCENE: Flat-lay on solid ${ctx.secondaryColor} or neutral surface, stickers slightly scattered with intentional overlap.`,
+        `LIGHTING: Even soft overhead light, sticker edge detail visible, slight shadow for depth.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Collectible, fun, the sticker sheet fans buy and hoard.`,
+        sTags, q, neg(ctx, provider, "blurry, cheap print, random layout, off-brand colors, text-heavy, cartoon"),
+      );
+    }
+
+    case "wax_seal_stamp": {
+      return parts(
+        prefix,
+        `PLATFORM: Wax seal and/or rubber stamp — 1:1 macro close-up showing artisanal brand seal.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}).`,
+        `ITEMS: Brass wax seal stamp + wax seal impression in ${ctx.primaryColor} or ${ctx.accentColor}. Optional: wooden-handle rubber stamp.`,
+        `DESIGN: Brand symbol (${ctx.logoSymbol}) rendered as seal/stamp art. Circular composition, intricate but readable.`,
+        `SCENE: Macro shot on envelope, packaging, or aged paper surface. Wax seal freshly pressed, slight imperfections for authenticity.`,
+        `LIGHTING: Warm directional light, wax texture and brass reflection visible, shallow DOF.`,
+        `MATERIALS: Sealing wax, brass stamp head, wooden handle, quality paper substrate.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Artisanal, ceremonial, the detail that makes unboxing feel like opening a letter from another era.`,
+        sTags, q, neg(ctx, provider, "flat illustration, plastic, digital render, cartoon, blurry, cheap wax, modern sterile"),
+      );
+    }
+
+    case "invoice_receipt": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded invoice or receipt — 4:3 flat-lay showing branded fiscal/commercial document.`,
+        soul,
+        `BRAND: ${B} (${data.industry}).`,
+        `DOCUMENT: A4 invoice or receipt/comanda with brand identity applied. Professional but distinctive.`,
+        `DESIGN: Logo header (${ctx.logoPrimary}), ${ctx.primaryColor} accent lines, ${ctx.bodyFont} for data fields, brand pattern (${ctx.patternStyle}) subtle footer or border.`,
+        `COLOR: Predominantly white/cream with ${ctx.primaryColor} structural accents. Strict palette: ${ctx.allColors}.`,
+        `SCENE: On clipboard, desk, or counter alongside pen and branded elements. Slight angle.`,
+        `LIGHTING: Soft overhead, paper texture visible, clean professional feel.`,
+        humanLayer,
+        `MOOD: Professional, trustworthy, branded down to the last touchpoint.`,
+        sTags, q, neg(ctx, provider, "generic blank form, messy desk, illegible text, cartoon, flat digital, off-brand"),
+      );
+    }
+
+    case "envelope_letterhead": {
+      return parts(
+        prefix,
+        `PLATFORM: Branded envelope + letterhead set — 4:3 editorial flat-lay showing corporate correspondence system.`,
+        soul, journey, sensory,
+        `BRAND: ${B} (${data.industry}). Personality: ${ctx.personality}.`,
+        `ITEMS: C4/DL envelope (front + back) and A4 letterhead paper, both branded. Optional wax seal on envelope.`,
+        `DESIGN: Logo (${ctx.logoPrimary}) on letterhead header and envelope flap, brand pattern (${ctx.patternStyle}) envelope lining.`,
+        `COLOR: White paper base, ${ctx.primaryColor} logo and accents, ${ctx.accentColor} envelope lining. Strict palette: ${ctx.allColors}.`,
+        `TYPOGRAPHY: ${ctx.displayFont} for headers, ${ctx.bodyFont} for body areas. Elegant spacing.`,
+        `SCENE: Styled flat-lay on premium surface (marble, dark wood). Partially open envelope revealing patterned lining.`,
+        `LIGHTING: Soft directional, paper weight and texture visible, premium stationery photography.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Correspondence that commands attention before being read.`,
+        sTags, q, neg(ctx, provider, "cheap paper, flat digital, generic template, cartoon, lorem ipsum text, off-brand"),
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DIGITAL EXTENDED
+    // ═══════════════════════════════════════════════════════════════════════
+
+    case "landing_page": {
+      return parts(
+        prefix,
+        `PLATFORM: Landing page mockup — vertical 9:16 full-page screenshot in browser/device frame.`,
+        soul, journey,
+        `MARKETING INTENT: Conversion-optimized landing page that embodies the brand's visual system. Not a wireframe — a finished, premium render.`,
+        `BRAND: ${B} (${data.industry}). Purpose: ${ctx.purpose}. Message: ${ctx.messagingPillar}.`,
+        ctx.tagline,
+        `PAGE STRUCTURE: Hero section (full-bleed brand visual, ${ctx.primaryColor}), value props section (3 columns), social proof band, CTA section (${ctx.accentColor}).`,
+        `VISUAL DESIGN: ${ctx.marketingArch}. ${ctx.visualStyle}. Brand pattern (${ctx.patternStyle}) as section divider.`,
+        `COLOR SYSTEM: ${ctx.primaryColor} hero, white content sections, ${ctx.secondaryColor} alternate bands, ${ctx.accentColor} CTAs.`,
+        `TYPOGRAPHY: ${ctx.displayFont} Bold for headlines, ${ctx.bodyFont} Regular for body text. Clean hierarchy.`,
+        `BRAND ELEMENTS: Logo in nav (${ctx.logoPrimary}), brand illustrations, iconography matching visual system.`,
+        `DEVICE: Shown in modern browser frame (Safari/Chrome) or MacBook Pro 14" mockup. Clean desk, minimal.`,
+        `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. The landing page that converts AND wins design awards.`,
+        sTags, q, neg(ctx, provider, "wireframe, generic template, lorem ipsum, flat no-shadow, old browser, cluttered layout"),
+      );
+    }
+
+    case "podcast_cover": {
+      return parts(
+        prefix,
+        `PLATFORM: Podcast cover art — 1:1 square (3000×3000px minimum) for Apple Podcasts, Spotify, etc.`,
+        soul, journey,
+        `MARKETING INTENT: Stand out in the podcast feed. Must read clearly at 64px thumbnail AND look premium at full size.`,
+        `BRAND: ${B} (${data.industry}).`,
+        `VISUAL DESIGN: Bold, graphic, minimal. ${ctx.marketingArch}. One dominant visual element.`,
+        `COLOR: ${ctx.primaryColor} dominant background, ${ctx.accentColor} focal element, strict palette: ${ctx.allPrimaryColors}.`,
+        `BRAND MARK: ${ctx.logoSymbol} or derived graphic element — prominent but not a straight logo placement.`,
+        `STYLE: ${ctx.visualStyle}. No photographic content — pure graphic design. Reads at any scale.`,
+        `COMPOSITION: Centered or offset bold graphic, clean edges, high contrast for feed visibility.`,
+        humanLayer,
+        `MOOD: ${ctx.moodWords}. Authoritative, recognizable, the cover art that makes you subscribe before reading the description.`,
+        `REFERENCES: Huberman Lab, Lex Fridman, How I Built This — adapted to ${data.industry} aesthetic.`,
+        sTags, q, neg(ctx, provider, "photographic, text overlays, cluttered, low contrast, generic microphone icon, cartoon face"),
+      );
+    }
+
+    case "app_icon": {
+      return parts(
+        prefix,
+        `PLATFORM: App icon — 1:1 square (1024×1024px) for iOS App Store and Google Play.`,
+        soul,
+        `MARKETING INTENT: Instantly recognizable at 64px on phone home screen. Simple, bold, no ambiguity.`,
+        `BRAND: ${B} (${data.industry}).`,
+        `DESIGN: Brand symbol (${ctx.logoSymbol}) simplified to absolute minimum. Works as silhouette.`,
+        `COLOR: ${ctx.primaryColor} background, symbol in white or ${ctx.accentColor}. Maximum 2–3 colors total.`,
+        `SHAPE: Rounded square (iOS standard). Symbol centered with generous padding (20% margin).`,
+        `STYLE: Flat or minimal gradient. No 3D, no photographic, no text. ${ctx.visualStyle} essence distilled.`,
+        `RENDERING: Pixel-perfect at all sizes (16px to 1024px). No fine details that disappear at small scale.`,
+        humanLayer,
+        `MOOD: Clean, confident, premium. The icon that users show off on their home screen.`,
+        `REFERENCES: Notion, Linear, Arc, Figma, Stripe — modern app icon standards.`,
+        sTags, q, neg(ctx, provider, "text in icon, photographic, complex illustration, 3D glossy, gradient overload, multiple elements, fine details"),
+      );
+    }
+
     default: {
       return parts(
         `Professional brand visual for ${B} (${data.industry}).`,
@@ -1893,6 +3216,7 @@ export interface SizeVariant {
 export function detectSizeVariants(appType: string): SizeVariant[] {
   const t = appType.toLowerCase();
 
+  // ─── SOCIAL ───────────────────────────────────────────────────────
   if (/story|stories|reels/.test(t))
     return [
       { label: "Stories 9:16", aspectRatio: "9:16", dims: "1080×1920px" },
@@ -1906,13 +3230,219 @@ export function detectSizeVariants(appType: string): SizeVariant[] {
       { label: "Cover 16:9", aspectRatio: "16:9", dims: "1200×630px" },
     ];
 
-  if (/outdoor|billboard|ooh|fachada|totem/.test(t))
+  if (/podcast/.test(t))
+    return [
+      { label: "Capa 1:1", aspectRatio: "1:1", dims: "3000×3000px" },
+    ];
+
+  if (/[ií]cone.*app|app.*icon|favicon/.test(t))
+    return [
+      { label: "Ícone 1:1", aspectRatio: "1:1", dims: "1024×1024px" },
+    ];
+
+  // ─── RETAIL / PDV ─────────────────────────────────────────────────
+  if (/fachada|storefront|vitrine|window.*display/.test(t))
+    return [
+      { label: "Panorama 16:9", aspectRatio: "16:9", dims: "1600×900px" },
+      { label: "Banner 21:9", aspectRatio: "21:9", dims: "1600×686px" },
+    ];
+
+  if (/neon|letreiro|luminoso/.test(t))
+    return [
+      { label: "Paisagem 16:9", aspectRatio: "16:9", dims: "1200×675px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "1200×1200px" },
+    ];
+
+  if (/menu.*board|quadro.*menu|cardápio.*parede/.test(t))
+    return [
+      { label: "Retrato 4:3", aspectRatio: "4:3", dims: "60×80cm" },
+      { label: "Paisagem 16:9", aspectRatio: "16:9", dims: "120×68cm" },
+    ];
+
+  if (/estande|feira|expo|booth|stand/.test(t))
+    return [
+      { label: "Panorama 16:9", aspectRatio: "16:9", dims: "6×3m" },
+      { label: "Wide 21:9", aspectRatio: "21:9", dims: "6×2m" },
+    ];
+
+  if (/totem|sinaliza[çc][aã]o.*digital|digital.*signage|kiosk/.test(t))
+    return [
+      { label: "Vertical 9:16", aspectRatio: "9:16", dims: "1080×1920px" },
+      { label: "Retrato 4:3", aspectRatio: "4:3", dims: "1080×1440px" },
+    ];
+
+  // ─── VEHICLE ──────────────────────────────────────────────────────
+  if (/caminh[aã]o|van|ve[ií]culo|frota|fleet|vehicle|envelopamento|food.*truck/.test(t))
+    return [
+      { label: "Lateral 16:9", aspectRatio: "16:9", dims: "4×2m" },
+      { label: "Wide 21:9", aspectRatio: "21:9", dims: "5×1.5m" },
+    ];
+
+  // ─── OOH / PRINT ─────────────────────────────────────────────────
+  if (/outdoor|billboard|ooh/.test(t))
     return [
       { label: "Outdoor 16:9", aspectRatio: "16:9", dims: "9×3m" },
       { label: "Banner 21:9", aspectRatio: "21:9", dims: "6×2m" },
       { label: "Totem 9:16", aspectRatio: "9:16", dims: "120×180cm" },
     ];
 
+  if (/abrigo.*[oô]nibus|bus.*shelter|metr[oô]|transit/.test(t))
+    return [
+      { label: "Retrato 9:16", aspectRatio: "9:16", dims: "120×180cm" },
+      { label: "Paisagem 16:9", aspectRatio: "16:9", dims: "180×120cm" },
+    ];
+
+  if (/roll.*up|x.*banner|banner.*vertical|banner.*evento/.test(t))
+    return [
+      { label: "Roll-up 9:16", aspectRatio: "9:16", dims: "85×200cm" },
+    ];
+
+  if (/p[oô]ster|cartaz|poster/.test(t))
+    return [
+      { label: "A2 Vertical 9:16", aspectRatio: "9:16", dims: "42×59cm" },
+      { label: "A3 4:3", aspectRatio: "4:3", dims: "30×42cm" },
+    ];
+
+  if (/flyer|panfleto|folheto/.test(t))
+    return [
+      { label: "A5 4:3", aspectRatio: "4:3", dims: "148×210mm" },
+      { label: "DL 9:16", aspectRatio: "9:16", dims: "99×210mm" },
+    ];
+
+  if (/folder|cat[aá]logo|brochure|tri.*fold/.test(t))
+    return [
+      { label: "A4 4:3", aspectRatio: "4:3", dims: "210×297mm" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "210×210mm" },
+    ];
+
+  // ─── PACKAGING ────────────────────────────────────────────────────
+  if (/garrafa|bottle|r[oó]tulo.*bebida|\blata\b|can.*bebida|beverage/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/copo|sleeve|cup/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+    ];
+
+  if (/r[oó]tulo|label|tag|etiqueta/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/pote|pot|bowl|tigela|a[çc]a[ií]|sorvete|coaster|porta.*copo/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/bandeja|tray|wrapper|inv[oó]lucro|embrulho|tent.*card|display.*mesa/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+    ];
+
+  if (/standee|display.*ch[aã]o|totem.*impresso/.test(t))
+    return [
+      { label: "Vertical 9:16", aspectRatio: "9:16", dims: "60×160cm" },
+    ];
+
+  if (/wobbler|shelf.*talker|g[oô]ndola|etiqueta.*pre[çc]o/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "10×7cm" },
+    ];
+
+  if (/card[aá]pio|menu.*impresso/.test(t))
+    return [
+      { label: "A4 4:3", aspectRatio: "4:3", dims: "210×297mm" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "210×210mm" },
+    ];
+
+  if (/embalagem|packaging|sacola|caixa|bag|pote|copo|delivery|gift.*box|product.*box/.test(t))
+    return [
+      { label: "Kit 4:3", aspectRatio: "4:3", dims: "800×600px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  // ─── MERCH / WEARABLE ────────────────────────────────────────────
+  if (/capa.*celular|phone.*case|capinha/.test(t))
+    return [
+      { label: "Vertical 9:16", aspectRatio: "9:16", dims: "375×812px" },
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+    ];
+
+  if (/skate|prancha|surfboard/.test(t))
+    return [
+      { label: "Vertical 9:16", aspectRatio: "9:16", dims: "800×2400px" },
+    ];
+
+  if (/chaveiro|keychain|\bpin\b|botton|broche/.test(t))
+    return [
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/almofada|cushion|pillow|rel[oó]gio.*parede|wall.*clock/.test(t))
+    return [
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/bandeira|flag|estandarte|wind.*banner/.test(t))
+    return [
+      { label: "Vertical 9:16", aspectRatio: "9:16", dims: "60×150cm" },
+    ];
+
+  if (/pulseira|wristband|fita.*adesiva|packaging.*tape/.test(t))
+    return [
+      { label: "Wide 21:9", aspectRatio: "21:9", dims: "20×3cm" },
+    ];
+
+  if (/agenda.*semana|weekly|programa[çc][aã]o/.test(t))
+    return [
+      { label: "Feed 1:1", aspectRatio: "1:1", dims: "1080×1080px" },
+      { label: "Stories 9:16", aspectRatio: "9:16", dims: "1080×1920px" },
+    ];
+
+  if (/cart[aã]o.*cr[eé]dito|cart[aã]o.*d[eé]bito|credit|debit|ingresso|ticket|voucher/.test(t))
+    return [
+      { label: "Cartão 16:9", aspectRatio: "16:9", dims: "85×55mm" },
+    ];
+
+  if (/geladeira|freezer|fridge|cadeira|mesa.*branded|m[oó]vel|capacho|doormat/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+    ];
+
+  if (/f[oó]sforo|matchbox|bala|bombom|candy|chocolate/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/uniforme|camiseta|avental|camisa|uniform|apron|polo|moletom|hoodie|bon[eé]|cap|tote|ecobag|jaqueta|jacket|colete|vest|terno|suit|t[eê]nis|sneaker|[oó]culos|sunglasses|bolsa|purse|caneta|pen|caderno|notebook|guarda.*chuva|umbrella|squeeze|garrafa.*t[eé]rmica|mouse.*pad|crach[aá]|lanyard|toalha|towel|caneca|mug/.test(t))
+    return [
+      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  // ─── STATIONERY ───────────────────────────────────────────────────
+  if (/vale.*presente|gift.*card|fidelidade|loyalty|vip.*card/.test(t))
+    return [
+      { label: "Cartão 16:9", aspectRatio: "16:9", dims: "85×55mm" },
+    ];
+
+  if (/adesivo|sticker|selo|carimbo|wax|stamp/.test(t))
+    return [
+      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
+    ];
+
+  if (/envelope|papel.*timbrado|letterhead|nota.*fiscal|invoice|recibo|receipt/.test(t))
+    return [
+      { label: "A4 4:3", aspectRatio: "4:3", dims: "210×297mm" },
+    ];
+
+  // ─── DIGITAL ──────────────────────────────────────────────────────
   if (/email|newsletter|mailing/.test(t))
     return [
       { label: "Header 21:9", aspectRatio: "21:9", dims: "600×200px" },
@@ -1931,22 +3461,11 @@ export function detectSizeVariants(appType: string): SizeVariant[] {
       { label: "Desktop 16:9", aspectRatio: "16:9", dims: "1440×900px" },
     ];
 
-  if (/banner|hero|site|web|landing|header|cover|capa/.test(t))
+  if (/landing.*page|banner|hero|site|web|landing|header|cover|capa/.test(t))
     return [
       { label: "Hero 16:9", aspectRatio: "16:9", dims: "1440×810px" },
       { label: "Banner 21:9", aspectRatio: "21:9", dims: "1440×614px" },
       { label: "Vertical 9:16", aspectRatio: "9:16", dims: "810×1440px" },
-    ];
-
-  if (/embalagem|packaging|sacola|caixa|bag|pote|copo|delivery/.test(t))
-    return [
-      { label: "Kit 4:3", aspectRatio: "4:3", dims: "800×600px" },
-      { label: "Quadrado 1:1", aspectRatio: "1:1", dims: "800×800px" },
-    ];
-
-  if (/uniforme|camiseta|avental|camisa|uniform|apron/.test(t))
-    return [
-      { label: "Produto 4:3", aspectRatio: "4:3", dims: "800×600px" },
     ];
 
   if (/menu|cardápio|folder|brochure|papelaria|colateral/.test(t))
@@ -1960,6 +3479,236 @@ export function detectSizeVariants(appType: string): SizeVariant[] {
     { label: "Paisagem 16:9", aspectRatio: "16:9" },
     { label: "Vertical 9:16", aspectRatio: "9:16" },
   ];
+}
+
+/**
+ * Detect the closest AssetKey from free-form user text.
+ * Searches BOTH app.type AND app.description + customInstruction for richer matching.
+ */
+export function detectApplicationAssetKey(
+  appType: string,
+  appDescription?: string,
+  customInstruction?: string
+): AssetKey {
+  // Combine all user-provided text for matching — type has highest priority
+  // but description and instruction provide fallback context
+  const t = appType.toLowerCase();
+  const all = `${t} ${(appDescription ?? "").toLowerCase()} ${(customInstruction ?? "").toLowerCase()}`;
+
+  // ─── RETAIL / PDV ─────────────────────────────────────────────────
+  if (/fachada|storefront|loja.*fora|exterior.*loja/.test(t)) return "storefront_facade";
+  if (/vitrine|window.*display|vitrin/.test(t)) return "window_display";
+  if (/neon|letreiro|luminoso|sign.*light/.test(t)) return "neon_sign";
+  if (/menu.*board|quadro.*menu|cardápio.*parede/.test(t)) return "menu_board";
+  if (/estande|feira|expo|booth|stand/.test(t)) return "trade_show_booth";
+  if (/totem|sinaliza[çc][aã]o.*digital|digital.*signage|kiosk|quiosque/.test(t)) return "digital_signage";
+  // ─── VEHICLE ──────────────────────────────────────────────────────
+  if (/food.*truck/.test(t)) return "food_truck";
+  if (/caminh[aã]o|van|ve[ií]culo|frota|fleet|vehicle.*wrap|envelopamento/.test(t)) return "vehicle_wrap";
+  // ─── PACKAGING SPECIFIC ───────────────────────────────────────────
+  if (/garrafa|bottle|r[oó]tulo.*bebida|wine.*label|beer.*label/.test(t)) return "beverage_bottle";
+  if (/\blata\b|can.*bebida|beverage.*can/.test(t)) return "beverage_can";
+  if (/copo|sleeve|cup|caf[eé].*copo|coffee.*cup/.test(t)) return "cup_sleeve";
+  if (/r[oó]tulo|label|adesivo.*produto/.test(all)) return "food_label";
+  if (/caixa.*produto|product.*box|unboxing|embalagem.*caixa/.test(t)) return "product_box";
+  if (/sacola.*compra|shopping.*bag|sacola.*loja/.test(t)) return "shopping_bag";
+  if (/gift.*box|caixa.*presente|kit.*presente/.test(t)) return "gift_box";
+  if (/\btag\b|etiqueta|hang.*tag/.test(t)) return "hang_tag";
+  if (/guardanapo|napkin|placemat|jogo.*americano|toalha.*mesa/.test(t)) return "napkin_placemat";
+  // ─── PACKAGING — specific product keywords ──────────────────────
+  if (/pote|pot|bowl|tigela|a[çc]a[ií]|sorvete|ice.*cream|iogurte|yogurt|salada|salad|poke/.test(all)) return "bowl_pot";
+  if (/bandeja|tray|forra[çc][aã]o|liner/.test(all)) return "tray_liner";
+  if (/wrapper|inv[oó]lucro|embrulho|papel.*wrap/.test(all)) return "wrapper_sleeve";
+  if (/porta.*copo|coaster|bolacha.*bar/.test(all)) return "coaster";
+  if (/card[aá]pio|menu.*impresso|menu.*print/.test(all)) return "menu_printed";
+  if (/wobbler|shelf.*talker|g[oô]ndola|etiqueta.*pre[çc]o|price.*tag/.test(all)) return "price_tag_shelf";
+  if (/tent.*card|display.*mesa/.test(all)) return "tent_card";
+  if (/standee|display.*ch[aã]o|totem.*impresso/.test(all)) return "standee_display";
+  if (/papel.*gordura|papel.*manteiga|grease.*proof|anti.*gordura|desengordurante/.test(all)) return "grease_proof_paper";
+  if (/guardanapeira|porta.*guardanapo|napkin.*holder|dispenser.*guardanapo/.test(all)) return "napkin_holder";
+  if (/caneca|x[ií]cara|mug|ceramic.*cup/.test(all)) return "cup_mug";
+  if (/pizza.*box|caixa.*pizza/.test(all)) return "pizza_box";
+  if (/bala|bombom|chocolate|candy|wrapper.*doce/.test(all)) return "candy_wrapper";
+  if (/fita.*adesiva|packaging.*tape|tape.*branded/.test(all)) return "packaging_tape";
+  if (/f[oó]sforo|matchbox|matches/.test(all)) return "matchbox";
+  if (/cadeira|mesa.*branded|banco.*branded|m[oó]vel|furniture/.test(all)) return "chair_furniture";
+  if (/geladeira|freezer|fridge/.test(all)) return "fridge_wrap";
+  if (/bandeira|flag|estandarte|galhardete|wind.*banner/.test(all)) return "flag_banner_fabric";
+  if (/capacho|doormat/.test(all)) return "doormat";
+  if (/rel[oó]gio.*parede|wall.*clock/.test(all)) return "wall_clock";
+  if (/agenda.*semana|weekly.*post|programa[çc][aã]o.*semana/.test(all)) return "weekly_agenda_post";
+  if (/cart[aã]o.*cr[eé]dito|cart[aã]o.*d[eé]bito|credit.*card|debit.*card/.test(all)) return "credit_debit_card";
+  if (/ingresso|ticket|voucher.*evento/.test(all)) return "ticket_event";
+  if (/embalagem|packaging|sacola|caixa|bag|delivery/.test(t)) return "delivery_packaging";
+  // ─── MERCH ────────────────────────────────────────────────────────
+  if (/polo|camisa.*polo/.test(t)) return "polo_uniform";
+  if (/bon[eé]|cap|chap[eé]u|hat/.test(t)) return "cap_hat";
+  if (/ecobag|tote|sacola.*algod[aã]o|sacola.*reutiliz/.test(t)) return "tote_bag";
+  if (/moletom|hoodie|blusa.*frio/.test(t)) return "hoodie";
+  if (/jaqueta|jacket|casaco|coat|bomber/.test(t)) return "jacket_coat";
+  if (/colete|vest/.test(t)) return "vest_colete";
+  if (/terno|suit|blazer|formal/.test(t)) return "suit_formal";
+  if (/t[eê]nis|sneaker|cal[çc]ado|sapato|shoe/.test(t)) return "sneakers_shoes";
+  if (/[oó]culos|sunglasses|eyewear/.test(t)) return "sunglasses";
+  if (/capa.*celular|phone.*case|capinha/.test(t)) return "phone_case";
+  if (/bolsa|purse|clutch|necessaire/.test(t)) return "branded_purse";
+  if (/caneta|pen/.test(t)) return "pen_branded";
+  if (/caderno|agenda|notebook|planner/.test(t)) return "notebook_planner";
+  if (/chaveiro|keychain/.test(t)) return "keychain";
+  if (/guarda.*chuva|umbrella|sombrinha/.test(t)) return "umbrella";
+  if (/squeeze|garrafa.*t[eé]rmica|water.*bottle|t[eé]rmica/.test(t)) return "water_bottle";
+  if (/mouse.*pad|desk.*mat/.test(t)) return "mouse_pad";
+  if (/crach[aá]|cord[aã]o|lanyard|badge.*id/.test(t)) return "lanyard_badge";
+  if (/\bpin\b|botton|broche/.test(t)) return "pin_button";
+  if (/almofada|cushion|pillow/.test(t)) return "pillow_cushion";
+  if (/toalha|towel/.test(t)) return "towel_branded";
+  if (/skate|prancha|surfboard|skateboard/.test(t)) return "skateboard_deck";
+  if (/pulseira|wristband/.test(t)) return "wristband";
+  if (/uniforme|camiseta|avental|camisa|apron/.test(t)) return "uniform_tshirt";
+  // ─── STATIONERY ───────────────────────────────────────────────────
+  if (/vale.*presente|gift.*card/.test(t)) return "gift_card";
+  if (/fidelidade|loyalty|vip.*card|member/.test(t)) return "loyalty_card";
+  if (/adesivo|sticker/.test(t)) return "sticker_sheet";
+  if (/selo|carimbo|wax.*seal|stamp/.test(t)) return "wax_seal_stamp";
+  if (/nota.*fiscal|invoice|recibo|receipt|comanda/.test(t)) return "invoice_receipt";
+  if (/envelope|papel.*timbrado|letterhead|correspond[eê]ncia/.test(t)) return "envelope_letterhead";
+  // ─── PRINT / OOH ─────────────────────────────────────────────────
+  if (/p[oô]ster|cartaz|poster/.test(t)) return "poster_print";
+  if (/flyer|panfleto|folheto/.test(t)) return "flyer_leaflet";
+  if (/folder|cat[aá]logo|brochure|tri.*fold/.test(t)) return "brochure_catalog";
+  if (/abrigo.*[oô]nibus|bus.*shelter|metr[oô]|transit/.test(t)) return "bus_shelter_ad";
+  if (/roll.*up|x.*banner|banner.*vertical|banner.*evento/.test(t)) return "banner_rollup";
+  if (/outdoor|billboard|ooh/.test(t)) return "outdoor_billboard";
+  // ─── DIGITAL ──────────────────────────────────────────────────────
+  if (/podcast|capa.*podcast|podcast.*cover/.test(t)) return "podcast_cover";
+  if (/[ií]cone.*app|app.*icon|favicon/.test(t)) return "app_icon";
+  if (/landing.*page|p[aá]gina.*destino/.test(t)) return "landing_page";
+  // ─── SOCIAL & CLASSIC ────────────────────────────────────────────
+  if (/card|cartão|visita/.test(t)) return "business_card";
+  if (/story|stories|reels/.test(t)) return "instagram_story";
+  if (/instagram|social|post|feed/.test(t)) return "social_post_square";
+  if (/email|newsletter/.test(t)) return "email_header";
+  if (/menu|cardápio|folder|brochure/.test(t)) return "brand_collateral";
+  if (/\bapp\b|mobile|interface|tela|screen|dashboard/.test(t)) return "app_mockup";
+  if (/banner|hero|site|web|landing|header|cover|capa/.test(t)) return "hero_visual";
+  if (/apresentação|slide|presentation/.test(t)) return "presentation_bg";
+
+  // ─── FALLBACK: search in full text (description + instruction) ───
+  if (/fachada|storefront/.test(all)) return "storefront_facade";
+  if (/food.*truck/.test(all)) return "food_truck";
+  if (/caminh[aã]o|van|ve[ií]culo|vehicle/.test(all)) return "vehicle_wrap";
+  if (/garrafa|bottle/.test(all)) return "beverage_bottle";
+  if (/\blata\b|beverage.*can/.test(all)) return "beverage_can";
+  if (/copo|cup|sleeve/.test(all)) return "cup_sleeve";
+  if (/outdoor|billboard/.test(all)) return "outdoor_billboard";
+  if (/p[oô]ster|poster|cartaz/.test(all)) return "poster_print";
+
+  return "brand_collateral";
+}
+
+/**
+ * Build scene/photography guidance based on detected type — used as
+ * STYLE hints, NOT as subject override. The user's description always
+ * determines WHAT is shown; this determines HOW it's photographed.
+ */
+function applicationSceneGuidance(key: AssetKey): string {
+  const scenes: Partial<Record<AssetKey, string>> = {
+    storefront_facade: "Architectural exterior photography. Eye-level street perspective, golden/blue hour, slight pedestrian blur.",
+    window_display: "Through-glass perspective, theatrical spot lighting, evening glow vs cool exterior.",
+    neon_sign: "Moody neon photography, dark wall mount, colored glow on surrounding surfaces.",
+    menu_board: "In-situ wall mount, warm ambient light, shallow DOF, textured wall backdrop.",
+    trade_show_booth: "Convention hall wide shot, modular booth system, spot lights and LED accents.",
+    digital_signage: "Totem/kiosk in modern interior, screen glow illuminating space, ambient light.",
+    food_truck: "Outdoor event/park, golden hour, string lights, steam wisps, queue blur.",
+    vehicle_wrap: "Urban street, daylight, 3/4 angle showing side + front, vibrant paint reflection.",
+    beverage_bottle: "Studio hero shot, rim light, condensation droplets, dark gradient background.",
+    beverage_can: "Studio hero, metallic sheen rim light, condensation, dark background with color glow.",
+    cup_sleeve: "In-hand or café counter, warm natural light, steam, lifestyle editorial.",
+    food_label: "Macro on styled surface, directional studio light, label texture detail visible.",
+    food_container: "Close-up product shot, clean surface, shallow DOF, premium packaging feel.",
+    bowl_pot: "Studio hero shot, clean styled surface, one closed + one open, premium packaging photography.",
+    tray_liner: "Overhead editorial, partially styled with props, paper texture visible.",
+    wrapper_sleeve: "Product partially wrapped showing design, studio or lifestyle setting.",
+    coaster: "Macro on bar/table, next to glass, warm ambient, material texture visible.",
+    menu_printed: "Open on table, restaurant context, warm light, editorial style.",
+    price_tag_shelf: "Macro on retail shelf edge, product blurred behind, realistic POS.",
+    tent_card: "On dining/retail table, warm ambient, tent card as focal point.",
+    standee_display: "In-store/entrance, realistic perspective, blurred people for scale.",
+    jacket_coat: "On person (face cropped) urban context, or premium hanger. Editorial lighting.",
+    vest_colete: "On person torso (face cropped) work context, or flat-lay. Professional.",
+    suit_formal: "Detail shots — lapel, lining, cuff. Premium tailoring, fashion editorial.",
+    sneakers_shoes: "3/4 angle hero shot, dramatic rim lighting, clean surface.",
+    sunglasses: "Studio shot on reflective surface, or with case. Lens reflection, dramatic light.",
+    phone_case: "Case on phone at angle, studio lighting, material texture visible.",
+    branded_purse: "Styled on surface or over shoulder (face cropped). Fashion editorial.",
+    pen_branded: "Macro on notebook/desk, shallow DOF, metal reflection visible.",
+    notebook_planner: "Desk flat-lay or 3/4, partially open showing endpapers. Premium paper.",
+    keychain: "Macro on textured surface, shallow DOF, material detail.",
+    umbrella: "Open from above showing pattern, or in-hand rain setting (face cropped).",
+    water_bottle: "Studio hero or gym/office lifestyle, condensation, premium finish.",
+    mouse_pad: "On styled desk with keyboard, overhead or 3/4. Modern workspace.",
+    lanyard_badge: "Flat-lay or hanging, clean background, badge detail visible.",
+    pin_button: "Macro on fabric or collection display, shallow DOF.",
+    pillow_cushion: "On couch/chair in styled interior, warm ambient light.",
+    towel_branded: "Folded on surface, draped, or beach context. Cotton texture visible.",
+    skateboard_deck: "Leaning on wall or mounted, art side hero, urban/studio.",
+    chair_furniture: "In-situ restaurant/café interior, warm ambient, architectural context.",
+    fridge_wrap: "In-store/bar context, fridge slightly open, interior glow, realistic PDV.",
+    flag_banner_fabric: "Outdoor, flag rippling in wind, blue sky, dynamic energy.",
+    doormat: "At entrance, door frame visible, welcoming perspective.",
+    wall_clock: "Mounted on textured wall, interior context, warm ambient.",
+    grease_proof_paper: "Wrapping food or lining basket/tray, food photography, warm light.",
+    napkin_holder: "On table/counter with branded napkins, contextual, warm ambient.",
+    cup_mug: "Lifestyle desk/café context, steam wisps, warm natural light.",
+    pizza_box: "Stack or single half-open, counter/table context, warm light.",
+    candy_wrapper: "Macro, artfully arranged, foil texture visible.",
+    packaging_tape: "Sealing branded box or unrolling, close-up print quality.",
+    matchbox: "Macro on bar counter, candle context, warm ambient.",
+    weekly_agenda_post: "Square 1:1 clean grid layout, organized, social-native design.",
+    credit_debit_card: "Slight angle on dark surface, metallic edge reflection, dramatic lighting.",
+    ticket_event: "Flat on surface or in-hand, editorial, premium paper stock.",
+    wristband: "On wrist (hand visible) or flat collection, event atmosphere.",
+    product_box: "Styled surface, partially open for unboxing hint, spot UV/foil detail visible.",
+    shopping_bag: "In-hand walking (face cropped) or shop counter, natural daylight.",
+    gift_box: "Flat-lay or 3/4 premium surface, partially open, ribbon/seal detail.",
+    hang_tag: "Macro on product/fabric, shallow DOF, paper fiber texture visible.",
+    napkin_placemat: "Overhead table setting, warm 45° light, fabric/paper texture emphasis.",
+    delivery_packaging: "Flat-lay or 3/4, editorial surface, cohesive kit arrangement.",
+    polo_uniform: "On-person torso (face cropped) or precision flat-lay, fabric texture.",
+    cap_hat: "3/4 angle floating or minimal stand, embroidery detail, studio light.",
+    tote_bag: "Over-shoulder urban (face cropped) or flat-lay with lifestyle props.",
+    hoodie: "On-person (face cropped at chin) urban/lifestyle, moody editorial light.",
+    uniform_tshirt: "On person face out of frame or flat-lay, editorial lighting.",
+    uniform_apron: "Kitchen/work context, face out of frame, warm natural light.",
+    gift_card: "Styled premium surface, card angled, envelope partially open.",
+    loyalty_card: "Premium surface alongside product/coffee, slight angle, foil detail.",
+    sticker_sheet: "Flat-lay, slightly scattered with overlap, soft overhead light.",
+    wax_seal_stamp: "Macro shot on paper, brass reflection, warm directional light.",
+    invoice_receipt: "Clipboard/desk flat-lay, clean professional, paper texture.",
+    envelope_letterhead: "Styled flat-lay, partially open envelope, patterned lining peek.",
+    poster_print: "Full-bleed vertical hero, gallery-quality print feel.",
+    flyer_leaflet: "A5/DL format, bold top half, clean info zone bottom.",
+    brochure_catalog: "Open on premium surface, cover + inside spread visible.",
+    bus_shelter_ad: "Backlit glass panel, evening urban, wet pavement reflections.",
+    banner_rollup: "Modern lobby/event space, clean floor, ambient light.",
+    outdoor_billboard: "Urban street, blue hour, bright illuminated billboard vs dim atmosphere.",
+    landing_page: "Browser/device frame, modern desk, conversion-oriented layout.",
+    podcast_cover: "Bold square graphic, minimal, reads at thumbnail and full size.",
+    app_icon: "Rounded square, simplified symbol, flat/minimal gradient, pixel-perfect.",
+    hero_visual: "Cinematic 16:9, three-point lighting, foreground-to-background depth.",
+    business_card: "3/4 angle on premium surface, marble/stone, sharp shadow.",
+    brand_collateral: "Overhead flat-lay, artfully arranged stationery, soft window light.",
+    instagram_carousel: "Square 1:1, bold asymmetric composition, thumb-stopping.",
+    instagram_story: "Full-bleed vertical 9:16, bold upper visual, safe zones.",
+    social_cover: "Wide 16:9, profile-safe left zone, bold right graphic.",
+    social_post_square: "Square 1:1, one dominant focal element, brand-strict.",
+    youtube_thumbnail: "16:9 high-drama, bold background, subject 55% left.",
+    presentation_bg: "Subtle micro-geometry, center 60% clear for content.",
+    email_header: "Ultra-wide 21:9 thin strip, left motif, right clear zone.",
+    app_mockup: "Device in 3/4 tilt, minimal desk, ambient bokeh.",
+    materials_board: "Top-down moodboard, curated swatches, precise grid.",
+  };
+  return scenes[key] ?? "Professional product/editorial photography. Premium quality.";
 }
 
 export function buildApplicationPrompt(
@@ -1982,19 +3731,7 @@ export function buildApplicationPrompt(
   const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
   const B = `"${data.brandName}"`;
 
-  const t = app.type.toLowerCase();
-  const detectedKey: AssetKey = /card|cartão|visita/.test(t) ? "business_card"
-    : /outdoor|billboard|ooh/.test(t) ? "outdoor_billboard"
-    : /story|stories|reels/.test(t) ? "instagram_story"
-    : /instagram|social|post|feed/.test(t) ? "social_post_square"
-    : /email|newsletter/.test(t) ? "email_header"
-    : /embalagem|packaging|sacola|caixa|bag|delivery/.test(t) ? "delivery_packaging"
-    : /uniforme|camiseta|avental|camisa/.test(t) ? "uniform_tshirt"
-    : /menu|cardápio|folder|brochure/.test(t) ? "brand_collateral"
-    : /\bapp\b|mobile|interface|tela|screen|dashboard/.test(t) ? "app_mockup"
-    : /banner|hero|site|web|landing|header|cover|capa/.test(t) ? "hero_visual"
-    : /apresentação|slide|presentation/.test(t) ? "presentation_bg"
-    : "brand_collateral";
+  const detectedKey = detectApplicationAssetKey(app.type, app.description, customInstruction);
 
   const q = providerQuality(provider, detectedKey, archetypeName);
   const generativeIntent = buildImageGenerationIntentSummary({
@@ -2016,29 +3753,69 @@ export function buildApplicationPrompt(
   const idAssets = identityAssetsDirective(ctx, detectedKey);
   const humanLayer = humanEssenceLayer(detectedKey, ctx, data);
 
+  // ═══════════════════════════════════════════════════════════════════
+  // USER INTENT IS KING — customInstruction and app details come FIRST
+  // The model prioritizes early tokens, so user-specified subject and
+  // creative direction MUST appear before generic brand context.
+  // ═══════════════════════════════════════════════════════════════════
+
+  const hasCustomDirection = !!(customInstruction?.trim());
+  const hasUserDescription = app.description !== "Descreva esta aplicação da marca" && app.description.trim().length > 5;
+
+  // Build the SUBJECT block — what the user actually wants to see
+  const subjectBlock = parts(
+    // User's custom instruction is the #1 priority — it overrides everything
+    hasCustomDirection
+      ? `PRIORITY CREATIVE DIRECTION (follow this above all other instructions): ${customInstruction}.`
+      : null,
+    // User's app type defines the object
+    `SUBJECT: ${app.type} for brand ${B} (${data.industry}).`,
+    // User's description adds detail
+    hasUserDescription
+      ? `DETAILED BRIEF: ${app.description}.`
+      : null,
+    // Warn the model not to substitute the subject
+    hasCustomDirection || hasUserDescription
+      ? `CRITICAL: Generate EXACTLY what is described above. Do NOT substitute the subject for a different product, object, or food item. The subject must match the user's description precisely.`
+      : null,
+  );
+
+  // Scene guidance from detection — HOW to photograph, not WHAT to show
+  const sceneHints = applicationSceneGuidance(detectedKey);
+
   return parts(
     prefix,
-    `Professional brand application — ${app.type} for ${B} (${data.industry}).`,
-    soul, journey,
-    `APPLICATION: ${app.description}.`,
+
+    // ── 1. USER INTENT (highest priority — early in prompt) ────────
+    subjectBlock,
+
+    // ── 2. FORMAT & MATERIALS ─────────────────────────────────────
     app.dimensions ? `DIMENSIONS/FORMAT: ${app.dimensions}. Aspect ratio: ${aspectRatio}.` : `ASPECT RATIO: ${aspectRatio}.`,
     app.materialSpecs && `MATERIAL & FINISH (render with haptic realism): ${app.materialSpecs}.`,
     app.layoutGuidelines && `LAYOUT RULES: ${app.layoutGuidelines}.`,
     app.typographyHierarchy && `TYPOGRAPHY HIERARCHY: ${app.typographyHierarchy}.`,
     app.artDirection && `ART DIRECTION: ${app.artDirection}.`,
     (app.substrates && app.substrates.length > 0) ? `SUBSTRATES & MATERIALS: ${app.substrates.join(", ")}.` : null,
+
+    // ── 3. SCENE & PHOTOGRAPHY STYLE (from detection) ─────────────
+    `PHOTOGRAPHY STYLE: ${sceneHints}`,
+    soul, journey,
+
+    // ── 4. BRAND SYSTEM (consistent identity) ─────────────────────
     `BRAND DNA: personality=${ctx.personality}. Values=${ctx.values}. Tone=${ctx.toneOfVoice}.`,
-    `COLOR PALETTE (strict): ${ctx.allColors}.`,
+    `COLOR PALETTE (strict — use ONLY these colors): ${ctx.allColors}.`,
     `LOGO: ${ctx.logoPrimary}. Symbol: ${ctx.logoSymbol}.`,
+    `TYPOGRAPHY: ${ctx.displayFont} for headlines, ${ctx.bodyFont} for body.`,
     tree, idAssets, sensory,
     `VISUAL STYLE: ${ctx.visualStyle}. Photography: ${ctx.photoStyle}.`,
     `INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
     `COMPOSITION: ${ctx.composition}. Mood: ${ctx.moodWords}.`,
     ctx.tagline,
-    `REFERENCES: ${ctx.artisticRef}.`,
     ctx.competitiveAngle,
     humanLayer,
-    customInstruction ? `CUSTOM CREATIVE DIRECTION: ${customInstruction}.` : null,
-    sTags, q, neg(ctx, provider),
+
+    // ── 5. QUALITY & NEGATIVES ────────────────────────────────────
+    sTags, q,
+    neg(ctx, provider, "wrong product, wrong food item, subject mismatch, generic stock"),
   );
 }

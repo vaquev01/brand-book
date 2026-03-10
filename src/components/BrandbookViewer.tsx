@@ -24,7 +24,7 @@ import {
   pickSectionHeroUrl,
   resolveImmersiveAssets,
 } from "./brandbookViewerAssetSelectors";
-import { buildSectionDefs, CATEGORIES } from "./brandbookViewerSections";
+import { buildSectionDefs, CATEGORIES, CATEGORY_ICONS, CATEGORY_DESCRIPTIONS } from "./brandbookViewerSections";
 
 const SECTION_HERO_ASSETS: Record<string, string[]> = {
   "dna": ["hero_visual"],
@@ -60,17 +60,12 @@ const SECTION_ACCENT_ASSETS: Record<string, string[]> = {
 };
 
 const CATEGORY_ATMO_ASSETS: Record<string, string[]> = {
-  "Essência da Marca": ["hero_visual"],
-  "Público-Alvo": ["hero_lifestyle", "hero_visual"],
-  "Identidade Verbal": ["presentation_bg"],
-  "Identidade Visual": ["brand_collateral", "logo_primary"],
-  "Paleta de Cores": ["materials_board", "brand_pattern"],
-  "Tipografia": ["presentation_bg", "materials_board"],
-  "Sistema Visual": ["hero_visual", "hero_lifestyle"],
-  "Padrões Gráficos": ["brand_pattern", "brand_mascot"],
-  "Design System": ["app_mockup", "presentation_bg"],
-  "Aplicações da Marca": ["delivery_packaging", "business_card", "brand_collateral"],
-  "Diretrizes de Uso": ["outdoor_billboard", "presentation_bg"],
+  "Estratégia": ["hero_visual", "hero_lifestyle"],
+  "Linguagem": ["presentation_bg"],
+  "Identidade Visual": ["brand_collateral", "logo_primary", "materials_board", "brand_pattern"],
+  "Sistema Visual": ["hero_visual", "hero_lifestyle", "brand_pattern", "brand_mascot"],
+  "Aplicações": ["app_mockup", "delivery_packaging", "business_card", "brand_collateral"],
+  "Operacional": ["outdoor_billboard", "presentation_bg"],
 };
 
 interface Props {
@@ -115,6 +110,9 @@ export function BrandbookViewer({
   const [presentationMode, setPresentationMode] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [genBarOpen, setGenBarOpen] = useState(false);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [hiddenSections, setHiddenSections] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
   const noop = () => {};
   const imgGen = useImageGeneration({
@@ -147,12 +145,39 @@ export function BrandbookViewer({
     .filter((s) => s.when)
     .map((s, idx) => ({ ...s, num: idx + 1 }));
 
-  const byCategory = CATEGORIES
+  // All sections by category (for Sumário — includes hidden for toggle UI)
+  const allByCategory = CATEGORIES
     .map((cat) => ({
       cat,
       items: sections.filter((s) => s.category === cat),
     }))
     .filter((g) => g.items.length > 0);
+
+  // Visible sections by category (filtered by hiddenSections)
+  const byCategory = allByCategory
+    .map((g) => ({
+      cat: g.cat,
+      items: g.items.filter((s) => !hiddenSections.has(s.id)),
+    }))
+    .filter((g) => g.items.length > 0);
+
+  const toggleSectionVisibility = useCallback((sectionId: string) => {
+    setHiddenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
+      return next;
+    });
+  }, []);
+
+  const toggleCategoryCollapse = useCallback((cat: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  }, []);
 
   const theme = useMemo(() => getImmersiveTheme(data), [data]);
 
@@ -261,6 +286,25 @@ export function BrandbookViewer({
     els.forEach((el) => { if (!el.classList.contains("revealed")) obs.observe(el); });
     return () => obs.disconnect();
   });
+
+  // Track which section is currently in view for the mini-nav
+  useEffect(() => {
+    const sectionEls = sections.map(s => document.getElementById(s.id)).filter(Boolean) as HTMLElement[];
+    if (sectionEls.length === 0) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setActiveSectionId(e.target.id);
+            break;
+          }
+        }
+      },
+      { threshold: 0.15, rootMargin: "-80px 0px -50% 0px" }
+    );
+    sectionEls.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, [sections]);
 
   // Auto-open gen bar when generation starts
   useEffect(() => {
@@ -451,6 +495,7 @@ export function BrandbookViewer({
                 ? "text-white shadow-lg"
                 : "text-gray-600 bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
             }`}
+            title="Aplica as cores e texturas da marca ao layout do brandbook"
             style={
               immersive
                 ? {
@@ -467,6 +512,7 @@ export function BrandbookViewer({
             type="button"
             onClick={() => { setCurrentSlide(0); setPresentationMode(true); }}
             className="text-[11px] font-bold px-4 py-2.5 rounded-xl border transition-all duration-300 bg-gray-900 hover:bg-gray-800 text-white border-gray-900 hover:shadow-lg"
+            title="Apresentação fullscreen do brandbook — navegue com setas"
           >
             <span className="flex items-center gap-2">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
@@ -622,6 +668,31 @@ export function BrandbookViewer({
         </div>
       )}
 
+      {/* Floating mini-nav — desktop only */}
+      <nav className="no-print hidden xl:block fixed left-4 top-1/2 -translate-y-1/2 z-40 max-h-[70vh] overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col gap-0.5 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 shadow-sm px-1.5 py-2">
+          {byCategory.map((g) => {
+            const isActive = g.items.some(s => s.id === activeSectionId);
+            const catIcon = CATEGORY_ICONS[g.cat as keyof typeof CATEGORY_ICONS] ?? "";
+            return (
+              <a
+                key={g.cat}
+                href={`#${g.items[0].id}`}
+                className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                  isActive
+                    ? "text-gray-900 bg-white shadow-sm"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-white/60"
+                }`}
+                title={g.cat}
+              >
+                <span className="text-xs">{catIcon}</span>
+                {g.cat}
+              </a>
+            );
+          })}
+        </div>
+      </nav>
+
       <section className="page-break mb-8 md:mb-9" id="sumario">
         <div
           className={immersive ? "bb-section-shell" : "rounded-[1.7rem] border px-3.5 py-4 md:px-5 md:py-5"}
@@ -692,7 +763,12 @@ export function BrandbookViewer({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 items-start">
-            {byCategory.map((g) => (
+            {allByCategory.map((g) => {
+              const isCollapsed = collapsedCategories.has(g.cat);
+              const visibleCount = g.items.filter(s => !hiddenSections.has(s.id)).length;
+              const catIcon = CATEGORY_ICONS[g.cat as keyof typeof CATEGORY_ICONS] ?? "";
+              const catDesc = CATEGORY_DESCRIPTIONS[g.cat as keyof typeof CATEGORY_DESCRIPTIONS] ?? "";
+              return (
               <div
                 key={g.cat}
                 className={`rounded-2xl p-4 shadow-sm ${
@@ -701,52 +777,108 @@ export function BrandbookViewer({
                 style={immersive ? undefined : defaultCardStyle}
               >
                 {immersive && <div className="bb-sumario-mascot" aria-hidden="true" />}
-                <div className="mb-2.5 flex items-start justify-between gap-3">
-                  <h3
-                    className={`text-[11px] font-extrabold uppercase tracking-[0.25em] ${
-                      immersive ? "bb-sumario-cat" : ""
-                    }`}
-                    style={immersive ? undefined : { color: rgba(theme.primaryHex, 0.62), fontFamily: `'${theme.headingFont}', sans-serif` }}
-                  >
-                    {g.cat}
-                  </h3>
-                  {!immersive && (
-                    <span
-                      className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
-                      style={{ background: rgba(theme.primaryHex, 0.05), color: rgba(theme.primaryHex, 0.52) }}
+                <button
+                  type="button"
+                  onClick={() => toggleCategoryCollapse(g.cat)}
+                  className="w-full text-left mb-2.5 flex items-start justify-between gap-3 group"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm flex-shrink-0">{catIcon}</span>
+                    <div className="min-w-0">
+                      <h3
+                        className={`text-[11px] font-extrabold uppercase tracking-[0.25em] ${
+                          immersive ? "bb-sumario-cat" : ""
+                        }`}
+                        style={immersive ? undefined : { color: rgba(theme.primaryHex, 0.62), fontFamily: `'${theme.headingFont}', sans-serif` }}
+                      >
+                        {g.cat}
+                      </h3>
+                      {!immersive && (
+                        <p className="text-[10px] text-gray-400 mt-0.5 leading-snug">{catDesc}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {!immersive && (
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums"
+                        style={{ background: rgba(theme.primaryHex, 0.05), color: rgba(theme.primaryHex, 0.52) }}
+                      >
+                        {visibleCount}/{g.items.length}
+                      </span>
+                    )}
+                    <svg
+                      className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+                      fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
                     >
-                      {String(g.items.length).padStart(2, "0")} seções
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  {g.items.map((s) => (
-                    <a
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </div>
+                </button>
+                {!isCollapsed && (
+                <div className="space-y-1">
+                  {g.items.map((s) => {
+                    const isHidden = hiddenSections.has(s.id);
+                    const isActive = activeSectionId === s.id;
+                    return (
+                    <div
                       key={s.id}
-                      href={`#${s.id}`}
-                      className={`block rounded-xl px-3 py-2 transition ${immersive ? "" : "hover:bg-gray-50"}`}
-                      style={immersive ? undefined : undefined}
+                      className={`group/item flex items-center gap-1 rounded-xl transition ${
+                        isHidden ? "opacity-40" : ""
+                      }`}
+                      style={isActive && !isHidden ? { background: rgba(theme.primaryHex, 0.06), boxShadow: `inset 0 0 0 1px ${rgba(theme.primaryHex, 0.15)}` } : undefined}
                     >
-                      <div className="flex items-start gap-3">
+                      <a
+                        href={isHidden ? undefined : `#${s.id}`}
+                        className={`flex-1 flex items-start gap-3 rounded-xl px-3 py-2 transition min-w-0 ${
+                          isHidden ? "cursor-default" : immersive ? "" : "hover:bg-gray-50"
+                        }`}
+                        onClick={isHidden ? (e: React.MouseEvent) => e.preventDefault() : undefined}
+                      >
                         <span
-                          className={`text-xs font-bold mt-0.5 tabular-nums ${
-                            immersive ? "bb-num" : "text-gray-400"
+                          className={`text-xs font-bold mt-0.5 tabular-nums flex-shrink-0 ${
+                            immersive ? "bb-num" : isActive ? "" : "text-gray-400"
                           }`}
+                          style={isActive && !immersive ? { color: theme.primaryHex } : undefined}
                         >
                           {String(s.num).padStart(2, "0")}
                         </span>
-                        <span className="font-semibold leading-snug" style={immersive ? undefined : { color: "#172033" }}>
+                        <span
+                          className={`font-semibold leading-snug ${isHidden ? "line-through" : ""}`}
+                          style={immersive ? undefined : { color: isActive ? theme.primaryHex : "#172033" }}
+                        >
                           {s.title}
                         </span>
-                      </div>
-                    </a>
-                  ))}
+                      </a>
+                      {/* Quick action: toggle visibility */}
+                      <button
+                        type="button"
+                        onClick={() => toggleSectionVisibility(s.id)}
+                        className="no-print opacity-0 group-hover/item:opacity-100 flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                        title={isHidden ? "Mostrar seção" : "Esconder seção"}
+                      >
+                        {isHidden ? (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12c1.292 4.338 5.31 7.5 10.066 7.5.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    );
+                  })}
                 </div>
-                {!immersive && (
+                )}
+                {!immersive && !isCollapsed && (
                   <div className="mt-3 h-px" style={{ background: `linear-gradient(90deg, ${rgba(theme.primaryHex, 0.12)} 0%, transparent 100%)` }} />
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Brand identity watermark in sumário */}
@@ -1073,6 +1205,19 @@ export function BrandbookViewer({
                 {data.industry}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Non-immersive footer */}
+      {!immersive && (
+        <div className="no-print mt-12 mb-6 text-center" data-reveal>
+          <div className="inline-flex items-center gap-2 text-xs text-gray-400 font-medium">
+            <span>{data.brandName}</span>
+            <span>·</span>
+            <span>Manual de Identidade Visual</span>
+            <span>·</span>
+            <span>{new Date().getFullYear()}</span>
           </div>
         </div>
       )}

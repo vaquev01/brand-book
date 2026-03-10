@@ -16,15 +16,15 @@ type Tab =
   | "imagebriefing";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "dna", label: "Essência da Marca", icon: "🧬" },
-  { id: "estrategia", label: "Público-Alvo", icon: "🎯" },
-  { id: "verbal", label: "Identidade Verbal", icon: "🗣️" },
-  { id: "logo", label: "Identidade Visual", icon: "🖼️" },
-  { id: "cores", label: "Paleta de Cores", icon: "🎨" },
+  { id: "dna", label: "Estratégia", icon: "🧭" },
+  { id: "estrategia", label: "Personas", icon: "🎯" },
+  { id: "verbal", label: "Linguagem", icon: "🗣️" },
+  { id: "logo", label: "Logo", icon: "🖼️" },
+  { id: "cores", label: "Cores", icon: "🎨" },
   { id: "tipografia", label: "Tipografia", icon: "🔤" },
   { id: "keyvisual", label: "Sistema Visual", icon: "✦" },
-  { id: "aplicacoes", label: "Aplicações da Marca", icon: "🖨️" },
-  { id: "imagebriefing", label: "Diretrizes de Uso", icon: "📋" },
+  { id: "aplicacoes", label: "Aplicações", icon: "🖨️" },
+  { id: "imagebriefing", label: "Operacional", icon: "📋" },
 ];
 
 interface FieldProps {
@@ -287,7 +287,7 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
       <div className="flex items-center justify-between border-b border-slate-200/80 bg-white/60 px-5 py-4">
         <div>
           <h3 className="font-bold text-gray-900">Editar Brandbook</h3>
-          <p className="mt-0.5 text-xs text-gray-500">Edite qualquer campo abaixo e clique em Salvar</p>
+          <p className="mt-0.5 text-xs text-gray-500">Edite os campos e salve</p>
         </div>
         <div className="flex gap-2">
           <button onClick={onCancel} className="app-secondary-button px-4 py-2 text-sm">Cancelar</button>
@@ -478,7 +478,7 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
                   <div className="app-surface-soft border-2 border-dashed border-slate-200 py-8 text-center text-gray-400">
                     <div className="mb-2 text-3xl">🐾</div>
                     <p className="text-sm font-medium">Nenhum mascote definido</p>
-                    <p className="mt-1 text-xs">Clique em &quot;+ Novo Mascote&quot; para adicionar um personagem à marca</p>
+                    <p className="mt-1 text-xs">Adicione um personagem à marca</p>
                   </div>
                 )}
                 <div className="space-y-4">

@@ -93,7 +93,7 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
       <div>
         <h3 className="font-bold text-base mb-1">Refinar Brandbook com IA</h3>
         <p className="text-sm text-gray-500">
-          Descreva o que você quer mudar. A IA aplicará a instrução de forma coerente em todo o brandbook.
+          Descreva as mudanças. A IA aplica em todo o brandbook.
         </p>
       </div>
 
@@ -137,7 +137,7 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
           className="app-textarea"
         />
         <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-          O sistema tenta extrair título/descrição/trechos dessas páginas para orientar a IA. Alguns sites (ex: Instagram) podem bloquear.
+          Extrai metadados das URLs para orientar a IA. Alguns sites podem bloquear.
         </p>
       </div>
 
@@ -161,7 +161,7 @@ export function RefinePanel({ brandbook, apiKeys, strategyProvider, onRefined }:
         {loading ? (
           <>
             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Refinando... (pode levar até 40s)
+            Refinando... (até 40s)
           </>
         ) : (
           <>

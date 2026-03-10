@@ -15,17 +15,12 @@ const imgGen = {
 describe("brandbookViewerSections", () => {
   it("exports the expected category order", () => {
     expect(CATEGORIES).toEqual([
-      "Essência da Marca",
-      "Público-Alvo",
-      "Identidade Verbal",
+      "Estratégia",
+      "Linguagem",
       "Identidade Visual",
-      "Paleta de Cores",
-      "Tipografia",
       "Sistema Visual",
-      "Padrões Gráficos",
-      "Design System",
-      "Aplicações da Marca",
-      "Diretrizes de Uso",
+      "Aplicações",
+      "Operacional",
     ]);
   });
 

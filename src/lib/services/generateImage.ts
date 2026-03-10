@@ -477,14 +477,19 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
         };
         const isMascotAsset = assetKey === "brand_mascot";
         const isLogoAsset = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
+        const isApplicationAsset = assetKey?.startsWith("app_");
         const refAnchor = hasRefImages
           ? [
               "REFERENCE IMAGES PROVIDED:",
               isLogoAsset
                 ? "- You are generating a corporate LOGO. Treat the attached images ONLY as structural or geometric inspiration. IGNORE their photographic or illustrative style completely. Force the output to be a flat 2D vector graphic."
+                : isApplicationAsset
+                ? "- CRITICAL: The reference image shows EXACTLY what the user wants to create. Replicate the same SUBJECT (product, object, item type) from the reference. Apply the brand identity (colors, logo, patterns) to that exact type of object. Do NOT substitute it with a different product or item."
                 : "- Treat all attached images as hard style anchors (brand system, motifs, line weights, textures, lighting).",
               "- If any attached image contains a logo/wordmark/symbol, do NOT redesign it. Replicate the same logo exactly.",
-              isMascotAsset
+              isApplicationAsset
+                ? "- Match the reference's: product type, shape, proportions, materials, camera angle, and styling. Change ONLY the branding to match the brand system."
+                : isMascotAsset
                 ? "- You ARE generating a mascot. Derive the mascot style from the references and the STYLE_TREE. Do not introduce unrelated motifs."
                 : "- Do not introduce new symbols, mascots, or unrelated motifs beyond what is present/derivable from the references and the STYLE_TREE.",
               "- Keep one coherent visual system across outputs (same art direction).",

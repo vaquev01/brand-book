@@ -59,7 +59,7 @@ export default function OnboardingPage() {
           {step === 0 && (
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">Qual é o nome da sua marca?</h2>
-              <p className="text-slate-400 mb-6">Pode ser um projeto existente ou uma nova ideia</p>
+              <p className="text-slate-400 mb-6">Projeto existente ou nova ideia</p>
               <input
                 type="text"
                 value={name}
@@ -75,7 +75,7 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">Qual é o setor da marca?</h2>
-              <p className="text-slate-400 mb-6">Isso ajuda a IA a personalizar o brandbook</p>
+              <p className="text-slate-400 mb-6">Personaliza o resultado da IA</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {SECTORS.map(s => (
                   <button
@@ -98,11 +98,11 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">Descreva sua marca</h2>
-              <p className="text-slate-400 mb-6">Quanto mais detalhes, melhor o resultado da IA</p>
+              <p className="text-slate-400 mb-6">Mais detalhes = melhor resultado</p>
               <textarea
                 value={briefing}
                 onChange={e => setBriefing(e.target.value)}
-                placeholder={`Descreva a essência de "${name}": valores, público-alvo, personalidade, diferenciais...`}
+                placeholder={`Essência de "${name}": valores, público, personalidade, diferenciais...`}
                 rows={5}
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 resize-none"
                 autoFocus

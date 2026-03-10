@@ -49,43 +49,33 @@ function slugify(s: string): string {
 }
 
 const FORBIDDEN_ICON_TOKENS = new Set([
-  "http",
-  "https",
-  "www",
-  "com",
-  "placeholder",
-  "undefined",
-  "null",
-  "temp",
-  "sample",
-  "mock",
-  "image",
-  "img",
-  "icon",
-  "icons",
-  "asset",
-  "assets",
-  "vector",
-  "svg",
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "webp",
-  "logo",
-  "brand",
-  "marca",
-  "symbol",
-  "simbolo",
+  "http", "https", "www", "com", "co", "org", "net", "io",
+  "placeholder", "placehol", "undefined", "null", "temp", "sample", "mock",
+  "image", "img", "icon", "icons", "asset", "assets", "vector", "vectors",
+  "svg", "png", "jpg", "jpeg", "gif", "webp", "avif",
+  "logo", "brand", "marca", "symbol", "simbolo",
+  "file", "upload", "download", "blob", "base64", "data",
+  "default", "generic", "test", "example", "lorem",
+  "400x400", "300x300", "200x200", "100x100",
 ]);
 
+/** Returns true if a raw string looks like a URL or path, not a semantic concept */
+function looksLikeUrlOrPath(value: string): boolean {
+  return /^https?:|^www\.|\.com|\.co\b|\.svg|\.png|\.jpg|placehol|\/\/|%[0-9a-f]{2}/i.test(value);
+}
+
 function cleanSemanticCandidate(value: string): string {
+  // Reject anything that looks like a URL/path before even trying
+  if (looksLikeUrlOrPath(value)) return "";
+
   const tokens = slugify(value)
     .split("-")
     .map((token) => token.trim())
     .filter((token) => token.length > 1)
     .filter((token) => !FORBIDDEN_ICON_TOKENS.has(token))
-    .filter((token) => !/^\d+$/.test(token));
+    .filter((token) => !/^\d+$/.test(token))
+    // Also reject hex-looking tokens (color codes, hashes)
+    .filter((token) => !/^[0-9a-f]{6,}$/i.test(token));
 
   if (tokens.length === 0) return "";
   return tokens.slice(0, 3).join("-");
@@ -96,8 +86,10 @@ function collectSemanticCandidates(values: Array<string | null | undefined>, lim
 
   for (const value of values) {
     if (!value) continue;
+    if (looksLikeUrlOrPath(value)) continue;
     const cleaned = cleanSemanticCandidate(value);
     if (!cleaned) continue;
+    if (cleaned.length < 3) continue; // Too short to be meaningful
     if (!out.includes(cleaned)) out.push(cleaned);
     if (out.length >= limit) break;
   }
@@ -123,75 +115,131 @@ function buildFallbackAssetPackPlan(params: {
     .slice(0, 8);
 
   return {
-    creativeThesis: `Criar um sistema de assets próprio para ${params.brandName}, com leitura imediata de marca e zero aparência de biblioteca genérica.`,
-    shapeLanguage: ["contornos distintivos", "ritmo proprietário", "formas com assinatura de marca"],
-    coreMotifs: motifSource,
-    avoidMotifs: ["ícones padrão de UI", "placeholders", "formas genéricas sem repertório da marca"],
+    creativeThesis: `Criar um sistema de assets exclusivo para ${params.brandName} que transmita a alma da marca em cada traço. Nenhum asset deve parecer vindo de uma biblioteca — todos devem ser reconhecíveis como parte de ${params.brandName}.`,
+    shapeLanguage: ["contornos com personalidade própria", "ritmo visual proprietário", "formas derivadas do universo da marca", "acabamentos consistentes entre si"],
+    coreMotifs: motifSource.length > 0 ? motifSource : [params.brandName.toLowerCase(), "essência", "identidade", "expressão"],
+    avoidMotifs: ["ícones de UI genéricos (home, user, settings, search)", "placeholders", "formas geométricas puras sem significado", "clichês do setor", "SVGs com menos de 3 primitivas"],
     bucketDirectives: {
-      icons: `Cada ícone deve traduzir um aspecto concreto do universo de ${params.brandName} em vez de símbolos genéricos do setor ${params.industry || "da marca"}.`,
-      elements: `Elementos abstratos devem parecer peças premium de sistema visual derivadas de ${params.objects || params.symbols || params.brandName}.`,
-      patterns: `O pattern deve ser seamless e nascer de ${params.patternDesc || params.brandName}, com ritmo reconhecível da marca.`,
-      motion: `Os motions devem animar gestos ligados a ${params.motionDesc || params.brandName}, sem spinner circular genérico.`,
+      icons: `Cada ícone deve traduzir um aspecto CONCRETO e VISUAL do universo de ${params.brandName}. Use traços com personalidade, não linhas genéricas. Cada ícone deve ter no mínimo 2 paths/primitivas SVG e parecer parte de uma família coesa.`,
+      elements: `Elementos são composições visuais premium para uso em embalagens, posts, papelaria e apresentações. Cada um deve ter no mínimo 6 primitivas SVG (paths, circles, rects). São: molduras, divisores, grafismos, badges, texturas. Derivados de ${params.objects || params.symbols || params.brandName}.`,
+      patterns: `O pattern deve ser seamless com <defs><pattern> e patternUnits, nascido de ${params.patternDesc || params.brandName}. Ritmo visual reconhecível, não abstração vazia.`,
+      motion: `Os motions devem animar um gesto que tenha a ver com ${params.motionDesc || params.brandName} — NUNCA um spinner circular genérico. Use <animate> ou <animateTransform>.`,
     },
     iconPlan: params.iconNames.map((name) => ({
       path: `vectors/icons/${name}.svg`,
       label: name.replace(/-/g, " "),
       concept: name.replace(/-/g, " "),
-      rationale: `Representar ${name.replace(/-/g, " ")} como parte de uma família proprietária de ícones da marca.`,
+      rationale: `Desenhar "${name.replace(/-/g, " ")}" com a linguagem visual de ${params.brandName}, usando traços e formas que ecoem a personalidade da marca.`,
     })),
   };
 }
 
+/** Industry-specific icon vocabularies — each word is a CONCRETE, drawable concept */
+const INDUSTRY_ICON_VOCAB: [string[], string[]][] = [
+  // [keywords to match industry], [icon concepts]
+  [["bar", "drinks", "bebida", "cocktail"], ["brinde", "coquetel", "balcao", "chama", "espeto", "copo-artesanal", "destilado", "gelo", "barril", "taco-de-limao"]],
+  [["café", "coffee"], ["grao-cafe", "xicara-fumegante", "coador-artesanal", "vapor-aroma", "torra", "barista-mao", "latte-art", "moedor", "sachê", "borra"]],
+  [["restaurante", "food", "gastro", "alimenta", "culinaria"], ["prato-servido", "fogo-fogao", "talheres-cruzados", "panela", "tempero-erva", "mesa-posta", "azeite", "receita-aberta", "cebolinha", "fatia"]],
+  [["moda", "fashion", "roupa", "vestuario"], ["tecido-dobra", "etiqueta-costura", "cabide-minimal", "agulha-linha", "atelier-manequim", "retalho", "botao", "caimento", "alfaiate", "textura-trama"]],
+  [["tech", "tecnologia", "software", "saas", "startup", "digital"], ["circuito-nodo", "malha-dados", "cursor-ponteiro", "pixel-grid", "pulso-digital", "conexao-api", "deploy-seta", "terminal-prompt", "cloud-sync", "modulo-bloco"]],
+  [["fitness", "esporte", "gym", "academia", "wellness"], ["energia-raio", "pulso-batimento", "movimento-corpo", "haltere", "medalha-conquista", "pista-corrida", "cronometro", "resistencia-mola", "yoga-pose", "hidratacao"]],
+  [["beleza", "beauty", "cosmetic", "estetica", "skincare"], ["petala-flor", "pincel-aplicador", "frasco-gota", "brilho-estrela", "ritual-mao", "espelho-reflexo", "textura-pele", "essencia-aroma", "mascara-facial", "conta-gotas"]],
+  [["música", "music", "audio", "som", "podcast"], ["vinil-disco", "onda-sonora", "batida-ritmo", "equalizador-barra", "palco-arco", "partitura", "amplificador", "fone-ouvido", "mic-captacao", "frequencia"]],
+  [["viagem", "travel", "turismo", "hotel", "hospeda"], ["horizonte-montanha", "rota-caminho", "mala-viajante", "compasso-direcao", "asa-voo", "ancora-porto", "mapa-dobrado", "tenda-aventura", "farol-guia", "passaporte"]],
+  [["educação", "educa", "escola", "curso", "ensino", "edtech"], ["livro-aberto", "lampada-ideia", "lousa-giz", "diploma-selo", "lapis-criativo", "cerebro-sinapse", "palestra-mic", "caderno-nota", "globo-mundo", "graduacao"]],
+  [["saude", "health", "medic", "farma", "clinica", "hospital"], ["batimento-coracao", "capsula-remedio", "estetoscopio", "folha-natural", "escudo-protecao", "gota-pura", "dna-helice", "termometro", "mao-cuidado", "balanca-equilibrio"]],
+  [["finança", "financ", "fintech", "banco", "invest", "pagamento"], ["grafico-crescimento", "cofre-seguro", "moeda-empilhada", "transferencia-seta", "carteira-digital", "escudo-transacao", "porcentagem", "balanca-justica", "chave-acesso", "relatorio-dash"]],
+  [["imobili", "construc", "arquitetura", "engenharia"], ["planta-projeto", "tijolo-modular", "telhado-casa", "compasso-tecnico", "viga-estrutura", "janela-luz", "grua-obra", "piso-pavimento", "blueprint", "nivel-bolha"]],
+  [["pet", "veterinar", "animal"], ["pata-pegada", "osso-brinquedo", "coleira-tag", "racao-tigela", "bigode-gato", "cauda-alegre", "casinha-pet", "pegada-trilha", "orelha-levantada", "cobrinha-brincalhona"]],
+  [["ecommerce", "loja", "varejo", "retail", "marketplace"], ["sacola-compra", "etiqueta-preco", "carrinho-compra", "caixa-entrega", "estrela-avaliacao", "filtro-busca", "codigo-barras", "oferta-selo", "embalagem-presente", "rastreio-rota"]],
+];
+
+/** Universal icon concepts that work for any brand — based on brand primitives, not UI */
+const UNIVERSAL_BRAND_ICONS = [
+  "selo-qualidade", "gesto-assinatura", "ritmo-visual", "textura-materia",
+  "origem-raiz", "horizonte-visao", "conexao-ponte", "escudo-confianca",
+  "chama-energia", "folha-crescimento", "onda-fluxo", "prisma-perspectiva",
+  "ancora-solidez", "farol-direcao", "cristal-clareza", "espiral-evolucao",
+];
+
 function deriveBrandIconNames(bb: BrandbookData, brandName: string, industry: string): string[] {
+  const brandSlug = cleanSemanticCandidate(brandName) || "marca";
+
+  // 1. Collect semantic candidates from brandbook data (safe extraction)
+  const rawSources: Array<string | null | undefined> = [];
+
+  // Logo symbol — often the most brand-specific element
   const logoSymbol = (bb.logo?.symbol ?? "").trim();
-  const objects = (bb.keyVisual?.objects ?? []).slice(0, 8);
-  const flora = (bb.keyVisual?.flora ?? []).slice(0, 5);
-  const fauna = (bb.keyVisual?.fauna ?? []).slice(0, 5);
-  const symbols = (bb.keyVisual?.symbols ?? []).slice(0, 6);
-  const mascots = (bb.keyVisual?.mascots ?? []).flatMap((m) => [m.name ?? "", m.description ?? ""]).slice(0, 4);
-  const patterns = (bb.keyVisual?.structuredPatterns ?? []).flatMap((pattern) => [pattern.name, pattern.description]).slice(0, 4);
+  if (logoSymbol && !looksLikeUrlOrPath(logoSymbol)) rawSources.push(logoSymbol);
 
-  const named = collectSemanticCandidates([
-    logoSymbol,
-    ...symbols,
-    ...objects,
-    ...fauna,
-    ...flora,
-    ...mascots,
-    ...patterns,
-  ], 12);
+  // KeyVisual elements — the richest source
+  for (const s of (bb.keyVisual?.symbols ?? []).slice(0, 6)) rawSources.push(s);
+  for (const o of (bb.keyVisual?.objects ?? []).slice(0, 8)) rawSources.push(o);
+  for (const f of (bb.keyVisual?.fauna ?? []).slice(0, 5)) rawSources.push(f);
+  for (const f of (bb.keyVisual?.flora ?? []).slice(0, 5)) rawSources.push(f);
 
-  const industryLower = industry.toLowerCase();
-  const industryIconSets: [string, string[]][] = [
-    ["bar", ["brinde", "coquetel", "balcao", "selo-da-casa", "ritmo", "chama", "espeto", "copo"]],
-    ["café", ["grao", "xicara", "vapor", "coador", "torra", "barista"]],
-    ["restaurante", ["prato", "fogo", "menu", "garfo-faca", "receita", "mesa"]],
-    ["food", ["sabor", "ingrediente", "prato", "fogo", "cozinha", "tempero"]],
-    ["moda", ["tecido", "etiqueta", "costura", "cabide", "dobra", "atelier"]],
-    ["tecnologia", ["circuito", "malha-digital", "cursor", "pixel", "nodo", "sinal"]],
-    ["fitness", ["energia", "pulso", "movimento", "resistencia", "medalha", "ritmo"]],
-    ["beleza", ["petala", "espelho", "pincel", "frasco", "brilho", "ritual"]],
-    ["música", ["vinil", "onda", "batida", "microfone", "equalizador", "palco"]],
-    ["viagem", ["horizonte", "rota", "mala", "pin", "asa", "compasso"]],
-  ];
-
-  const matched = industryIconSets.find(([key]) => industryLower.includes(key));
-  const fillIcons = matched ? matched[1] : [
-    `${cleanSemanticCandidate(brandName) || "brand"}-selo`,
-    `${cleanSemanticCandidate(brandName) || "brand"}-gesto`,
-    `${cleanSemanticCandidate(brandName) || "brand"}-ritmo`,
-    `${cleanSemanticCandidate(brandName) || "brand"}-materia`,
-    `${cleanSemanticCandidate(brandName) || "brand"}-assinatura`,
-  ];
-
-  let fillIdx = 0;
-  while (named.length < 16 && fillIdx < fillIcons.length * 3) {
-    const candidate = cleanSemanticCandidate(fillIcons[fillIdx % fillIcons.length]) + (fillIdx >= fillIcons.length ? `-${Math.floor(fillIdx / fillIcons.length)}` : "");
-    if (!named.includes(candidate)) named.push(candidate);
-    fillIdx++;
+  // Mascot names (not descriptions — those are too long/noisy)
+  for (const m of (bb.keyVisual?.mascots ?? []).slice(0, 3)) {
+    if (m.name) rawSources.push(m.name);
   }
 
-  return named.slice(0, 16);
+  // Pattern names
+  for (const p of (bb.keyVisual?.structuredPatterns ?? []).slice(0, 3)) {
+    if (p.name) rawSources.push(p.name);
+  }
+
+  // Personality traits can inspire icons (e.g., "ousado" → "chama-ousadia")
+  for (const trait of (bb.brandConcept?.personality ?? []).slice(0, 4)) {
+    rawSources.push(trait);
+  }
+
+  // Brand values
+  for (const val of (bb.brandConcept?.values ?? []).slice(0, 4)) {
+    rawSources.push(val);
+  }
+
+  const named = collectSemanticCandidates(rawSources, 10);
+
+  // 2. Fill with industry-specific vocabulary
+  const industryLower = (industry || "").toLowerCase();
+  const matchedSets = INDUSTRY_ICON_VOCAB.filter(([keys]) =>
+    keys.some((key) => industryLower.includes(key))
+  );
+
+  const industryIcons: string[] = matchedSets.flatMap(([, icons]) => icons);
+
+  // Add industry icons that aren't already in named
+  for (const icon of industryIcons) {
+    if (named.length >= 14) break;
+    if (!named.includes(icon)) named.push(icon);
+  }
+
+  // 3. Fill remaining with universal brand concepts, prefixed with brand name for uniqueness
+  for (const icon of UNIVERSAL_BRAND_ICONS) {
+    if (named.length >= 16) break;
+    const candidate = `${brandSlug}-${icon}`;
+    const cleaned = cleanSemanticCandidate(candidate);
+    if (cleaned && !named.includes(cleaned)) named.push(cleaned);
+  }
+
+  // 4. Final safety: ensure exactly 16, all clean
+  const result = named
+    .slice(0, 16)
+    .map((name, i) => {
+      // Last resort: if any name is still suspicious, replace with safe fallback
+      if (looksLikeUrlOrPath(name) || name.length < 3) {
+        return `${brandSlug}-motivo-${String(i + 1).padStart(2, "0")}`;
+      }
+      return name;
+    });
+
+  // Pad to 16 if needed
+  while (result.length < 16) {
+    const idx = result.length + 1;
+    result.push(`${brandSlug}-elemento-${String(idx).padStart(2, "0")}`);
+  }
+
+  return result;
 }
 
 export async function POST(request: NextRequest) {
@@ -271,9 +319,13 @@ export async function POST(request: NextRequest) {
     const expectedPaths = buildExpectedAssetPackPaths(iconNames, patternSlug);
 
     const systemPrompt =
-      "Você é um Diretor de Arte e Brand Designer Sênior especializado em identidade visual. " +
-      "Sua missão é criar ativos vetoriais que EXPRESSEM a alma da marca, não ícones genéricos de UI. " +
-      "Cada SVG deve ser inconfundível — qualquer pessoa que veja deve reconhecer que pertence a ESTA marca específica. " +
+      "Você é um Diretor de Arte e Brand Designer Sênior especializado em identidade visual premium. " +
+      "Sua missão é criar ativos vetoriais que EXPRESSEM a alma da marca com personalidade forte e utilidade real. " +
+      "Cada SVG deve ser: (1) INCONFUNDÍVEL — pertencer claramente a ESTA marca específica, não a uma biblioteca genérica; " +
+      "(2) ÚTIL — pronto para uso em embalagens, UI, redes sociais, papelaria e apresentações; " +
+      "(3) CRIATIVO — trazer repertório visual proprietário, não clichês do setor; " +
+      "(4) COESO — todos os assets devem parecer parte da mesma família visual, com linguagem formal consistente. " +
+      "PROIBIDO: placeholders, URLs no nome, ícones de UI genéricos (home, user, settings, search, mail), formas abstratas sem significado, SVGs vazios ou com menos de 3 primitivas. " +
       "Retorne EXCLUSIVAMENTE JSON válido, sem markdown e sem texto fora do JSON.";
 
     const planningPrompt = `Crie um PLANO CRIATIVO para o Asset Pack da marca "${brandName}" antes de desenhar qualquer SVG.
@@ -382,8 +434,20 @@ Cada ícone: viewBox="0 0 24 24", use ${primaryColor} como cor principal no stro
 Inspire-se DIRETAMENTE em: ${[flora, fauna, objects, symbols].filter(Boolean).join(" | ") || "universo visual da marca"}
 - viewBox="0 0 512 512"
 - Use a paleta completa: ${primaryColor}, ${secondaryColor}, ${accentColor}
-- Gráficos premium para embalagens, posts, papelaria — não ícones simples
-- Cada elemento = uma composição artística do vocabulário visual da marca
+- CADA elemento deve ter MÍNIMO 6 primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <g>)
+- NUNCA entregue um SVG com menos de 6 tags primitivas — será rejeitado automaticamente
+
+Os 8 elementos devem cobrir estes TIPOS de uso real:
+element-01.svg → Moldura/frame decorativo (para emoldurar fotos em posts/papelaria)
+element-02.svg → Divisor/separador horizontal (para headers de documentos)
+element-03.svg → Grafismo de canto (para cantos de cartões/slides)
+element-04.svg → Composição central/badge (selo decorativo da marca)
+element-05.svg → Textura/pattern fragment (trecho de padrão para fundos parciais)
+element-06.svg → Faixa decorativa/ribbon (para banners e destaques)
+element-07.svg → Ilustração abstrata da marca (composição artística que expressa a personalidade)
+element-08.svg → Ícone hero/statement (versão grande e detalhada do conceito central da marca)
+
+PROIBIDO: formas geométricas simples (um círculo, um quadrado, um triângulo isolado)
 
 ═══════════════ PADRÃO SEAMLESS ═══════════════
 Path: vectors/patterns/pattern-${patternSlug}.svg
@@ -462,44 +526,63 @@ ${JSON.stringify(assetPlan, null, 2)}
       });
     }
 
+    const MAX_REPAIR_ATTEMPTS = 2;
     const firstRaw = await generateRaw(userPrompt);
     let normalized: NormalizedAssetPackResult;
-    let repairAttempted = false;
+    let repairAttempts = 0;
+    let lastRaw = firstRaw;
 
     try {
       normalized = finalizeRaw(firstRaw);
-      if (!normalized.isComplete) {
-        repairAttempted = true;
-        const repairPrompt = buildAssetPackRepairPrompt({
-          brandName,
-          expected: expectedPaths,
-          raw: firstRaw,
-          plan: assetPlan,
-          issues: [
-            ...normalized.issues,
-            ...normalized.missingPaths.map((path) => `Faltou o path obrigatório ${path}.`),
-            ...normalized.invalidSvgPaths.map((path) => `O path ${path} não contém SVG válido.`),
-            ...normalized.suspiciousPaths.map((path) => `O path ${path} contém nome contaminado ou suspeito.`),
-          ],
-        });
-        const repairedRaw = await generateRaw(repairPrompt);
-        normalized = finalizeRaw(repairedRaw);
-      }
     } catch (error: unknown) {
       if (!(error instanceof AssetPackGenerationError)) throw error;
-      repairAttempted = true;
+      normalized = { files: [], coverage: { icons: 0, elements: 0, patterns: 0, motion: 0, total: 0, expectedTotal: expectedPaths.all.length }, quality: { status: "fail", score: 0, summary: error.message, strengths: [], warnings: [], issues: error.issues, buckets: [] }, issues: error.issues, missingPaths: expectedPaths.all, unexpectedPaths: [], invalidSvgPaths: [], suspiciousPaths: [], isStructurallyComplete: false, passesQualityGate: false, isComplete: false };
+    }
+
+    // Retry loop: up to MAX_REPAIR_ATTEMPTS
+    while (!normalized.isComplete && repairAttempts < MAX_REPAIR_ATTEMPTS) {
+      repairAttempts++;
+      bbLog("info", "api.generate-asset-pack.repair", {
+        requestId,
+        attempt: repairAttempts,
+        coverage: normalized.coverage,
+        issues: normalized.issues.slice(0, 6),
+      });
+
       const repairPrompt = buildAssetPackRepairPrompt({
         brandName,
         expected: expectedPaths,
-        raw: firstRaw,
+        raw: lastRaw,
         plan: assetPlan,
-        issues: error.issues.length > 0 ? error.issues : [error.message],
+        issues: [
+          ...normalized.issues,
+          ...normalized.missingPaths.map((path) => `Faltou o path obrigatório ${path}.`),
+          ...normalized.invalidSvgPaths.map((path) => `O path ${path} não contém SVG válido.`),
+          ...normalized.suspiciousPaths.map((path) => `O path ${path} contém nome contaminado ou suspeito.`),
+        ],
       });
-      const repairedRaw = await generateRaw(repairPrompt);
-      normalized = finalizeRaw(repairedRaw);
+
+      try {
+        lastRaw = await generateRaw(repairPrompt);
+        normalized = finalizeRaw(lastRaw);
+      } catch (error: unknown) {
+        if (!(error instanceof AssetPackGenerationError)) throw error;
+        bbLog("warn", "api.generate-asset-pack.repair-parse-fail", {
+          requestId,
+          attempt: repairAttempts,
+          error: serializeError(error),
+        });
+      }
     }
 
-    if (!normalized.isComplete) {
+    // Soft acceptance: if structurally almost complete (≥90% coverage) and quality isn't hard-fail on all buckets, accept with warnings
+    const coverageRatio = normalized.coverage.expectedTotal > 0
+      ? normalized.coverage.total / normalized.coverage.expectedTotal
+      : 0;
+    const hardFailBuckets = normalized.quality.buckets?.filter(b => b.status === "fail").length ?? 0;
+    const isSoftAcceptable = coverageRatio >= 0.88 && hardFailBuckets <= 2;
+
+    if (!normalized.isComplete && !isSoftAcceptable) {
       const issueSummary = [
         ...normalized.issues,
         ...normalized.missingPaths.slice(0, 8).map((path) => `Ausente: ${path}`),
@@ -508,13 +591,13 @@ ${JSON.stringify(assetPlan, null, 2)}
       return respond(
         500,
         {
-          error: `Asset Pack personalizado reprovado após validação${repairAttempted ? " e reparo" : ""}.\n${issueSummary.slice(0, 12).join("\n")}`,
+          error: `Asset Pack personalizado reprovado após validação${repairAttempts > 0 ? ` e ${repairAttempts} tentativa(s) de reparo` : ""}.\n${issueSummary.slice(0, 12).join("\n")}`,
           plan: assetPlan,
           quality: normalized.quality,
           coverage: normalized.coverage,
         },
         {
-          repairAttempted,
+          repairAttempts,
           filesCount: normalized.files.length,
           coverage: normalized.coverage,
           quality: normalized.quality,
@@ -529,9 +612,11 @@ ${JSON.stringify(assetPlan, null, 2)}
         plan: assetPlan,
         quality: normalized.quality,
         coverage: normalized.coverage,
+        softAccepted: !normalized.isComplete && isSoftAcceptable,
       },
       {
-        repairAttempted,
+        repairAttempts,
+        softAccepted: !normalized.isComplete && isSoftAcceptable,
         filesCount: normalized.files.length,
         coverage: normalized.coverage,
         quality: normalized.quality,

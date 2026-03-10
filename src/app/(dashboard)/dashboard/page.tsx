@@ -99,7 +99,7 @@ function EmptyState() {
       </div>
       <h3 className="text-lg font-bold text-gray-900 mb-2">Crie seu primeiro brandbook</h3>
       <p className="text-gray-400 mb-8 max-w-sm mx-auto text-sm leading-relaxed">
-        Envie um logo ou descreva sua marca em poucas palavras — a IA gera uma identidade visual completa em minutos.
+        Envie um logo ou descreva sua marca — identidade visual completa em minutos.
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link

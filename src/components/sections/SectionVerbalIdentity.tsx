@@ -56,7 +56,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
             <div className="mb-4 flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-base font-bold text-gray-950">Pilares de Mensagem</h3>
-                <p className="mt-1 text-sm text-gray-500">Base verbal para narrativa, prova e aplicação de copy.</p>
+                <p className="mt-1 text-sm text-gray-500">Narrativa, prova e aplicação de copy.</p>
               </div>
             </div>
             <div className="space-y-3">
@@ -418,7 +418,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
       {(v.sampleHeadlines?.length > 0 || v.sampleCTAs?.length > 0 || v.tagline) && (
         <div className="mt-6 mb-6">
           <h3 className="text-base font-bold mb-1">Voz da Marca em Ação</h3>
-          <p className="text-xs text-gray-500 mb-4">Como a identidade verbal se expressa em peças reais</p>
+          <p className="text-xs text-gray-500 mb-4">Identidade verbal aplicada em peças reais</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             {/* Instagram post mock */}
@@ -597,7 +597,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                   />
                 </div>
                 <div className="bg-gray-50 border rounded-lg p-3">
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Exemplo</div>
+                  <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Exemplo</div>
                   <div className="text-xs text-gray-600 italic leading-relaxed flex">
                     <span className="mr-1">&ldquo;</span>
                     <EditableField

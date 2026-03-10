@@ -143,7 +143,6 @@ html {
     @apply min-h-screen text-gray-900 antialiased;
     background:
       radial-gradient(circle at top, rgba(99, 102, 241, 0.08), transparent 24%),
-      radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.08), transparent 20%),
       linear-gradient(180deg, #f8fafc 0%, #f1f5f9 42%, #eef2ff 100%);
   }
 
@@ -274,6 +273,13 @@ html {
   }
   .color-swatch:hover {
     @apply scale-105;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 

@@ -75,10 +75,10 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
             <div className="p-4 space-y-4">
               <div className="flex flex-wrap gap-3">
                 <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 flex-1 min-w-[140px]">
-                  <div className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">Porte</div>
+                  <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">Porte</div>
                   <div className="text-xs text-blue-900 font-medium">
                     <EditableField
-                      value={p.companySize || "Não definido"}
+                      value={p.companySize || "—"}
                       onSave={(val) => onUpdateData?.(prev => {
                         const next = [...(prev.audiencePersonas || [])];
                         next[i] = { ...next[i], companySize: val };
@@ -89,10 +89,10 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
                   </div>
                 </div>
                 <div className="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 flex-1 min-w-[140px]">
-                  <div className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Maturidade Digital</div>
+                  <div className="text-[11px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Maturidade Digital</div>
                   <div className="text-xs text-purple-900 font-medium">
                     <EditableField
-                      value={p.digitalMaturity || "Não definido"}
+                      value={p.digitalMaturity || "—"}
                       onSave={(val) => onUpdateData?.(prev => {
                         const next = [...(prev.audiencePersonas || [])];
                         next[i] = { ...next[i], digitalMaturity: val };

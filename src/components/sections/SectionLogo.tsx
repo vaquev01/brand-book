@@ -308,7 +308,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
         {isExpanded && (
           <div className="space-y-3 bg-white rounded-lg p-3 border">
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                 Como você espera este logo?
               </label>
               <textarea
@@ -320,7 +320,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                 Fotos de referência
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
@@ -359,7 +359,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                 Links de referência
               </label>
               <div className="flex gap-1.5">

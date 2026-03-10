@@ -230,8 +230,8 @@ function evaluateAssetPackQuality(params: {
       return tokens.length > 0 && tokens.every((token) => WEAK_ICON_TOKENS.has(token) || /^\d+$/.test(token));
     })
     .map((file) => file.path);
-  const lowDetailElements = elementFiles.filter((file) => countSvgPrimitiveTags(file.content) < 3).map((file) => file.path);
-  const lowDetailIcons = iconFiles.filter((file) => countSvgPrimitiveTags(file.content) < 1).map((file) => file.path);
+  const lowDetailElements = elementFiles.filter((file) => countSvgPrimitiveTags(file.content) < 5).map((file) => file.path);
+  const lowDetailIcons = iconFiles.filter((file) => countSvgPrimitiveTags(file.content) < 2).map((file) => file.path);
   const invalidPatterns = patternFiles.filter((file) => !/<pattern\b/i.test(file.content) || !/<defs\b/i.test(file.content)).map((file) => file.path);
   const invalidMotion = motionFiles.filter((file) => !hasAnimationMarkup(file.content)).map((file) => file.path);
   const planMismatchIcons = params.plan
@@ -536,7 +536,15 @@ export function buildAssetPackRepairPrompt(params: {
   return [
     `Sua resposta anterior para o Asset Pack da marca \"${params.brandName}\" ficou inválida, incompleta ou genérica demais.`,
     "Reescreva o JSON COMPLETO do zero, sem markdown, sem comentários e sem texto extra.",
-    "Você DEVE retornar `files` como array e incluir TODOS os paths obrigatórios abaixo, cada um com SVG válido em `content`.",
+    "Você DEVE retornar `files` como array e incluir TODOS os paths obrigatórios abaixo, cada um com SVG válido e detalhado em `content`.",
+    "",
+    "REGRAS CRÍTICAS:",
+    "- Cada SVG DEVE ter pelo menos 3 primitivas (<path>, <circle>, <rect>, etc.) — SVGs vazios ou minimalistas demais serão rejeitados.",
+    "- Patterns DEVEM usar <defs><pattern id=\"tile\"...> com patternUnits para ser realmente tileável.",
+    "- Motion SVGs DEVEM ter <animate> ou <animateTransform> — sem animação = rejeitado.",
+    "- NUNCA use URLs, placeholders ou tokens genéricos nos nomes dos arquivos.",
+    "- Elementos abstratos devem ser composições visuais premium (mínimo 5 primitivas), não formas geométricas simples.",
+    "",
     "Além da cobertura, corrija genericidade, nomes contaminados, falta de animação e qualquer fraqueza de direção criativa apontada.",
     "",
     "Problemas detectados:",

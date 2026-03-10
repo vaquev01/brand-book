@@ -347,12 +347,55 @@ export function useImageGeneration({
             `Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? activeProvider}.`
           );
         }
+
+        // ── REFERENCE IMAGE ANALYSIS ──────────────────────────────
+        // Analyze the FIRST user reference image with vision to extract
+        // a structured description. This description is injected into
+        // the prompt so ALL providers (not just Imagen) understand what
+        // the user wants to generate.
+        let referenceAnalysis: string | undefined;
+        if (userReferenceImages && userReferenceImages.length > 0) {
+          const visionProvider = apiKeys.google ? "google" : apiKeys.openai ? "openai" : null;
+          if (visionProvider) {
+            try {
+              const analyzeRes = await fetch("/api/analyze-reference", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  imageDataUrl: userReferenceImages[0],
+                  appType: app.type,
+                  appDescription: app.description,
+                  provider: visionProvider,
+                  googleKey: apiKeys.google || undefined,
+                  openaiKey: apiKeys.openai || undefined,
+                }),
+              });
+              if (analyzeRes.ok) {
+                const analyzeData = await analyzeRes.json();
+                if (analyzeData.analysis) {
+                  referenceAnalysis = analyzeData.analysis;
+                }
+              }
+            } catch {
+              // Vision analysis is optional; continue without it
+            }
+          }
+        }
+
+        // Combine user instruction + reference analysis into enriched instruction
+        const enrichedInstruction = [
+          customInstruction,
+          referenceAnalysis
+            ? `REFERENCE IMAGE ANALYSIS (replicate this subject and style): ${referenceAnalysis}`
+            : null,
+        ].filter(Boolean).join(". ") || undefined;
+
         const basePrompt = buildApplicationPrompt(
           app,
           data,
           activeProvider,
           aspectRatio,
-          customInstruction
+          enrichedInstruction
         );
         let prompt = basePrompt;
         if (refineBeforeGenerate) {

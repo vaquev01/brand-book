@@ -205,13 +205,13 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
   const sections = [
     {
       title: "Código & Design Tokens",
-      desc: "Exporte o design system em formatos prontos para desenvolvimento",
+      desc: "Design system pronto para desenvolvimento",
       items: [
         {
           key: "css" as const,
           Icon: Code2,
           label: "CSS Custom Properties",
-          sub: "Variáveis CSS prontas para colar no seu projeto",
+          sub: "Variáveis CSS prontas para usar",
           loadingLabel: "Gerando CSS...",
           onClick: handleCSS,
         },
@@ -219,7 +219,7 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
           key: "tokens" as const,
           Icon: Coins,
           label: "Design Tokens (JSON)",
-          sub: "Tokens de cores, tipografia e espaçamento — compatível com Style Dictionary e Figma Tokens",
+          sub: "Cores, tipografia e espaçamento — Style Dictionary / Figma Tokens",
           loadingLabel: "Gerando tokens...",
           onClick: handleW3C,
         },
@@ -227,7 +227,7 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
           key: "tailwind" as const,
           Icon: Wind,
           label: "Tailwind Config",
-          sub: "Extenda seu tailwind.config.js com as cores e fontes da marca",
+          sub: "Cores e fontes da marca para tailwind.config.js",
           loadingLabel: "Gerando config...",
           onClick: handleTailwind,
         },
@@ -235,13 +235,13 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
     },
     {
       title: "Exportação Visual",
-      desc: "Exporte o brandbook como PDF para apresentação",
+      desc: "Brandbook em PDF para apresentação",
       items: [
         {
           key: "pdf" as const,
           Icon: FileText,
           label: "PDF — Brandbook Completo",
-          sub: "Captura o viewer como PDF multi-página de alta resolução",
+          sub: "PDF multi-página em alta resolução",
           loadingLabel: "Gerando PDF...",
           onClick: handlePDF,
         },
@@ -249,13 +249,13 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
     },
     {
       title: "Compartilhar",
-      desc: "Compartilhe o brandbook com seu time ou cliente",
+      desc: "Envie para seu time ou cliente",
       items: [
         {
           key: "share" as const,
           Icon: Link2,
           label: "Copiar link de compartilhamento",
-          sub: shareMsg || "Gera uma URL com o brandbook comprimido para compartilhar",
+          sub: shareMsg || "URL comprimida do brandbook",
           loadingLabel: "Comprimindo...",
           onClick: handleShare,
         },
