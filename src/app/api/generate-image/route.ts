@@ -6,6 +6,8 @@ import {
 } from "@/lib/services/generateImage";
 import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } from "@/lib/serverLog";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { auth } from "@/app/auth";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -14,9 +16,23 @@ export async function POST(request: NextRequest) {
   const startedAt = Date.now();
   const memBefore = captureMem();
 
-  // Rate limiting
-  const clientId = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anon";
-  const rl = await checkRateLimit(clientId, "free");
+  // Rate limiting with user plan
+  let userPlan = "free";
+  let clientId = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anon";
+  try {
+    const session = await auth();
+    if (session?.user?.id) {
+      clientId = session.user.id;
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { subscriptionTier: true },
+      });
+      if (user?.subscriptionTier) userPlan = user.subscriptionTier;
+    }
+  } catch {
+    // Fall through to free tier
+  }
+  const rl = await checkRateLimit(clientId, userPlan);
   if (!rl.success) {
     return NextResponse.json(
       { error: "Rate limit exceeded", remaining: rl.remaining, reset: rl.reset },

@@ -33,12 +33,15 @@ interface Props {
   onSubmit: (data: GenerateBriefingData) => void;
   loading: boolean;
   error: string;
+  initialBrandName?: string;
+  initialIndustry?: string;
+  initialBriefing?: string;
 }
 
-export function GenerateBriefingForm({ onSubmit, loading, error }: Props) {
-  const [brandName, setBrandName] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [rawBriefing, setRawBriefing] = useState("");
+export function GenerateBriefingForm({ onSubmit, loading, error, initialBrandName, initialIndustry, initialBriefing }: Props) {
+  const [brandName, setBrandName] = useState(initialBrandName ?? "");
+  const [industry, setIndustry] = useState(initialIndustry ?? "");
+  const [rawBriefing, setRawBriefing] = useState(initialBriefing ?? "");
   const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
   const [projectMode, setProjectMode] = useState<ProjectMode>("new_brand");
   const [scope, setScope] = useState<GenerateScope>("full");

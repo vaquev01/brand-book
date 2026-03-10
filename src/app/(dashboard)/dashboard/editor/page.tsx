@@ -90,6 +90,9 @@ export default function Home() {
   const [generationPhase, setGenerationPhase] = useState("");
   const [generationPct, setGenerationPct] = useState(0);
   const [error, setError] = useState("");
+  const [prefillBrandName, setPrefillBrandName] = useState("");
+  const [prefillIndustry, setPrefillIndustry] = useState("");
+  const [prefillBriefing, setPrefillBriefing] = useState("");
   const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
   const brandbookRef = useRef<BrandbookData | null>(null);
   const [jsonText, setJsonText] = useState("");
@@ -262,8 +265,26 @@ export default function Home() {
     void (async () => {
       await migrateLegacyLocalStorageToIndexedDB().catch(() => {});
 
-      // Load shared brandbook from URL
       const params = new URLSearchParams(window.location.search);
+
+      // Handle ?tab= query parameter (from "Novo Brandbook" page or onboarding)
+      const tabParam = params.get("tab");
+      if (tabParam === "generate" || tabParam === "examples") {
+        setTab(tabParam);
+      }
+
+      // Handle prefill from onboarding (?name=, ?industry=, ?briefing=)
+      const nameParam = params.get("name");
+      const industryParam = params.get("industry");
+      const briefingParam = params.get("briefing");
+      if (nameParam) setPrefillBrandName(nameParam);
+      if (industryParam) setPrefillIndustry(industryParam);
+      if (briefingParam) setPrefillBriefing(briefingParam);
+      if (nameParam || industryParam || briefingParam) {
+        window.history.replaceState({}, "", window.location.pathname + (tabParam ? `?tab=${tabParam}` : ""));
+      }
+
+      // Load shared brandbook from URL
       const bbParam = params.get("bb");
       if (bbParam) {
         setLoadingShared(true);
@@ -289,6 +310,48 @@ export default function Home() {
           .finally(() => {
             setLoadingShared(false);
           });
+        return;
+      }
+
+      // Load project from database via ?slug= parameter
+      const slugParam = params.get("slug");
+      if (slugParam) {
+        setLoadingShared(true);
+        try {
+          const res = await fetch(`/api/projects/${encodeURIComponent(slugParam)}`);
+          if (res.ok) {
+            const json = await res.json() as { data?: { brandbookVersions?: Array<{ brandbookJson?: unknown }> } };
+            const latestVersion = json.data?.brandbookVersions?.[0];
+            if (latestVersion?.brandbookJson) {
+              const validated = validateLooseBrandbook(latestVersion.brandbookJson, {
+                action: "carregar projeto",
+                subject: "Brandbook do projeto",
+              });
+              await restoreBrandbookSession(validated, {
+                nextTab: "viewer",
+                nextViewerTab: "preview",
+              });
+              setLoadingShared(false);
+              return;
+            }
+          }
+        } catch {
+          // Fall through to localStorage
+        }
+        // Fallback: try loading from localStorage with the slug
+        const savedData = loadBrandbookData(slugParam);
+        if (savedData) {
+          try {
+            const validated = validateLooseBrandbook(savedData, {
+              action: "carregar projeto",
+              subject: "Brandbook salvo",
+            });
+            await restoreBrandbookSession(validated, { nextTab: "viewer" });
+          } catch {
+            // Corrupt — ignore
+          }
+        }
+        setLoadingShared(false);
         return;
       }
 
@@ -404,6 +467,19 @@ export default function Home() {
               toast.success("Brandbook gerado com sucesso", {
                 description: `${validated.brandName} — ${validated.industry}`,
               });
+
+              // Auto-save to database
+              fetch("/api/projects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name: validated.brandName,
+                  industry: validated.industry,
+                  briefing: formData.briefing,
+                  projectMode: formData.projectMode,
+                  brandbookData: validated,
+                }),
+              }).catch(() => {});
 
               // Auto-generate logo images
               const currentKeys = loadApiKeys();
@@ -893,6 +969,9 @@ export default function Home() {
                   onSubmit={handleGenerate}
                   loading={loading}
                   error={error}
+                  initialBrandName={prefillBrandName}
+                  initialIndustry={prefillIndustry}
+                  initialBriefing={prefillBriefing}
                 />
               )}
 

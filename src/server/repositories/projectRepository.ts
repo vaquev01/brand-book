@@ -55,6 +55,7 @@ export class ProjectRepository {
           select: {
             id: true,
             versionNumber: true,
+            brandbookJson: true,
             lintScore: true,
             qualityScore: true,
             createdAt: true,

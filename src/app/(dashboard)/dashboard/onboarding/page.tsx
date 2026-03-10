@@ -28,7 +28,7 @@ export default function OnboardingPage() {
         industry: sector,
         briefing,
       })
-      router.push(`/?${params.toString()}`)
+      router.push(`/dashboard/editor?${params.toString()}`)
       return
     }
     setStep(s => s + 1)
