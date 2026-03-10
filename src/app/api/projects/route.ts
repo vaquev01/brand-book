@@ -3,6 +3,30 @@ import { auth } from "@/app/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/common";
 
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    const projects = await prisma.project.findMany({
+      where: { ownerId: session.user.id },
+      orderBy: { updatedAt: "desc" },
+      take: 12,
+      include: { brandbookVersions: { take: 1, orderBy: { createdAt: "desc" } } },
+    });
+
+    return NextResponse.json({ data: projects });
+  } catch (error: unknown) {
+    console.error("[GET /api/projects]", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erro ao listar projetos" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const session = await auth();

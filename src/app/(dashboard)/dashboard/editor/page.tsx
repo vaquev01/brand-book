@@ -102,6 +102,11 @@ export default function Home() {
   const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
   const [assetPack, setAssetPack] = useState<AssetPackState>({ files: [] });
   const [assetPackGenerating, setAssetPackGenerating] = useState(false);
+  const [savedProjects, setSavedProjects] = useState<Array<{
+    id: string; slug: string; name: string; industry: string; status: string;
+    updatedAt: string; brandbookVersions: Array<{ brandbookJson?: unknown }>;
+  }>>([]);
+  const [loadingSavedProjects, setLoadingSavedProjects] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const strategyProvider = useAppPreferencesStore(selectStrategyProvider);
   const promptOpsProvider = useAppPreferencesStore(selectPromptOpsProvider);
@@ -377,6 +382,20 @@ export default function Home() {
       }
     })();
   }, [restoreBrandbookSession]);
+
+  // Fetch saved projects for the examples gallery
+  useEffect(() => {
+    setLoadingSavedProjects(true);
+    fetch("/api/projects")
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((json: { data?: typeof savedProjects }) => {
+        if (json.data) setSavedProjects(json.data);
+      })
+      .catch(() => {
+        // Not logged in or API error — silently skip
+      })
+      .finally(() => setLoadingSavedProjects(false));
+  }, []);
 
   useEffect(() => {
     if (!hasHydratedPreferences) return;
@@ -1016,41 +1035,132 @@ export default function Home() {
           <div className="space-y-8">
             <div className="app-shell px-6 py-7 sm:px-8 sm:py-8">
               <span className="app-chip mb-4">Galeria curada</span>
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 sm:text-[2.4rem]">Exemplos de Brandbooks</h2>
-              <p className="mt-2 max-w-3xl text-base text-gray-500 sm:text-lg">Explore manuais gerados pela IA para entender o potencial estrutural, o nível de acabamento visual e a profundidade estratégica que o produto já suporta.</p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 sm:text-[2.4rem]">Brandbooks</h2>
+              <p className="mt-2 max-w-3xl text-base text-gray-500 sm:text-lg">Seus projetos salvos e exemplos gerados pela IA para explorar o potencial da plataforma.</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-              <ExampleCard
-                title="CloudFlow"
-                subtitle="SaaS / B2B Software"
-                description="Brandbook avançado com Design Tokens, A11y, Microcopy, Motion e UX Patterns."
-                badge="Avançado"
-                color="blue"
-                onClick={() => handleLoadExample(saasExample)}
-              />
-              <ExampleCard
-                title="Neon Tokyo Bar"
-                subtitle="Nightlife & Bar"
-                description="Identidade visual cyberpunk com neon, tipografia bold e fotografia noturna."
-                color="pink"
-                onClick={() => handleLoadExample(barExample)}
-              />
-              <ExampleCard
-                title="Kansai Sushi"
-                subtitle="Restaurante Japonês"
-                description="Manual tradicional japonês com Sumi-e, Washi e tipografia Noto Serif JP."
-                color="red"
-                onClick={() => handleLoadExample(sushiExample)}
-              />
-              <ExampleCard
-                title="Caraca! Bar"
-                subtitle="Bar & Gastronomia — Boteco Tropical Premium"
-                description="Identidade botânica tropical com 4 sistemas de pattern, paleta Kraft + Verde Noturno e gravura brasileira."
-                badge="Projeto Real"
-                color="amber"
-                onClick={() => handleLoadExample(caracaBarExample)}
-              />
+            {/* Seus Projetos */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Seus Projetos</h3>
+              {loadingSavedProjects ? (
+                <div className="flex items-center gap-2 text-sm text-gray-400 py-6">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                  Carregando projetos...
+                </div>
+              ) : savedProjects.length === 0 ? (
+                <div className="app-shell px-6 py-10 text-center">
+                  <p className="text-gray-400 text-sm mb-4">Nenhum projeto salvo ainda. Gere seu primeiro brandbook!</p>
+                  <button
+                    onClick={() => setTab("generate")}
+                    className="app-primary-button px-5 py-2.5 text-sm inline-flex items-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Gerar com IA
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {savedProjects.map((project) => {
+                    const hue = project.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+                    const initial = project.name[0]?.toUpperCase() ?? "B";
+                    const hasBrandbook = project.brandbookVersions.length > 0;
+                    return (
+                      <button
+                        key={project.id}
+                        onClick={async () => {
+                          if (!hasBrandbook) {
+                            setTab("generate");
+                            return;
+                          }
+                          setLoadingShared(true);
+                          try {
+                            const res = await fetch(`/api/projects/${encodeURIComponent(project.slug)}`);
+                            if (res.ok) {
+                              const json = await res.json() as { data?: { brandbookVersions?: Array<{ brandbookJson?: unknown }> } };
+                              const latestVersion = json.data?.brandbookVersions?.[0];
+                              if (latestVersion?.brandbookJson) {
+                                const validated = validateLooseBrandbook(latestVersion.brandbookJson, {
+                                  action: "carregar projeto",
+                                  subject: "Brandbook do projeto",
+                                });
+                                await restoreBrandbookSession(validated, {
+                                  nextTab: "viewer",
+                                  nextViewerTab: "preview",
+                                });
+                              }
+                            }
+                          } catch {
+                            toast.error("Erro ao carregar o projeto.");
+                          } finally {
+                            setLoadingShared(false);
+                          }
+                        }}
+                        className="group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-lg hover:border-violet-200/60 transition-all hover:-translate-y-0.5 text-left"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div
+                            className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
+                            style={{
+                              background: `linear-gradient(135deg, hsl(${hue}, 65%, 52%) 0%, hsl(${(hue + 30) % 360}, 55%, 42%) 100%)`,
+                            }}
+                          >
+                            {initial}
+                          </div>
+                          {hasBrandbook && (
+                            <span className="text-[10px] text-violet-500 font-semibold bg-violet-50 px-2 py-0.5 rounded-full">
+                              Brandbook
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-gray-900 truncate group-hover:text-violet-700 transition-colors text-[15px]">
+                          {project.name}
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1 truncate">{project.industry}</p>
+                        <p className="text-[11px] text-gray-300 font-medium mt-3 pt-3 border-t border-gray-50">
+                          {new Date(project.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Exemplos */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Exemplos</h3>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <ExampleCard
+                  title="CloudFlow"
+                  subtitle="SaaS / B2B Software"
+                  description="Brandbook avançado com Design Tokens, A11y, Microcopy, Motion e UX Patterns."
+                  badge="Avançado"
+                  color="blue"
+                  onClick={() => handleLoadExample(saasExample)}
+                />
+                <ExampleCard
+                  title="Neon Tokyo Bar"
+                  subtitle="Nightlife & Bar"
+                  description="Identidade visual cyberpunk com neon, tipografia bold e fotografia noturna."
+                  color="pink"
+                  onClick={() => handleLoadExample(barExample)}
+                />
+                <ExampleCard
+                  title="Kansai Sushi"
+                  subtitle="Restaurante Japonês"
+                  description="Manual tradicional japonês com Sumi-e, Washi e tipografia Noto Serif JP."
+                  color="red"
+                  onClick={() => handleLoadExample(sushiExample)}
+                />
+                <ExampleCard
+                  title="Caraca! Bar"
+                  subtitle="Bar & Gastronomia — Boteco Tropical Premium"
+                  description="Identidade botânica tropical com 4 sistemas de pattern, paleta Kraft + Verde Noturno e gravura brasileira."
+                  badge="Projeto Real"
+                  color="amber"
+                  onClick={() => handleLoadExample(caracaBarExample)}
+                />
+              </div>
             </div>
           </div>
         )}

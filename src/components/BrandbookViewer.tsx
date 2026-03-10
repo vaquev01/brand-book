@@ -113,6 +113,7 @@ export function BrandbookViewer({
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [hiddenSections, setHiddenSections] = useState<Set<string>>(new Set());
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
   const noop = () => {};
   const imgGen = useImageGeneration({
@@ -175,6 +176,15 @@ export function BrandbookViewer({
       const next = new Set(prev);
       if (next.has(cat)) next.delete(cat);
       else next.add(cat);
+      return next;
+    });
+  }, []);
+
+  const toggleSectionCollapse = useCallback((sectionId: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
       return next;
     });
   }, []);
@@ -508,6 +518,27 @@ export function BrandbookViewer({
           >
             {immersive ? "Imersivo Ativo" : "Modo Imersivo"}
           </button>
+          <div className="no-print flex items-center rounded-xl border border-gray-200 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => {
+                const allIds = sections.map(s => s.id);
+                setCollapsedSections(new Set(allIds));
+              }}
+              className="text-[11px] font-bold px-3 py-2.5 bg-white hover:bg-gray-50 text-gray-500 transition-all border-r border-gray-200"
+              title="Recolher todas as seções"
+            >
+              Recolher tudo
+            </button>
+            <button
+              type="button"
+              onClick={() => setCollapsedSections(new Set())}
+              className="text-[11px] font-bold px-3 py-2.5 bg-white hover:bg-gray-50 text-gray-500 transition-all"
+              title="Expandir todas as seções"
+            >
+              Expandir tudo
+            </button>
+          </div>
           <button
             type="button"
             onClick={() => { setCurrentSlide(0); setPresentationMode(true); }}
@@ -1036,6 +1067,8 @@ export function BrandbookViewer({
             const showPatternBand = immersive && sIdx > 0 && sIdx % 2 === 0;
             const accentUrl = immersive ? getSectionAccentUrl(s.id) : null;
             const showAccent = immersive && !showPatternBand && sIdx > 0 && accentUrl;
+            const isSectionCollapsed = collapsedSections.has(s.id);
+            const sectionCatIcon = CATEGORY_ICONS[g.cat as keyof typeof CATEGORY_ICONS] ?? "";
             return (
               <div key={s.id} id={s.id} className="scroll-mt-24" data-reveal>
                 {/* Color strip between sections */}
@@ -1054,6 +1087,26 @@ export function BrandbookViewer({
                   className={immersive ? "bb-section-shell" : "rounded-[1.6rem] border px-3.5 py-4 md:px-5 md:py-5"}
                   style={immersive ? undefined : defaultShellStyle}
                 >
+                  {/* Collapsible section header bar */}
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionCollapse(s.id)}
+                    className={`no-print flex items-center justify-between cursor-pointer px-4 py-3 hover:bg-gray-50/50 transition w-full text-left ${isSectionCollapsed ? "rounded-[1.6rem]" : "rounded-t-[1.6rem]"}`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-sm flex-shrink-0">{sectionCatIcon}</span>
+                      <span
+                        className="text-xs font-extrabold uppercase tracking-[0.15em] truncate"
+                        style={{ color: immersive ? "inherit" : rgba(theme.primaryHex, 0.7), fontFamily: `'${theme.headingFont}', sans-serif` }}
+                      >
+                        {s.num}. {s.title}
+                      </span>
+                    </div>
+                    <span className="flex-shrink-0 text-gray-400 text-xs ml-2">{isSectionCollapsed ? "▶" : "▼"}</span>
+                  </button>
+
+                  {!isSectionCollapsed && (
+                    <>
                   {immersive && <div className="bb-section-mascot" aria-hidden="true" />}
 
                   {/* Section hero image — shows relevant generated asset (deduped) */}
@@ -1103,6 +1156,8 @@ export function BrandbookViewer({
                     </div>
                   )}
                   {s.render(s.num)}
+                    </>
+                  )}
                 </div>
               </div>
             );
