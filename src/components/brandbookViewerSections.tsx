@@ -264,7 +264,6 @@ export function buildSectionDefs({
           data={data}
           num={num}
           generatedImages={generatedImages}
-          onUpdateApplicationImageKey={onUpdateApplicationImageKey}
           onGenerateApplication={hasGeneration ? (index: number, aspectRatio: string, customInstruction?: string, refs?: string[], providerOverride?) => imgGen.generateApplication(index, aspectRatio as "1:1" | "16:9" | "9:16" | "4:3" | "21:9", customInstruction, refs, providerOverride) : undefined}
           onGenerateAllApplications={hasGeneration ? () => imgGen.generateAllApplications() : undefined}
           loadingKey={imgGen.loadingKey}

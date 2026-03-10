@@ -1,7 +1,7 @@
 "use client";
 import { BrandbookData, GeneratedAsset, Application, ImageProvider } from "@/lib/types";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
-import { ASSET_CATALOG, detectSizeVariants, type AssetKey } from "@/lib/imagePrompts";
+import { detectSizeVariants } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -10,7 +10,6 @@ interface Props {
   data: BrandbookData;
   num: number;
   generatedImages?: Record<string, string>;
-  onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
   onGenerateApplication?: (index: number, aspectRatio: string, customInstruction?: string, referenceImages?: string[], providerOverride?: ImageProvider) => void;
   onGenerateAllApplications?: () => void;
   loadingKey?: string | null;
@@ -135,7 +134,7 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-export function SectionApplications({ data, num, generatedImages = {}, onUpdateApplicationImageKey, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {}, onUpdateData }: Props) {
+export function SectionApplications({ data, num, generatedImages = {}, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {}, onUpdateData }: Props) {
   const totalGenerated = Object.keys(generatedImages).length;
   const [activeAppVariant, setActiveAppVariant] = useState<Record<number, string>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
@@ -296,7 +295,6 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
           const variants = detectSizeVariants(app.type);
           const activeVariant = activeAppVariant[i] ?? variants[0]?.aspectRatio ?? "1:1";
           const aiImage = findImage(app, i, generatedImages, generatedAssets, activeVariant);
-          const selectId = `application-image-key-${i}`;
           const activeKey = `app_${i}_${activeVariant}`;
           const isAnyLoading = variants.some((v) => loadingKey === `app_${i}_${v.aspectRatio}`);
           const briefing = getBriefing(i);
@@ -496,11 +494,61 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
                 )}
 
                 {onGenerateApplication && (
-                  <div className="no-print border-t pt-2 space-y-2">
+                  <div className="no-print border-t pt-3 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <PerImageProviderSelect
+                        value={providerOverrides[i] ?? null}
+                        onChange={(val) => setAppProvider(i, val)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleGenerate(i, activeVariant)}
+                        disabled={loadingKey !== null}
+                        className="flex items-center gap-1.5 bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
+                      >
+                        {isAnyLoading ? (
+                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <span>✦</span>
+                        )}
+                        Gerar
+                      </button>
+                    </div>
+
+                    {variants.length > 1 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {variants.map((v) => {
+                          const vKey = `app_${i}_${v.aspectRatio}`;
+                          const hasGen = !!generatedAssets[vKey];
+                          const isLoadingV = loadingKey === vKey;
+                          return (
+                            <button
+                              key={v.aspectRatio}
+                              type="button"
+                              onClick={() => {
+                                setActiveAppVariant((prev) => ({ ...prev, [i]: v.aspectRatio }));
+                                handleGenerate(i, v.aspectRatio);
+                              }}
+                              disabled={loadingKey !== null}
+                              className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                                hasGen
+                                  ? "border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+                                  : activeVariant === v.aspectRatio
+                                  ? "border-gray-900 bg-gray-900 text-white"
+                                  : "border-gray-300 bg-white text-gray-700 hover:border-gray-500 hover:bg-gray-50"
+                              }`}
+                            >
+                              {isLoadingV ? "..." : hasGen ? "↺ " + v.label : "✦ " + v.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => setExpandedBriefing(isBriefingExpanded ? null : i)}
-                      className="w-full flex items-center justify-between text-[11px] font-bold text-gray-500 uppercase tracking-wider hover:text-gray-700 transition"
+                      className="w-full flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition pt-1 border-t"
                     >
                       <span>Direcionamento criativo</span>
                       <span className="text-base leading-none">{isBriefingExpanded ? "−" : "+"}</span>
@@ -595,68 +643,6 @@ export function SectionApplications({ data, num, generatedImages = {}, onUpdateA
                         </div>
                       </div>
                     )}
-
-                    <div className="flex items-center justify-between gap-2 pt-1">
-                      <PerImageProviderSelect
-                        value={providerOverrides[i] ?? null}
-                        onChange={(val) => setAppProvider(i, val)}
-                      />
-                      <div className="flex flex-wrap gap-1.5">
-                        {variants.map((v) => {
-                          const vKey = `app_${i}_${v.aspectRatio}`;
-                          const hasGen = !!generatedAssets[vKey];
-                          const isLoadingV = loadingKey === vKey;
-                          return (
-                            <button
-                              key={v.aspectRatio}
-                              type="button"
-                              onClick={() => {
-                                setActiveAppVariant((prev) => ({ ...prev, [i]: v.aspectRatio }));
-                                handleGenerate(i, v.aspectRatio);
-                              }}
-                              disabled={loadingKey !== null}
-                              className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                                hasGen
-                                  ? "border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
-                                  : "border-gray-900 bg-gray-900 text-white hover:bg-gray-800"
-                              }`}
-                            >
-                              {isLoadingV ? "..." : hasGen ? "↺ " + v.label : "✦ " + v.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {onUpdateApplicationImageKey && totalGenerated > 0 && (
-                  <div className="no-print mt-2 border-t pt-2">
-                    <label
-                      htmlFor={selectId}
-                      className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2"
-                    >
-                      {aiImage ? "Imagem vinculada" : "Vincular imagem gerada"}
-                    </label>
-                    <select
-                      id={selectId}
-                      aria-label="Escolher qual imagem gerada usar nesta aplicação"
-                      name={selectId}
-                      title="Escolher qual imagem gerada usar nesta aplicação"
-                      value={app.imageKey ?? ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        onUpdateApplicationImageKey(i, (val ? (val as AssetKey) : undefined));
-                      }}
-                      className="w-full bg-gray-50 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10"
-                    >
-                      <option value="">Automático</option>
-                      {ASSET_CATALOG.filter((a) => !!generatedImages[a.key]).map((a) => (
-                        <option key={a.key} value={a.key}>
-                          {a.label}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 )}
               </div>

@@ -230,8 +230,8 @@ function evaluateAssetPackQuality(params: {
       return tokens.length > 0 && tokens.every((token) => WEAK_ICON_TOKENS.has(token) || /^\d+$/.test(token));
     })
     .map((file) => file.path);
-  const lowDetailElements = elementFiles.filter((file) => countSvgPrimitiveTags(file.content) < 5).map((file) => file.path);
-  const lowDetailIcons = iconFiles.filter((file) => countSvgPrimitiveTags(file.content) < 2).map((file) => file.path);
+  const lowDetailElements = elementFiles.filter((file) => countSvgPrimitiveTags(file.content) < 6).map((file) => file.path);
+  const lowDetailIcons = iconFiles.filter((file) => countSvgPrimitiveTags(file.content) < 3).map((file) => file.path);
   const invalidPatterns = patternFiles.filter((file) => !/<pattern\b/i.test(file.content) || !/<defs\b/i.test(file.content)).map((file) => file.path);
   const invalidMotion = motionFiles.filter((file) => !hasAnimationMarkup(file.content)).map((file) => file.path);
   const planMismatchIcons = params.plan
@@ -538,12 +538,14 @@ export function buildAssetPackRepairPrompt(params: {
     "Reescreva o JSON COMPLETO do zero, sem markdown, sem comentários e sem texto extra.",
     "Você DEVE retornar `files` como array e incluir TODOS os paths obrigatórios abaixo, cada um com SVG válido e detalhado em `content`.",
     "",
-    "REGRAS CRÍTICAS:",
-    "- Cada SVG DEVE ter pelo menos 3 primitivas (<path>, <circle>, <rect>, etc.) — SVGs vazios ou minimalistas demais serão rejeitados.",
+    "REGRAS CRÍTICAS DE QUALIDADE PROFISSIONAL:",
+    "- Ícones: MÍNIMO 3 primitivas SVG (<path>, <circle>, <rect>, etc.) — SVGs com menos de 3 primitivas são REJEITADOS.",
+    "- Elementos: MÍNIMO 6 primitivas SVG — são composições visuais complexas premium, NÃO formas geométricas simples.",
     "- Patterns DEVEM usar <defs><pattern id=\"tile\"...> com patternUnits para ser realmente tileável.",
     "- Motion SVGs DEVEM ter <animate> ou <animateTransform> — sem animação = rejeitado.",
     "- NUNCA use URLs, placeholders ou tokens genéricos nos nomes dos arquivos.",
-    "- Elementos abstratos devem ser composições visuais premium (mínimo 5 primitivas), não formas geométricas simples.",
+    "- Cada SVG deve ser VISUALMENTE RICO e profissional. Um círculo + uma linha NÃO é um ícone aceitável.",
+    "- Use fills, strokes, gradients e composições com camadas para criar assets de qualidade world-class.",
     "",
     "Além da cobertura, corrija genericidade, nomes contaminados, falta de animação e qualquer fraqueza de direção criativa apontada.",
     "",

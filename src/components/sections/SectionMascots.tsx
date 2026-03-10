@@ -410,9 +410,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
   }
 
   return (
-    <section className="page-break mb-6">
-      <div className="flex items-center justify-between gap-4 mb-4 border-b border-gray-100 pb-2">
-        <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
+    <section className="page-break mb-4">
+      <div className="flex items-center justify-between gap-3 mb-3 border-b border-gray-100 pb-2">
+        <h2 className="text-lg md:text-xl font-extrabold tracking-tight">
           {String(num).padStart(2, "0")}. Mascotes, Símbolos &amp; Padrões
         </h2>
         {onGenerate && (
@@ -433,11 +433,11 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
       </div>
 
       {mascots.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold">Mascotes &amp; Personagens</h3>
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold">Mascotes &amp; Personagens</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
             {mascots.map((mascot, i) => {
               const storageKey = `mascot_${i}`;
               const uploadedImg = uploadedMascots[i] ?? null;
@@ -449,7 +449,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
               return (
                 <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm group">
                   {mascotImage ? (
-                    <div className="h-28 bg-gray-50 flex items-center justify-center p-3 relative">
+                    <div className="h-20 bg-gray-50 flex items-center justify-center p-2 relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={mascotImage} alt={mascot.name} className="max-h-full object-contain rounded" />
                       {isGenerated && (
@@ -471,7 +471,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                       )}
                     </div>
                   ) : (
-                    <div className="h-28 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 relative">
+                    <div className="h-20 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400 relative">
                       {isLoadingThis ? (
                         <>
                           <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
@@ -490,7 +490,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                       )}
                     </div>
                   )}
-                  <div className="p-4">
+                  <div className="p-3">
                     {editingMascot === i ? (
                       <div className="no-print space-y-2">
                         <input type="text" value={mascotDraft.name ?? ""} onChange={(e) => setMascotDraft((d) => ({ ...d, name: e.target.value }))} placeholder="Nome do mascote" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
@@ -580,9 +580,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
       )}
 
       {uploadedMascots.length > mascots.length && (
-        <div className="mb-6">
-          <h3 className="text-base font-bold mb-3">Mascotes Enviados</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="mb-4">
+          <h3 className="text-sm font-bold mb-2">Mascotes Enviados</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {uploadedMascots.slice(mascots.length).map((asset) => (
               <div key={asset.id} className="bg-gray-50 border rounded-lg overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -597,20 +597,20 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 items-start">
         {symbols.length > 0 && (
           <div>
-            <h3 className="text-lg font-bold mb-4">Símbolos Identitários</h3>
-            <div className="space-y-4">
+            <h3 className="text-sm font-bold mb-2">Símbolos Identitários</h3>
+            <div className="space-y-2">
               {symbols.map((sym, i) => {
                 const symKey = `symbol_${i}`;
                 const symImg = generatedAssets[symKey]?.url ?? null;
                 const isLoadingSym = loadingKey === symKey;
                 const symContext = `Generate a visual symbol/icon for: "${sym}". This is a brand identity symbol — render as a standalone graphic element.`;
                 return (
-                  <div key={i} className="bg-white border rounded-xl p-4 shadow-sm">
+                  <div key={i} className="bg-white border rounded-xl p-3 shadow-sm">
                     {symImg && (
-                      <div className="mb-3 rounded-lg overflow-hidden border relative group/sym h-28 bg-gray-50 flex items-center justify-center">
+                      <div className="mb-2 rounded-lg overflow-hidden border relative group/sym h-20 bg-gray-50 flex items-center justify-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={symImg} alt={sym} className="max-h-full object-contain" />
                         <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">IA</span>
@@ -626,7 +626,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                       </div>
                     )}
                     {isLoadingSym && !symImg && (
-                      <div className="mb-3 rounded-lg border h-28 bg-gray-50 flex items-center justify-center">
+                      <div className="mb-2 rounded-lg border h-20 bg-gray-50 flex items-center justify-center">
                         <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
                       </div>
                     )}
@@ -684,7 +684,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
               </button>
             )}
             {uploadedElements.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-3">
+              <div className="mt-3 grid grid-cols-4 md:grid-cols-6 gap-2">
                 {uploadedElements.map((asset) => (
                   <div key={asset.id} className="bg-gray-50 border rounded-lg overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -699,11 +699,11 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
 
         {(patterns.length > 0 || (structuredPatterns && structuredPatterns.length > 0)) && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold">Padrões Gráficos</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold">Padrões Gráficos</h3>
             </div>
             {structuredPatterns && structuredPatterns.length > 0 ? (
-              <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {structuredPatterns.map((pat, i) => {
                   const patKey = `pattern_${i}`;
                   const patImg = generatedAssets[patKey]?.url ?? (i === 0 ? generatedImages["brand_pattern"] : null);
@@ -712,7 +712,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                   return (
                     <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm">
                       {patImg ? (
-                        <div className="h-24 bg-gray-50 relative group/patcard">
+                        <div className="h-20 bg-gray-50 relative group/patcard">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={patImg} alt={pat.name} className="w-full h-full object-cover" />
                           <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">IA</span>
@@ -732,7 +732,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                           )}
                         </div>
                       ) : (
-                        <div className="h-28 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400">
+                        <div className="h-20 bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center text-gray-400">
                           {isLoadingPat ? (
                             <>
                               <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
@@ -751,7 +751,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                           )}
                         </div>
                       )}
-                      <div className="p-4">
+                      <div className="p-3">
                         {editingPattern === i ? (
                           <div className="no-print space-y-2">
                             <input type="text" value={patternDraft.name ?? ""} onChange={(e) => setPatternDraft((d) => ({ ...d, name: e.target.value }))} placeholder="Nome do padrão" className="w-full bg-gray-50 border rounded-lg px-3 py-1.5 text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10" />
@@ -815,16 +815,16 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                 })}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {patterns.map((pat, i) => {
                   const patKey = `pattern_${i}`;
                   const patImg = generatedAssets[patKey]?.url ?? null;
                   const isLoadingPat = loadingKey === patKey;
                   const patContext = `Generate a seamless brand pattern based on: "${pat}"`;
                   return (
-                    <div key={i} className="bg-white border rounded-xl p-4 shadow-sm">
+                    <div key={i} className="bg-white border rounded-xl p-3 shadow-sm">
                       {patImg && (
-                        <div className="mb-3 rounded-lg overflow-hidden border relative group/patitem h-28 bg-gray-50">
+                        <div className="mb-2 rounded-lg overflow-hidden border relative group/patitem h-20 bg-gray-50">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={patImg} alt={pat} className="w-full h-full object-cover" />
                           <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">IA</span>
@@ -840,7 +840,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                         </div>
                       )}
                       {isLoadingPat && !patImg && (
-                        <div className="mb-3 rounded-lg border h-28 bg-gray-50 flex items-center justify-center">
+                        <div className="mb-2 rounded-lg border h-20 bg-gray-50 flex items-center justify-center">
                           <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
                         </div>
                       )}
@@ -899,7 +899,7 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
               </button>
             )}
             {uploadedPatterns.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-3">
+              <div className="mt-3 grid grid-cols-4 md:grid-cols-6 gap-2">
                 {uploadedPatterns.map((asset) => (
                   <div key={asset.id} className="bg-gray-50 border rounded-lg overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -319,13 +319,14 @@ export async function POST(request: NextRequest) {
     const expectedPaths = buildExpectedAssetPackPaths(iconNames, patternSlug);
 
     const systemPrompt =
-      "Você é um Diretor de Arte e Brand Designer Sênior especializado em identidade visual premium. " +
-      "Sua missão é criar ativos vetoriais que EXPRESSEM a alma da marca com personalidade forte e utilidade real. " +
+      "Você é um Diretor de Arte e Brand Designer Sênior com 20+ anos de experiência em identidade visual premium para marcas globais. " +
+      "Sua missão é criar ativos vetoriais de QUALIDADE WORLD-CLASS que EXPRESSEM a alma da marca com personalidade forte e utilidade real. " +
       "Cada SVG deve ser: (1) INCONFUNDÍVEL — pertencer claramente a ESTA marca específica, não a uma biblioteca genérica; " +
       "(2) ÚTIL — pronto para uso em embalagens, UI, redes sociais, papelaria e apresentações; " +
-      "(3) CRIATIVO — trazer repertório visual proprietário, não clichês do setor; " +
-      "(4) COESO — todos os assets devem parecer parte da mesma família visual, com linguagem formal consistente. " +
-      "PROIBIDO: placeholders, URLs no nome, ícones de UI genéricos (home, user, settings, search, mail), formas abstratas sem significado, SVGs vazios ou com menos de 3 primitivas. " +
+      "(3) VISUALMENTE RICO — cada SVG deve ter composição elaborada com múltiplos paths, formas e detalhes. Um ícone BOM tem no mínimo 3 primitivas SVG, um elemento BOM tem no mínimo 8; " +
+      "(4) COESO — todos os assets devem parecer parte da mesma família visual, com linguagem formal consistente; " +
+      "(5) CRIATIVO — trazer repertório visual proprietário, não clichês do setor. " +
+      "PROIBIDO: placeholders, URLs no nome, ícones de UI genéricos (home, user, settings, search, mail), formas abstratas sem significado, SVGs com poucos detalhes (menos de 3 primitivas para ícones, menos de 6 para elementos). " +
       "Retorne EXCLUSIVAMENTE JSON válido, sem markdown e sem texto fora do JSON.";
 
     const planningPrompt = `Crie um PLANO CRIATIVO para o Asset Pack da marca "${brandName}" antes de desenhar qualquer SVG.
@@ -429,13 +430,22 @@ Os nomes abaixo já foram derivados do universo semântico de "${brandName}" —
 ${assetPlan.iconPlan.map((entry, i) => `${String(i + 1).padStart(2, "0")}. ${entry.path}  ← conceito: "${entry.concept}" | rationale: ${entry.rationale}`).join("\n")}
 
 Cada ícone: viewBox="0 0 24 24", use ${primaryColor} como cor principal no stroke/fill, stroke-linecap="${borderRadii?.includes("0") ? "square" : "round"}", stroke-linejoin="${borderRadii?.includes("0") ? "miter" : "round"}", stroke-width="1.5".
+MÍNIMO OBRIGATÓRIO: cada ícone deve ter pelo menos 3 tags primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <line>). Ícones com menos de 3 primitivas serão REJEITADOS automaticamente.
+
+Exemplo de ícone BOM (complexidade mínima aceitável):
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="${primaryColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+  <path d="M8 12l3 3 5-6"/>
+  <circle cx="12" cy="12" r="3"/>
+</svg>
 
 ═══════════════ ELEMENTOS ABSTRATOS — 8 ARQUIVOS ═══════════════
 Inspire-se DIRETAMENTE em: ${[flora, fauna, objects, symbols].filter(Boolean).join(" | ") || "universo visual da marca"}
 - viewBox="0 0 512 512"
 - Use a paleta completa: ${primaryColor}, ${secondaryColor}, ${accentColor}
-- CADA elemento deve ter MÍNIMO 6 primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <g>)
-- NUNCA entregue um SVG com menos de 6 tags primitivas — será rejeitado automaticamente
+- CADA elemento deve ter MÍNIMO 8 primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <g>)
+- NUNCA entregue um SVG com menos de 8 tags primitivas — será rejeitado automaticamente
+- Elementos devem parecer composições visuais ricas e profissionais, não formas básicas
 
 Os 8 elementos devem cobrir estes TIPOS de uso real:
 element-01.svg → Moldura/frame decorativo (para emoldurar fotos em posts/papelaria)
@@ -526,7 +536,7 @@ ${JSON.stringify(assetPlan, null, 2)}
       });
     }
 
-    const MAX_REPAIR_ATTEMPTS = 2;
+    const MAX_REPAIR_ATTEMPTS = 3;
     const firstRaw = await generateRaw(userPrompt);
     let normalized: NormalizedAssetPackResult;
     let repairAttempts = 0;
@@ -580,7 +590,7 @@ ${JSON.stringify(assetPlan, null, 2)}
       ? normalized.coverage.total / normalized.coverage.expectedTotal
       : 0;
     const hardFailBuckets = normalized.quality.buckets?.filter(b => b.status === "fail").length ?? 0;
-    const isSoftAcceptable = coverageRatio >= 0.88 && hardFailBuckets <= 2;
+    const isSoftAcceptable = coverageRatio >= 0.92 && hardFailBuckets <= 1;
 
     if (!normalized.isComplete && !isSoftAcceptable) {
       const issueSummary = [
