@@ -230,8 +230,8 @@ function evaluateAssetPackQuality(params: {
       return tokens.length > 0 && tokens.every((token) => WEAK_ICON_TOKENS.has(token) || /^\d+$/.test(token));
     })
     .map((file) => file.path);
-  const lowDetailElements = elementFiles.filter((file) => countSvgPrimitiveTags(file.content) < 6).map((file) => file.path);
-  const lowDetailIcons = iconFiles.filter((file) => countSvgPrimitiveTags(file.content) < 3).map((file) => file.path);
+  const lowDetailElements = elementFiles.filter((file) => countSvgPrimitiveTags(file.content) < 8).map((file) => file.path);
+  const lowDetailIcons = iconFiles.filter((file) => countSvgPrimitiveTags(file.content) < 4).map((file) => file.path);
   const invalidPatterns = patternFiles.filter((file) => !/<pattern\b/i.test(file.content) || !/<defs\b/i.test(file.content)).map((file) => file.path);
   const invalidMotion = motionFiles.filter((file) => !hasAnimationMarkup(file.content)).map((file) => file.path);
   const planMismatchIcons = params.plan
@@ -539,13 +539,19 @@ export function buildAssetPackRepairPrompt(params: {
     "Você DEVE retornar `files` como array e incluir TODOS os paths obrigatórios abaixo, cada um com SVG válido e detalhado em `content`.",
     "",
     "REGRAS CRÍTICAS DE QUALIDADE PROFISSIONAL:",
-    "- Ícones: MÍNIMO 3 primitivas SVG (<path>, <circle>, <rect>, etc.) — SVGs com menos de 3 primitivas são REJEITADOS.",
-    "- Elementos: MÍNIMO 6 primitivas SVG — são composições visuais complexas premium, NÃO formas geométricas simples.",
+    "- Ícones: MÍNIMO 4 primitivas SVG (<path>, <circle>, <rect>, etc.) — SVGs com menos de 4 primitivas são REJEITADOS.",
+    "- Elementos: MÍNIMO 8 primitivas SVG — são composições visuais complexas premium, NÃO formas geométricas simples.",
     "- Patterns DEVEM usar <defs><pattern id=\"tile\"...> com patternUnits para ser realmente tileável.",
     "- Motion SVGs DEVEM ter <animate> ou <animateTransform> — sem animação = rejeitado.",
     "- NUNCA use URLs, placeholders ou tokens genéricos nos nomes dos arquivos.",
     "- Cada SVG deve ser VISUALMENTE RICO e profissional. Um círculo + uma linha NÃO é um ícone aceitável.",
     "- Use fills, strokes, gradients e composições com camadas para criar assets de qualidade world-class.",
+    "",
+    "TÉCNICA DE DESENHO OBRIGATÓRIA:",
+    "- Decomponha cada objeto em suas PARTES VISÍVEIS (um copo = corpo trapezoidal + borda + base + líquido)",
+    "- Cada ícone deve ter pelo menos 4 formas distintas que JUNTAS formam o objeto reconhecível",
+    "- Elementos devem ser COMPOSIÇÕES ricas com bordas, ornamentos, camadas e detalhes",
+    "- NUNCA entregue um único <path> como ícone — isso é inaceitável",
     "",
     "Além da cobertura, corrija genericidade, nomes contaminados, falta de animação e qualquer fraqueza de direção criativa apontada.",
     "",

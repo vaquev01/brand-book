@@ -430,22 +430,49 @@ Os nomes abaixo já foram derivados do universo semântico de "${brandName}" —
 ${assetPlan.iconPlan.map((entry, i) => `${String(i + 1).padStart(2, "0")}. ${entry.path}  ← conceito: "${entry.concept}" | rationale: ${entry.rationale}`).join("\n")}
 
 Cada ícone: viewBox="0 0 24 24", use ${primaryColor} como cor principal no stroke/fill, stroke-linecap="${borderRadii?.includes("0") ? "square" : "round"}", stroke-linejoin="${borderRadii?.includes("0") ? "miter" : "round"}", stroke-width="1.5".
-MÍNIMO OBRIGATÓRIO: cada ícone deve ter pelo menos 3 tags primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <line>). Ícones com menos de 3 primitivas serão REJEITADOS automaticamente.
+MÍNIMO OBRIGATÓRIO: cada ícone deve ter pelo menos 4 tags primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <line>). Ícones com menos de 4 primitivas serão REJEITADOS automaticamente.
 
-Exemplo de ícone BOM (complexidade mínima aceitável):
+TÉCNICA DE DESENHO: Construa cada ícone como um designer faria — decomponha o objeto em formas geométricas:
+- Um COPO = trapézio (path com 4 pontos), linhas horizontais para borda/base, arco para líquido, elipse para boca
+- Uma FOLHA = path curvo principal + veio central + 3-4 veias laterais como paths menores
+- Uma CHAMA = path curvo externo + path interno menor + base arredondada
+- Um LIVRO = 2 retângulos (capas) + path curvo (lombada) + linhas horizontais (páginas)
+NUNCA entregue um único <path> e chame de ícone. Cada objeto tem MÚLTIPLAS PARTES visíveis.
+
+═══ EXEMPLO 1: Ícone de COPO (nível mínimo aceitável) ═══
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="${primaryColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-  <path d="M8 12l3 3 5-6"/>
-  <circle cx="12" cy="12" r="3"/>
+  <path d="M7 3h10l-1.5 13H8.5L7 3z"/>
+  <ellipse cx="12" cy="3" rx="5" ry="1"/>
+  <path d="M9 8h6"/>
+  <line x1="10" y1="16" x2="10" y2="19"/>
+  <line x1="14" y1="16" x2="14" y2="19"/>
+  <path d="M8 19h8"/>
+</svg>
+
+═══ EXEMPLO 2: Ícone de FOLHA/PLANTA ═══
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="${primaryColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 22V8"/>
+  <path d="M5 3c0 5.5 3.5 10 7 10s7-4.5 7-10c-3.5 0-7 1.5-7 5-1-3.5-3.5-5-7-5z"/>
+  <path d="M9 12c1-1 2-2.5 3-3"/>
+  <path d="M15 10c-1-1-2-2-3-2.5"/>
+  <path d="M8 8c1.5-.5 2.5-1.5 4-2"/>
+  <circle cx="12" cy="20" r="1.5" fill="${primaryColor}" opacity="0.2"/>
+</svg>
+
+═══ EXEMPLO 3: Ícone de CHAMA/ENERGIA ═══
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="${primaryColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 2c-2 4-6 6-6 11a6 6 0 0 0 12 0c0-5-4-7-6-11z"/>
+  <path d="M12 8c-1 2-3 3-3 5.5a3 3 0 0 0 6 0c0-2.5-2-3.5-3-5.5z" fill="${primaryColor}" opacity="0.15"/>
+  <path d="M10 15.5c0 1.1.9 2 2 2s2-.9 2-2"/>
+  <ellipse cx="12" cy="19" rx="4" ry="1" opacity="0.3" fill="${primaryColor}"/>
 </svg>
 
 ═══════════════ ELEMENTOS ABSTRATOS — 8 ARQUIVOS ═══════════════
 Inspire-se DIRETAMENTE em: ${[flora, fauna, objects, symbols].filter(Boolean).join(" | ") || "universo visual da marca"}
 - viewBox="0 0 512 512"
 - Use a paleta completa: ${primaryColor}, ${secondaryColor}, ${accentColor}
-- CADA elemento deve ter MÍNIMO 8 primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <g>)
-- NUNCA entregue um SVG com menos de 8 tags primitivas — será rejeitado automaticamente
-- Elementos devem parecer composições visuais ricas e profissionais, não formas básicas
+- CADA elemento deve ter MÍNIMO 10 primitivas SVG (<path>, <circle>, <rect>, <ellipse>, <polygon>, <g>)
+- NUNCA entregue um SVG com menos de 10 tags primitivas — será rejeitado automaticamente
 
 Os 8 elementos devem cobrir estes TIPOS de uso real:
 element-01.svg → Moldura/frame decorativo (para emoldurar fotos em posts/papelaria)
@@ -457,7 +484,44 @@ element-06.svg → Faixa decorativa/ribbon (para banners e destaques)
 element-07.svg → Ilustração abstrata da marca (composição artística que expressa a personalidade)
 element-08.svg → Ícone hero/statement (versão grande e detalhada do conceito central da marca)
 
-PROIBIDO: formas geométricas simples (um círculo, um quadrado, um triângulo isolado)
+TÉCNICA PARA ELEMENTOS: Cada elemento é uma COMPOSIÇÃO rica com múltiplas camadas:
+- Uma MOLDURA = 4 cantos decorativos (paths curvos) + bordas com ornamentos + linhas internas
+- Um BADGE = círculo externo + círculo interno + texto-path decorativo + estrelas/folhas ao redor + linhas de detalhe
+- Um DIVISOR = linha central + ornamentos simétricos em cada ponta + elemento central (losango/flor/símbolo)
+- Uma FAIXA/RIBBON = path curvo principal + dobras nas pontas + sombra sutil + textura interna
+
+═══ EXEMPLO: Elemento BADGE/SELO (complexidade mínima esperada) ═══
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="256" cy="256" r="200" fill="none" stroke="${primaryColor}" stroke-width="3"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="${primaryColor}" stroke-width="1" stroke-dasharray="8 4"/>
+  <circle cx="256" cy="256" r="160" fill="${primaryColor}" opacity="0.08"/>
+  <path d="M256 96l12 36h38l-30 22 12 36-32-24-32 24 12-36-30-22h38z" fill="${accentColor}"/>
+  <path d="M256 344l12 36h38l-30 22 12 36-32-24-32 24 12-36-30-22h38z" fill="${accentColor}"/>
+  <path d="M152 200l-20 10 20 10" fill="none" stroke="${secondaryColor}" stroke-width="2"/>
+  <path d="M360 200l20 10-20 10" fill="none" stroke="${secondaryColor}" stroke-width="2"/>
+  <rect x="196" y="230" width="120" height="2" fill="${primaryColor}" rx="1"/>
+  <rect x="206" y="270" width="100" height="2" fill="${primaryColor}" rx="1" opacity="0.5"/>
+  <circle cx="256" cy="256" r="40" fill="none" stroke="${accentColor}" stroke-width="2"/>
+  <path d="M240 256l10 10 20-20" fill="none" stroke="${accentColor}" stroke-width="3" stroke-linecap="round"/>
+</svg>
+
+═══ EXEMPLO: Elemento MOLDURA (complexidade mínima esperada) ═══
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect x="40" y="40" width="432" height="432" rx="8" fill="none" stroke="${primaryColor}" stroke-width="2"/>
+  <rect x="56" y="56" width="400" height="400" rx="4" fill="none" stroke="${primaryColor}" stroke-width="1" opacity="0.4"/>
+  <path d="M40 100 Q70 70 100 40" fill="none" stroke="${accentColor}" stroke-width="3"/>
+  <path d="M412 40 Q442 70 472 100" fill="none" stroke="${accentColor}" stroke-width="3"/>
+  <path d="M472 412 Q442 442 412 472" fill="none" stroke="${accentColor}" stroke-width="3"/>
+  <path d="M100 472 Q70 442 40 412" fill="none" stroke="${accentColor}" stroke-width="3"/>
+  <circle cx="40" cy="40" r="6" fill="${accentColor}"/>
+  <circle cx="472" cy="40" r="6" fill="${accentColor}"/>
+  <circle cx="472" cy="472" r="6" fill="${accentColor}"/>
+  <circle cx="40" cy="472" r="6" fill="${accentColor}"/>
+  <line x1="180" y1="40" x2="332" y2="40" stroke="${primaryColor}" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line x1="180" y1="472" x2="332" y2="472" stroke="${primaryColor}" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+</svg>
+
+PROIBIDO: formas geométricas simples (um círculo isolado, um quadrado isolado, um triângulo isolado). Cada elemento deve ter COMPOSIÇÃO com múltiplas partes visíveis.
 
 ═══════════════ PADRÃO SEAMLESS ═══════════════
 Path: vectors/patterns/pattern-${patternSlug}.svg
@@ -465,9 +529,44 @@ Path: vectors/patterns/pattern-${patternSlug}.svg
 - Motivos derivados de: ${[flora, fauna, objects].filter(Boolean).join(", ") || brandName}
 - Cores: ${primaryColor} e ${secondaryColor} com opacidades variadas — premium e on-brand
 
+═══ EXEMPLO: Pattern seamless (estrutura obrigatória) ═══
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="tile" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="none"/>
+      <circle cx="50" cy="50" r="8" fill="${primaryColor}" opacity="0.15"/>
+      <circle cx="0" cy="0" r="8" fill="${primaryColor}" opacity="0.15"/>
+      <circle cx="100" cy="0" r="8" fill="${primaryColor}" opacity="0.15"/>
+      <circle cx="0" cy="100" r="8" fill="${primaryColor}" opacity="0.15"/>
+      <circle cx="100" cy="100" r="8" fill="${primaryColor}" opacity="0.15"/>
+      <path d="M25 0 L50 25 L75 0" fill="none" stroke="${secondaryColor}" stroke-width="1" opacity="0.2"/>
+      <path d="M25 100 L50 75 L75 100" fill="none" stroke="${secondaryColor}" stroke-width="1" opacity="0.2"/>
+      <path d="M0 25 L25 50 L0 75" fill="none" stroke="${secondaryColor}" stroke-width="1" opacity="0.2"/>
+      <path d="M100 25 L75 50 L100 75" fill="none" stroke="${secondaryColor}" stroke-width="1" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="400" fill="url(#tile)"/>
+</svg>
+IMPORTANTE: O pattern DEVE usar <defs><pattern> com patternUnits="userSpaceOnUse". Substitua os motivos genéricos por motivos da marca. O tile deve ter pelo menos 6 elementos visuais.
+
 ═══════════════ MOTION SVGs ═══════════════
 - motion/loading-spinner.svg: viewBox="0 0 64 64", animate um elemento de "${logoSymbol || brandName}", não círculo genérico
 - motion/success-check.svg: viewBox="0 0 64 64", celebração on-brand com cor ${primaryColor}
+
+═══ EXEMPLO: Motion spinner (estrutura obrigatória) ═══
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="32" cy="32" r="24" fill="none" stroke="${primaryColor}" stroke-width="2" opacity="0.2"/>
+  <path d="M32 8 A24 24 0 0 1 56 32" fill="none" stroke="${primaryColor}" stroke-width="3" stroke-linecap="round">
+    <animateTransform attributeName="transform" type="rotate" from="0 32 32" to="360 32 32" dur="1s" repeatCount="indefinite"/>
+  </path>
+  <circle cx="32" cy="32" r="4" fill="${primaryColor}" opacity="0.3">
+    <animate attributeName="r" values="3;5;3" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="32" cy="8" r="3" fill="${accentColor}">
+    <animateTransform attributeName="transform" type="rotate" from="0 32 32" to="360 32 32" dur="1s" repeatCount="indefinite"/>
+  </circle>
+</svg>
+NÃO faça um simples círculo girando. Anime elementos da marca com personalidade.
 
 ═══════════════ SAÍDA JSON OBRIGATÓRIA ═══════════════
 {
@@ -504,8 +603,8 @@ ${JSON.stringify(assetPlan, null, 2)}
               config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
-                temperature: 0.85,
-                maxOutputTokens: 16384,
+                temperature: 0.8,
+                maxOutputTokens: 32768,
               },
             }),
         });
@@ -517,8 +616,8 @@ ${JSON.stringify(assetPlan, null, 2)}
       const openai = new OpenAI({ apiKey });
       const completion = await openai.chat.completions.create({
         model: body.openaiModel?.trim() || "gpt-4o",
-        temperature: 0.75,
-        max_tokens: 16384,
+        temperature: 0.7,
+        max_tokens: 32768,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
