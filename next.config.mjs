@@ -3,6 +3,9 @@ process.env.AUTH_TRUST_HOST = "true";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_BUILD_TIMESTAMP: new Date().toISOString(),
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "oaidalleapiprodscus.blob.core.windows.net" },
