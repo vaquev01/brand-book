@@ -4,7 +4,8 @@ import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
 import { ASSET_CATALOG, detectSizeVariants } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { computeBrandFingerprint } from "@/lib/brandFingerprint";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
   data: BrandbookData;
@@ -225,6 +226,7 @@ function CatalogPicker({ onPick, onClose }: { onPick: (item: typeof ASSET_CATALO
 
 export function SectionApplications({ data, num, generatedImages = {}, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {}, onUpdateData, onAssetGenerated }: Props) {
   const totalGenerated = Object.keys(generatedImages).length;
+  const brandFp = useMemo(() => computeBrandFingerprint(data), [data]);
   const [activeAppVariant, setActiveAppVariant] = useState<Record<number, string>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
   const [briefings, setBriefings] = useState<Record<number, AppBriefing>>({});
@@ -419,6 +421,8 @@ export function SectionApplications({ data, num, generatedImages = {}, onGenerat
           const isAnyLoading = variants.some((v) => loadingKey === `app_${i}_${v.aspectRatio}`);
           const briefing = getBriefing(i);
           const isBriefingExpanded = expandedBriefing === i;
+          const activeAsset = generatedAssets[activeKey];
+          const isStale = activeAsset?.brandFingerprint && activeAsset.brandFingerprint !== brandFp;
 
           return (
             <div key={i} className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative">
@@ -428,8 +432,8 @@ export function SectionApplications({ data, num, generatedImages = {}, onGenerat
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={aiImage} alt={app.type} className="w-full h-full object-cover" />
                     <MockupFrame appType={app.type} />
-                    <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow z-20">
-                      IA
+                    <span className={`absolute top-2 right-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow z-20 ${isStale ? "bg-amber-500" : "bg-green-500"}`}>
+                      {isStale ? "Desatualizado" : "IA"}
                     </span>
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                       <button

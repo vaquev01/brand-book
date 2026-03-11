@@ -43,6 +43,7 @@ import {
   saveBrandAssets,
   saveAssetPack,
 } from "@/lib/imageStorage";
+import { computeBrandFingerprint, countStaleAssets } from "@/lib/brandFingerprint";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
   Image as ImageIcon, Wand2, ShieldCheck, Download,
@@ -842,11 +843,13 @@ export default function Home() {
   }
 
   async function handleAssetGenerated(key: string, asset: GeneratedAsset) {
-    let storedAsset = asset;
+    // Stamp with current brand fingerprint so we can detect staleness later
+    const fp = brandbookRef.current ? computeBrandFingerprint(brandbookRef.current) : undefined;
+    let storedAsset: GeneratedAsset = { ...asset, brandFingerprint: fp };
     // For DALL-E 3 / Ideogram: external URLs expire — display immediately,
     // then convert to permanent data URL in the background
     if (asset.url.startsWith("https://")) {
-      storedAsset = { ...asset, originalUrl: asset.url };
+      storedAsset = { ...storedAsset, originalUrl: asset.url };
       setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
       fetchImageDataUrl(asset.url)
         .then((dataUrl) => {
@@ -1292,6 +1295,60 @@ export default function Home() {
         {/* Tab: Viewer */}
         {tab === "viewer" && brandbookData && (
           <div>
+            {/* Stale assets banner */}
+            {(() => {
+              const assetCount = Object.keys(generatedAssets).length;
+              if (assetCount === 0) return null;
+              const fp = computeBrandFingerprint(brandbookData);
+              const stale = countStaleAssets(generatedAssets, fp);
+              if (stale === 0) return null;
+              return (
+                <div className="no-print mx-auto max-w-6xl mb-4 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-amber-600 text-xl shrink-0">!</span>
+                    <div>
+                      <p className="text-sm font-semibold text-amber-900">
+                        A identidade visual mudou
+                      </p>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        {stale} {stale === 1 ? "imagem foi gerada" : "imagens foram geradas"} com cores/dados antigos.
+                        As imagens marcadas como <strong>&quot;Desatualizado&quot;</strong> precisam ser regeneradas para refletir a nova identidade.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Update all stale assets fingerprint to current (mark as acknowledged)
+                        const currentFp = computeBrandFingerprint(brandbookData);
+                        setGeneratedAssets((prev) => {
+                          const next = { ...prev };
+                          for (const [k, v] of Object.entries(next)) {
+                            if (v.brandFingerprint && v.brandFingerprint !== currentFp) {
+                              next[k] = { ...v, brandFingerprint: currentFp };
+                            }
+                          }
+                          return next;
+                        });
+                      }}
+                      className="text-xs font-medium text-amber-700 px-3 py-1.5 rounded-lg border border-amber-300 hover:bg-amber-100 transition"
+                    >
+                      Ignorar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (viewerTab !== "preview") setViewerTab("preview");
+                      }}
+                      className="text-xs font-bold bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition"
+                    >
+                      Regenerar no Preview
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Sub-tab: Brandbook Preview */}
             {viewerTab === "preview" && (

@@ -365,6 +365,7 @@ export interface GeneratedAsset {
   provider: ImageProvider;
   prompt: string;
   generatedAt: string;
+  brandFingerprint?: string;
 }
 
 export interface AssetPackFile {
