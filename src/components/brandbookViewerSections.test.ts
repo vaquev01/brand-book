@@ -16,11 +16,12 @@ describe("brandbookViewerSections", () => {
   it("exports the expected category order", () => {
     expect(CATEGORIES).toEqual([
       "Estratégia",
-      "Linguagem",
+      "Linguagem & Tipografia",
       "Identidade Visual",
       "Sistema Visual",
       "Aplicações",
-      "Operacional",
+      "Assets",
+      "Para Devs & Designers",
     ]);
   });
 

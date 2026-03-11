@@ -25,11 +25,12 @@ import type { AssetKey } from "@/lib/imagePrompts";
 
 export type Category =
   | "Estratégia"
-  | "Linguagem"
+  | "Linguagem & Tipografia"
   | "Identidade Visual"
   | "Sistema Visual"
   | "Aplicações"
-  | "Operacional";
+  | "Assets"
+  | "Para Devs & Designers";
 
 export type SectionDef = {
   id: string;
@@ -41,31 +42,39 @@ export type SectionDef = {
 
 export const CATEGORIES: Category[] = [
   "Estratégia",
-  "Linguagem",
+  "Linguagem & Tipografia",
   "Identidade Visual",
   "Sistema Visual",
   "Aplicações",
-  "Operacional",
+  "Assets",
+  "Para Devs & Designers",
+];
+
+/** Categories that start collapsed by default */
+export const DEFAULT_COLLAPSED_CATEGORIES: Category[] = [
+  "Para Devs & Designers",
 ];
 
 /** Icon per category for UI display */
 export const CATEGORY_ICONS: Record<Category, string> = {
   "Estratégia": "🧭",
-  "Linguagem": "🗣️",
+  "Linguagem & Tipografia": "🗣️",
   "Identidade Visual": "🎨",
   "Sistema Visual": "✦",
   "Aplicações": "🖨️",
-  "Operacional": "📋",
+  "Assets": "📦",
+  "Para Devs & Designers": "⚙️",
 };
 
 /** Short description per category */
 export const CATEGORY_DESCRIPTIONS: Record<Category, string> = {
   "Estratégia": "Quem somos, para quem e por quê",
-  "Linguagem": "Como a marca fala e se expressa",
-  "Identidade Visual": "Logo, cores e tipografia",
-  "Sistema Visual": "Mundo visual, key visuals e elementos",
-  "Aplicações": "UI, mockups, redes sociais e uso real",
-  "Operacional": "Produção, entrega e governança",
+  "Linguagem & Tipografia": "Voz, tom, tipografia e redes sociais",
+  "Identidade Visual": "Cores, logo e mundo visual",
+  "Sistema Visual": "Key visuals, mascotes e padrões",
+  "Aplicações": "Mockups, materiais e uso real",
+  "Assets": "Pacote de entrega e ativos da marca",
+  "Para Devs & Designers": "Tokens, guidelines, governança e produção",
 };
 
 export type BrandbookViewerImageGenerationControls = {
@@ -109,47 +118,80 @@ export function buildSectionDefs({
   uploadedAssets: UploadedAsset[];
 }): SectionDef[] {
   return [
+    // ── Estratégia (conciso, estilo PPT) ──
     {
       id: "dna",
       title: "DNA & Estratégia",
-      category: "Estratégia",
+      category: "Estratégia" as Category,
       when: true,
-      render: (num) => <SectionDNA data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "brand-story",
-      title: "Brand Story & Manifesto",
-      category: "Estratégia",
-      when: !!data.brandStory,
-      render: (num) => <SectionBrandStory data={data} num={num} onUpdateData={onUpdateData} />,
+      render: (num: number) => <SectionDNA data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "positioning",
       title: "Posicionamento",
-      category: "Estratégia",
+      category: "Estratégia" as Category,
       when: !!data.positioning,
-      render: (num) => <SectionPositioning data={data} num={num} onUpdateData={onUpdateData} />,
+      render: (num: number) => <SectionPositioning data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "brand-story",
+      title: "Brand Story & Manifesto",
+      category: "Estratégia" as Category,
+      when: !!data.brandStory,
+      render: (num: number) => <SectionBrandStory data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "personas",
       title: "Personas",
-      category: "Estratégia",
+      category: "Estratégia" as Category,
       when: !!data.audiencePersonas && data.audiencePersonas.length > 0,
-      render: (num) => <SectionAudiencePersonas data={data} num={num} onUpdateData={onUpdateData} />,
+      render: (num: number) => <SectionAudiencePersonas data={data} num={num} onUpdateData={onUpdateData} />,
     },
+
+    // ── Linguagem & Tipografia (verbal + tipo + social media) ──
     {
       id: "verbal-identity",
       title: "Identidade Verbal",
-      category: "Linguagem",
+      category: "Linguagem & Tipografia" as Category,
       when: !!data.verbalIdentity,
-      render: (num) => <SectionVerbalIdentity data={data} num={num} onUpdateData={onUpdateData} />,
+      render: (num: number) => <SectionVerbalIdentity data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "typography",
+      title: "Tipografia",
+      category: "Linguagem & Tipografia" as Category,
+      when: true,
+      render: (num: number) => <SectionTypography data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "typography-scale",
+      title: "Escala Tipográfica",
+      category: "Linguagem & Tipografia" as Category,
+      when: !!data.typographyScale && data.typographyScale.length > 0,
+      render: (num: number) => <SectionTypographyScale data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "social-media",
+      title: "Guia de Redes Sociais",
+      category: "Linguagem & Tipografia" as Category,
+      when: !!data.socialMediaGuidelines && data.socialMediaGuidelines.platforms.length > 0,
+      render: (num: number) => <SectionSocialMedia data={data} num={num} />,
+    },
+
+    // ── Identidade Visual (cores com WCAG + logo seguindo regras de cores) ──
+    {
+      id: "colors",
+      title: "Cores & Matriz WCAG",
+      category: "Identidade Visual" as Category,
+      when: true,
+      render: (num: number) => <SectionColors data={data} num={num} onUpdateColors={onUpdateColors} />,
     },
     {
       id: "logo",
-      title: "Logo & Identidade Visual",
-      category: "Identidade Visual",
+      title: "Logo & Aplicações de Marca",
+      category: "Identidade Visual" as Category,
       when: true,
-      render: (num) => (
+      render: (num: number) => (
         <SectionLogo
           data={data}
           num={num}
@@ -164,40 +206,21 @@ export function buildSectionDefs({
         />
       ),
     },
-    {
-      id: "colors",
-      title: "Cores",
-      category: "Identidade Visual",
-      when: true,
-      render: (num) => <SectionColors data={data} num={num} onUpdateColors={onUpdateColors} />,
-    },
-    {
-      id: "typography",
-      title: "Tipografia",
-      category: "Identidade Visual",
-      when: true,
-      render: (num) => <SectionTypography data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "typography-scale",
-      title: "Escala Tipográfica",
-      category: "Identidade Visual",
-      when: !!data.typographyScale && data.typographyScale.length > 0,
-      render: (num) => <SectionTypographyScale data={data} num={num} onUpdateData={onUpdateData} />,
-    },
+
+    // ── Sistema Visual (mundo da marca, key visuals, mascotes) ──
     {
       id: "brand-world",
       title: "Mundo da Marca",
-      category: "Sistema Visual",
+      category: "Sistema Visual" as Category,
       when: true,
-      render: (num) => <SectionBrandWorld data={data} num={num} />,
+      render: (num: number) => <SectionBrandWorld data={data} num={num} />,
     },
     {
       id: "key-visual",
       title: "Key Visual",
-      category: "Sistema Visual",
+      category: "Sistema Visual" as Category,
       when: true,
-      render: (num) => (
+      render: (num: number) => (
         <SectionKeyVisual
           data={data}
           num={num}
@@ -213,7 +236,7 @@ export function buildSectionDefs({
     {
       id: "mascots",
       title: "Mascotes & Símbolos",
-      category: "Sistema Visual",
+      category: "Sistema Visual" as Category,
       when: !!(
         (data.keyVisual.mascots && data.keyVisual.mascots.length > 0) ||
         (data.keyVisual.symbols && data.keyVisual.symbols.length > 0) ||
@@ -221,7 +244,7 @@ export function buildSectionDefs({
         (data.keyVisual.structuredPatterns && data.keyVisual.structuredPatterns.length > 0) ||
         uploadedAssets.some((asset) => asset.type === "mascot" || asset.type === "element" || asset.type === "pattern")
       ),
-      render: (num) => (
+      render: (num: number) => (
         <SectionMascots
           data={data}
           num={num}
@@ -235,33 +258,14 @@ export function buildSectionDefs({
         />
       ),
     },
-    {
-      id: "ui-guidelines",
-      title: "Guidelines de UI",
-      category: "Aplicações",
-      when: !!data.uiGuidelines,
-      render: (num) => <SectionUiGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "tokens-a11y",
-      title: "Design Tokens & Acessibilidade",
-      category: "Aplicações",
-      when: isAdvanced && !!data.designTokens && !!data.accessibility,
-      render: (num) => <SectionTokensA11y data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "ux-microcopy-motion",
-      title: "UX Patterns, Microcopy & Motion",
-      category: "Aplicações",
-      when: isAdvanced && !!data.uxPatterns && !!data.microcopy && !!data.motion,
-      render: (num) => <SectionUxMicrocopyMotion data={data} num={num} onUpdateData={onUpdateData} />,
-    },
+
+    // ── Aplicações (mockups e uso real) ──
     {
       id: "applications",
       title: "Aplicações",
-      category: "Aplicações",
+      category: "Aplicações" as Category,
       when: true,
-      render: (num) => (
+      render: (num: number) => (
         <SectionApplications
           data={data}
           num={num}
@@ -275,33 +279,14 @@ export function buildSectionDefs({
         />
       ),
     },
-    {
-      id: "production-guidelines",
-      title: "Produção & Handoff",
-      category: "Operacional",
-      when: !!data.productionGuidelines,
-      render: (num) => <SectionProductionGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
-    },
-    {
-      id: "social-media",
-      title: "Guia de Redes Sociais",
-      category: "Aplicações",
-      when: !!data.socialMediaGuidelines && data.socialMediaGuidelines.platforms.length > 0,
-      render: (num) => <SectionSocialMedia data={data} num={num} />,
-    },
-    {
-      id: "governance",
-      title: "Governança do Design System",
-      category: "Operacional",
-      when: !!data.governance,
-      render: (num) => <SectionGovernance data={data} num={num} onUpdateData={onUpdateData} />,
-    },
+
+    // ── Assets (pacote de entrega) ──
     {
       id: "asset-pack",
       title: "Entrega — Asset Pack",
-      category: "Operacional",
+      category: "Assets" as Category,
       when: true,
-      render: (num) => (
+      render: (num: number) => (
         <SectionAssetPack
           data={data}
           num={num}
@@ -316,16 +301,53 @@ export function buildSectionDefs({
     {
       id: "brand-assets",
       title: "Ativos de Marca",
-      category: "Operacional",
+      category: "Assets" as Category,
       when: uploadedAssets.length > 0,
-      render: (num) => <SectionBrandAssets num={num} uploadedAssets={uploadedAssets} />,
+      render: (num: number) => <SectionBrandAssets num={num} uploadedAssets={uploadedAssets} />,
+    },
+
+    // ── Para Devs & Designers (colapsado por padrão) ──
+    {
+      id: "ui-guidelines",
+      title: "Guidelines de UI",
+      category: "Para Devs & Designers" as Category,
+      when: !!data.uiGuidelines,
+      render: (num: number) => <SectionUiGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "tokens-a11y",
+      title: "Design Tokens & Acessibilidade",
+      category: "Para Devs & Designers" as Category,
+      when: isAdvanced && !!data.designTokens && !!data.accessibility,
+      render: (num: number) => <SectionTokensA11y data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "ux-microcopy-motion",
+      title: "UX Patterns, Microcopy & Motion",
+      category: "Para Devs & Designers" as Category,
+      when: isAdvanced && !!data.uxPatterns && !!data.microcopy && !!data.motion,
+      render: (num: number) => <SectionUxMicrocopyMotion data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "production-guidelines",
+      title: "Produção & Handoff",
+      category: "Para Devs & Designers" as Category,
+      when: !!data.productionGuidelines,
+      render: (num: number) => <SectionProductionGuidelines data={data} num={num} onUpdateData={onUpdateData} />,
+    },
+    {
+      id: "governance",
+      title: "Governança do Design System",
+      category: "Para Devs & Designers" as Category,
+      when: !!data.governance,
+      render: (num: number) => <SectionGovernance data={data} num={num} onUpdateData={onUpdateData} />,
     },
     {
       id: "brand-health",
       title: "Brand Health Dashboard",
-      category: "Operacional",
+      category: "Para Devs & Designers" as Category,
       when: true,
-      render: (num) => <SectionBrandHealth data={data} num={num} />,
+      render: (num: number) => <SectionBrandHealth data={data} num={num} />,
     },
   ];
 }

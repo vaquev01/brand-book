@@ -24,7 +24,7 @@ import {
   pickSectionHeroUrl,
   resolveImmersiveAssets,
 } from "./brandbookViewerAssetSelectors";
-import { buildSectionDefs, CATEGORIES, CATEGORY_ICONS, CATEGORY_DESCRIPTIONS } from "./brandbookViewerSections";
+import { buildSectionDefs, CATEGORIES, CATEGORY_ICONS, CATEGORY_DESCRIPTIONS, DEFAULT_COLLAPSED_CATEGORIES } from "./brandbookViewerSections";
 
 const SECTION_HERO_ASSETS: Record<string, string[]> = {
   "dna": ["hero_visual"],
@@ -61,11 +61,12 @@ const SECTION_ACCENT_ASSETS: Record<string, string[]> = {
 
 const CATEGORY_ATMO_ASSETS: Record<string, string[]> = {
   "Estratégia": ["hero_visual", "hero_lifestyle"],
-  "Linguagem": ["presentation_bg"],
+  "Linguagem & Tipografia": ["presentation_bg", "brand_pattern"],
   "Identidade Visual": ["brand_collateral", "logo_primary", "materials_board", "brand_pattern"],
   "Sistema Visual": ["hero_visual", "hero_lifestyle", "brand_pattern", "brand_mascot"],
   "Aplicações": ["app_mockup", "delivery_packaging", "business_card", "brand_collateral"],
-  "Operacional": ["outdoor_billboard", "presentation_bg"],
+  "Assets": ["outdoor_billboard", "presentation_bg"],
+  "Para Devs & Designers": ["presentation_bg", "brand_pattern"],
 };
 
 interface Props {
@@ -114,7 +115,7 @@ export function BrandbookViewer({
   const [genBarOpen, setGenBarOpen] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [hiddenSections, setHiddenSections] = useState<Set<string>>(new Set());
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set(DEFAULT_COLLAPSED_CATEGORIES));
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
   const noop = () => {};
