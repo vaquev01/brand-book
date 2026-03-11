@@ -7,6 +7,9 @@ interface SidebarProps {
   user: { name?: string | null; email?: string | null; image?: string | null }
 }
 
+/** Key used by Sidebar/Dashboard to signal "create new brandbook" to the editor */
+export const BB_NEW_FLAG = "bb_force_new"
+
 const navItems = [
   {
     href: "/dashboard",
@@ -27,8 +30,9 @@ const navItems = [
     ),
   },
   {
-    href: "/dashboard/projects/new",
+    href: "/dashboard/editor",
     label: "Novo Brandbook",
+    action: "new-brandbook",
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -74,9 +78,26 @@ export function Sidebar({ user }: SidebarProps) {
       <nav className="flex-1 px-3 space-y-0.5">
         <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-300 px-3 mb-2">Menu</div>
         {navItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href))
+          const isNewBrandbook = (item as { action?: string }).action === "new-brandbook"
+          const isActive = isNewBrandbook
+            ? false // "Novo Brandbook" is an action, never shows as active
+            : item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname === item.href || pathname.startsWith(item.href)
+
+          if (isNewBrandbook) {
+            return (
+              <Link
+                key="new-brandbook"
+                href="/dashboard/new-brandbook"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              >
+                <span className="text-gray-400">{item.icon}</span>
+                {item.label}
+              </Link>
+            )
+          }
+
           return (
             <Link
               key={item.href}

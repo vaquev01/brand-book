@@ -34,7 +34,7 @@ export default async function DashboardPage() {
           <p className="text-gray-400 mt-1 text-sm">Seus brandbooks e projetos de marca</p>
         </div>
         <Link
-          href="/dashboard/projects/new"
+          href="/dashboard/new-brandbook"
           className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
           style={{
             background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)",
@@ -103,7 +103,7 @@ function EmptyState() {
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
-          href="/dashboard/editor?tab=generate"
+          href="/dashboard/new-brandbook"
           className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
           style={{
             background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)",

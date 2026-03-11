@@ -1,10 +1,7 @@
 "use client"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 export default function NewProjectPage() {
-  const router = useRouter()
-
   return (
     <div className="max-w-2xl mx-auto animate-page-enter">
       <div className="mb-6">
@@ -18,8 +15,8 @@ export default function NewProjectPage() {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button
-          onClick={() => router.push("/dashboard/editor?tab=generate")}
+        <Link
+          href="/dashboard/new-brandbook"
           className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-gray-300 hover:shadow-md transition-all text-left group"
         >
           <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center mb-4">
@@ -33,10 +30,10 @@ export default function NewProjectPage() {
           <p className="text-sm text-gray-400 mt-1">
             Descreva sua marca e a IA cria tudo automaticamente
           </p>
-        </button>
+        </Link>
 
-        <button
-          onClick={() => router.push("/dashboard/editor?tab=examples")}
+        <Link
+          href="/dashboard/new-brandbook"
           className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-gray-300 hover:shadow-md transition-all text-left group"
         >
           <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
@@ -50,7 +47,7 @@ export default function NewProjectPage() {
           <p className="text-sm text-gray-400 mt-1">
             Comece a partir de um brandbook existente
           </p>
-        </button>
+        </Link>
       </div>
     </div>
   )

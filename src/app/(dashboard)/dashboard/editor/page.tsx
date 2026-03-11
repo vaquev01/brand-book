@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
 import { ExampleCard } from "@/components/ExampleCard";
 import { JsonBySectionPanel } from "@/components/JsonBySectionPanel";
-import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
+import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, loadApiKeysFromServer, saveApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookEditor } from "@/components/BrandbookEditor";
 import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
 import { GenerateBriefingForm, type GenerateBriefingData } from "@/components/GenerateBriefingForm";
@@ -85,7 +86,8 @@ function getTextProviderModel(provider: AiTextProvider, keys: ApiKeys): string {
 }
 
 export default function Home() {
-  const [tab, setTab] = useState<Tab>("examples");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<Tab>("generate");
   const [loading, setLoading] = useState(false);
   const [loadingShared, setLoadingShared] = useState(false);
   const [generationPhase, setGenerationPhase] = useState("");
@@ -107,6 +109,7 @@ export default function Home() {
     updatedAt: string; brandbookVersions: Array<{ brandbookJson?: unknown }>;
   }>>([]);
   const [loadingSavedProjects, setLoadingSavedProjects] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const strategyProvider = useAppPreferencesStore(selectStrategyProvider);
   const promptOpsProvider = useAppPreferencesStore(selectPromptOpsProvider);
@@ -179,7 +182,7 @@ export default function Home() {
     setError("");
   }, []);
 
-  async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, promptProvider: AiTextProvider) {
+  async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, promptProvider: AiTextProvider, projectId?: string | null) {
     const providerKeyMap: Record<ImageProvider, keyof ApiKeys> = {
       dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google",
     };
@@ -235,7 +238,9 @@ export default function Home() {
           body: JSON.stringify({
             prompt,
             provider,
+            assetKey,
             aspectRatio: "1:1",
+            projectId: projectId || undefined,
             openaiKey: keys.openai || undefined,
             stabilityKey: keys.stability || undefined,
             ideogramKey: keys.ideogram || undefined,
@@ -271,30 +276,85 @@ export default function Home() {
     const keys = loadApiKeys();
     setApiKeys(keys);
 
+    // Merge with server-stored keys (server wins)
+    loadApiKeysFromServer().then((serverKeys) => {
+      if (serverKeys) {
+        setApiKeys((prev) => {
+          const merged = { ...prev };
+          let changed = false;
+          for (const k of Object.keys(merged) as (keyof typeof merged)[]) {
+            if (serverKeys[k] && serverKeys[k] !== prev[k]) {
+              merged[k] = serverKeys[k];
+              changed = true;
+            }
+          }
+          if (changed) saveApiKeys(merged);
+          return changed ? merged : prev;
+        });
+      }
+    });
+
+    // ── CHECK sessionStorage flag from Sidebar "Novo Brandbook" button ──
+    // This MUST be checked FIRST, before any URL params or auto-restore.
+    const forceNew = sessionStorage.getItem("bb_force_new");
+    if (forceNew) {
+      sessionStorage.removeItem("bb_force_new");
+      setBrandbookData(null);
+      setGeneratedAssets({});
+      setUploadedBrandAssets([]);
+      setAssetPack({ files: [] });
+      setCurrentProjectId(null);
+      resetHistory();
+      setError("");
+      setTab("generate");
+      migrateLegacyLocalStorageToIndexedDB().catch(() => {});
+      return; // ← HARD STOP. Clean slate, no auto-restore.
+    }
+
+    // ── CRITICAL: Read ALL URL params SYNCHRONOUSLY before any async work ──
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    const nameParam = params.get("name");
+    const industryParam = params.get("industry");
+    const briefingParam = params.get("briefing");
+    const bbParam = params.get("bb");
+    const slugParam = params.get("slug");
+
+    // Clean URL immediately so no other code can race with it
+    if (params.toString()) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
+    // Handle ?tab= (from "Novo Brandbook" or onboarding)
+    if (tabParam === "generate" || tabParam === "examples") {
+      setTab(tabParam);
+    }
+
+    // Handle prefill from onboarding
+    if (nameParam) setPrefillBrandName(nameParam);
+    if (industryParam) setPrefillIndustry(industryParam);
+    if (briefingParam) setPrefillBriefing(briefingParam);
+
+    // If user wants to create a new brandbook, clean everything and STOP.
+    // No auto-restore, no loading, nothing.
+    if (tabParam === "generate" && !bbParam && !slugParam) {
+      setBrandbookData(null);
+      setGeneratedAssets({});
+      setUploadedBrandAssets([]);
+      setAssetPack({ files: [] });
+      setCurrentProjectId(null);
+      resetHistory();
+      setError("");
+      // Still run migration in background (non-blocking)
+      migrateLegacyLocalStorageToIndexedDB().catch(() => {});
+      return; // ← HARD STOP. Don't touch anything else.
+    }
+
+    // For all other cases, run the async init logic
     void (async () => {
       await migrateLegacyLocalStorageToIndexedDB().catch(() => {});
 
-      const params = new URLSearchParams(window.location.search);
-
-      // Handle ?tab= query parameter (from "Novo Brandbook" page or onboarding)
-      const tabParam = params.get("tab");
-      if (tabParam === "generate" || tabParam === "examples") {
-        setTab(tabParam);
-      }
-
-      // Handle prefill from onboarding (?name=, ?industry=, ?briefing=)
-      const nameParam = params.get("name");
-      const industryParam = params.get("industry");
-      const briefingParam = params.get("briefing");
-      if (nameParam) setPrefillBrandName(nameParam);
-      if (industryParam) setPrefillIndustry(industryParam);
-      if (briefingParam) setPrefillBriefing(briefingParam);
-      if (nameParam || industryParam || briefingParam) {
-        window.history.replaceState({}, "", window.location.pathname + (tabParam ? `?tab=${tabParam}` : ""));
-      }
-
       // Load shared brandbook from URL
-      const bbParam = params.get("bb");
       if (bbParam) {
         setLoadingShared(true);
         setTab("viewer");
@@ -310,7 +370,6 @@ export default function Home() {
               nextTab: "viewer",
               nextViewerTab: "preview",
             });
-            window.history.replaceState({}, "", window.location.pathname);
           })
           .catch(() => {
             setError("Link compartilhado inválido ou expirado.");
@@ -323,13 +382,13 @@ export default function Home() {
       }
 
       // Load project from database via ?slug= parameter
-      const slugParam = params.get("slug");
       if (slugParam) {
         setLoadingShared(true);
         try {
           const res = await fetch(`/api/projects/${encodeURIComponent(slugParam)}`);
           if (res.ok) {
-            const json = await res.json() as { data?: { brandbookVersions?: Array<{ brandbookJson?: unknown }> } };
+            const json = await res.json() as { data?: { id?: string; brandbookVersions?: Array<{ brandbookJson?: unknown }> } };
+            if (json.data?.id) setCurrentProjectId(json.data.id);
             const latestVersion = json.data?.brandbookVersions?.[0];
             if (latestVersion?.brandbookJson) {
               const validated = validateLooseBrandbook(latestVersion.brandbookJson, {
@@ -364,7 +423,12 @@ export default function Home() {
         return;
       }
 
-      // Restore last active brandbook session from storage
+      // No special params — restore last active session
+      if (tabParam === "examples") {
+        // User wants to see examples, don't auto-restore
+        return;
+      }
+
       const activeSlug = getActiveSlug();
       if (activeSlug) {
         const savedData = loadBrandbookData(activeSlug);
@@ -423,6 +487,10 @@ export default function Home() {
     setLoading(true);
     setError("");
     setBrandbookData(null);
+    setGeneratedAssets({});
+    setUploadedBrandAssets([]);
+    setAssetPack({ files: [] });
+    setCurrentProjectId(null);
     resetHistory();
     setGenerationPhase("Preparando geração...");
     setGenerationPct(0);
@@ -491,22 +559,32 @@ export default function Home() {
                 description: `${validated.brandName} — ${validated.industry}`,
               });
 
-              // Auto-save to database
-              fetch("/api/projects", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  name: validated.brandName,
-                  industry: validated.industry,
-                  briefing: formData.briefing,
-                  projectMode: formData.projectMode,
-                  brandbookData: validated,
-                }),
-              }).catch(() => {});
+              // Auto-save to database and capture projectId, then generate logos
+              let savedProjectId: string | undefined;
+              try {
+                const saveRes = await fetch("/api/projects", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    name: validated.brandName,
+                    industry: validated.industry,
+                    briefing: formData.briefing,
+                    projectMode: formData.projectMode,
+                    brandbookData: validated,
+                  }),
+                });
+                if (saveRes.ok) {
+                  const json = await saveRes.json() as { data?: { id?: string } };
+                  if (json.data?.id) {
+                    savedProjectId = json.data.id;
+                    setCurrentProjectId(savedProjectId);
+                  }
+                }
+              } catch { /* non-fatal */ }
 
-              // Auto-generate logo images
+              // Auto-generate logo images (with projectId for R2 persistence)
               const currentKeys = loadApiKeys();
-              autoGenerateLogos(validated, currentKeys, promptOpsProvider).catch(() => {});
+              autoGenerateLogos(validated, currentKeys, promptOpsProvider, savedProjectId).catch(() => {});
             } else if (event.type === "error") {
               throw new Error(event.error ?? "Erro desconhecido");
             }
@@ -527,8 +605,51 @@ export default function Home() {
     }
   }
 
+  /** Reset all state and navigate to the generate form for a fresh brandbook */
+  function startNewBrandbook() {
+    setBrandbookData(null);
+    setGeneratedAssets({});
+    setUploadedBrandAssets([]);
+    setAssetPack({ files: [] });
+    setCurrentProjectId(null);
+    resetHistory();
+    setError("");
+    setPrefillBrandName("");
+    setPrefillIndustry("");
+    setPrefillBriefing("");
+    setJsonText("");
+    setTab("generate");
+  }
+
+  // React to client-side navigations to ?tab=generate (e.g. clicking "Novo Brandbook"
+  // while already on the editor page). useSearchParams changes trigger this effect.
+  // We track whether init has completed to avoid double-processing on mount.
+  const initDoneRef = useRef(false);
+  useEffect(() => {
+    // Mark init as done after a tick (init effect runs first, same commit)
+    const timer = setTimeout(() => { initDoneRef.current = true; }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Skip until init effect has had time to process
+    if (!initDoneRef.current) return;
+    // Only react if there's actually a tab param in the live URL
+    const tabParam = searchParams.get("tab");
+    if (!tabParam) return;
+    if (tabParam === "generate") {
+      startNewBrandbook();
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (tabParam === "examples") {
+      setTab("examples");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   function handleLoadExample(example: BrandbookData) {
     try {
+      setCurrentProjectId(null); // Examples are not saved projects
       const validated = validateLooseBrandbook(example, {
         action: "carregar exemplo",
         subject: "Brandbook de exemplo",
@@ -751,11 +872,11 @@ export default function Home() {
         {tab === "viewer" && brandbookData ? (
           /* ── Viewer mode: single consolidated row ── */
           <div className="app-shell mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 min-w-0">
-            {/* Logo — click to go back */}
+            {/* Logo — click to start new brandbook */}
             <button
-              onClick={() => setTab("generate")}
+              onClick={startNewBrandbook}
               className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:bg-indigo-700"
-              title="Voltar ao gerador"
+              title="Novo brandbook"
             >
               <Hexagon className="text-white w-3.5 h-3.5" fill="currentColor" />
             </button>
@@ -1076,7 +1197,8 @@ export default function Home() {
                           try {
                             const res = await fetch(`/api/projects/${encodeURIComponent(project.slug)}`);
                             if (res.ok) {
-                              const json = await res.json() as { data?: { brandbookVersions?: Array<{ brandbookJson?: unknown }> } };
+                              const json = await res.json() as { data?: { id?: string; brandbookVersions?: Array<{ brandbookJson?: unknown }> } };
+                              if (json.data?.id) setCurrentProjectId(json.data.id);
                               const latestVersion = json.data?.brandbookVersions?.[0];
                               if (latestVersion?.brandbookJson) {
                                 const validated = validateLooseBrandbook(latestVersion.brandbookJson, {
@@ -1199,6 +1321,7 @@ export default function Home() {
                   });
                 }}
                 onUpdateData={(updater) => updateBrandbook(updater)}
+                projectId={currentProjectId}
               />
             )}
 

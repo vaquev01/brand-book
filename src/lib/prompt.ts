@@ -687,3 +687,398 @@ REGRA: Nenhuma imagem pode ser ignorada. Cada imagem DEVE deixar rastro em pelo 
 
   return prompt;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// CHAIN GENERATION — Multi-step prompts for deeper quality (3 steps)
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Extract compact strategic DNA from Step 1 output.
+ * Keeps the essence (~2-3k chars) instead of the full JSON (~15-20k chars).
+ * This prevents context window overflow in Steps 2 and 3.
+ */
+export function compactStrategySummary(data: Record<string, unknown>): string {
+  const bc = (data.brandConcept ?? {}) as Record<string, unknown>;
+  const pos = (data.positioning ?? {}) as Record<string, unknown>;
+  const vi = (data.verbalIdentity ?? {}) as Record<string, unknown>;
+  const bs = (data.brandStory ?? {}) as Record<string, unknown>;
+  const personas = (data.audiencePersonas ?? []) as Record<string, unknown>[];
+
+  const personaSummary = personas.slice(0, 4).map((p) =>
+    `${p.name ?? "?"} (${p.role ?? "?"}) — goals: ${(p.goals as string[] ?? []).slice(0, 2).join("; ")}`
+  ).join("\n  ");
+
+  const pillars = ((vi.messagingPillars ?? []) as Record<string, unknown>[])
+    .slice(0, 4).map((p) => p.title ?? "").filter(Boolean).join(", ");
+
+  return `RESUMO ESTRATÉGICO (Etapa 1):
+• Marca: ${data.brandName ?? "?"} — ${data.industry ?? "?"}
+• Propósito: ${bc.purpose ?? "?"}
+• Missão: ${bc.mission ?? "?"}
+• Visão: ${bc.vision ?? "?"}
+• UVP: ${bc.uniqueValueProposition ?? "?"}
+• Arquétipo: ${bc.brandArchetype ?? "?"}
+• Personalidade: ${(bc.personality as string[] ?? []).join(", ")}
+• Tom de voz: ${bc.toneOfVoice ?? "?"}
+• Valores: ${(bc.values as string[] ?? []).slice(0, 5).join(" | ")}
+• Posicionamento: ${pos.positioningStatement ?? "?"}
+• Categoria: ${pos.category ?? "?"} → Target: ${pos.targetMarket ?? "?"}
+• Diferenciadores: ${(pos.primaryDifferentiators as string[] ?? []).slice(0, 3).join(" | ")}
+• Tagline: ${vi.tagline ?? "?"}
+• One-liner: ${vi.oneLiner ?? "?"}
+• Voice traits: ${(vi.brandVoiceTraits as string[] ?? []).join(", ")}
+• Pillars: ${pillars}
+• Vocabulário preferido: ${((vi.vocabulary as Record<string, unknown>)?.preferred as string[] ?? []).slice(0, 8).join(", ")}
+• Vocabulário evitar: ${((vi.vocabulary as Record<string, unknown>)?.avoid as string[] ?? []).slice(0, 8).join(", ")}
+• Manifesto (resumo): ${(bs.manifesto as string ?? "").slice(0, 400)}${(bs.manifesto as string ?? "").length > 400 ? "..." : ""}
+• Brand Promise: ${bs.brandPromise ?? "?"}
+• Personas:
+  ${personaSummary}`;
+}
+
+/**
+ * Extract compact visual identity summary from Step 2 output.
+ * Keeps color names/hex, font names, logo concept (~1.5k chars).
+ */
+export function compactVisualSummary(data: Record<string, unknown>): string {
+  const logo = (data.logo ?? {}) as Record<string, unknown>;
+  const colors = (data.colors ?? {}) as Record<string, unknown>;
+  const typo = (data.typography ?? {}) as Record<string, unknown>;
+
+  const primaryColors = (colors.primary as Record<string, unknown>[] ?? [])
+    .map((c) => `${c.name} (${c.hex})`).join(", ");
+  const secondaryColors = (colors.secondary as Record<string, unknown>[] ?? [])
+    .map((c) => `${c.name} (${c.hex})`).join(", ");
+
+  const fonts = ["marketing", "ui", "monospace", "primary", "secondary"]
+    .map((key) => {
+      const f = (typo[key] ?? null) as Record<string, unknown> | null;
+      return f ? `${key}: ${f.name} (${(f.weights as string[] ?? []).join("/")})` : null;
+    }).filter(Boolean).join("\n  ");
+
+  return `RESUMO VISUAL (Etapa 2):
+• Logo clearSpace/conceito: ${(logo.clearSpace as string ?? "").slice(0, 300)}
+• Forma/psicologia: ${logo.shapePsychology ?? "?"}
+• Estágio: ${logo.evolutionaryStage ?? "?"}
+• Semiótica: ${(logo.semioticAnalysis as Record<string, unknown>)?.natureOfSymbol ?? "?"} — ${(logo.semioticAnalysis as Record<string, unknown>)?.connotation ?? "?"}
+• Cores primárias: ${primaryColors}
+• Cores secundárias: ${secondaryColors}
+• Tipografia:
+  ${fonts}`;
+}
+
+/**
+ * Step 1: Strategy & Positioning — DNA, story, positioning, personas, verbal identity
+ */
+export function buildChainStep1Prompt(
+  brandName: string,
+  industry: string,
+  briefing: string,
+  projectMode: "new_brand" | "rebrand",
+  scope: GenerateScope,
+  creativity: CreativityLevel,
+  hasReferenceImages: boolean,
+  hasLogoImage: boolean,
+  hasExternalReferences: boolean,
+  externalRefsText: string
+): string {
+  const fullUserPrompt = buildUserPrompt(
+    brandName, industry, briefing, projectMode, scope,
+    hasReferenceImages, undefined, hasLogoImage, hasExternalReferences
+  ) + externalRefsText;
+
+  return `${fullUserPrompt}
+
+═══════════════════════════════════════
+ETAPA 1 DE 3 — ESTRATÉGIA & POSICIONAMENTO (GERE APENAS ESTAS SEÇÕES)
+═══════════════════════════════════════
+${CREATIVITY_USER_INSTRUCTION[creativity]}
+
+Nesta etapa, foque EXCLUSIVAMENTE na fundação estratégica da marca. Gere APENAS as seções abaixo com PROFUNDIDADE MÁXIMA.
+
+SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
+• brandName, industry, schemaVersion
+• brandConcept (purpose, mission, vision, UVP, RTBs, psychographics, values, personality, toneOfVoice, brandArchetype — TUDO profundo)
+• brandStory (manifesto de 2-3 parágrafos NA VOZ DA MARCA, originStory, brandPromise, brandBeliefs)
+• positioning (category inovadora, targetMarket preciso, positioningStatement memorável, differentiators, competitors, RTBs)
+• audiencePersonas (3-4 personas RICAS — nomes reais, contexto de vida, goals com emoção, dores profundas, objeções específicas, canais)
+• verbalIdentity (tagline memorável, oneLiner, brandVoiceTraits, messagingPillars com copy REAL, vocabulary 8+, doDont, headlines 5+, CTAs, tonePerChannel para 4+ canais)
+
+QUALIDADE ESPERADA:
+- Cada persona deve ter HISTÓRIA DE VIDA, não apenas bullet points
+- O manifesto deve emocionar — deve soar como peça publicitária premiada
+- O positioningStatement deve ser citável e memorável
+- Os messagingPillars devem ter copy pronta para uso REAL em cada canal
+- O vocabulário preferred e avoid deve ter 10+ palavras cada
+- O tonePerChannel deve cobrir pelo menos 4 canais com exemplos prontos
+
+Retorne APENAS um JSON válido com estas seções. NÃO gere seções visuais (logo, colors, typography, keyVisual, applications, etc).`;
+}
+
+/**
+ * Step 2: Visual Identity — logo, colors, typography, based on Step 1 output.
+ * Receives COMPACT strategy summary to save context window.
+ * Full Step 1 JSON is NOT needed — the summary carries all key decisions.
+ */
+export function buildChainStep2Prompt(
+  strategySummary: string,
+  creativity: CreativityLevel,
+  hasLogoImage: boolean,
+  hasReferenceImages: boolean
+): string {
+  return `Você recebeu o RESUMO ESTRATÉGICO de uma marca já definida na Etapa 1. Agora gere a IDENTIDADE VISUAL como consequência direta dessa estratégia.
+
+═══════════════════════════════════════
+${strategySummary}
+═══════════════════════════════════════
+
+═══════════════════════════════════════
+ETAPA 2 DE 3 — IDENTIDADE VISUAL (GERE APENAS ESTAS SEÇÕES)
+═══════════════════════════════════════
+${CREATIVITY_USER_INSTRUCTION[creativity]}
+
+Cada decisão visual DEVE ser RASTREÁVEL à estratégia acima. Se o archetype é "Rebelde", as cores devem refletir rebeldia. Se o tone é "caloroso", a tipografia deve refletir calor.
+
+${hasLogoImage ? `RE-ANÁLISE OBRIGATÓRIA DAS IMAGENS À LUZ DA ESTRATÉGIA:
+A imagem do logo (e referências se houver) foi analisada na Etapa 1 para definir a estratégia.
+Agora, RE-ANALISE essas mesmas imagens com FOCO VISUAL:
+- Cores EXATAS do logo → base da paleta primária (extraia HEX precisos)
+- Geometria do logo → define border-radius, formas dos componentes, estágio evolutivo
+- Estilo tipográfico do wordmark → direciona a escolha de Google Fonts para "marketing"
+- Mood visual → calibra o peso e a temperatura da identidade
+A estratégia já foi definida. Agora as imagens servem como GUIA VISUAL, não como fonte estratégica.` : ""}
+${hasReferenceImages && !hasLogoImage ? `ANÁLISE VISUAL DAS REFERÊNCIAS:
+As imagens de referência contêm pistas visuais importantes. Analise:
+- Cores dominantes → influenciam a paleta
+- Estilo/mood → calibra a temperatura visual
+- Composição → sugere o sistema de design` : ""}
+
+SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
+• logo (primary, secondary, symbol, favicon, clearSpace DETALHADO explicando como o símbolo nasce do propósito e posicionamento, minimumSize, incorrectUsages 5+, semioticAnalysis completa, shapePsychology, negativeSpaceMetaphor, evolutionaryStage)
+• logoVariants (horizontal, stacked, mono, negative, markOnly, wordmarkOnly — todos com URLs placehold.co usando cores da paleta)
+• colors (primary 2-3 com tonalScale 50-900, secondary 2-4 com tonalScale, semantic completa, dataViz 5-8 — CADA cor com nome criativo que revela sua psicologia, usage detalhado, CMYK correto)
+• typography (marketing com personalidade forte, ui funcional, monospace técnica — CADA uma com fallbackFont, textTransform, category, antiBlandingRationale explicando como combate a mesmice)
+• typographyScale (mínimo 10 níveis — Display até Overline — com medidas em px, lineHeight, fontWeight, letterSpacing, usage)
+
+REGRAS CRÍTICAS:
+- O logo DEVE ser CONSEQUÊNCIA do propósito, archetype e positioning — não um truque visual${hasLogoImage ? "\n- O LOGO REAL DA MARCA (imagem anexada) é a ÂNCORA IMUTÁVEL — extraia cores e estilo dele" : ""}
+- Tipografia: a marketing font deve CONTRASTAR com a ui font — uma com personalidade forte, outra funcional
+- NOMES DE CORES devem ser criativos e específicos da marca (ex: "Verde Caraca" não "Verde Escuro")
+- Cada cor primária e secundária DEVE ter tonalScale com mínimo 7 shades (50, 100, 200, 300, 500, 700, 900)
+- Os placehold.co URLs devem usar as cores HEX reais da paleta
+
+Retorne APENAS um JSON válido com estas seções. NÃO inclua brandConcept, positioning, personas, verbalIdentity, brandStory.`;
+}
+
+/**
+ * Step 3: System, Applications, Operations + Image Generation Briefing
+ * Receives COMPACT summaries of Steps 1 and 2 + FULL color/font details for cross-referencing.
+ */
+export function buildChainStep3Prompt(
+  strategySummary: string,
+  visualSummary: string,
+  fullColorsJson: string,
+  fullTypographyJson: string,
+  fullLogoJson: string
+): string {
+  return `Você recebeu o RESUMO ESTRATÉGICO e VISUAL de uma marca, além dos detalhes completos de cores, tipografia e logo. Gere o SISTEMA VISUAL, APLICAÇÕES, OPERACIONAL e BRIEFING DE IMAGENS.
+
+═══════════════════════════════════════
+${strategySummary}
+═══════════════════════════════════════
+
+═══════════════════════════════════════
+${visualSummary}
+═══════════════════════════════════════
+
+═══════════════════════════════════════
+DETALHES PARA CROSS-REFERENCING (use NOMES EXATOS):
+═══════════════════════════════════════
+CORES: ${fullColorsJson}
+
+TIPOGRAFIA: ${fullTypographyJson}
+
+LOGO: ${fullLogoJson}
+
+═══════════════════════════════════════
+ETAPA 3 DE 3 — SISTEMA VISUAL, APLICAÇÕES, OPERACIONAL & IMAGE BRIEFING
+═══════════════════════════════════════
+
+SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
+
+A) SISTEMA VISUAL:
+• keyVisual (elements 6+, photographyStyle com referências REAIS, iconography, illustrations, marketingArchitecture, compositionPhilosophy, mascots se aplicável, symbols 3+, patterns 2+, structuredPatterns 2+ com detalhes, flora/fauna/objects)
+• designTokens (spacing 10+, borderRadii 6+ refletindo geometria do logo, shadows 3-5, breakpoints 4, grid)
+• uiGuidelines (layoutGrid, spacingDensity, iconographyStyle técnico, illustrationStyle, dataVizGuidelines, components 6+ com estados completos)
+
+B) APLICAÇÕES:
+• applications (4+ variadas — digital + print — CADA uma com dimensions, materialSpecs, layoutGuidelines, typographyHierarchy com NOMES EXATOS das fontes e cores, artDirection, substrates)
+• socialMediaGuidelines (3+ plataformas com formato, tom, pillars, frequência, do/dont, exemplo de post — globalHashtagStrategy, brandVoiceAdaptation)
+
+C) OPERACIONAL:
+• productionGuidelines (fileNamingConvention, handoffChecklist 10+, printSpecs, digitalSpecs, deliverables, productionMethods com flexografia/serigrafia/bordado — restrições técnicas REAIS)
+• governance (designTools, documentationPlatform, componentLibrary, versioningStrategy, updateProcess, ownershipRoles)
+
+D) BRIEFING DE GERAÇÃO DE IMAGENS (imageGenerationBriefing):
+TODOS estes campos com profundidade máxima:
+• visualStyle — estilo visual técnico com referências de movimento artístico REAL
+• colorMood — mood cromático com NOMES EXATOS das cores da paleta
+• compositionNotes — instruções técnicas (regra dos terços, DOF, iluminação)
+• moodKeywords — mínimo 10 keywords de mood
+• artisticReferences — fotógrafos, diretores, artistas REAIS com explicação
+• avoidElements — lista do que NUNCA pode aparecer
+• logoStyleGuide — como o logo aparece em contextos fotográficos/gráficos
+• photographyMood — iluminação, temperatura, DOF, cenários, modelos
+• patternStyle — estrutura, escala, densidade, variações de cor
+• marketingVisualLanguage — hierarquia, composição, uso de espaço em mídia
+• negativePrompt — negative prompt COMPLETO derivado do archetype + avoidElements
+• emotionalCore — emoção central que toda imagem DEVE evocar (conectada ao manifesto)
+• textureLanguage — vocabulário tátil/material da marca
+• lightingSignature — temperatura Kelvin, ratio key:fill, direção, qualidade
+• cameraSignature — lente, DOF, perspectiva por tipo de peça
+• brandArchetype — archetype dominante + secundário com tradução visual
+• sensoryProfile — perfil sensorial completo (5 sentidos traduzidos em linguagem visual)
+
+REGRAS CRÍTICAS DE CROSS-REFERENCING:
+- Cada cor referenciada DEVE usar o NOME EXATO da paleta (ex: "Verde Caraca" não "verde escuro")
+- typographyHierarchy de cada application DEVE nomear as fontes exatas (ex: "Títulos em Barlow Condensed ExtraBold")
+- borderRadii devem refletir a geometria do logo (orgânico → maiores, angular → menores)
+- structuredPatterns devem usar cores da paleta nos backgrounds
+- productionMethods devem conter restrições técnicas REAIS
+- imageGenerationBriefing DEVE conectar emotionalCore ao manifesto e archetype
+
+Retorne APENAS um JSON válido com estas seções. NÃO inclua brandConcept, positioning, personas, verbalIdentity, brandStory, logo, colors, typography, typographyScale.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODULAR SYSTEM PROMPT BLOCKS — used by focused chain system prompts
+// ═══════════════════════════════════════════════════════════════════
+
+const ROLE_PREAMBLE = `Você é um Diretor de Arte Sênior, Estrategista de Marca e UX/UI Designer com 20+ anos de experiência, referência global em branding de alto impacto. Você já trabalhou com marcas de Fortune 500 e startups que se tornaram unicórnios.
+
+Sua saída DEVE SER EXCLUSIVAMENTE UM OBJETO JSON válido. Não adicione nenhum texto antes ou depois do JSON. Não use formatação markdown.`;
+
+const STRATEGY_PRINCIPLES = `PRINCÍPIOS PARA ESTRATÉGIA:
+1. COERÊNCIA SISTÊMICA: Todas as escolhas devem se originar do mesmo conceito central. O brandbook deve parecer criado por uma única mente criativa.
+2. ESPECIFICIDADE: Evite termos vagos como "moderno", "profissional" sem contexto. Seja específico e profundo.
+3. MARCAS COMO REFERÊNCIA: Use referências REAIS e específicas — artistas, fotógrafos, diretores, movimentos culturais.
+4. MASCOTES & SÍMBOLOS: Avalie se a marca se beneficia de mascotes (food & beverage, entretenimento, apps jovens). Se sim, planeje-os.
+5. COMPLETUDE: Preencha TODOS os campos do JSON com profundidade. Campos vagos comprometem a usabilidade.
+6. REBRAND COM PRESERVAÇÃO DE EQUITY: Se houver sinais de marca existente, extraia o que é forte e preserve. Rebrand = evolução, não ruptura.`;
+
+const STRATEGY_SECTION_INSTRUCTIONS = `INSTRUÇÕES POR SEÇÃO:
+• "brandConcept": propósito filosófico profundo, missão acionável, visão aspiracional, UVP diferenciada (não clichê), RTBs verificáveis, psicografia detalhada, valores com conexão visual, personalidade com nuances, tom de voz com exemplos. "brandArchetype" — arquétipo dominante com explicação de COMO se manifesta.
+• "positioning": categoria inovadora (não a óbvia), mercado-alvo preciso, positioning statement memorável, diferenciais realmente únicos, concorrentes honestos, RTBs concretos.
+• "audiencePersonas": 2-4 personas ricas — nomes reais, contextos de vida detalhados, objetivos com emoção, dores profundas, objeções específicas, canais preferidos. Para SaaS: incluir "companySize" e "digitalMaturity".
+• "verbalIdentity": tagline memorável e intraduzível, one-liner com ganchos, traços de voz com exemplos, messaging pillars com copy REAL, vocabulário 8+ cada lista, do/don'ts acionáveis, 5+ headlines e CTAs. "tonePerChannel" para 4+ canais com exemplos prontos.
+• "brandStory": manifesto de 2-3 parágrafos NA VOZ DA MARCA (emocional, aspiracional), originStory, brandPromise (1-2 frases), brandBeliefs (4-6 crenças "Acreditamos que...").`;
+
+const VISUAL_PRINCIPLES = `PRINCÍPIOS PARA IDENTIDADE VISUAL:
+1. LOGO COMO CONSEQUÊNCIA: O símbolo/logotipo emerge do propósito, posicionamento, personalidade e proposta de valor. Nunca predefina recursos visuais.
+2. IMPLEMENTAÇÃO GARANTIDA: Se adotar recurso expressivo (pontuação, monograma, gesto caligráfico), ele deve ser traduzido em TODAS as regras de aplicação.
+3. PALETA COM PROPÓSITO: Cores contam uma história. Use psicologia das cores e teoria da cor conscientemente.
+4. TIPOGRAFIA COM PERSONALIDADE: Cada fonte tem razão de ser. A combinação cria contraste e harmonia.
+5. PANTONE CRITERIOSO: Use apenas códigos com alta confiança. Se não tiver certeza, use "Pantone (verificar com Pantone Color Bridge)".`;
+
+const VISUAL_SECTION_INSTRUCTIONS = `INSTRUÇÕES POR SEÇÃO:
+• "logo": URLs placehold.co com cores da paleta. clearSpace = como o símbolo deriva do conceito central. Regras de uso incorreto mínimo 5.
+• "logoVariants": 6 variações com placehold.co.
+• "colors": primária 2-3, secundária 2-4, semântica, dataViz 5-8. Nomes criativos. ESCALA TONAL OBRIGATÓRIA: "tonalScale" com mínimo 7 shades (50-900) para primárias e secundárias.
+• "typography": 3 famílias (marketing/ui/monospace) com fallbackFont, textTransform, category, antiBlandingRationale.
+• "typographyScale": mínimo 8 níveis com medidas em px, lineHeight, fontWeight, letterSpacing.`;
+
+const SYSTEM_AND_APPLICATIONS_PRINCIPLES = `PRINCÍPIOS PARA SISTEMA, APLICAÇÕES & OPERACIONAL:
+1. CROSS-REFERENCING OBRIGATÓRIO: Cada cor referenciada DEVE usar o NOME EXATO da paleta. Nunca "cor de destaque" — sempre o nome específico (ex: "Laranja Tucano"). Cada fonte referenciada DEVE usar o nome exato (ex: "Barlow Condensed ExtraBold").
+2. PROFUNDIDADE DE PRODUÇÃO INDUSTRIAL:
+   • Flexografia: alertar sobre gradientes, textos vazados, registro de cores.
+   • Serigrafia: base branca em tecidos escuros, máximo de cores por peça.
+   • Bordado: mínimo 5mm de texto, conversão para matriz, máximo de fios.
+   • Offset: perfis ICC, overprint vs knockout, UCR/GCR.
+   • Substratos coloridos: tintas escurecem, branco pode exigir 5ª cor.
+   • Sempre: "Converter fontes em curvas" e "Expandir traços" no checklist.
+3. COERÊNCIA LOGO → SISTEMA: Geometria do logo traduzida em borderRadii, iconographyStyle, keyVisual.elements. Curvas orgânicas → radii maiores. Geometria angular → radii menores.
+4. NEGATIVE PROMPT POR ARQUÉTIPO: Derive automaticamente do archetype (Sábio→caótico; Rebelde→convencional; Herói→passivo; etc).
+
+NOTA SOBRE ICONOGRAFIA E ILUSTRAÇÃO:
+- "uiGuidelines.iconographyStyle" = especificação TÉCNICA (grid px, stroke weight, biblioteca)
+- "keyVisual.iconography" = estilo ARTÍSTICO/identitário
+- "uiGuidelines.illustrationStyle" = diretrizes de IMPLEMENTAÇÃO
+- "keyVisual.illustrations" = estilo CONCEITUAL`;
+
+const SYSTEM_SECTION_INSTRUCTIONS = `INSTRUÇÕES POR SEÇÃO:
+• "keyVisual": 6+ elementos gráficos com significado simbólico, photographyStyle com referências REAIS, iconography, illustrations, marketingArchitecture, compositionPhilosophy. MASCOTES se aplicável (1-3 ricos). SÍMBOLOS 3+. PADRÕES: "patterns" + "structuredPatterns" 2+ com detalhes. "flora"/"fauna"/"objects".
+• "designTokens": spacing 10+ (4px grid), borderRadii 6+, shadows 3-5, breakpoints 4, grid responsivo.
+• "uiGuidelines": grid detalhado, densidade/espaçamento, iconographyStyle técnico, illustrationStyle, dataViz, 6+ componentes com estados completos.
+• "applications": 4+ variadas (digital + print) com dimensions exatas, materialSpecs, layoutGuidelines, typographyHierarchy com NOMES EXATOS, artDirection, substrates.
+• "productionGuidelines": naming convention com exemplos, checklist 10+, printSpecs, digitalSpecs, deliverables, productionMethods (flexografia/serigrafia/bordado/offset/digital).
+• "socialMediaGuidelines": 3+ plataformas com formatos, tom, pillars, frequência, do/dont, exemplo de post. globalHashtagStrategy, brandVoiceAdaptation.
+• "governance": designTools, documentationPlatform, componentLibrary, versioningStrategy, updateProcess, ownershipRoles.
+• "imageGenerationBriefing": TODOS os campos com profundidade máxima — visualStyle, colorMood (nomes EXATOS), compositionNotes, moodKeywords 10+, artisticReferences REAIS, avoidElements, logoStyleGuide, photographyMood, patternStyle, marketingVisualLanguage, negativePrompt COMPLETO, emotionalCore (conectado ao manifesto), textureLanguage, lightingSignature (Kelvin, ratio), cameraSignature (lente, DOF), brandArchetype (dominante + secundário visual), sensoryProfile (5 sentidos).`;
+
+/** Creativity-level instruction for user prompts */
+const CREATIVITY_USER_INSTRUCTION: Record<CreativityLevel, string> = {
+  conservative: "POSTURA: Mantenha sobriedade e confiança atemporal em cada decisão. Pense IBM, Rolex — o resultado deve inspirar autoridade máxima.",
+  balanced: "POSTURA: Equilibre memorabilidade e acessibilidade. Caráter forte mas não polarizante. Pense Notion, Stripe — moderno e profissional.",
+  creative: "POSTURA: Surpreenda com ousadia INTENCIONAL. Cada decisão deve gerar reação emocional. Pense Spotify, Oatly — inesquecível.",
+  experimental: "POSTURA: QUEBRE CONVENÇÕES. Combine o aparentemente conflitante. Polarize intencionalmente — amada pelo target, estranha para quem não é. Cult brand potential.",
+};
+
+/**
+ * Focused chain system prompt per step — only includes relevant instructions.
+ * Step 1: ~3k tokens (strategy focus)
+ * Step 2: ~3k tokens (visual focus + intentionality)
+ * Step 3: ~4k tokens (system focus + cross-referencing + production)
+ */
+export function buildChainSystemPrompt(
+  step: 1 | 2 | 3,
+  _scope: GenerateScope,
+  creativity: CreativityLevel,
+  _intentionality: boolean
+): string {
+  if (step === 1) {
+    return `${ROLE_PREAMBLE}
+
+${CREATIVITY_LAYER[creativity]}
+
+${INTENTIONALITY_LAYER}
+${STRATEGY_PRINCIPLES}
+
+${STRATEGY_SECTION_INSTRUCTIONS}
+
+ETAPA 1 DE 3 — FOCO EXCLUSIVO EM ESTRATÉGIA:
+Gere APENAS: brandConcept, brandStory, positioning, audiencePersonas, verbalIdentity.
+Esta é a etapa MAIS CRIATIVA — invista profundidade máxima em cada persona, cada messaging pillar, cada crença da marca.
+O manifesto deve emocionar. O positioningStatement deve ser citável. As personas devem ter HISTÓRIA DE VIDA.`;
+  }
+
+  if (step === 2) {
+    return `${ROLE_PREAMBLE}
+
+${CREATIVITY_LAYER[creativity]}
+
+${INTENTIONALITY_LAYER}
+${VISUAL_PRINCIPLES}
+
+${VISUAL_SECTION_INSTRUCTIONS}
+
+ETAPA 2 DE 3 — FOCO EXCLUSIVO EM IDENTIDADE VISUAL:
+Gere APENAS: logo, logoVariants, colors, typography, typographyScale.
+Recebeu um RESUMO ESTRATÉGICO da Etapa 1. Cada escolha visual DEVE ser rastreável ao propósito, archetype e posicionamento.
+Esta é a etapa de TRADUÇÃO VISUAL — transforme estratégia em forma, cor e tipo.`;
+  }
+
+  // Step 3
+  return `${ROLE_PREAMBLE}
+
+${CREATIVITY_LAYER[creativity]}
+
+${SYSTEM_AND_APPLICATIONS_PRINCIPLES}
+
+${SYSTEM_SECTION_INSTRUCTIONS}
+
+ETAPA 3 DE 3 — SISTEMA, APLICAÇÕES, OPERACIONAL & IMAGE BRIEFING:
+Recebeu resumos de estratégia e visual + detalhes completos de cores/tipografia/logo para cross-referencing.
+Gere: keyVisual, designTokens, uiGuidelines, applications, productionGuidelines, socialMediaGuidelines, governance, imageGenerationBriefing.
+Esta é a etapa de PRECISÃO — use nomes exatos de cores e fontes em TODAS as referências cruzadas.
+O imageGenerationBriefing deve ser tão detalhado que um designer ou IA gere peças PERFEITAS sem mais contexto.`;
+}

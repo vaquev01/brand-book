@@ -114,6 +114,7 @@ export interface UseImageGenerationProps {
   apiKeys: ApiKeys;
   uploadedAssets: UploadedAsset[];
   promptProvider: AiTextProvider;
+  projectId?: string | null;
   enabled?: boolean;
 }
 
@@ -125,6 +126,7 @@ export function useImageGeneration({
   apiKeys,
   uploadedAssets,
   promptProvider,
+  projectId,
 }: UseImageGenerationProps) {
   const [provider, setProvider] = useState<ImageProvider>(() =>
     pickDefaultProvider(apiKeys)
@@ -291,6 +293,7 @@ export function useImageGeneration({
             provider: activeProvider,
             assetKey,
             referenceImages,
+            projectId: projectId || undefined,
             openaiKey: apiKeys.openai || undefined,
             stabilityKey: apiKeys.stability || undefined,
             ideogramKey: apiKeys.ideogram || undefined,
@@ -301,7 +304,7 @@ export function useImageGeneration({
             googleImageModel: apiKeys.googleImageModel || undefined,
           }),
         });
-        const result = await readJsonResponse<{ url?: string; error?: string }>(
+        const result = await readJsonResponse<{ url?: string; publicUrl?: string; error?: string }>(
           res,
           "/api/generate-image"
         );
@@ -326,6 +329,7 @@ export function useImageGeneration({
       provider,
       apiKeys,
       promptProvider,
+      projectId,
       refineBeforeGenerate,
       useReferenceImages,
       onAssetGenerated,
@@ -431,8 +435,10 @@ export function useImageGeneration({
           body: JSON.stringify({
             prompt,
             provider: activeProvider,
+            assetKey: appKey,
             aspectRatio,
             referenceImages,
+            projectId: projectId || undefined,
             openaiKey: apiKeys.openai || undefined,
             stabilityKey: apiKeys.stability || undefined,
             ideogramKey: apiKeys.ideogram || undefined,
@@ -443,7 +449,7 @@ export function useImageGeneration({
             googleImageModel: apiKeys.googleImageModel || undefined,
           }),
         });
-        const result = await readJsonResponse<{ url?: string; error?: string }>(
+        const result = await readJsonResponse<{ url?: string; publicUrl?: string; error?: string }>(
           res,
           "/api/generate-image"
         );
@@ -468,6 +474,7 @@ export function useImageGeneration({
       provider,
       apiKeys,
       promptProvider,
+      projectId,
       refineBeforeGenerate,
       useReferenceImages,
       onAssetGenerated,

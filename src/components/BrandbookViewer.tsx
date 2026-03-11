@@ -83,6 +83,7 @@ interface Props {
   onSaveToAssets?: (asset: UploadedAsset) => void;
   onUpdateColors?: (colors: Colors) => void;
   onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
+  projectId?: string | null;
 }
 
 export function BrandbookViewer({
@@ -100,6 +101,7 @@ export function BrandbookViewer({
   onSaveToAssets,
   onUpdateColors,
   onUpdateData,
+  projectId,
 }: Props) {
   const isAdvanced = !!data.uxPatterns;
   const hasGeneration = !!apiKeys && !!onAssetGenerated;
@@ -124,6 +126,7 @@ export function BrandbookViewer({
     apiKeys: apiKeys ?? EMPTY_KEYS,
     uploadedAssets,
     promptProvider,
+    projectId,
   });
 
   const sectionDefs = buildSectionDefs({

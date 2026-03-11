@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { signOut } from "next-auth/react"
 
 interface MobileDrawerProps {
@@ -31,8 +31,9 @@ const navItems = [
     ),
   },
   {
-    href: "/dashboard/projects/new",
+    href: "/dashboard/editor",
     label: "Novo Brandbook",
+    action: "new-brandbook",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -61,6 +62,7 @@ const navItems = [
 
 export function MobileDrawer({ open, onClose, user }: MobileDrawerProps) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const drawerRef = useRef<HTMLDivElement>(null)
 
   // Close on route change
@@ -123,9 +125,27 @@ export function MobileDrawer({ open, onClose, user }: MobileDrawerProps) {
         {/* Nav */}
         <nav className="px-3 mt-2 space-y-1">
           {navItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href))
+            const isNewBrandbook = (item as { action?: string }).action === "new-brandbook"
+            const isActive = isNewBrandbook
+              ? false
+              : item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname === item.href || pathname.startsWith(item.href)
+
+            if (isNewBrandbook) {
+              return (
+                <Link
+                  key="new-brandbook"
+                  href="/dashboard/new-brandbook"
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  <span className="text-gray-400">{item.icon}</span>
+                  {item.label}
+                </Link>
+              )
+            }
+
             return (
               <Link
                 key={item.href}

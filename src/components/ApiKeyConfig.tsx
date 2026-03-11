@@ -36,25 +36,19 @@ const LS: Record<keyof ApiKeys, string> = {
   ideogramModel: "bb_ideogram_model",
 };
 
+function normalizeGoogleModel(val: string | undefined): string {
+  const trimmed = val?.trim() ?? "";
+  return trimmed.startsWith("models/") ? trimmed.slice("models/".length) : trimmed;
+}
+
 export function loadApiKeys(): ApiKeys {
   if (typeof window === "undefined") return { ...EMPTY_KEYS };
   const keys = Object.fromEntries(
     (Object.keys(LS) as (keyof ApiKeys)[]).map((k) => [k, localStorage.getItem(LS[k]) ?? ""])
   ) as unknown as ApiKeys;
 
-  const rawGoogleTextModel = keys.googleTextModel?.trim();
-  if (rawGoogleTextModel) {
-    keys.googleTextModel = rawGoogleTextModel.startsWith("models/")
-      ? rawGoogleTextModel.slice("models/".length)
-      : rawGoogleTextModel;
-  }
-
-  const rawGoogleImageModel = keys.googleImageModel?.trim();
-  if (rawGoogleImageModel) {
-    keys.googleImageModel = rawGoogleImageModel.startsWith("models/")
-      ? rawGoogleImageModel.slice("models/".length)
-      : rawGoogleImageModel;
-  }
+  keys.googleTextModel = normalizeGoogleModel(keys.googleTextModel);
+  keys.googleImageModel = normalizeGoogleModel(keys.googleImageModel);
 
   return keys;
 }
@@ -62,22 +56,45 @@ export function loadApiKeys(): ApiKeys {
 export function saveApiKeys(keys: ApiKeys) {
   if (typeof window === "undefined") return;
   const next = { ...keys };
-  const rawGoogleTextModel = next.googleTextModel?.trim();
-  if (rawGoogleTextModel) {
-    next.googleTextModel = rawGoogleTextModel.startsWith("models/")
-      ? rawGoogleTextModel.slice("models/".length)
-      : rawGoogleTextModel;
-  }
+  next.googleTextModel = normalizeGoogleModel(next.googleTextModel);
+  next.googleImageModel = normalizeGoogleModel(next.googleImageModel);
 
-  const rawGoogleImageModel = next.googleImageModel?.trim();
-  if (rawGoogleImageModel) {
-    next.googleImageModel = rawGoogleImageModel.startsWith("models/")
-      ? rawGoogleImageModel.slice("models/".length)
-      : rawGoogleImageModel;
-  }
   (Object.keys(LS) as (keyof ApiKeys)[]).forEach((k) => {
     if (next[k]) localStorage.setItem(LS[k], next[k]);
     else localStorage.removeItem(LS[k]);
+  });
+
+  // Persist to server (fire-and-forget)
+  syncKeysToServer(next).catch(() => {});
+}
+
+/** Load keys from server (database) and merge with localStorage. Server wins for keys. */
+export async function loadApiKeysFromServer(): Promise<ApiKeys | null> {
+  try {
+    const res = await fetch("/api/user/api-keys");
+    if (!res.ok) return null;
+    const data = await res.json() as { keys: Record<string, string> | null };
+    if (!data.keys) return null;
+    const serverKeys = { ...EMPTY_KEYS } as ApiKeys;
+    for (const k of Object.keys(LS) as (keyof ApiKeys)[]) {
+      if (data.keys[k]) serverKeys[k] = data.keys[k];
+    }
+    serverKeys.googleTextModel = normalizeGoogleModel(serverKeys.googleTextModel);
+    serverKeys.googleImageModel = normalizeGoogleModel(serverKeys.googleImageModel);
+    return serverKeys;
+  } catch {
+    return null;
+  }
+}
+
+async function syncKeysToServer(keys: ApiKeys): Promise<void> {
+  const payload = Object.fromEntries(
+    (Object.keys(LS) as (keyof ApiKeys)[]).map((k) => [k, keys[k]])
+  );
+  await fetch("/api/user/api-keys", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ keys: payload }),
   });
 }
 
@@ -277,20 +294,59 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
     if (!isOpen) return;
     lastAutoFetchedKeyRef.current = {};
     if (autoFetchTimerRef.current) clearTimeout(autoFetchTimerRef.current);
-    const loaded = loadApiKeys();
-    setKeys(loaded);
+
+    // Load from localStorage first, then merge server keys (server wins)
+    const localKeys = loadApiKeys();
+    setKeys(localKeys);
     setSaved(false);
     setFetchedModels({});
     setFetchStatus({});
     setFetchError({});
-    PROVIDERS.forEach((p) => {
-      const key = loaded[p.key]?.trim();
-      if (key) {
-        setTimeout(() => {
-          lastAutoFetchedKeyRef.current[p.key] = key;
-          fetchModels(p.key, key);
-        }, 300);
-      }
+
+    // Auto-fetch models for locally loaded keys
+    const autoFetchForKeys = (loaded: ApiKeys) => {
+      PROVIDERS.forEach((p) => {
+        const key = loaded[p.key]?.trim();
+        if (key) {
+          setTimeout(() => {
+            lastAutoFetchedKeyRef.current[p.key] = key;
+            fetchModels(p.key, key);
+          }, 300);
+        }
+      });
+    };
+
+    autoFetchForKeys(localKeys);
+
+    // Try to load from server and merge (server keys win for non-empty values)
+    loadApiKeysFromServer().then((serverKeys) => {
+      if (!serverKeys) return;
+      setKeys((prev) => {
+        const merged = { ...prev };
+        let changed = false;
+        for (const k of Object.keys(LS) as (keyof ApiKeys)[]) {
+          if (serverKeys[k] && serverKeys[k] !== prev[k]) {
+            merged[k] = serverKeys[k];
+            changed = true;
+          }
+        }
+        if (changed) {
+          // Save merged keys to localStorage
+          (Object.keys(LS) as (keyof ApiKeys)[]).forEach((k) => {
+            if (merged[k]) localStorage.setItem(LS[k], merged[k]);
+            else localStorage.removeItem(LS[k]);
+          });
+          // Fetch models for any new server-provided keys
+          PROVIDERS.forEach((p) => {
+            const key = merged[p.key]?.trim();
+            if (key && key !== lastAutoFetchedKeyRef.current[p.key]) {
+              lastAutoFetchedKeyRef.current[p.key] = key;
+              fetchModels(p.key, key);
+            }
+          });
+        }
+        return changed ? merged : prev;
+      });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -424,7 +480,7 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
             <Lock className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-gray-500 leading-relaxed">
-              <strong>Segurança:</strong> Chaves no <code>localStorage</code>, enviadas via server-side. Nada em servidor externo.
+              <strong>Segurança:</strong> Chaves salvas no seu perfil (criptografadas) e no <code>localStorage</code>. Sincronizadas entre dispositivos.
             </p>
           </div>
         </div>

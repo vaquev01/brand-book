@@ -8,6 +8,7 @@ import { bbLog, captureMem, diffMem, getRequestId, memToJson, serializeError } f
 import { checkRateLimit } from "@/lib/rateLimit";
 import { auth } from "@/app/auth";
 import { prisma } from "@/lib/prisma";
+import { storageUpload, buildAssetKey } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -62,8 +63,8 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    const payload = await request.json() as GenerateImageInput;
-    const { prompt, provider, assetKey, aspectRatio, referenceImages } = payload;
+    const payload = await request.json() as GenerateImageInput & { projectId?: string };
+    const { prompt, provider, assetKey, aspectRatio, referenceImages, projectId } = payload;
 
     providerName = provider;
     assetKeyName = assetKey;
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
       provider,
       assetKey,
       aspectRatio,
+      projectId,
       promptChars: typeof prompt === "string" ? prompt.length : 0,
       referenceImagesCount: Array.isArray(referenceImages) ? referenceImages.length : 0,
     });
@@ -83,11 +85,80 @@ export async function POST(request: NextRequest) {
 
     const result = await generateImageWithProvider(payload);
 
-    return respond(200, result, {
+    // Auto-persist image to R2 + database when projectId is provided
+    let publicUrl: string | undefined;
+    if (projectId && assetKey && result.url) {
+      try {
+        // Convert data URL to buffer
+        let imageBuffer: Buffer;
+        let mimeType = "image/png";
+        if (result.url.startsWith("data:")) {
+          const match = result.url.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            mimeType = match[1];
+            imageBuffer = Buffer.from(match[2], "base64");
+          } else {
+            imageBuffer = Buffer.from(result.url);
+          }
+        } else {
+          // Fetch external URL
+          const imgRes = await fetch(result.url);
+          const arrayBuf = await imgRes.arrayBuffer();
+          imageBuffer = Buffer.from(arrayBuf);
+          mimeType = imgRes.headers.get("content-type") ?? "image/png";
+        }
+
+        const ext = mimeType.split("/")[1] ?? "png";
+        const storageKey = buildAssetKey(projectId, assetKey, ext);
+        const uploadResult = await storageUpload(storageKey, imageBuffer, { contentType: mimeType });
+        publicUrl = uploadResult.publicUrl;
+
+        // Upsert ProjectAsset record
+        const existing = await prisma.projectAsset.findFirst({
+          where: { projectId, key: assetKey },
+        });
+        if (existing) {
+          await prisma.projectAsset.update({
+            where: { id: existing.id },
+            data: {
+              storageKey,
+              publicUrl,
+              prompt,
+              provider: result.provider,
+              mimeType,
+              fileSizeBytes: imageBuffer.length,
+            },
+          });
+        } else {
+          await prisma.projectAsset.create({
+            data: {
+              projectId,
+              key: assetKey,
+              name: assetKey.replace(/_/g, " "),
+              storageKey,
+              publicUrl,
+              prompt,
+              provider: result.provider,
+              mimeType,
+              fileSizeBytes: imageBuffer.length,
+            },
+          });
+        }
+      } catch (persistErr) {
+        // Non-fatal: image was generated successfully, persistence is best-effort
+        bbLog("warn", "api.generate-image.persist-failed", {
+          requestId,
+          error: serializeError(persistErr),
+        });
+      }
+    }
+
+    return respond(200, { ...result, publicUrl }, {
       provider: result.provider,
       assetKey,
       aspectRatio: result.aspectRatio,
       ...(result.fallback ? { fallback: true } : {}),
+      ...(publicUrl ? { persisted: true } : {}),
     });
   } catch (error: unknown) {
     if (error instanceof GenerateImageInputError) {

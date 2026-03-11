@@ -4,7 +4,16 @@ import { BrandbookSchemaV2, formatZodIssues } from "@/lib/brandbookSchema";
 import { fetchExternalReferences, formatExternalReferencesForPrompt } from "@/lib/externalReferences";
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { migrateBrandbook } from "@/lib/brandbookMigration";
-import { buildSystemPrompt, buildUserPrompt } from "@/lib/prompt";
+import {
+  buildSystemPrompt,
+  buildUserPrompt,
+  buildChainStep1Prompt,
+  buildChainStep2Prompt,
+  buildChainStep3Prompt,
+  buildChainSystemPrompt,
+  compactStrategySummary,
+  compactVisualSummary,
+} from "@/lib/prompt";
 import type { BrandbookData, CreativityLevel, GenerateScope } from "@/lib/types";
 
 export type GenerateRequestPayload = {
@@ -53,15 +62,15 @@ const CREATIVITY_TEMPERATURE: Record<CreativityLevel, number> = {
 };
 
 const PROGRESS_PHASES: [number, number, string][] = [
-  [0, 8, "Analisando briefing e preparando IA..."],
-  [8, 18, "Definindo DNA e propósito da marca..."],
-  [18, 30, "Criando posicionamento e personas..."],
-  [30, 44, "Desenvolvendo identidade verbal e tagline..."],
-  [44, 58, "Construindo identidade visual e logo..."],
-  [58, 72, "Criando design system e componentes..."],
-  [72, 84, "Finalizando aplicações da marca..."],
-  [84, 92, "Compondo briefing de geração de imagens..."],
-  [92, 98, "Validando estrutura do brandbook..."],
+  [0, 4, "Analisando briefing e preparando IA..."],
+  [4, 8, "Lendo referências externas..."],
+  [8, 32, "Etapa 1/3 — Estratégia & Posicionamento..."],
+  [32, 36, "Validando estratégia..."],
+  [36, 58, "Etapa 2/3 — Identidade Visual..."],
+  [58, 62, "Validando identidade visual..."],
+  [62, 92, "Etapa 3/3 — Sistema, Aplicações & Image Briefing..."],
+  [92, 96, "Montando brandbook completo..."],
+  [96, 100, "Validando estrutura final..."],
 ];
 
 const MAX_IMAGE_DATAURL_CHARS = 3_500_000;
@@ -278,84 +287,70 @@ function enforceCoherence(data: BrandbookData): BrandbookData {
   return data;
 }
 
-export async function generateBrandbook(
-  input: GenerateInput,
-  onProgress: (phase: string, pct: number) => void
-): Promise<BrandbookData> {
+/**
+ * Core LLM call abstraction — streams a single step and returns the text.
+ * Supports both Gemini and OpenAI with images on first call.
+ */
+async function callLLM(opts: {
+  systemPrompt: string;
+  userPrompt: string;
+  temperature: number;
+  useGemini: boolean;
+  googleKey?: string;
+  openaiKey?: string;
+  googleModel?: string;
+  openaiModel?: string;
+  logoImage?: string;
+  referenceImages?: string[];
+  includeImages?: boolean;
+  onProgress: (label: string, pct: number) => void;
+  pctStart: number;
+  pctEnd: number;
+  phaseLabel: string;
+}): Promise<string> {
   const {
-    brandName,
-    industry,
-    briefing,
-    externalUrls,
-    projectMode,
-    openaiKey,
-    googleKey,
-    provider,
-    openaiModel,
-    googleModel,
-    referenceImages,
-    logoImage,
-    scope,
-    creativityLevel,
-    intentionality,
-  } = input;
+    systemPrompt, userPrompt, temperature, useGemini,
+    googleKey, openaiKey, googleModel, openaiModel,
+    logoImage, referenceImages, includeImages,
+    onProgress, pctStart, pctEnd, phaseLabel,
+  } = opts;
 
-  const temperature = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
-  const hasLogoImage = !!logoImage;
-  const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
-  const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
-  const useGemini = provider === "gemini";
-  const estimatedChars = 45000;
-
-  onProgress(hasLogoImage ? "Analisando logo da marca..." : "Preparando geração...", 2);
-
-  if (externalUrls && externalUrls.length > 0) {
-    onProgress("Lendo referências externas...", 4);
-  }
-
-  const externalRefs = externalUrls && externalUrls.length > 0 ? await fetchExternalReferences(externalUrls) : [];
-  const externalRefsText = formatExternalReferencesForPrompt(externalRefs);
-  const userPromptText =
-    buildUserPrompt(
-      brandName,
-      industry,
-      briefing || "",
-      projectMode,
-      scope,
-      hasImages,
-      undefined,
-      hasLogoImage,
-      externalRefs.length > 0
-    ) + externalRefsText;
-
+  const estimatedChars = 20000;
   let fullContent = "";
+  let lastPct = pctStart;
+
+  const updatePct = () => {
+    const pct = Math.min(pctEnd - 2, Math.round((fullContent.length / estimatedChars) * (pctEnd - pctStart - 2)) + pctStart);
+    if (pct >= lastPct + 2) {
+      onProgress(phaseLabel, pct);
+      lastPct = pct;
+    }
+  };
 
   if (useGemini) {
     const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
     if (!apiKey) throw new Error("GOOGLE_API_KEY não configurada. Configure em ⚙ APIs.");
 
     const ai = new GoogleGenAI({ apiKey });
-    const contentParts: unknown[] = [{ text: userPromptText }];
+    const contentParts: unknown[] = [{ text: userPrompt }];
 
-    if (hasLogoImage) {
-      const match = logoImage!.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+    if (includeImages && logoImage) {
+      const match = logoImage.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
       if (match) contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
     }
-
-    if (hasImages) {
-      for (const imgDataUrl of referenceImages!) {
+    if (includeImages && referenceImages) {
+      for (const imgDataUrl of referenceImages) {
         const match = imgDataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
         if (match) contentParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
       }
     }
 
-    onProgress("Iniciando Gemini...", 5);
-
     const geminiContents = contentParts.length === 1
-      ? userPromptText
+      ? userPrompt
       : (contentParts as Parameters<typeof ai.models.generateContent>[0]["contents"]);
 
-    let lastPct = 5;
+    onProgress(phaseLabel, pctStart);
+
     try {
       const { value: genStream } = await withGoogleTextModelFallback({
         apiKey,
@@ -375,14 +370,10 @@ export async function generateBrandbook(
       for await (const chunk of genStream) {
         const text = (chunk as { text?: string }).text ?? "";
         fullContent += text;
-        const pct = Math.min(90, Math.round((fullContent.length / estimatedChars) * 85) + 5);
-        if (pct >= lastPct + 2) {
-          onProgress(getPhaseLabel(pct), pct);
-          lastPct = pct;
-        }
+        updatePct();
       }
     } catch {
-      onProgress("Gerando brandbook com Gemini...", 20);
+      onProgress(phaseLabel, pctStart + 2);
       const { value: response } = await withGoogleTextModelFallback({
         apiKey,
         preferredModel: googleModel,
@@ -411,17 +402,19 @@ export async function generateBrandbook(
       | { type: "text"; text: string }
       | { type: "image_url"; image_url: { url: string; detail: "high" } };
 
-    const userMsgContent: ContentPart[] = [{ type: "text", text: userPromptText }];
-    if (hasLogoImage) {
-      userMsgContent.push({ type: "image_url", image_url: { url: logoImage!, detail: "high" } });
+    const userMsgContent: ContentPart[] = [{ type: "text", text: userPrompt }];
+    const hasImages = includeImages && (!!logoImage || (referenceImages && referenceImages.length > 0));
+
+    if (includeImages && logoImage) {
+      userMsgContent.push({ type: "image_url", image_url: { url: logoImage, detail: "high" } });
     }
-    if (hasImages) {
-      for (const imgDataUrl of referenceImages!) {
+    if (includeImages && referenceImages) {
+      for (const imgDataUrl of referenceImages) {
         userMsgContent.push({ type: "image_url", image_url: { url: imgDataUrl, detail: "high" } });
       }
     }
 
-    onProgress("Iniciando GPT-4o...", 5);
+    onProgress(phaseLabel, pctStart);
 
     const openaiStream = await openai.chat.completions.create({
       model: resolvedModel,
@@ -431,77 +424,320 @@ export async function generateBrandbook(
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: hasLogoImage || hasImages ? userMsgContent : userPromptText },
+        { role: "user", content: hasImages ? userMsgContent : userPrompt },
       ],
     });
 
-    let lastPct = 5;
     for await (const chunk of openaiStream) {
       const text = chunk.choices[0]?.delta?.content || "";
       fullContent += text;
-      const pct = Math.min(90, Math.round((fullContent.length / estimatedChars) * 85) + 5);
-      if (pct >= lastPct + 2) {
-        onProgress(getPhaseLabel(pct), pct);
-        lastPct = pct;
-      }
+      updatePct();
     }
   }
 
-  onProgress("Validando estrutura do brandbook...", 92);
+  return fullContent;
+}
 
-  let parsed = safeParseJson(fullContent);
-  if (parsed == null) {
-    onProgress("Corrigindo formato do JSON...", 93);
-    const repairPrompt =
-      "Extraia e reescreva o JSON COMPLETO e válido do brandbook a partir do texto abaixo. " +
-      "Retorne SOMENTE o objeto JSON (sem markdown, sem texto fora do JSON).\n\n" +
-      "TEXTO:\n" +
-      fullContent.slice(0, 120000);
+/**
+ * Parse step output, with repair if needed.
+ */
+async function parseStepOutput(
+  rawContent: string,
+  stepLabel: string,
+  repairOpts: {
+    systemPrompt: string;
+    useGemini: boolean;
+    googleKey?: string;
+    openaiKey?: string;
+    googleModel?: string;
+    openaiModel?: string;
+  }
+): Promise<Record<string, unknown>> {
+  let parsed = safeParseJson(rawContent);
+  if (parsed != null && typeof parsed === "object") return parsed as Record<string, unknown>;
 
-    let repairedContent = "";
-    if (useGemini) {
-      const apiKey = googleKey?.trim() || process.env.GOOGLE_API_KEY;
-      const ai = new GoogleGenAI({ apiKey: apiKey! });
-      const { value: response } = await withGoogleTextModelFallback({
-        apiKey: apiKey!,
-        preferredModel: googleModel,
-        run: (model) =>
-          ai.models.generateContent({
-            model,
-            contents: repairPrompt,
-            config: {
-              systemInstruction: systemPrompt,
-              responseMimeType: "application/json",
-              temperature: 0.2,
-              maxOutputTokens: 32768,
-            },
-          }),
-      });
-      repairedContent = response.text ?? "";
-    } else {
-      const apiKey = openaiKey?.trim() || process.env.OPENAI_API_KEY;
-      const openai = new OpenAI({ apiKey: apiKey! });
-      const completion = await openai.chat.completions.create({
-        model: openaiModel?.trim() || "gpt-4o",
-        temperature: 0.2,
-        max_tokens: 32768,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: repairPrompt },
-        ],
-      });
-      repairedContent = completion.choices[0]?.message?.content ?? "";
-    }
+  // Attempt repair
+  const repairPrompt =
+    `Extraia e reescreva o JSON COMPLETO e válido da ${stepLabel} a partir do texto abaixo. ` +
+    "Retorne SOMENTE o objeto JSON (sem markdown, sem texto fora do JSON).\n\n" +
+    "TEXTO:\n" + rawContent.slice(0, 120000);
 
-    parsed = safeParseJson(repairedContent);
+  let repairedContent = "";
+  if (repairOpts.useGemini) {
+    const apiKey = repairOpts.googleKey?.trim() || process.env.GOOGLE_API_KEY;
+    const ai = new GoogleGenAI({ apiKey: apiKey! });
+    const { value: response } = await withGoogleTextModelFallback({
+      apiKey: apiKey!,
+      preferredModel: repairOpts.googleModel,
+      run: (model) =>
+        ai.models.generateContent({
+          model,
+          contents: repairPrompt,
+          config: {
+            systemInstruction: repairOpts.systemPrompt,
+            responseMimeType: "application/json",
+            temperature: 0.2,
+            maxOutputTokens: 32768,
+          },
+        }),
+    });
+    repairedContent = response.text ?? "";
+  } else {
+    const apiKey = repairOpts.openaiKey?.trim() || process.env.OPENAI_API_KEY;
+    const openai = new OpenAI({ apiKey: apiKey! });
+    const completion = await openai.chat.completions.create({
+      model: repairOpts.openaiModel?.trim() || "gpt-4o",
+      temperature: 0.2,
+      max_tokens: 32768,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: repairOpts.systemPrompt },
+        { role: "user", content: repairPrompt },
+      ],
+    });
+    repairedContent = completion.choices[0]?.message?.content ?? "";
+  }
+
+  parsed = safeParseJson(repairedContent);
+  if (parsed == null || typeof parsed !== "object") {
+    throw new Error(`A IA retornou JSON inválido na ${stepLabel}. Tente novamente.`);
+  }
+  return parsed as Record<string, unknown>;
+}
+
+/** Per-step temperature offsets: Step 1 = more creative, Step 3 = more precise */
+const STEP_TEMP_OFFSET: Record<number, number> = { 1: 0.05, 2: 0, 3: -0.08 };
+
+/** Minimum expected top-level keys per chain step */
+const STEP_EXPECTED_KEYS: Record<number, string[]> = {
+  1: ["brandConcept", "positioning", "verbalIdentity"],
+  2: ["logo", "colors", "typography"],
+  3: ["keyVisual", "applications", "imageGenerationBriefing"],
+};
+
+/**
+ * Validate that a step output has minimum expected keys. Throws if missing critical fields.
+ */
+function validateStepKeys(data: Record<string, unknown>, step: number, label: string): void {
+  const expected = STEP_EXPECTED_KEYS[step] ?? [];
+  const missing = expected.filter((k) => !(k in data) || data[k] == null);
+  if (missing.length > 0) {
+    throw new Error(`${label}: campos obrigatórios ausentes — ${missing.join(", ")}`);
+  }
+}
+
+/**
+ * Chain generation — 3 sequential LLM calls with compact summaries between steps.
+ */
+async function generateBrandbookChain(
+  input: GenerateInput,
+  onProgress: (phase: string, pct: number) => void,
+  externalRefs: Awaited<ReturnType<typeof fetchExternalReferences>>,
+  externalRefsText: string,
+): Promise<BrandbookData> {
+  const {
+    brandName, industry, briefing, projectMode,
+    openaiKey, googleKey, provider, openaiModel, googleModel,
+    referenceImages, logoImage, scope, creativityLevel, intentionality,
+  } = input;
+
+  const baseTemp = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
+  const hasLogoImage = !!logoImage;
+  const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+  const useGemini = provider === "gemini";
+
+  const repairOpts = {
+    systemPrompt: buildSystemPrompt(scope, creativityLevel, intentionality),
+    useGemini, googleKey, openaiKey, googleModel, openaiModel,
+  };
+
+  // ══════════════════════════════════════════════════════════════
+  // STEP 1: Strategy & Positioning (temperature +0.05 for creativity)
+  // ══════════════════════════════════════════════════════════════
+  const step1Temp = Math.min(baseTemp + STEP_TEMP_OFFSET[1], 0.98);
+
+  const step1UserPrompt = buildChainStep1Prompt(
+    brandName, industry, briefing || "", projectMode, scope, creativityLevel,
+    hasImages, hasLogoImage, externalRefs.length > 0, externalRefsText
+  );
+
+  const step1Raw = await callLLM({
+    systemPrompt: buildChainSystemPrompt(1, scope, creativityLevel, intentionality),
+    userPrompt: step1UserPrompt,
+    temperature: step1Temp,
+    useGemini, googleKey, openaiKey, googleModel, openaiModel,
+    logoImage, referenceImages,
+    includeImages: true,
+    onProgress, pctStart: 8, pctEnd: 32,
+    phaseLabel: "Etapa 1/3 — Estratégia & Posicionamento...",
+  });
+
+  onProgress("Validando estratégia...", 32);
+  const step1Data = await parseStepOutput(step1Raw, "Etapa 1 (estratégia)", repairOpts);
+  validateStepKeys(step1Data, 1, "Etapa 1");
+
+  // Build compact summary for downstream steps (~2-3k chars instead of ~15-20k)
+  const strategySummary = compactStrategySummary(step1Data);
+
+  // ══════════════════════════════════════════════════════════════
+  // STEP 2: Visual Identity (base temperature)
+  // ══════════════════════════════════════════════════════════════
+  const step2Temp = baseTemp + STEP_TEMP_OFFSET[2];
+
+  const step2UserPrompt = buildChainStep2Prompt(
+    strategySummary, creativityLevel, hasLogoImage, hasImages
+  );
+
+  const step2Raw = await callLLM({
+    systemPrompt: buildChainSystemPrompt(2, scope, creativityLevel, intentionality),
+    userPrompt: step2UserPrompt,
+    temperature: step2Temp,
+    useGemini, googleKey, openaiKey, googleModel, openaiModel,
+    logoImage, referenceImages,
+    includeImages: hasLogoImage || hasImages, // Re-analyze images for visual extraction
+    onProgress, pctStart: 36, pctEnd: 58,
+    phaseLabel: "Etapa 2/3 — Identidade Visual...",
+  });
+
+  onProgress("Validando identidade visual...", 58);
+  const step2Data = await parseStepOutput(step2Raw, "Etapa 2 (visual)", repairOpts);
+  validateStepKeys(step2Data, 2, "Etapa 2");
+
+  // Build compact visual summary + extract full details for cross-referencing
+  const visualSummary = compactVisualSummary(step2Data);
+  const fullColorsJson = JSON.stringify(step2Data.colors ?? {});
+  const fullTypographyJson = JSON.stringify(step2Data.typography ?? {});
+  const fullLogoJson = JSON.stringify({
+    clearSpace: (step2Data.logo as Record<string, unknown>)?.clearSpace,
+    shapePsychology: (step2Data.logo as Record<string, unknown>)?.shapePsychology,
+    evolutionaryStage: (step2Data.logo as Record<string, unknown>)?.evolutionaryStage,
+    incorrectUsages: (step2Data.logo as Record<string, unknown>)?.incorrectUsages,
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // STEP 3: System + Applications + Operations + Image Briefing
+  // (temperature -0.08 for cross-referencing precision)
+  // ══════════════════════════════════════════════════════════════
+  const step3Temp = Math.max(baseTemp + STEP_TEMP_OFFSET[3], 0.3);
+
+  const step3UserPrompt = buildChainStep3Prompt(
+    strategySummary, visualSummary, fullColorsJson, fullTypographyJson, fullLogoJson
+  );
+
+  const step3Raw = await callLLM({
+    systemPrompt: buildChainSystemPrompt(3, scope, creativityLevel, intentionality),
+    userPrompt: step3UserPrompt,
+    temperature: step3Temp,
+    useGemini, googleKey, openaiKey, googleModel, openaiModel,
+    includeImages: false,
+    onProgress, pctStart: 62, pctEnd: 92,
+    phaseLabel: "Etapa 3/3 — Sistema, Aplicações & Image Briefing...",
+  });
+
+  onProgress("Montando brandbook completo...", 92);
+  const step3Data = await parseStepOutput(step3Raw, "Etapa 3 (sistema)", repairOpts);
+  validateStepKeys(step3Data, 3, "Etapa 3");
+
+  // ══════════════════════════════════════════════════════════════
+  // MERGE all steps — Step 1 (strategy) + Step 2 (visual) + Step 3 (system)
+  // ══════════════════════════════════════════════════════════════
+  return {
+    schemaVersion: "2.0",
+    ...step1Data,
+    ...step2Data,
+    ...step3Data,
+    brandName,
+    industry,
+  } as unknown as BrandbookData;
+}
+
+/**
+ * Single-shot generation fallback — the original method for when chain fails.
+ */
+async function generateBrandbookSingleShot(
+  input: GenerateInput,
+  onProgress: (phase: string, pct: number) => void,
+  externalRefs: Awaited<ReturnType<typeof fetchExternalReferences>>,
+  externalRefsText: string,
+): Promise<string> {
+  const {
+    brandName, industry, briefing, projectMode,
+    openaiKey, googleKey, provider, openaiModel, googleModel,
+    referenceImages, logoImage, scope, creativityLevel, intentionality,
+  } = input;
+
+  const temperature = CREATIVITY_TEMPERATURE[creativityLevel] ?? 0.72;
+  const hasLogoImage = !!logoImage;
+  const hasImages = Array.isArray(referenceImages) && referenceImages.length > 0;
+  const systemPrompt = buildSystemPrompt(scope, creativityLevel, intentionality);
+
+  const userPromptText =
+    buildUserPrompt(
+      brandName, industry, briefing || "", projectMode, scope,
+      hasImages, undefined, hasLogoImage, externalRefs.length > 0
+    ) + externalRefsText;
+
+  return callLLM({
+    systemPrompt,
+    userPrompt: userPromptText,
+    temperature,
+    useGemini: provider === "gemini",
+    googleKey, openaiKey, googleModel, openaiModel,
+    logoImage, referenceImages,
+    includeImages: true,
+    onProgress, pctStart: 8, pctEnd: 90,
+    phaseLabel: "Gerando brandbook completo...",
+  });
+}
+
+export async function generateBrandbook(
+  input: GenerateInput,
+  onProgress: (phase: string, pct: number) => void
+): Promise<BrandbookData> {
+  const {
+    brandName, industry, externalUrls, logoImage, scope, creativityLevel, intentionality,
+    openaiKey, googleKey, provider, openaiModel, googleModel,
+  } = input;
+
+  const useGemini = provider === "gemini";
+
+  // ── Fetch external references (shared by both chain and fallback) ──
+  onProgress(!!logoImage ? "Analisando logo da marca..." : "Preparando geração...", 2);
+  if (externalUrls && externalUrls.length > 0) {
+    onProgress("Lendo referências externas...", 4);
+  }
+  const externalRefs = externalUrls && externalUrls.length > 0 ? await fetchExternalReferences(externalUrls) : [];
+  const externalRefsText = formatExternalReferencesForPrompt(externalRefs);
+
+  let merged: Record<string, unknown> | null = null;
+
+  // ══════════════════════════════════════════════════════════════
+  // Try chain generation (3 steps) first
+  // ══════════════════════════════════════════════════════════════
+  try {
+    const chainResult = await generateBrandbookChain(input, onProgress, externalRefs, externalRefsText);
+    merged = chainResult as unknown as Record<string, unknown>;
+  } catch (chainError) {
+    // ── Chain failed → fallback to single-shot ──
+    console.error("[chain-generation] Chain failed, falling back to single-shot:", chainError);
+    onProgress("Modo alternativo — gerando brandbook completo...", 8);
+
+    const singleShotRaw = await generateBrandbookSingleShot(input, onProgress, externalRefs, externalRefsText);
+    const parsed = safeParseJson(singleShotRaw);
     if (parsed == null) {
       throw new Error("A IA retornou JSON inválido. Tente novamente.");
     }
-    fullContent = JSON.stringify(parsed);
+    merged = parsed as Record<string, unknown>;
+    merged.brandName = brandName;
+    merged.industry = industry;
   }
 
-  const migrated1 = migrateBrandbook(parsed);
+  // ══════════════════════════════════════════════════════════════
+  // Validate & repair merged output
+  // ══════════════════════════════════════════════════════════════
+  onProgress("Validando estrutura final...", 96);
+
+  const migrated1 = migrateBrandbook(merged);
   const validated1 = BrandbookSchemaV2.safeParse(migrated1);
   if (validated1.success) {
     const coherent = enforceCoherence(validated1.data);
@@ -509,15 +745,17 @@ export async function generateBrandbook(
     return coherent;
   }
 
-  onProgress("Corrigindo e refinando brandbook...", 94);
+  // ── Repair pass ──
+  onProgress("Corrigindo e refinando brandbook...", 97);
 
+  const fullContent = JSON.stringify(merged);
   const fixPrompt =
     "Você gerou um JSON que NÃO passou na validação do schema. Reescreva o JSON COMPLETO e válido, " +
     "mantendo o máximo de conteúdo possível, mas corrigindo campos obrigatórios, tipos e arrays mínimos. " +
     "NÃO adicione texto fora do JSON.\n\nErros:\n" +
     formatZodIssues(validated1.error.issues) +
     "\n\nJSON atual (corrija):\n" +
-    fullContent;
+    fullContent.slice(0, 120000);
 
   let fixedContent = "";
   if (useGemini) {

@@ -81,6 +81,8 @@ model User {
   // Subscription
   subscriptionTier WorkspacePlan @default(free)
   stripeCustomerId String?
+  // Encrypted API keys (JSON blob encrypted with server secret)
+  apiKeysEncrypted String?
   // Workspace memberships
   workspaceMemberships WorkspaceMember[]
   // Legacy / direct relations
