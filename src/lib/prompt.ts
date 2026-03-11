@@ -740,6 +740,13 @@ export function compactStrategySummary(data: Record<string, unknown>): string {
 • Vocabulário evitar: ${((vi.vocabulary as Record<string, unknown>)?.avoid as string[] ?? []).slice(0, 8).join(", ")}
 • Manifesto (resumo): ${(bs.manifesto as string ?? "").slice(0, 400)}${(bs.manifesto as string ?? "").length > 400 ? "..." : ""}
 • Brand Promise: ${bs.brandPromise ?? "?"}
+• Brand Beliefs: ${(bs.brandBeliefs as string[] ?? []).slice(0, 4).join(" | ")}
+• Reasons to Believe: ${(bc.reasonsToBelieve as string[] ?? []).slice(0, 4).join(" | ")}
+• User Psychographics: ${bc.userPsychographics ?? "?"}
+• Sample Headlines: ${(vi.sampleHeadlines as string[] ?? []).slice(0, 3).join(" | ")}
+• Sample CTAs: ${(vi.sampleCTAs as string[] ?? []).slice(0, 3).join(" | ")}
+• Do: ${((vi.doDont as Record<string, unknown>)?.do as string[] ?? []).slice(0, 4).join(" | ")}
+• Don't: ${((vi.doDont as Record<string, unknown>)?.dont as string[] ?? []).slice(0, 4).join(" | ")}
 • Personas:
   ${personaSummary}`;
 }
@@ -806,7 +813,7 @@ Nesta etapa, foque EXCLUSIVAMENTE na fundação estratégica da marca. Gere APEN
 
 SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
 • brandName, industry, schemaVersion
-• brandConcept (purpose, mission, vision, UVP, RTBs, psychographics, values, personality, toneOfVoice, brandArchetype — TUDO profundo)
+• brandConcept (purpose, mission, vision, UVP, RTBs, psychographics, values, personality, toneOfVoice, brandArchetype — TUDO profundo. Para brandArchetype: escolha o arquétipo dominante E um secundário. Justifique a escolha com 2-3 frases explicando POR QUE este arquétipo e como ele se manifesta visualmente. Se houver ambiguidade entre 2 arquétipos, escolha o mais específico para a indústria.)
 • brandStory (manifesto de 2-3 parágrafos NA VOZ DA MARCA, originStory, brandPromise, brandBeliefs)
 • positioning (category inovadora, targetMarket preciso, positioningStatement memorável, differentiators, competitors, RTBs)
 • audiencePersonas (3-4 personas RICAS — nomes reais, contexto de vida, goals com emoção, dores profundas, objeções específicas, canais)
@@ -915,7 +922,7 @@ ETAPA 3 DE 3 — SISTEMA VISUAL, APLICAÇÕES, OPERACIONAL & IMAGE BRIEFING
 SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
 
 A) SISTEMA VISUAL:
-• keyVisual (elements 6+, photographyStyle com referências REAIS, iconography, illustrations, marketingArchitecture, compositionPhilosophy, mascots se aplicável, symbols 3+, patterns 2+, structuredPatterns 2+ com detalhes, flora/fauna/objects)
+• keyVisual (elements 6+ — CADA elemento deve ser uma FORMA VISUAL CONCRETA, nunca conceitos abstratos. Ex: "arcos protetores concêntricos" NÃO "confiança". Ex: "linhas ascendentes angulares" NÃO "inovação". photographyStyle com referências REAIS, iconography, illustrations, marketingArchitecture, compositionPhilosophy, mascots se aplicável, symbols 3+, patterns 2+, structuredPatterns 2+ com detalhes, flora/fauna/objects)
 • designTokens (spacing 10+, borderRadii 6+ refletindo geometria do logo, shadows 3-5, breakpoints 4, grid)
 • uiGuidelines (layoutGrid, spacingDensity, iconographyStyle técnico, illustrationStyle, dataVizGuidelines, components 6+ com estados completos)
 

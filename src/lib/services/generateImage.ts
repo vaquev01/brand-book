@@ -399,21 +399,28 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
       const isSocial = ["social_post_square", "instagram_carousel", "instagram_story", "social_cover", "youtube_thumbnail"].includes(assetKey ?? "");
       const isHero = assetKey === "hero_visual" || assetKey === "hero_lifestyle";
 
+      // Dynamic style preset — uses brand's photography/visual style when available
+      const brandStyle = (prompt.match(/VISUAL STYLE:\s*([^.]+)/i)?.[1] ?? "").toLowerCase();
+      const isMinimalist = /minimalist|clean|flat|vector|swiss/i.test(brandStyle);
+      const isOrganic = /organic|natural|botanical|handcraft|artisan/i.test(brandStyle);
+      const isPhotographic = /photographic|cinematic|editorial|documentary/i.test(brandStyle);
+
       const stylePreset = isLogo
         ? "digital-art"
         : isPattern
           ? "tile-texture"
           : isMascot
-            ? "digital-art"
+            ? (isMinimalist ? "digital-art" : isOrganic ? "analog-film" : "digital-art")
             : isMockup
-              ? "photographic"
+              ? (isMinimalist ? "digital-art" : "photographic")
               : isHero
-                ? "cinematic"
+                ? (isPhotographic ? "cinematic" : isMinimalist ? "digital-art" : "cinematic")
                 : isSocial
-                  ? "digital-art"
-                  : "cinematic";
+                  ? (isMinimalist ? "digital-art" : isPhotographic ? "cinematic" : "digital-art")
+                  : (isMinimalist ? "digital-art" : "cinematic");
 
-      const cfgScale = isLogo ? 11 : isPattern ? 9 : isMascot ? 8 : isMockup ? 7 : isHero ? 7 : 8;
+      // Adaptive CFG: higher for precise assets (logos), lower for creative freedom
+      const cfgScale = isLogo ? 11 : isPattern ? 9 : isMascot ? 8 : isMockup ? (isMinimalist ? 8 : 7) : isHero ? 7 : 8;
       const sampler = isLogo || isPattern || isMascot ? "K_EULER" : "K_DPMPP_2M";
       const steps = isLogo ? 60 : 50;
 

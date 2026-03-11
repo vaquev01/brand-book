@@ -377,6 +377,78 @@ function enforceCoherence(data: BrandbookData): BrandbookData {
     }
   }
 
+  // 4. Cross-validate: applications must reference actual palette colors
+  if (data.applications && data.colors?.primary?.length) {
+    const allHexes = new Set([
+      ...data.colors.primary.map((c) => c.hex.toLowerCase()),
+      ...(data.colors.secondary ?? []).map((c) => c.hex.toLowerCase()),
+    ]);
+    const allColorNames = [
+      ...data.colors.primary.map((c) => c.name),
+      ...(data.colors.secondary ?? []).map((c) => c.name),
+    ];
+    for (const app of data.applications) {
+      // If imagePlaceholder uses placehold.co, ensure it references real palette colors
+      if (app.imagePlaceholder?.includes("placehold.co")) {
+        const hexMatch = app.imagePlaceholder.match(/[0-9a-fA-F]{6}/g);
+        if (hexMatch) {
+          const usesRealColor = hexMatch.some((h) => allHexes.has(`#${h.toLowerCase()}`));
+          if (!usesRealColor && allHexes.size > 0) {
+            const primaryHex = data.colors.primary[0].hex.replace("#", "");
+            app.imagePlaceholder = `https://placehold.co/800x600/${primaryHex}/ffffff?text=${encodeURIComponent(app.type)}`;
+          }
+        }
+      }
+      // Ensure artDirection references actual color names if empty/vague
+      if (!app.artDirection?.trim() && allColorNames.length >= 2) {
+        app.artDirection = `Fundo em ${allColorNames[0]}, acentos em ${allColorNames[1]}. Tipografia conforme hierarquia do brandbook.`;
+      }
+    }
+  }
+
+  // 5. Cross-validate: keyVisual elements must be concrete visual forms, not abstract concepts
+  if (data.keyVisual?.elements) {
+    const abstractPatterns = /^(inovação|confiança|qualidade|excelência|crescimento|sucesso|transformação|liderança|innovation|trust|quality|excellence|growth|success|transformation|leadership)$/i;
+    data.keyVisual.elements = data.keyVisual.elements.map((el) => {
+      if (abstractPatterns.test(el.trim())) {
+        // Convert abstract concept to visual form suggestion
+        const visualForms: Record<string, string> = {
+          "inovação": "formas angulares ascendentes que sugerem inovação",
+          "innovation": "ascending angular shapes suggesting innovation",
+          "confiança": "arcos protetores concêntricos que transmitem confiança",
+          "trust": "concentric protective arcs conveying trust",
+          "qualidade": "geometria precisa com acabamento premium que evoca qualidade",
+          "quality": "precise geometry with premium finish evoking quality",
+          "excelência": "elementos com proporção áurea que expressam excelência",
+          "excellence": "golden-ratio elements expressing excellence",
+          "crescimento": "linhas orgânicas ascendentes que representam crescimento",
+          "growth": "ascending organic lines representing growth",
+          "sucesso": "formas em V ou chevrons que simbolizam conquista",
+          "success": "V-shapes or chevrons symbolizing achievement",
+          "transformação": "espirais ou formas metamórficas que sugerem transformação",
+          "transformation": "spirals or metamorphic shapes suggesting transformation",
+          "liderança": "formas triangulares ou em coroa que remetem à liderança",
+          "leadership": "triangular or crown-like shapes referencing leadership",
+        };
+        return visualForms[el.trim().toLowerCase()] ?? `formas abstratas inspiradas em "${el}"`;
+      }
+      return el;
+    });
+  }
+
+  // 6. Cross-validate: imageGenerationBriefing.colorMood must reference actual palette colors
+  if (data.imageGenerationBriefing && data.colors?.primary?.length) {
+    const allColorNames = [
+      ...data.colors.primary.map((c) => `${c.name} (${c.hex})`),
+      ...(data.colors.secondary ?? []).map((c) => `${c.name} (${c.hex})`),
+    ];
+    const mood = data.imageGenerationBriefing.colorMood;
+    const hasAnyColorRef = data.colors.primary.some((c) => mood.includes(c.name));
+    if (!hasAnyColorRef) {
+      data.imageGenerationBriefing.colorMood = `${mood}. Paleta exata: ${allColorNames.join(", ")}.`;
+    }
+  }
+
   return data;
 }
 

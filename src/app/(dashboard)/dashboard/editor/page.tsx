@@ -797,35 +797,59 @@ export default function Home() {
     }
   }
 
-  // Persist brandbook JSON to localStorage whenever it changes
-  useEffect(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    saveBrandbookData(slug, brandbookData);
-    setActiveSlug(slug);
-  }, [brandbookData]);
+  // ─── Robust auto-save with debounce + error feedback ─────────────
+  const saveStatusRef = useRef<"idle" | "saving" | "error">("idle");
+  const [saveError, setSaveError] = useState(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  const persistAll = useCallback(() => {
     if (!brandbookData) return;
     const slug = slugifyForStorage(brandbookData.brandName);
-    // Save each image to IndexedDB (primary — handles multi-MB base64 blobs)
-    for (const [key, asset] of Object.entries(generatedAssets)) {
-      saveGeneratedImage(slug, key, asset).catch(() => {});
+    setSaveError(false);
+    saveStatusRef.current = "saving";
+
+    // 1. localStorage for brandbook JSON
+    try {
+      saveBrandbookData(slug, brandbookData);
+      setActiveSlug(slug);
+    } catch {
+      setSaveError(true);
+      saveStatusRef.current = "error";
+      toast.error("Erro ao salvar — localStorage cheio. Exporte seu brandbook para não perder dados.");
+      return;
     }
-  }, [generatedAssets, brandbookData]);
 
+    // 2. IndexedDB for assets (async, with error reporting)
+    const promises: Promise<void>[] = [];
+    for (const [key, asset] of Object.entries(generatedAssets)) {
+      promises.push(saveGeneratedImage(slug, key, asset));
+    }
+    promises.push(saveBrandAssets(slug, uploadedBrandAssets));
+    promises.push(saveAssetPack(slug, assetPack));
+
+    Promise.all(promises)
+      .then(() => { saveStatusRef.current = "idle"; })
+      .catch(() => {
+        setSaveError(true);
+        saveStatusRef.current = "error";
+        toast.error("Erro ao salvar assets no IndexedDB. Exporte para não perder dados.");
+      });
+  }, [brandbookData, generatedAssets, uploadedBrandAssets, assetPack]);
+
+  // Debounced auto-save: triggers 800ms after last change
   useEffect(() => {
     if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    // Save to IndexedDB (handles large dataUrls)
-    saveBrandAssets(slug, uploadedBrandAssets).catch(() => {});
-  }, [uploadedBrandAssets, brandbookData]);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(persistAll, 800);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [brandbookData, generatedAssets, uploadedBrandAssets, assetPack, persistAll]);
 
+  // Also save immediately on page unload
   useEffect(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    saveAssetPack(slug, assetPack).catch(() => {});
-  }, [assetPack, brandbookData]);
+    const handleBeforeUnload = () => { persistAll(); };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [persistAll]);
 
   function handleClearImageCache() {
     if (!brandbookData) return;
@@ -922,6 +946,13 @@ export default function Home() {
                 <span className="hidden sm:inline">Exportar</span>
               </button>
             </nav>
+
+            {saveError && (
+              <div className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-md">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
+                Erro ao salvar — exporte seu brandbook
+              </div>
+            )}
 
             {/* Action buttons */}
             <div className="flex items-center gap-1 flex-shrink-0">
