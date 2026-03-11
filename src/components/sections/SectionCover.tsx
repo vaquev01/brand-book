@@ -49,7 +49,7 @@ function VisualCard({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[1.85rem] border ${tall ? "min-h-[20rem]" : "min-h-[12.5rem]"}`}
+      className={`relative overflow-hidden rounded-[1.85rem] border ${tall ? "min-h-[22rem]" : "min-h-[16rem]"}`}
       style={{
         borderColor: dividerColor,
         background,
@@ -84,10 +84,10 @@ function VisualCard({
             : "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 100%)",
         }}
       />
-      <div className="absolute inset-x-5 top-5 h-px" style={{ background: card.imageUrl ? "rgba(255,255,255,0.18)" : dividerColor }} />
-      <div className="relative flex h-full flex-col justify-end gap-3 p-5 md:p-6">
+      <div className="absolute inset-x-6 top-6 h-px" style={{ background: card.imageUrl ? "rgba(255,255,255,0.18)" : dividerColor }} />
+      <div className="relative flex h-full flex-col justify-end gap-4 p-6 md:p-7 lg:p-8">
         <span
-          className="w-fit rounded-full border px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em]"
+          className="w-fit rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em]"
           style={{
             color: card.imageUrl ? "#ffffff" : textColor,
             borderColor: card.imageUrl ? "rgba(255,255,255,0.25)" : dividerColor,
@@ -98,23 +98,23 @@ function VisualCard({
           {card.title}
         </span>
         <p
-          className={`max-w-sm font-medium ${tall ? "text-[1.05rem] leading-7" : "text-sm leading-6"}`}
+          className={`max-w-md font-medium ${tall ? "text-[1.15rem] leading-[1.55]" : "text-[0.94rem] leading-[1.6]"}`}
           style={{ color: card.imageUrl ? "rgba(255,255,255,0.94)" : textColor }}
         >
           {card.subtitle}
         </p>
-        <div className="mt-1 flex items-center justify-between gap-3">
+        <div className="mt-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-1.5 w-14 rounded-full" style={{ background: accentHex }} />
+            <div className="h-2 w-16 rounded-full" style={{ background: accentHex }} />
             <span
-              className="text-[10px] font-bold uppercase tracking-[0.18em]"
+              className="text-[11px] font-bold uppercase tracking-[0.16em]"
               style={{ color: card.imageUrl ? "rgba(255,255,255,0.7)" : muted }}
             >
               {card.imageUrl ? "curadoria visual" : "assinatura visual"}
             </span>
           </div>
           <span
-            className="text-[10px] font-bold uppercase tracking-[0.18em]"
+            className="text-[11px] font-bold uppercase tracking-[0.16em]"
             style={{ color: card.imageUrl ? "rgba(255,255,255,0.54)" : muted }}
           >
             {tall ? "hero" : "insight"}
@@ -281,16 +281,16 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
                 {signaturePanels.map((panel) => (
                   <div
                     key={panel.label}
-                    className="rounded-[1.2rem] border px-4 py-3"
+                    className="rounded-[1.2rem] border px-5 py-4"
                     style={{
                       borderColor: dividerColor,
                       background: dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.22)",
                     }}
                   >
-                    <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: subtextColor }}>
+                    <div className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: subtextColor }}>
                       {panel.label}
                     </div>
-                    <div className="text-sm font-semibold leading-6" style={{ color: textColor }}>
+                    <div className="text-[0.94rem] font-semibold leading-6" style={{ color: textColor }}>
                       {panel.value}
                     </div>
                   </div>
@@ -333,24 +333,24 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
                 {data.brandConcept.values.slice(0, 3).map((v, index) => (
                   <div
                     key={v}
-                    className="rounded-[1.2rem] border p-3.5"
+                    className="rounded-[1.2rem] border p-4"
                     style={{ color: textColor, borderColor: dividerColor, background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.14)" }}
                   >
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: subtextColor }}>
+                    <div className="mb-2.5 flex items-center justify-between">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: subtextColor }}>
                         Valor
                       </div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: subtextColor }}>
+                      <div className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: subtextColor }}>
                         {String(index + 1).padStart(2, "0")}
                       </div>
                     </div>
-                    <div className="text-sm font-semibold leading-6">{v}</div>
+                    <div className="text-[0.94rem] font-semibold leading-6">{v}</div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <div className="grid gap-3 lg:grid-rows-[minmax(17rem,1fr)_auto] xl:gap-4">
+          <div className="grid gap-4 lg:grid-rows-[minmax(19rem,1fr)_auto] xl:gap-5">
             {heroCard && (
               <VisualCard
                 accentHex={accentHex}
@@ -363,7 +363,7 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
               />
             )}
             {supportCards.length > 0 && (
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 lg:[grid-template-columns:repeat(1,minmax(0,1fr))] xl:[grid-template-columns:repeat(3,minmax(0,1fr))]">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:[grid-template-columns:repeat(1,minmax(0,1fr))] xl:[grid-template-columns:repeat(3,minmax(0,1fr))] xl:gap-5">
                 {supportCards.map((card) => (
                   <VisualCard
                     key={card.id}
@@ -396,19 +396,19 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
                 ))}
               </div>
               <div className="flex flex-wrap gap-3 md:gap-4">
-                <div className="rounded-[1.25rem] border px-4 py-3" style={{ borderColor: dividerColor, background: dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.2)" }}>
-                  <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: subtextColor }}>
+                <div className="rounded-[1.25rem] border px-5 py-3.5" style={{ borderColor: dividerColor, background: dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.2)" }}>
+                  <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: subtextColor }}>
                     Tipografia
                   </div>
-                  <div className="text-sm font-semibold" style={{ color: textColor }}>
+                  <div className="text-[0.94rem] font-semibold" style={{ color: textColor }}>
                     {primaryFont}
                   </div>
                 </div>
-                <div className="rounded-[1.25rem] border px-4 py-3" style={{ borderColor: dividerColor, background: dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.2)" }}>
-                  <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: subtextColor }}>
+                <div className="rounded-[1.25rem] border px-5 py-3.5" style={{ borderColor: dividerColor, background: dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.2)" }}>
+                  <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: subtextColor }}>
                     Aplicação-chave
                   </div>
-                  <div className="text-sm font-semibold" style={{ color: textColor }}>
+                  <div className="text-[0.94rem] font-semibold" style={{ color: textColor }}>
                     {firstApplication}
                   </div>
                 </div>
