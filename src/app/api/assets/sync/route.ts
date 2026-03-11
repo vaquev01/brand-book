@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
       if (!asset.key || !asset.url) continue;
 
       const existing = existingMap.get(asset.key);
-      // Skip if already has a valid URL (R2 or sourceUrl)
-      if (existing?.publicUrl && !existing.publicUrl.includes("_placeholder")) continue;
-      if (existing?.sourceUrl && existing.sourceUrl.startsWith("data:")) continue;
+      // Skip if the exact same URL is already stored (avoid redundant uploads)
+      if (existing?.publicUrl && !existing.publicUrl.includes("_placeholder") && existing.sourceUrl === asset.url) continue;
+      if (existing?.sourceUrl === asset.url) continue;
 
       let publicUrl: string | undefined;
       let sourceUrl: string | undefined;

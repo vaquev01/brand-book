@@ -588,6 +588,22 @@ export function useImageGeneration({
     }
   }
 
+  /**
+   * Duplicate an existing asset to another AssetKey slot.
+   * Copies the image URL so the same image appears in multiple places.
+   */
+  function duplicateAsset(sourceKey: AssetKey, targetKey: AssetKey) {
+    const source = generatedAssets[sourceKey];
+    if (!source) return;
+    const duplicate: GeneratedAsset = {
+      ...source,
+      key: targetKey,
+      prompt: `Duplicado de ${sourceKey}: ${source.prompt}`,
+      generatedAt: new Date().toISOString(),
+    };
+    onAssetGenerated(targetKey, duplicate);
+  }
+
   async function downloadImage(url: string, name: string) {
     try {
       await downloadImageUrl(url, data.brandName, name);
@@ -618,6 +634,7 @@ export function useImageGeneration({
     cancelBatch,
     saveGeneratedToAssets,
     uploadForKey,
+    duplicateAsset,
     downloadImage,
     PROVIDER_KEY_MAP,
   };

@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset, Mascot, BrandPattern, ImageProvider } from "@/lib/types";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
-import { AssetUploadButton } from "@/components/AssetUploadButton";
+import { AssetUploadButton, DuplicateAssetButton } from "@/components/AssetUploadButton";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
@@ -14,6 +14,7 @@ interface Props {
   generatedImages?: Record<string, string>;
   onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
   onUploadForKey?: (key: AssetKey, file: File) => void | Promise<void>;
+  onDuplicateAsset?: (sourceKey: AssetKey, targetKey: AssetKey) => void;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -41,7 +42,7 @@ function downloadImageDirect(url: string, name: string) {
   });
 }
 
-export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, onUploadForKey, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
+export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, onUploadForKey, onDuplicateAsset, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
   const mascots = useMemo(() => data.keyVisual.mascots ?? [], [data.keyVisual.mascots]);
   const symbols = useMemo(() => data.keyVisual.symbols ?? [], [data.keyVisual.symbols]);
   const patterns = useMemo(() => data.keyVisual.patterns ?? [], [data.keyVisual.patterns]);
@@ -412,6 +413,9 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
                   isOfficial={generatedAssets[ak]?.provider === "upload"}
                   compact
                 />
+              )}
+              {onDuplicateAsset && generatedAssets[ak] && (
+                <DuplicateAssetButton sourceKey={ak} onDuplicate={onDuplicateAsset} compact />
               )}
             </div>
           </div>

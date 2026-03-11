@@ -6,7 +6,7 @@ import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
-import { AssetUploadButton, OfficialBadge } from "@/components/AssetUploadButton";
+import { AssetUploadButton, DuplicateAssetButton } from "@/components/AssetUploadButton";
 
 interface Props {
   data: BrandbookData;
@@ -14,6 +14,7 @@ interface Props {
   generatedImages?: Record<string, string>;
   onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
   onUploadForKey?: (key: AssetKey, file: File) => void | Promise<void>;
+  onDuplicateAsset?: (sourceKey: AssetKey, targetKey: AssetKey) => void;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -41,7 +42,7 @@ function downloadImageDirect(url: string, name: string) {
   });
 }
 
-export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, onUploadForKey, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
+export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, onUploadForKey, onDuplicateAsset, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
   const isAdvanced = !!data.keyVisual.iconography;
   const hasFlora = data.keyVisual.flora && data.keyVisual.flora.length > 0;
   const hasFauna = data.keyVisual.fauna && data.keyVisual.fauna.length > 0;
@@ -241,6 +242,9 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
                   isOfficial={generatedAssets[assetKey]?.provider === "upload"}
                   compact
                 />
+              )}
+              {onDuplicateAsset && generatedAssets[assetKey] && (
+                <DuplicateAssetButton sourceKey={assetKey} onDuplicate={onDuplicateAsset} compact />
               )}
             </div>
           </div>

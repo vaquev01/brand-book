@@ -1,5 +1,6 @@
 "use client";
 import { BrandbookData } from "@/lib/types";
+import { EditableField } from "@/components/EditableField";
 
 function isLight(hex: string): boolean {
   if (!hex || hex.length < 4) return true;
@@ -10,7 +11,7 @@ function isLight(hex: string): boolean {
   return 0.299 * r + 0.587 * g + 0.114 * b > 0.55;
 }
 
-export function SectionBrandWorld({ data, num }: { data: BrandbookData; num: number }) {
+export function SectionBrandWorld({ data, num, onUpdateData }: { data: BrandbookData; num: number; onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void }) {
   const allColors = [...data.colors.primary, ...data.colors.secondary];
   const marketing = data.typography.marketing ?? data.typography.primary;
   const ui = data.typography.ui ?? data.typography.secondary;
@@ -77,12 +78,16 @@ export function SectionBrandWorld({ data, num }: { data: BrandbookData; num: num
                 letterSpacing: "-0.02em",
               }}
             >
-              {data.brandName}
+              <EditableField
+                value={data.brandName}
+                onSave={(val) => onUpdateData?.((prev) => ({ ...prev, brandName: val }))}
+                readOnly={!onUpdateData}
+              />
             </div>
           )}
 
           {/* Tagline */}
-          {tagline && (
+          {(tagline || onUpdateData) && (
             <div
               className="mb-5 italic font-medium"
               style={{
@@ -91,12 +96,22 @@ export function SectionBrandWorld({ data, num }: { data: BrandbookData; num: num
                 color: accentHex,
               }}
             >
-              &ldquo;{tagline}&rdquo;
+              &ldquo;
+              <EditableField
+                value={tagline || ""}
+                onSave={(val) => onUpdateData?.((prev) => ({
+                  ...prev,
+                  verbalIdentity: prev.verbalIdentity ? { ...prev.verbalIdentity, tagline: val } : undefined,
+                }))}
+                readOnly={!onUpdateData}
+                className="inline"
+              />
+              &rdquo;
             </div>
           )}
 
           {/* Purpose / mission in UI font */}
-          {ui && (data.brandConcept.purpose || data.brandConcept.mission) && (
+          {ui && (data.brandConcept.purpose || data.brandConcept.mission || onUpdateData) && (
             <div
               className="leading-relaxed max-w-2xl mb-6"
               style={{
@@ -105,18 +120,33 @@ export function SectionBrandWorld({ data, num }: { data: BrandbookData; num: num
                 color: onPrimaryMuted,
               }}
             >
-              {data.brandConcept.purpose || data.brandConcept.mission}
+              <EditableField
+                value={data.brandConcept.purpose || data.brandConcept.mission || ""}
+                onSave={(val) => onUpdateData?.((prev) => ({
+                  ...prev,
+                  brandConcept: { ...prev.brandConcept, purpose: val },
+                }))}
+                readOnly={!onUpdateData}
+                multiline
+              />
             </div>
           )}
 
           {/* Archetype + personality */}
           <div className="flex flex-wrap gap-2 items-center">
-            {archetype && (
+            {(archetype || onUpdateData) && (
               <span
                 className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full"
                 style={{ background: accentHex, color: isLight(accentHex) ? "#000" : "#fff" }}
               >
-                {archetype}
+                <EditableField
+                  value={archetype || ""}
+                  onSave={(val) => onUpdateData?.((prev) => ({
+                    ...prev,
+                    brandConcept: { ...prev.brandConcept, brandArchetype: val || undefined },
+                  }))}
+                  readOnly={!onUpdateData}
+                />
               </span>
             )}
             {personality.map((p, i) => (
@@ -125,17 +155,66 @@ export function SectionBrandWorld({ data, num }: { data: BrandbookData; num: num
                 className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border"
                 style={{ borderColor: `${accentHex}77`, color: accentHex }}
               >
-                {p}
+                <EditableField
+                  value={p}
+                  onSave={(val) => onUpdateData?.((prev) => ({
+                    ...prev,
+                    brandConcept: {
+                      ...prev.brandConcept,
+                      personality: (prev.brandConcept.personality ?? []).map((item, idx) => idx === i ? val : item),
+                    },
+                  }))}
+                  onDelete={onUpdateData ? () => onUpdateData((prev) => ({
+                    ...prev,
+                    brandConcept: {
+                      ...prev.brandConcept,
+                      personality: (prev.brandConcept.personality ?? []).filter((_, idx) => idx !== i),
+                    },
+                  })) : undefined}
+                  readOnly={!onUpdateData}
+                />
               </span>
             ))}
+            {onUpdateData && (
+              <button
+                type="button"
+                onClick={() => onUpdateData((prev) => ({
+                  ...prev,
+                  brandConcept: {
+                    ...prev.brandConcept,
+                    personality: [...(prev.brandConcept.personality ?? []), "Nova trait"],
+                  },
+                }))}
+                className="no-print text-[10px] font-bold text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:bg-gray-50 transition"
+              >
+                + Trait
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Values grid */}
-      {values.length > 0 && (
+      {(values.length > 0 || onUpdateData) && (
         <div className="mb-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400 mb-3">Valores da Marca</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400">Valores da Marca</p>
+            {onUpdateData && (
+              <button
+                type="button"
+                onClick={() => onUpdateData((prev) => ({
+                  ...prev,
+                  brandConcept: {
+                    ...prev.brandConcept,
+                    values: [...(prev.brandConcept.values ?? []), "Novo valor"],
+                  },
+                }))}
+                className="no-print text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+              >
+                + Adicionar
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {values.map((v, i) => (
               <div
@@ -150,7 +229,24 @@ export function SectionBrandWorld({ data, num }: { data: BrandbookData; num: num
                     fontFamily: marketing ? `'${marketing.name}', sans-serif` : "inherit",
                   }}
                 >
-                  {v}
+                  <EditableField
+                    value={v}
+                    onSave={(val) => onUpdateData?.((prev) => ({
+                      ...prev,
+                      brandConcept: {
+                        ...prev.brandConcept,
+                        values: (prev.brandConcept.values ?? []).map((item, idx) => idx === i ? val : item),
+                      },
+                    }))}
+                    onDelete={onUpdateData ? () => onUpdateData((prev) => ({
+                      ...prev,
+                      brandConcept: {
+                        ...prev.brandConcept,
+                        values: (prev.brandConcept.values ?? []).filter((_, idx) => idx !== i),
+                      },
+                    })) : undefined}
+                    readOnly={!onUpdateData}
+                  />
                 </div>
               </div>
             ))}
@@ -159,16 +255,50 @@ export function SectionBrandWorld({ data, num }: { data: BrandbookData; num: num
       )}
 
       {/* Mood keywords energy cloud */}
-      {moodKeywords.length > 0 && (
+      {(moodKeywords.length > 0 || onUpdateData) && (
         <div className="rounded-[1.4rem] border bg-gray-50 p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400 mb-3">Energia Visual</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400">Energia Visual</p>
+            {onUpdateData && (
+              <button
+                type="button"
+                onClick={() => onUpdateData((prev) => ({
+                  ...prev,
+                  imageGenerationBriefing: {
+                    ...(prev.imageGenerationBriefing as BrandbookData["imageGenerationBriefing"]),
+                    moodKeywords: [...(prev.imageGenerationBriefing?.moodKeywords ?? []), "nova keyword"],
+                  } as BrandbookData["imageGenerationBriefing"],
+                }))}
+                className="no-print text-[10px] font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+              >
+                + Adicionar
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {moodKeywords.map((kw, i) => (
               <span
                 key={i}
                 className="text-sm font-medium px-3 py-1.5 rounded-full bg-white border shadow-sm text-gray-700"
               >
-                {kw}
+                <EditableField
+                  value={kw}
+                  onSave={(val) => onUpdateData?.((prev) => ({
+                    ...prev,
+                    imageGenerationBriefing: {
+                      ...(prev.imageGenerationBriefing as BrandbookData["imageGenerationBriefing"]),
+                      moodKeywords: (prev.imageGenerationBriefing?.moodKeywords ?? []).map((item, idx) => idx === i ? val : item),
+                    } as BrandbookData["imageGenerationBriefing"],
+                  }))}
+                  onDelete={onUpdateData ? () => onUpdateData((prev) => ({
+                    ...prev,
+                    imageGenerationBriefing: {
+                      ...(prev.imageGenerationBriefing as BrandbookData["imageGenerationBriefing"]),
+                      moodKeywords: (prev.imageGenerationBriefing?.moodKeywords ?? []).filter((_, idx) => idx !== i),
+                    } as BrandbookData["imageGenerationBriefing"],
+                  })) : undefined}
+                  readOnly={!onUpdateData}
+                />
               </span>
             ))}
           </div>

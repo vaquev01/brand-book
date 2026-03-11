@@ -9,6 +9,7 @@ const imgGen = {
   generateAllApplications: () => Promise.resolve(),
   generateApplication: () => Promise.resolve(),
   uploadForKey: () => Promise.resolve(),
+  duplicateAsset: () => {},
   loadingKey: null,
   saveGeneratedToAssets: () => Promise.resolve(),
 };

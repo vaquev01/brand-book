@@ -933,14 +933,15 @@ export default function Home() {
       .finally(() => { projectIdResolveRef.current = false; });
   }, [brandbookData, currentProjectId]);
 
-  // Sync local images to server when projectId becomes available
-  const imageSyncDoneRef = useRef(false);
+  // Sync images to server whenever generatedAssets change and projectId is available
+  const syncedKeysRef = useRef<Set<string>>(new Set());
+  const imageSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!currentProjectId || Object.keys(generatedAssets).length === 0 || imageSyncDoneRef.current) return;
-    imageSyncDoneRef.current = true;
+    if (!currentProjectId || Object.keys(generatedAssets).length === 0) return;
 
+    // Find assets not yet synced to server
     const assetsToSync = Object.entries(generatedAssets)
-      .filter(([, a]) => a.url && a.url.startsWith("data:"))
+      .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt))
       .map(([key, a]) => ({
         key,
         url: a.url,
@@ -951,11 +952,27 @@ export default function Home() {
 
     if (assetsToSync.length === 0) return;
 
-    fetch("/api/assets/sync", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId: currentProjectId, assets: assetsToSync }),
-    }).catch(() => { /* non-fatal */ });
+    // Debounce to avoid hammering the server during batch generation
+    if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current);
+    imageSyncTimerRef.current = setTimeout(() => {
+      fetch("/api/assets/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: currentProjectId, assets: assetsToSync }),
+      })
+        .then((res) => {
+          if (res.ok) {
+            // Mark these as synced so we don't re-upload
+            for (const a of assetsToSync) {
+              const asset = generatedAssets[a.key];
+              if (asset) syncedKeysRef.current.add(a.key + ":" + asset.generatedAt);
+            }
+          }
+        })
+        .catch(() => { /* non-fatal */ });
+    }, 2000);
+
+    return () => { if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current); };
   }, [currentProjectId, generatedAssets]);
 
   // Also save immediately on page unload

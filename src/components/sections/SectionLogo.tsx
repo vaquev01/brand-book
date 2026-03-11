@@ -6,7 +6,7 @@ import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
-import { AssetUploadButton } from "@/components/AssetUploadButton";
+import { AssetUploadButton, DuplicateAssetButton } from "@/components/AssetUploadButton";
 
 interface Props {
   data: BrandbookData;
@@ -15,6 +15,7 @@ interface Props {
   uploadedAssets?: UploadedAsset[];
   onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
   onUploadForKey?: (key: AssetKey, file: File) => void | Promise<void>;
+  onDuplicateAsset?: (sourceKey: AssetKey, targetKey: AssetKey) => void;
   loadingKey?: string | null;
   onDownload?: (url: string, name: string) => void;
   onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
@@ -187,7 +188,7 @@ function downloadImageDirect(url: string, name: string) {
   });
 }
 
-export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, onUploadForKey, loadingKey, onDownload, onSaveToAssets, generatedAssets = {}, onUpdateData }: Props) {
+export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, onUploadForKey, onDuplicateAsset, loadingKey, onDownload, onSaveToAssets, generatedAssets = {}, onUpdateData }: Props) {
   const uploadedLogos = useMemo(
     () => uploadedAssets.filter((a) => a.type === "logo"),
     [uploadedAssets]
@@ -409,6 +410,9 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
                   isOfficial={generatedAssets[assetKey]?.provider === "upload"}
                   compact
                 />
+              )}
+              {onDuplicateAsset && generatedAssets[assetKey] && (
+                <DuplicateAssetButton sourceKey={assetKey} onDuplicate={onDuplicateAsset} compact />
               )}
             </div>
           </div>

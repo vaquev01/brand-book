@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import type { AssetKey } from "@/lib/imagePrompts";
+import { useRef, useState } from "react";
+import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
 
 interface Props {
   assetKey: AssetKey;
@@ -73,6 +73,74 @@ export function AssetUploadButton({ assetKey, onUpload, loading, isOfficial, cla
         )}
       </button>
     </>
+  );
+}
+
+/** Duplicate asset button — copies an existing asset to another key slot */
+export function DuplicateAssetButton({
+  sourceKey,
+  onDuplicate,
+  compact,
+}: {
+  sourceKey: AssetKey;
+  onDuplicate: (sourceKey: AssetKey, targetKey: AssetKey) => void;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = Object.entries(ASSET_CATALOG)
+    .filter(([key, entry]) => key !== sourceKey && (
+      key.toLowerCase().includes(search.toLowerCase()) ||
+      entry.label.toLowerCase().includes(search.toLowerCase())
+    ))
+    .slice(0, 12);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`inline-flex items-center gap-1.5 text-xs font-semibold rounded-lg transition-all bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 ${compact ? "px-2 py-1" : "px-3 py-1.5"}`}
+        title="Duplicar este asset para outro slot"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="14" height="14" x="8" y="8" rx="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+        {compact ? "Duplicar" : "Duplicar para..."}
+      </button>
+      {open && (
+        <div className="absolute z-50 top-full mt-1 right-0 w-64 bg-white border rounded-xl shadow-xl p-2 max-h-72 overflow-y-auto">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar slot..."
+            className="w-full text-xs border rounded-lg px-2 py-1.5 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            autoFocus
+          />
+          {filtered.length === 0 && (
+            <p className="text-xs text-gray-400 px-2 py-1">Nenhum slot encontrado</p>
+          )}
+          {filtered.map(([key, entry]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => {
+                onDuplicate(sourceKey, key as AssetKey);
+                setOpen(false);
+                setSearch("");
+              }}
+              className="w-full text-left px-2 py-1.5 text-xs rounded-lg hover:bg-blue-50 transition flex items-center gap-2"
+            >
+              <span className="font-semibold text-gray-800 truncate">{entry.label}</span>
+              <span className="text-gray-400 text-[10px] shrink-0">{entry.aspectRatio}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
