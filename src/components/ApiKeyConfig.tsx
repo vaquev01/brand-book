@@ -272,7 +272,7 @@ export function ApiKeyConfig({ isOpen, onClose, onSave }: Props) {
           if (providerKey === "google") {
             const order = [
               "imagen-3.0-generate-002",
-              "imagen-3.0-fast-generate-002",
+              "imagen-3.0-generate-001",
               "gemini-3.1-flash-image-preview",
               "gemini-3-pro-image-preview",
               "gemini-2.5-flash-image",
