@@ -206,6 +206,99 @@ export function parseGenerateInput(body: GenerateRequestPayload): GenerateInput 
  * - Ensures imageGenerationBriefing.negativePrompt is never empty
  * - Ensures accessibility.contrastRules references actual palette color names
  */
+
+function ensureArrayMin(obj: Record<string, unknown>, path: string[], min: number, factory: () => unknown) {
+  let cur: Record<string, unknown> = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    if (!cur || typeof cur !== "object") return;
+    cur = cur[path[i]] as Record<string, unknown>;
+  }
+  const key = path[path.length - 1];
+  if (!cur || typeof cur !== "object") return;
+  if (!Array.isArray(cur[key])) cur[key] = [];
+  const arr = cur[key] as unknown[];
+  while (arr.length < min) arr.push(factory());
+}
+
+/**
+ * Programmatically fixes the most common AI omissions/defects BEFORE schema
+ * validation, so the repair LLM pass is less likely to be needed.
+ */
+function patchCommonDefects(data: Record<string, unknown>) {
+  if (!data || typeof data !== "object") return;
+
+  // colors: Required — AI sometimes nests under "colorPalette" or omits entirely
+  if (!data.colors) {
+    if (data.colorPalette && typeof data.colorPalette === "object") {
+      data.colors = data.colorPalette;
+      delete data.colorPalette;
+    } else {
+      data.colors = {
+        primary: [
+          { name: "Primary", hex: "#111827", rgb: "17, 24, 39", cmyk: "80, 68, 53, 54", usage: "Main brand color" },
+          { name: "Primary Light", hex: "#374151", rgb: "55, 65, 81", cmyk: "70, 56, 43, 36", usage: "Secondary usage" },
+        ],
+        secondary: [
+          { name: "Accent", hex: "#6366F1", rgb: "99, 102, 241", cmyk: "62, 58, 0, 0", usage: "Accent & CTAs" },
+        ],
+      };
+    }
+  }
+  const colors = data.colors as Record<string, unknown[]>;
+  if (colors && typeof colors === "object") {
+    if (!Array.isArray(colors.primary)) colors.primary = [];
+    if (!Array.isArray(colors.secondary)) colors.secondary = [];
+    while (colors.primary.length < 2) {
+      colors.primary.push({ name: `Color ${colors.primary.length + 1}`, hex: "#555555", rgb: "85,85,85", cmyk: "0,0,0,67", usage: "General use" });
+    }
+    while (colors.secondary.length < 1) {
+      colors.secondary.push({ name: "Secondary", hex: "#888888", rgb: "136,136,136", cmyk: "0,0,0,47", usage: "Secondary use" });
+    }
+  }
+
+  // applications: min 3
+  ensureArrayMin(data, ["applications"], 3, () => ({
+    type: "Social Media Post",
+    description: "Template para posts de redes sociais",
+    imagePlaceholder: "https://placehold.co/1080x1080/111827/ffffff?text=Social",
+    imageKey: "social_instagram_post",
+    dimensions: "1080×1080px",
+  }));
+
+  // socialMediaGuidelines.platforms[*].doList min 2, dontList min 2
+  const smg = data.socialMediaGuidelines as Record<string, unknown> | undefined;
+  if (smg?.platforms && Array.isArray(smg.platforms)) {
+    for (const p of smg.platforms as Record<string, unknown>[]) {
+      if (!Array.isArray(p.doList)) p.doList = [];
+      const doList = p.doList as string[];
+      while (doList.length < 2) doList.push(doList.length === 0 ? "Manter consistência visual com a paleta da marca" : "Usar tom de voz alinhado ao canal");
+      if (!Array.isArray(p.dontList)) p.dontList = [];
+      const dontList = p.dontList as string[];
+      while (dontList.length < 2) dontList.push(dontList.length === 0 ? "Não usar cores fora da paleta institucional" : "Não publicar sem revisão de copy");
+    }
+  }
+
+  // productionGuidelines.deliverables min 2
+  if (data.productionGuidelines) {
+    ensureArrayMin(data, ["productionGuidelines", "deliverables"], 2, () => ({
+      asset: "Logo Pack",
+      formats: ["SVG", "PNG", "PDF"],
+      specs: "Versões em alta resolução para print e digital",
+    }));
+  }
+
+  // audiencePersonas min 2
+  ensureArrayMin(data, ["audiencePersonas"], 2, () => ({
+    name: "Persona Secundária",
+    role: "Decisor complementar",
+    context: "Profissional que influencia decisões de compra",
+    goals: ["Eficiência", "Redução de custos", "Inovação"],
+    painPoints: ["Falta de tempo", "Complexidade de ferramentas"],
+    objections: ["Custo", "Curva de aprendizado"],
+    channels: ["LinkedIn", "Email"],
+  }));
+}
+
 function enforceCoherence(data: BrandbookData): BrandbookData {
   // 1. Fix typographyScale fontRoles that don't match actual typography keys
   if (data.typographyScale && data.typography) {
@@ -737,6 +830,9 @@ export async function generateBrandbook(
   // ══════════════════════════════════════════════════════════════
   onProgress("Validando estrutura final...", 96);
 
+  // Programmatic patch for common AI omissions before schema validation
+  patchCommonDefects(merged);
+
   const migrated1 = migrateBrandbook(merged);
   const validated1 = BrandbookSchemaV2.safeParse(migrated1);
   if (validated1.success) {
@@ -800,6 +896,7 @@ export async function generateBrandbook(
     throw new Error("A IA retornou JSON inválido na correção.");
   }
 
+  patchCommonDefects(fixedParsed as Record<string, unknown>);
   const migrated2 = migrateBrandbook(fixedParsed);
   const validated2 = BrandbookSchemaV2.safeParse(migrated2);
   if (!validated2.success) {

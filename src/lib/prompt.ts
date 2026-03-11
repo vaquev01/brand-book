@@ -159,6 +159,14 @@ NOTA SOBRE ICONOGRAFIA E ILUSTRAÇÃO:
 - "keyVisual.illustrations" = estilo CONCEITUAL (técnica artística, referências de ilustradores, mood)
 Não duplique o conteúdo — cada campo tem propósito distinto.
 
+CAMPOS CRÍTICOS — VALIDAÇÃO RIGOROSA (se ausentes, o brandbook será REJEITADO):
+• "colors" (OBRIGATÓRIO): objeto com "primary" (array min 2 cores) e "secondary" (array min 1 cor). Cada cor: { name, hex, rgb, cmyk, usage }. NUNCA omitir este campo.
+• "applications" (min 3 itens): array com pelo menos 3 aplicações variadas, cada uma com imageKey válido.
+• "socialMediaGuidelines.platforms[*].doList" (min 2 itens cada): lista de boas práticas por plataforma.
+• "socialMediaGuidelines.platforms[*].dontList" (min 2 itens cada): lista de proibições por plataforma.
+• "productionGuidelines.deliverables" (min 2 itens): lista de entregáveis com asset, formats e specs.
+• "audiencePersonas" (min 2 personas): array com pelo menos 2 personas detalhadas.
+
 ESTRUTURA JSON EXIGIDA:
 {
   "schemaVersion": "2.0",
