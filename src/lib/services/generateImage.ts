@@ -527,29 +527,83 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
             }
           }
           throw new Error("Gemini não retornou imagem.");
-        } catch {
+        } catch (geminiErr) {
           if (strictLogo && hasRefImages) {
             throw new Error("Falha ao gerar com referências (Gemini). Para manter consistência do logo, não foi feito fallback.");
           }
+          // Try Imagen as fallback, then re-try Gemini with a different model
           const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
-          const url = await generateImagenWithFallback(
-            ai,
-            ["imagen-3.0-generate-002", "imagen-3.0-generate-001"],
-            finalPrompt,
-            IMAGEN_RATIOS[pickedAspectRatio]
-          );
-          return { url, provider: "imagen", aspectRatio: pickedAspectRatio, fallback: true };
+          try {
+            const url = await generateImagenWithFallback(
+              ai,
+              ["imagen-3.0-generate-002"],
+              finalPrompt,
+              IMAGEN_RATIOS[pickedAspectRatio]
+            );
+            return { url, provider: "imagen", aspectRatio: pickedAspectRatio, fallback: true };
+          } catch {
+            // Imagen also unavailable — try Gemini with alternative model
+            const altGemini = geminiModel === "gemini-2.0-flash-exp" ? "gemini-2.0-flash-001" : "gemini-2.0-flash-exp";
+            const response = await ai.models.generateContent({
+              model: altGemini,
+              contents: finalPrompt,
+              config: { responseModalities: ["IMAGE", "TEXT"] },
+            });
+            const parts = response.candidates?.[0]?.content?.parts ?? [];
+            for (const part of parts) {
+              if (part.inlineData?.data) {
+                const mimeType = part.inlineData.mimeType ?? "image/png";
+                return {
+                  url: `data:${mimeType};base64,${part.inlineData.data}`,
+                  provider: "imagen",
+                  aspectRatio: pickedAspectRatio,
+                  fallback: true,
+                };
+              }
+            }
+            throw geminiErr instanceof Error ? geminiErr : new Error("Falha ao gerar imagem.");
+          }
         }
       }
 
       const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
-      const url = await generateImagenWithFallback(
-        ai,
-        [selectedModel, "imagen-3.0-generate-002", "imagen-3.0-generate-001"].filter(Boolean),
-        finalPrompt,
-        IMAGEN_RATIOS[pickedAspectRatio]
-      );
-      return { url, provider: "imagen", aspectRatio: pickedAspectRatio };
+      try {
+        const url = await generateImagenWithFallback(
+          ai,
+          [selectedModel, "imagen-3.0-generate-002"].filter(Boolean),
+          finalPrompt,
+          IMAGEN_RATIOS[pickedAspectRatio]
+        );
+        return { url, provider: "imagen", aspectRatio: pickedAspectRatio };
+      } catch {
+        // Imagen models unavailable — fall back to Gemini generateContent
+        const ratioHint = `Generate as ${{
+          "1:1": "square 1:1",
+          "16:9": "wide landscape 16:9",
+          "9:16": "tall portrait 9:16",
+          "4:3": "standard 4:3 landscape",
+          "21:9": "ultra-wide cinematic 21:9",
+        }[pickedAspectRatio] ?? "square 1:1"} aspect ratio image.`;
+        const gemFallback = selectedLower.startsWith("gemini") ? selectedModel : "gemini-2.0-flash-exp";
+        const response = await ai.models.generateContent({
+          model: gemFallback,
+          contents: `${finalPrompt}\n\n${ratioHint}`,
+          config: { responseModalities: ["IMAGE", "TEXT"] },
+        });
+        const parts = response.candidates?.[0]?.content?.parts ?? [];
+        for (const part of parts) {
+          if (part.inlineData?.data) {
+            const mimeType = part.inlineData.mimeType ?? "image/png";
+            return {
+              url: `data:${mimeType};base64,${part.inlineData.data}`,
+              provider: "imagen",
+              aspectRatio: pickedAspectRatio,
+              fallback: true,
+            };
+          }
+        }
+        throw new Error("Nenhum modelo de imagem disponível (Imagen + Gemini falharam).");
+      }
     }
 
     default:
