@@ -439,10 +439,15 @@ export default function Home() {
               subject: "Brandbook salvo",
             });
             await restoreBrandbookSession(validated, { nextTab: "viewer" });
+            setLoadingShared(false);
+            return;
           } catch {
             // Corrupt — ignore
           }
         }
+        // Both API and localStorage failed — show error
+        setError(`Não foi possível carregar o projeto "${slugParam}". Tente novamente.`);
+        setTab("examples");
         setLoadingShared(false);
         return;
       }

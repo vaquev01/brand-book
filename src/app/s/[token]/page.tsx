@@ -2,9 +2,10 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { ShareBrandbookClient } from "./ShareBrandbookClient"
 
-export default async function SharePage({ params }: { params: { token: string } }) {
+export default async function SharePage({ params }: { params: Promise<{ token: string }> | { token: string } }) {
+  const { token } = await Promise.resolve(params);
   const shareLink = await prisma.shareLink.findUnique({
-    where: { token: params.token },
+    where: { token },
     include: {
       project: {
         include: {
@@ -31,7 +32,7 @@ export default async function SharePage({ params }: { params: { token: string } 
 
   // Increment view count
   await prisma.shareLink.update({
-    where: { token: params.token },
+    where: { token },
     data: { viewCount: { increment: 1 } },
   })
 

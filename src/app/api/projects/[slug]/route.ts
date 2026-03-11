@@ -7,10 +7,11 @@ const projectController = new ProjectController();
 
 export async function GET(
   _request: Request,
-  context: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> | { slug: string } }
 ) {
   try {
-    const project = await projectController.showBySlug(context.params.slug);
+    const { slug } = await Promise.resolve(context.params);
+    const project = await projectController.showBySlug(slug);
     if (!project) {
       return NextResponse.json({ error: "Projeto não encontrado." }, { status: 404 });
     }
@@ -30,7 +31,7 @@ export async function GET(
  */
 export async function PUT(
   request: Request,
-  context: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> | { slug: string } }
 ) {
   try {
     const session = await auth();
@@ -46,7 +47,7 @@ export async function PUT(
       return NextResponse.json({ error: "brandbookData é obrigatório." }, { status: 400 });
     }
 
-    const slug = context.params.slug;
+    const { slug } = await Promise.resolve(context.params);
     let project = await prisma.project.findUnique({ where: { slug } });
 
     // If project doesn't exist, create it automatically from the brandbook data
@@ -101,7 +102,7 @@ export async function PUT(
  */
 export async function POST(
   request: Request,
-  context: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> | { slug: string } }
 ) {
   return PUT(request, context);
 }
