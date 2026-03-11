@@ -192,6 +192,42 @@ async function generateImagenDataUrl(
   return `data:image/png;base64,${bytesToBase64(imageBytes)}`;
 }
 
+const GEMINI_IMAGE_FALLBACKS = [
+  "gemini-2.0-flash-exp",
+  "gemini-2.0-flash-001",
+  "gemini-2.0-flash",
+];
+
+async function generateGeminiImage(
+  ai: GoogleGenAI,
+  model: string,
+  prompt: string,
+  aspectRatio: string
+): Promise<string> {
+  const ratioHints: Record<string, string> = {
+    "1:1": "square 1:1",
+    "16:9": "wide landscape 16:9",
+    "9:16": "tall portrait 9:16",
+    "4:3": "standard 4:3 landscape",
+    "3:4": "standard 3:4 portrait",
+    "21:9": "ultra-wide cinematic 21:9",
+  };
+  const hint = ratioHints[aspectRatio] ?? "square 1:1";
+  const response = await ai.models.generateContent({
+    model,
+    contents: `${prompt}\n\nGenerate as ${hint} aspect ratio image.`,
+    config: { responseModalities: ["IMAGE", "TEXT"] },
+  });
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
+  for (const part of parts) {
+    if (part.inlineData?.data) {
+      const mimeType = part.inlineData.mimeType ?? "image/png";
+      return `data:${mimeType};base64,${part.inlineData.data}`;
+    }
+  }
+  throw new Error("Gemini não retornou imagem.");
+}
+
 async function generateImagenWithFallback(
   ai: GoogleGenAI,
   models: string[],
@@ -199,6 +235,8 @@ async function generateImagenWithFallback(
   aspectRatio: string
 ): Promise<string> {
   let lastError: unknown;
+
+  // 1. Try Imagen models (generateImages API)
   for (const model of models) {
     try {
       return await generateImagenDataUrl(ai, model, prompt, aspectRatio);
@@ -206,7 +244,17 @@ async function generateImagenWithFallback(
       lastError = error;
     }
   }
-  throw new Error(lastError instanceof Error ? lastError.message : "Erro ao gerar imagem");
+
+  // 2. Imagen unavailable — try Gemini generateContent with image output
+  for (const gemini of GEMINI_IMAGE_FALLBACKS) {
+    try {
+      return await generateGeminiImage(ai, gemini, prompt, aspectRatio);
+    } catch (error: unknown) {
+      lastError = error;
+    }
+  }
+
+  throw new Error(lastError instanceof Error ? lastError.message : "Nenhum modelo de imagem disponível.");
 }
 
 function extractVisualSystemSeed(prompt: string, assetKey?: string): number | null {
@@ -527,42 +575,19 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
             }
           }
           throw new Error("Gemini não retornou imagem.");
-        } catch (geminiErr) {
+        } catch {
           if (strictLogo && hasRefImages) {
             throw new Error("Falha ao gerar com referências (Gemini). Para manter consistência do logo, não foi feito fallback.");
           }
-          // Try Imagen as fallback, then re-try Gemini with a different model
-          const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
-          try {
-            const url = await generateImagenWithFallback(
-              ai,
-              ["imagen-3.0-generate-002"],
-              finalPrompt,
-              IMAGEN_RATIOS[pickedAspectRatio]
-            );
-            return { url, provider: "imagen", aspectRatio: pickedAspectRatio, fallback: true };
-          } catch {
-            // Imagen also unavailable — try Gemini with alternative model
-            const altGemini = geminiModel === "gemini-2.0-flash-exp" ? "gemini-2.0-flash-001" : "gemini-2.0-flash-exp";
-            const response = await ai.models.generateContent({
-              model: altGemini,
-              contents: finalPrompt,
-              config: { responseModalities: ["IMAGE", "TEXT"] },
-            });
-            const parts = response.candidates?.[0]?.content?.parts ?? [];
-            for (const part of parts) {
-              if (part.inlineData?.data) {
-                const mimeType = part.inlineData.mimeType ?? "image/png";
-                return {
-                  url: `data:${mimeType};base64,${part.inlineData.data}`,
-                  provider: "imagen",
-                  aspectRatio: pickedAspectRatio,
-                  fallback: true,
-                };
-              }
-            }
-            throw geminiErr instanceof Error ? geminiErr : new Error("Falha ao gerar imagem.");
-          }
+          // Primary Gemini model failed — use universal fallback (Imagen → Gemini chain)
+          const fallbackPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
+          const url = await generateImagenWithFallback(
+            ai,
+            ["imagen-3.0-generate-002"],
+            fallbackPrompt,
+            IMAGEN_RATIOS[pickedAspectRatio]
+          );
+          return { url, provider: "imagen", aspectRatio: pickedAspectRatio, fallback: true };
         }
       }
 
@@ -576,32 +601,8 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
         );
         return { url, provider: "imagen", aspectRatio: pickedAspectRatio };
       } catch {
-        // Imagen models unavailable — fall back to Gemini generateContent
-        const ratioHint = `Generate as ${{
-          "1:1": "square 1:1",
-          "16:9": "wide landscape 16:9",
-          "9:16": "tall portrait 9:16",
-          "4:3": "standard 4:3 landscape",
-          "21:9": "ultra-wide cinematic 21:9",
-        }[pickedAspectRatio] ?? "square 1:1"} aspect ratio image.`;
-        const gemFallback = selectedLower.startsWith("gemini") ? selectedModel : "gemini-2.0-flash-exp";
-        const response = await ai.models.generateContent({
-          model: gemFallback,
-          contents: `${finalPrompt}\n\n${ratioHint}`,
-          config: { responseModalities: ["IMAGE", "TEXT"] },
-        });
-        const parts = response.candidates?.[0]?.content?.parts ?? [];
-        for (const part of parts) {
-          if (part.inlineData?.data) {
-            const mimeType = part.inlineData.mimeType ?? "image/png";
-            return {
-              url: `data:${mimeType};base64,${part.inlineData.data}`,
-              provider: "imagen",
-              aspectRatio: pickedAspectRatio,
-              fallback: true,
-            };
-          }
-        }
+        // generateImagenWithFallback already tries Imagen → Gemini chain,
+        // but if it still throws, nothing more to do.
         throw new Error("Nenhum modelo de imagem disponível (Imagen + Gemini falharam).");
       }
     }
