@@ -1390,6 +1390,7 @@ export default function Home() {
                     apiKeys={apiKeys}
                     strategyProvider={strategyProvider}
                     onUpdated={(updated) => updateBrandbook(() => updated)}
+                    onSwitchToPreview={() => setViewerTab("preview")}
                   />
                 </div>
               </div>

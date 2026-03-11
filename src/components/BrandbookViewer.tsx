@@ -138,6 +138,7 @@ export function BrandbookViewer({
     hasGeneration,
     imgGen,
     isAdvanced,
+    onAssetGenerated,
     onGenerateAssetPack,
     onUpdateApplicationImageKey,
     onUpdateColors,

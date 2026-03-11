@@ -86,6 +86,7 @@ export function buildSectionDefs({
   hasGeneration,
   imgGen,
   isAdvanced,
+  onAssetGenerated,
   onGenerateAssetPack,
   onUpdateApplicationImageKey,
   onUpdateColors,
@@ -100,6 +101,7 @@ export function buildSectionDefs({
   hasGeneration: boolean;
   imgGen: BrandbookViewerImageGenerationControls;
   isAdvanced: boolean;
+  onAssetGenerated?: (key: string, asset: GeneratedAsset) => void;
   onGenerateAssetPack?: () => void;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
   onUpdateColors?: (colors: Colors) => void;
@@ -269,6 +271,7 @@ export function buildSectionDefs({
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
           onUpdateData={onUpdateData}
+          onAssetGenerated={onAssetGenerated}
         />
       ),
     },

@@ -10,6 +10,7 @@ interface Props {
   apiKeys: ApiKeys;
   strategyProvider: AiTextProvider;
   onUpdated: (updated: BrandbookData) => void;
+  onSwitchToPreview?: () => void;
 }
 
 interface SectionConfig {
@@ -37,7 +38,7 @@ const SECTIONS: SectionConfig[] = [
   { key: "imageGenerationBriefing", label: "Briefing de Imagens", icon: "🖼️", description: "Diretrizes para geração de imagens IA" },
 ];
 
-export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, onUpdated }: Props) {
+export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, onUpdated, onSwitchToPreview }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [instruction, setInstruction] = useState("");
   const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
@@ -81,11 +82,15 @@ export function RegenerateSectionsPanel({ brandbook, apiKeys, strategyProvider, 
 
       const updated = { ...brandbook, [sectionKey]: data.section } as BrandbookData;
       onUpdated(updated);
-      setSuccess(`Seção "${SECTIONS.find((s) => s.key === sectionKey)?.label}" regenerada!`);
+      const label = SECTIONS.find((s) => s.key === sectionKey)?.label;
+      setSuccess(`Seção "${label}" regenerada!`);
       setSelected(null);
       setInstruction("");
       setExternalUrlsRaw("");
-      setTimeout(() => setSuccess(""), 4000);
+      setTimeout(() => {
+        setSuccess("");
+        onSwitchToPreview?.();
+      }, 1500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro desconhecido");
     } finally {

@@ -1,7 +1,7 @@
 "use client";
 import { BrandbookData, GeneratedAsset, Application, ImageProvider } from "@/lib/types";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
-import { detectSizeVariants } from "@/lib/imagePrompts";
+import { ASSET_CATALOG, detectSizeVariants } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -15,6 +15,7 @@ interface Props {
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
+  onAssetGenerated?: (key: string, asset: GeneratedAsset) => void;
 }
 
 interface AppBriefing {
@@ -134,7 +135,95 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-export function SectionApplications({ data, num, generatedImages = {}, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {}, onUpdateData }: Props) {
+// ─── Catalog grouped by category ────────────────────────────────────────────
+const CATALOG_CATEGORIES: { id: string; label: string }[] = [
+  { id: "mockup", label: "Mockup" },
+  { id: "print", label: "Print / OOH" },
+  { id: "retail", label: "Retail / PDV" },
+  { id: "packaging", label: "Embalagens" },
+  { id: "merch", label: "Merch / Wearable" },
+  { id: "digital", label: "Digital" },
+  { id: "social", label: "Social Media" },
+  { id: "vehicle", label: "Veículos" },
+  { id: "stationery", label: "Papelaria" },
+  { id: "logo", label: "Logo" },
+];
+
+function CatalogPicker({ onPick, onClose }: { onPick: (item: typeof ASSET_CATALOG[number]) => void; onClose: () => void }) {
+  const [catFilter, setCatFilter] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const filtered = ASSET_CATALOG.filter((item) => {
+    if (catFilter && item.category !== catFilter) return false;
+    if (search) {
+      const lc = search.toLowerCase();
+      return item.label.toLowerCase().includes(lc) || item.description.toLowerCase().includes(lc);
+    }
+    return true;
+  });
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+        <div className="px-5 py-4 border-b flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-base">Catálogo de Aplicações</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Escolha uma aplicação pronta do catálogo ({ASSET_CATALOG.length} opções)</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition text-lg leading-none">×</button>
+        </div>
+        <div className="px-5 py-3 border-b space-y-2">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar aplicação..."
+            className="w-full bg-gray-50 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setCatFilter(null)}
+              className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition ${!catFilter ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-300 hover:border-gray-500"}`}
+            >
+              Todos
+            </button>
+            {CATALOG_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCatFilter(catFilter === cat.id ? null : cat.id)}
+                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition ${catFilter === cat.id ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-300 hover:border-gray-500"}`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {filtered.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => onPick(item)}
+                className="text-left p-3 rounded-xl border hover:border-gray-400 hover:bg-gray-50 transition group/item"
+              >
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded shrink-0">{item.aspectRatio}</span>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm text-gray-900 truncate">{item.label}</div>
+                    <div className="text-[11px] text-gray-500 leading-snug mt-0.5">{item.description}</div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          {filtered.length === 0 && (
+            <p className="text-center text-sm text-gray-400 py-8">Nenhuma aplicação encontrada.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SectionApplications({ data, num, generatedImages = {}, onGenerateApplication, onGenerateAllApplications, loadingKey, generatedAssets = {}, onUpdateData, onAssetGenerated }: Props) {
   const totalGenerated = Object.keys(generatedImages).length;
   const [activeAppVariant, setActiveAppVariant] = useState<Record<number, string>>({});
   const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
@@ -149,6 +238,8 @@ export function SectionApplications({ data, num, generatedImages = {}, onGenerat
   const setAppProvider = useCallback((i: number, val: ImageProvider | null) => {
     setProviderOverrides((prev) => ({ ...prev, [i]: val }));
   }, []);
+  const [showCatalog, setShowCatalog] = useState(false);
+  const uploadInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   useEffect(() => {
     if (!previewImage) return;
@@ -261,6 +352,35 @@ export function SectionApplications({ data, num, generatedImages = {}, onGenerat
     setTimeout(() => startEditing(data.applications.length), 50);
   }, [onUpdateData, data.applications.length, startEditing]);
 
+  const addFromCatalog = useCallback((item: typeof ASSET_CATALOG[number]) => {
+    if (!onUpdateData) return;
+    const newApp: Application = {
+      type: item.label,
+      description: item.description,
+      imagePlaceholder: `https://placehold.co/800x600/111827/ffffff?text=${encodeURIComponent(item.label.slice(0, 20))}`,
+    };
+    onUpdateData((prev) => ({
+      ...prev,
+      applications: [...prev.applications, newApp],
+    }));
+    setShowCatalog(false);
+  }, [onUpdateData]);
+
+  const handleDirectUpload = useCallback(async (appIndex: number, file: File, aspectRatio: string) => {
+    if (!onAssetGenerated) return;
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const appKey = `app_${appIndex}_${aspectRatio}`;
+      onAssetGenerated(appKey, {
+        key: appKey,
+        url: dataUrl,
+        provider: "dalle3", // placeholder — it's a user upload
+        prompt: "Upload direto pelo usuário",
+        generatedAt: new Date().toISOString(),
+      });
+    } catch { /* skip */ }
+  }, [onAssetGenerated]);
+
   return (
     <section className="page-break mb-6">
       <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
@@ -342,15 +462,38 @@ export function SectionApplications({ data, num, generatedImages = {}, onGenerat
                   <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-4">
                     <span className="text-white/20 text-5xl font-black tracking-tighter select-none">{app.type.slice(0, 2).toUpperCase()}</span>
                     <span className="text-white/40 text-xs text-center font-medium">{app.type}</span>
-                    {onGenerateApplication && (
-                      <button
-                        onClick={() => handleGenerate(i, activeVariant)}
-                        disabled={loadingKey !== null}
-                        className="no-print mt-1 text-[11px] bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1.5 rounded-full transition disabled:opacity-40"
-                      >
-                        + Gerar imagem
-                      </button>
-                    )}
+                    <div className="flex gap-2 mt-1">
+                      {onGenerateApplication && (
+                        <button
+                          onClick={() => handleGenerate(i, activeVariant)}
+                          disabled={loadingKey !== null}
+                          className="no-print text-[11px] bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1.5 rounded-full transition disabled:opacity-40"
+                        >
+                          + Gerar imagem
+                        </button>
+                      )}
+                      {onAssetGenerated && (
+                        <>
+                          <button
+                            onClick={() => uploadInputRefs.current[i]?.click()}
+                            className="no-print text-[11px] bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1.5 rounded-full transition"
+                          >
+                            Upload
+                          </button>
+                          <input
+                            ref={(el) => { uploadInputRefs.current[i] = el; }}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleDirectUpload(i, file, activeVariant);
+                              e.target.value = "";
+                            }}
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
                 {isAnyLoading && (
@@ -500,19 +643,45 @@ export function SectionApplications({ data, num, generatedImages = {}, onGenerat
                         value={providerOverrides[i] ?? null}
                         onChange={(val) => setAppProvider(i, val)}
                       />
-                      <button
-                        type="button"
-                        onClick={() => handleGenerate(i, activeVariant)}
-                        disabled={loadingKey !== null}
-                        className="flex items-center gap-1.5 bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
-                      >
-                        {isAnyLoading ? (
-                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <span>✦</span>
+                      <div className="flex items-center gap-1.5">
+                        {onAssetGenerated && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => uploadInputRefs.current[i + 1000]?.click()}
+                              className="flex items-center gap-1 bg-gray-100 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg hover:bg-gray-200 transition"
+                              title="Fazer upload de imagem pronta"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                              Upload
+                            </button>
+                            <input
+                              ref={(el) => { uploadInputRefs.current[i + 1000] = el; }}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleDirectUpload(i, file, activeVariant);
+                                e.target.value = "";
+                              }}
+                            />
+                          </>
                         )}
-                        Gerar
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleGenerate(i, activeVariant)}
+                          disabled={loadingKey !== null}
+                          className="flex items-center gap-1.5 bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
+                        >
+                          {isAnyLoading ? (
+                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <span>✦</span>
+                          )}
+                          Gerar
+                        </button>
+                      </div>
                     </div>
 
                     {variants.length > 1 && (
@@ -650,15 +819,28 @@ export function SectionApplications({ data, num, generatedImages = {}, onGenerat
           );
         })}
         {onUpdateData && (
-          <button
-            type="button"
-            onClick={addApplication}
-            className="no-print w-full border-2 border-dashed border-gray-300 rounded-xl py-8 text-sm font-medium text-gray-500 hover:border-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex flex-col items-center gap-2"
-          >
-            <span className="text-2xl leading-none">+</span>
-            <span>Nova Aplicação</span>
-          </button>
+          <div className="no-print w-full border-2 border-dashed border-gray-300 rounded-xl py-6 flex flex-col items-center gap-3 hover:border-gray-400 transition">
+            <span className="text-2xl leading-none text-gray-400">+</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCatalog(true)}
+                className="text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+              >
+                Escolher do Catálogo
+              </button>
+              <button
+                type="button"
+                onClick={addApplication}
+                className="text-xs font-bold text-gray-600 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+              >
+                Criar Manual
+              </button>
+            </div>
+            <span className="text-[10px] text-gray-400">Catálogo com {ASSET_CATALOG.length}+ aplicações prontas</span>
+          </div>
         )}
+        {showCatalog && <CatalogPicker onPick={addFromCatalog} onClose={() => setShowCatalog(false)} />}
       </div>
 
       {previewImage && (
