@@ -801,6 +801,8 @@ export default function Home() {
   const saveStatusRef = useRef<"idle" | "saving" | "error">("idle");
   const [saveError, setSaveError] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastServerSaveRef = useRef<string>("");
 
   const persistAll = useCallback(() => {
     if (!brandbookData) return;
@@ -808,7 +810,7 @@ export default function Home() {
     setSaveError(false);
     saveStatusRef.current = "saving";
 
-    // 1. localStorage for brandbook JSON
+    // 1. localStorage for brandbook JSON (instant)
     try {
       saveBrandbookData(slug, brandbookData);
       setActiveSlug(slug);
@@ -836,7 +838,26 @@ export default function Home() {
       });
   }, [brandbookData, generatedAssets, uploadedBrandAssets, assetPack]);
 
-  // Debounced auto-save: triggers 800ms after last change
+  // Server-side persist — saves brandbook to database so share links & other devices stay in sync
+  const persistToServer = useCallback(() => {
+    if (!brandbookData) return;
+    const slug = slugifyForStorage(brandbookData.brandName);
+    const dataHash = JSON.stringify(brandbookData).length.toString() + ":" + brandbookData.brandName;
+    // Skip if nothing meaningful changed since last server save
+    if (dataHash === lastServerSaveRef.current) return;
+    lastServerSaveRef.current = dataHash;
+
+    fetch(`/api/projects/${encodeURIComponent(slug)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brandbookData }),
+    }).catch(() => {
+      // Server save is best-effort — localStorage is the primary backup
+      // If user is not authenticated or project doesn't exist yet, this silently fails
+    });
+  }, [brandbookData]);
+
+  // Debounced auto-save to localStorage: triggers 800ms after last change
   useEffect(() => {
     if (!brandbookData) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -844,12 +865,30 @@ export default function Home() {
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [brandbookData, generatedAssets, uploadedBrandAssets, assetPack, persistAll]);
 
+  // Debounced auto-save to server: triggers 3s after last change (less aggressive)
+  useEffect(() => {
+    if (!brandbookData) return;
+    if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
+    serverSaveTimerRef.current = setTimeout(persistToServer, 3000);
+    return () => { if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current); };
+  }, [brandbookData, persistToServer]);
+
   // Also save immediately on page unload
   useEffect(() => {
-    const handleBeforeUnload = () => { persistAll(); };
+    const handleBeforeUnload = () => {
+      persistAll();
+      // Fire-and-forget server save via sendBeacon for reliability on tab close
+      if (brandbookData) {
+        const slug = slugifyForStorage(brandbookData.brandName);
+        navigator.sendBeacon?.(
+          `/api/projects/${encodeURIComponent(slug)}`,
+          new Blob([JSON.stringify({ brandbookData })], { type: "application/json" })
+        );
+      }
+    };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [persistAll]);
+  }, [persistAll, brandbookData]);
 
   function handleClearImageCache() {
     if (!brandbookData) return;
