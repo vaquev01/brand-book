@@ -61,6 +61,13 @@ export class ProjectRepository {
             createdAt: true,
           },
         },
+        assets: {
+          select: {
+            key: true,
+            publicUrl: true,
+            sourceUrl: true,
+          },
+        },
       },
     });
   }

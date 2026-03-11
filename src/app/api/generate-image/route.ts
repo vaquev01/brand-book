@@ -186,7 +186,36 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (persistErr) {
-        // Non-fatal: image was generated successfully, persistence is best-effort
+        // R2 upload failed — store the data URL directly in the DB as fallback
+        // so share links can still serve the image (larger DB rows, but functional)
+        try {
+          const sourceUrl = result.url.startsWith("data:") ? result.url : undefined;
+          if (sourceUrl) {
+            const existing = await prisma.projectAsset.findFirst({
+              where: { projectId, key: assetKey },
+            });
+            if (existing) {
+              await prisma.projectAsset.update({
+                where: { id: existing.id },
+                data: { sourceUrl, prompt, provider: result.provider },
+              });
+            } else {
+              await prisma.projectAsset.create({
+                data: {
+                  projectId,
+                  key: assetKey,
+                  name: assetKey.replace(/_/g, " "),
+                  sourceUrl,
+                  prompt,
+                  provider: result.provider,
+                  mimeType: "image/png",
+                },
+              });
+            }
+          }
+        } catch {
+          // Truly non-fatal: image was generated, persistence entirely failed
+        }
         bbLog("warn", "api.generate-image.persist-failed", {
           requestId,
           error: serializeError(persistErr),

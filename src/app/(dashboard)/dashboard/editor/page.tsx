@@ -388,7 +388,11 @@ export default function Home() {
         try {
           const res = await fetch(`/api/projects/${encodeURIComponent(slugParam)}`);
           if (res.ok) {
-            const json = await res.json() as { data?: { id?: string; brandbookVersions?: Array<{ brandbookJson?: unknown }> } };
+            const json = await res.json() as { data?: {
+              id?: string;
+              brandbookVersions?: Array<{ brandbookJson?: unknown }>;
+              assets?: Array<{ key: string; publicUrl?: string | null; sourceUrl?: string | null }>;
+            } };
             if (json.data?.id) setCurrentProjectId(json.data.id);
             const latestVersion = json.data?.brandbookVersions?.[0];
             if (latestVersion?.brandbookJson) {
@@ -400,6 +404,25 @@ export default function Home() {
                 nextTab: "viewer",
                 nextViewerTab: "preview",
               });
+              // Load server-side images into generatedAssets so they display immediately
+              if (json.data?.assets?.length) {
+                const serverAssets: Record<string, GeneratedAsset> = {};
+                for (const a of json.data.assets) {
+                  const url = a.publicUrl ?? a.sourceUrl;
+                  if (a.key && url) {
+                    serverAssets[a.key] = {
+                      key: a.key,
+                      url,
+                      provider: "dalle3",
+                      prompt: "",
+                      generatedAt: new Date().toISOString(),
+                    };
+                  }
+                }
+                if (Object.keys(serverAssets).length > 0) {
+                  setGeneratedAssets((prev) => ({ ...serverAssets, ...prev }));
+                }
+              }
               setLoadingShared(false);
               return;
             }
@@ -872,6 +895,63 @@ export default function Home() {
     serverSaveTimerRef.current = setTimeout(persistToServer, 3000);
     return () => { if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current); };
   }, [brandbookData, persistToServer]);
+
+  // Ensure currentProjectId is always resolved — required for image persistence to R2/DB
+  const projectIdResolveRef = useRef(false);
+  useEffect(() => {
+    if (!brandbookData || currentProjectId || projectIdResolveRef.current) return;
+    projectIdResolveRef.current = true;
+    const slug = slugifyForStorage(brandbookData.brandName);
+    fetch(`/api/projects/${encodeURIComponent(slug)}`)
+      .then((res) => res.ok ? res.json() as Promise<{ data?: { id?: string } }> : null)
+      .then((json) => {
+        if (json?.data?.id) {
+          setCurrentProjectId(json.data.id);
+        } else {
+          // Project doesn't exist on server yet — create it
+          return fetch("/api/projects", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: brandbookData.brandName,
+              industry: brandbookData.industry,
+              brandbookData,
+            }),
+          })
+            .then((r) => r.ok ? r.json() as Promise<{ data?: { id?: string } }> : null)
+            .then((r) => {
+              if (r?.data?.id) setCurrentProjectId(r.data.id);
+            });
+        }
+      })
+      .catch(() => { /* non-fatal — images will still work locally */ })
+      .finally(() => { projectIdResolveRef.current = false; });
+  }, [brandbookData, currentProjectId]);
+
+  // Sync local images to server when projectId becomes available
+  const imageSyncDoneRef = useRef(false);
+  useEffect(() => {
+    if (!currentProjectId || Object.keys(generatedAssets).length === 0 || imageSyncDoneRef.current) return;
+    imageSyncDoneRef.current = true;
+
+    const assetsToSync = Object.entries(generatedAssets)
+      .filter(([, a]) => a.url && a.url.startsWith("data:"))
+      .map(([key, a]) => ({
+        key,
+        url: a.url,
+        provider: a.provider,
+        prompt: a.prompt,
+      }))
+      .slice(0, 10);
+
+    if (assetsToSync.length === 0) return;
+
+    fetch("/api/assets/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId: currentProjectId, assets: assetsToSync }),
+    }).catch(() => { /* non-fatal */ });
+  }, [currentProjectId, generatedAssets]);
 
   // Also save immediately on page unload
   useEffect(() => {
