@@ -46,7 +46,7 @@ import {
 import { computeBrandFingerprint, countStaleAssets } from "@/lib/brandFingerprint";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
-  Image as ImageIcon, Wand2, ShieldCheck, Download,
+  Image as ImageIcon, Wand2, ShieldCheck, Download, CloudUpload, Check,
   Trash2, UploadCloud, FileJson, Hexagon, Undo2, Redo2,
 } from "lucide-react";
 import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
@@ -970,6 +970,92 @@ export default function Home() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [persistAll, brandbookData]);
 
+  // ─── Force save to cloud (manual trigger) ──────────────────────────
+  const [cloudSaving, setCloudSaving] = useState(false);
+  const [cloudSaved, setCloudSaved] = useState(false);
+
+  async function handleForceSaveToCloud() {
+    if (!brandbookData || cloudSaving) return;
+    setCloudSaving(true);
+    setCloudSaved(false);
+    const slug = slugifyForStorage(brandbookData.brandName);
+
+    try {
+      // 1. Save brandbook JSON to server
+      const saveRes = await fetch(`/api/projects/${encodeURIComponent(slug)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandbookData }),
+      });
+
+      // If project didn't exist, create it
+      let resolvedProjectId = currentProjectId;
+      if (!saveRes.ok && saveRes.status === 401) {
+        toast.error("Faça login para salvar na nuvem.");
+        return;
+      }
+      if (!resolvedProjectId) {
+        const createRes = await fetch("/api/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: brandbookData.brandName,
+            industry: brandbookData.industry,
+            brandbookData,
+          }),
+        });
+        if (createRes.ok) {
+          const json = await createRes.json() as { data?: { id?: string } };
+          if (json.data?.id) {
+            resolvedProjectId = json.data.id;
+            setCurrentProjectId(resolvedProjectId);
+          }
+        }
+      }
+
+      // 2. Sync all images to server
+      if (resolvedProjectId && Object.keys(generatedAssets).length > 0) {
+        const assetsToSync = Object.entries(generatedAssets)
+          .filter(([, a]) => a.url)
+          .map(([key, a]) => ({
+            key,
+            url: a.url,
+            provider: a.provider,
+            prompt: a.prompt,
+          }));
+
+        if (assetsToSync.length > 0) {
+          // Sync in batches of 10
+          for (let i = 0; i < assetsToSync.length; i += 10) {
+            await fetch("/api/assets/sync", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                projectId: resolvedProjectId,
+                assets: assetsToSync.slice(i, i + 10),
+              }),
+            });
+          }
+        }
+      }
+
+      // 3. Also persist locally
+      persistAll();
+
+      setCloudSaved(true);
+      toast.success("Salvo na nuvem", {
+        description: "Brandbook + imagens sincronizados. Qualquer pessoa com o link verá a versão atual.",
+      });
+      setTimeout(() => setCloudSaved(false), 4000);
+    } catch (err) {
+      toast.error("Erro ao salvar na nuvem", {
+        description: err instanceof Error ? err.message : "Tente novamente",
+      });
+    } finally {
+      setCloudSaving(false);
+    }
+  }
+
   function handleClearImageCache() {
     if (!brandbookData) return;
     setConfirmDialog({
@@ -1087,7 +1173,26 @@ export default function Home() {
               <button onClick={() => setShowApiConfig(true)} className="rounded-xl p-2 text-gray-500 transition hover:bg-white/80 hover:text-gray-900" title="APIs">
                 <Settings className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => setViewerTab("export")} className="app-primary-button ml-1 px-3 py-2 text-xs font-bold">
+              <button
+                onClick={handleForceSaveToCloud}
+                disabled={cloudSaving}
+                className={`ml-1 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
+                  cloudSaved
+                    ? "bg-emerald-600 text-white"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                } disabled:opacity-60`}
+                title="Salvar tudo na nuvem (brandbook + imagens)"
+              >
+                {cloudSaving ? (
+                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : cloudSaved ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <CloudUpload className="w-3 h-3" />
+                )}
+                <span className="hidden sm:inline">{cloudSaving ? "Salvando..." : cloudSaved ? "Salvo!" : "Salvar"}</span>
+              </button>
+              <button onClick={() => setViewerTab("export")} className="app-primary-button px-3 py-2 text-xs font-bold">
                 <Download className="w-3 h-3" />
                 <span className="hidden sm:inline">Exportar</span>
               </button>
