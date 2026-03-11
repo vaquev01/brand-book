@@ -512,23 +512,27 @@ function providerQuality(provider: ImageProvider, key: AssetKey, archetypeName?:
     ? "award-winning brand identity craftsmanship, distinctive silhouette, strategic clarity, emotional resonance, scalable system quality"
     : (archetypeQuality[arch] ?? archetypeQuality.Creator);
 
+  const patternQ = "world-class surface pattern design, mathematically perfect seamless tile, Hermès-level textile pattern quality, precise vector illustration, consistent stroke weights, intentional grid-based composition, professional brand pattern system";
+
   if (provider === "dalle3") {
     if (isLogo) return `professional brand identity mark, strategically distinctive, clean crisp edges, concept-led construction, world-class identity studio quality, ${archQ}`;
     if (isMockup) return `hyperrealistic commercial product photography, ultra-sharp material textures, medium-format sensor quality, studio-grade three-point lighting, ${archQ}`;
-    if (isPattern) return `precise geometric illustration, mathematically perfect seamless tile, professional brand pattern system, ${archQ}`;
+    if (isPattern) return `${patternQ}, ${archQ}`;
     if (isSocial) return `social media design excellence, thumb-stopping visual hierarchy, mobile-optimized composition, ${archQ}`;
     if (isMascot) return `professional character design, clean modern 2D illustration, consistent line weights, animation-ready silhouette, ${archQ}`;
     return `ultra-high resolution commercial photography, award-winning brand campaign, ${archQ}`;
   }
   if (provider === "stability") {
     if (isMockup) return `hyperrealistic product photography, 8K UHD, professional studio lighting, photorealistic material texture, ${archQ}`;
-    if (isLogo || isPattern) return `precise clean graphic illustration, sharp edges, concept-led brand identity quality, ${archQ}`;
+    if (isLogo) return `precise clean graphic illustration, sharp edges, concept-led brand identity quality, ${archQ}`;
+    if (isPattern) return `${patternQ}, sharp edges, crisp vector quality, ${archQ}`;
     if (isMascot) return `professional character illustration, clean linework, expressive simple shapes, ${archQ}`;
     return `8K UHD editorial photography, sharp focus, highly detailed, professional color grading, ${archQ}`;
   }
   if (provider === "imagen") {
     if (isMockup) return `photorealistic commercial photography, professional studio lighting, sharp material details, ${archQ}`;
-    if (isLogo || isPattern) return `clean precise graphic design, sharp edges, strategically distinctive illustration quality, ${archQ}`;
+    if (isLogo) return `clean precise graphic design, sharp edges, strategically distinctive illustration quality, ${archQ}`;
+    if (isPattern) return `${patternQ}, clean precise graphic design, sharp edges, ${archQ}`;
     if (isMascot) return `professional character illustration, clean 2D design, crisp edges, ${archQ}`;
     return `high-fidelity photorealistic image, professional photography quality, rich color, ${archQ}`;
   }
@@ -1496,27 +1500,55 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "brand_pattern": {
       const patternEls = data.keyVisual.patterns?.length
-        ? `Specific motifs: ${data.keyVisual.patterns.slice(0, 5).join(", ")}.`
-        : `Derived from brand symbol: ${ctx.logoSymbol}.`;
+        ? `MOTIF VOCABULARY: ${data.keyVisual.patterns.slice(0, 5).join(", ")}. Use ONLY these motifs — do not invent new ones.`
+        : `MOTIF VOCABULARY: Geometric abstractions derived from the brand symbol: ${ctx.logoSymbol}. Deconstruct the symbol into its fundamental shapes (circles, lines, angles, curves) and recombine them into a repeating system.`;
       const ppat = ctx.primaryPattern;
       const patternDirective = ppat
-        ? `PRIMARY PATTERN: "${ppat.name}" — ${ppat.composition}. Density: ${ppat.density ?? "moderate"}. Background: ${ppat.background ?? "neutral"}. Usage: ${ppat.usage ?? "packaging, stationery, backgrounds"}.`
+        ? `PRIMARY PATTERN SPEC: "${ppat.name}" — ${ppat.composition}. Visual density: ${ppat.density ?? "moderate"}. Background ground: ${ppat.background ?? "neutral"}. Application contexts: ${ppat.usage ?? "packaging, stationery, backgrounds"}.`
         : `PATTERN DIRECTION: ${ctx.patternStyle}.`;
+
+      // Determine the pattern construction technique based on what's available
+      const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+      const patternTechnique: Record<string, string> = {
+        Ruler: "CONSTRUCTION: Rigid bilateral symmetry. Imperial lattice grid. Gold-ratio proportioned cells. Heraldic precision. Think Versace home textiles, Hermès scarves — authoritative, unwavering geometry.",
+        Lover: "CONSTRUCTION: Flowing organic curves that interweave. Art Nouveau-inspired sinuous lines. Botanical or floral abstractions with sensual rhythms. Think William Morris meets modern luxury — intimate and tactile.",
+        Jester: "CONSTRUCTION: Playful irregular grid with surprising scale shifts. Memphis Group inspired — unexpected color blocking, confetti-like scattered motifs, energetic diagonal rhythms. Fun but controlled chaos.",
+        Explorer: "CONSTRUCTION: Topographic contour lines, compass rose fragments, map-grid abstractions. Layered translucent shapes suggesting terrain and journey. Think Patagonia meets cartographic art.",
+        Sage: "CONSTRUCTION: Swiss-grid precision. Clean geometric modules on mathematical grid. Mondrian-like proportional cells. Information-density patterns (dot grids, hash marks, data-viz inspired). Think Braun design ethos.",
+        Caregiver: "CONSTRUCTION: Soft rounded shapes, gentle organic tessellation. Overlapping circles, protective arcs, nest-like enclosed forms. Warm negative space. Think Scandinavian textile design — comforting, rhythmic.",
+        Outlaw: "CONSTRUCTION: Deconstructed grid with intentional disruptions. Rough-edged geometric fragments, torn-paper-like shapes, industrial stencil marks. Controlled grunge. Think Banksy studio patterns — raw but designed.",
+        Hero: "CONSTRUCTION: Bold angular chevrons, upward-pointing arrows, shield-like shapes. Strong diagonal energy with triumphant momentum. Thick confident stroke weights. Think Nike/Adidas pattern systems — powerful geometry.",
+        Magician: "CONSTRUCTION: Ethereal layered geometries with depth illusion. Impossible tessellations, Escher-inspired interlocking. Radial symmetry with mystical precision. Celestial/alchemical symbols abstracted into geometry.",
+        Everyman: "CONSTRUCTION: Honest simple shapes — dots, dashes, basic triangles. Friendly grid with breathing room. Craft-paper-appropriate. Think MUJI or IKEA patterns — approachable, democratic, unpretentious.",
+        Innocent: "CONSTRUCTION: Light, airy geometric lattice with generous whitespace. Minimal thin-line motifs. Pastel-weight shapes floating in clean space. Think Apple packaging tissue, Glossier — pure and optimistic.",
+        Creator: "CONSTRUCTION: Hand-drawn-feeling geometric system. Visible construction lines, deliberate imperfections in perfect grids. Process-visible: the viewer can sense HOW it was designed. Think Pentagram identity systems.",
+      };
+      const technique = patternTechnique[archetypeName] ?? patternTechnique.Creator;
+
       return parts(
         prefix,
-        `Seamless infinitely-tileable brand surface pattern for ${B} (${data.industry}).`,
+        `TASK: Create a professional-grade seamless surface pattern for the brand "${B}" (${data.industry}). This pattern is the brand's visual TEXTURE — it appears on packaging, stationery, website backgrounds, textiles, wall coverings, and event materials. It must be world-class.`,
         soul, journey, spDir, idAssets, tree,
         patternDirective,
         patternEls,
-        `STRICT COLOR PALETTE — use ONLY these colors, no others: ${ctx.allPrimaryColors}.`,
+        technique,
+        `STRICT COLOR PALETTE — use ONLY these exact colors, absolutely no others: ${ctx.allPrimaryColors}. Background may use a very light tint (5-10% opacity) of the primary color, or pure white, or pure ${ctx.primaryColor} depending on density.`,
         `VISUAL LANGUAGE: ${ctx.visualStyle}. Mood: ${ctx.moodWords}.`,
-        ctx.illustrationStyle ? `ILLUSTRATION STYLE REFERENCE: ${ctx.illustrationStyle}.` : "",
+        ctx.illustrationStyle ? `ILLUSTRATION STYLE REFERENCE: ${ctx.illustrationStyle}. Apply this artistic sensibility to the pattern construction.` : "",
         humanLayer,
-        `PURPOSE: Packaging wraps, stationery backgrounds, website surfaces, slide decks, event materials, textile prints.`,
-        `MATHEMATICAL PRECISION: The pattern must tile perfectly with zero visible seams at any scale.`,
-        `Consistent line weights throughout. Square 1:1 composition. Abstract shapes only.`,
-        `No text, no logos, no wordmarks, no photographic content. Pure geometric/organic motif system.`,
-        sTags, q, neg(ctx, provider, "visible seams, text, logos, wordmarks, photographic content, random noise, asymmetric layout, gradient washes"),
+        // Core technical requirements
+        `SEAMLESS TILING RULES (CRITICAL):
+1. The pattern MUST tile perfectly when repeated horizontally and vertically — edges must connect with mathematical precision.
+2. Use a clear underlying GRID SYSTEM (square, triangular, hexagonal, or diamond) — do not scatter motifs randomly.
+3. Maintain consistent STROKE WEIGHT across all elements (thin: 1-2px, medium: 3-4px, or thick: 5-8px — pick one and commit).
+4. Establish clear HIERARCHY: primary motif (60%), secondary accent motif (30%), negative space breathing room (10%).
+5. The REPEAT UNIT should feel intentional and rhythmic, not chaotic or random.
+6. At 50% zoom the overall texture should read as an even surface. At 100% zoom individual motifs should be beautiful.
+7. DENSITY: Leave adequate negative space — overcrowded patterns look amateur. The space between motifs is as designed as the motifs themselves.`,
+        `WHAT MAKES A PATTERN WORLD-CLASS: Restraint (fewer motifs, perfectly placed > many motifs scattered). Rhythm (visual pulse the eye can follow). Depth (subtle weight variation creates foreground/background). Intentionality (every element has a reason to exist). Brand derivation (motifs trace back to the logo/symbol DNA).`,
+        `FORMAT: Square 1:1 composition showing the full repeat unit. Flat vector-style illustration (no 3D, no shadows, no gradients, no photographic textures). Clean, precise, professional.`,
+        `ABSOLUTELY NO: text, words, letters, logos, wordmarks, brand names, human figures, realistic objects, photographic elements, lens flares, drop shadows, 3D effects, watermarks. PURE pattern only.`,
+        sTags, q, neg(ctx, provider, "visible seams, text, words, letters, logos, wordmarks, brand name, photographic content, random noise, asymmetric scattered layout, gradient washes, 3D effects, drop shadows, blurry edges, inconsistent stroke weights, overcrowded composition, realistic objects, human figures"),
       );
     }
 
