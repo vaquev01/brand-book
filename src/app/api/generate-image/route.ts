@@ -83,7 +83,48 @@ export async function POST(request: NextRequest) {
       return respond(400, { error: "prompt e provider são obrigatórios" }, { provider, assetKey });
     }
 
-    const result = await generateImageWithProvider(payload);
+    // Build cross-provider fallback order: requested provider first, then others with keys
+    const PROVIDER_KEY_FIELDS: Record<string, keyof GenerateImageInput> = {
+      dalle3: "openaiKey",
+      stability: "stabilityKey",
+      ideogram: "ideogramKey",
+      imagen: "googleKey",
+    };
+    const ALL_PROVIDERS = ["imagen", "dalle3", "stability", "ideogram"] as const;
+    const fallbackOrder = [
+      provider,
+      ...ALL_PROVIDERS.filter((p) => p !== provider && payload[PROVIDER_KEY_FIELDS[p] as keyof typeof payload]),
+    ];
+
+    let result: Awaited<ReturnType<typeof generateImageWithProvider>> | undefined;
+    let lastErr: unknown;
+    for (const tryProvider of fallbackOrder) {
+      try {
+        result = await generateImageWithProvider({ ...payload, provider: tryProvider });
+        providerName = tryProvider;
+        if (tryProvider !== provider) {
+          bbLog("info", "api.generate-image.fallback", {
+            requestId,
+            originalProvider: provider,
+            fallbackProvider: tryProvider,
+            assetKey,
+          });
+        }
+        break;
+      } catch (err: unknown) {
+        lastErr = err;
+        if (err instanceof GenerateImageInputError) throw err; // Don't fallback on input errors
+        bbLog("warn", "api.generate-image.provider-failed", {
+          requestId,
+          provider: tryProvider,
+          assetKey,
+          error: serializeError(err),
+        });
+      }
+    }
+    if (!result) {
+      throw lastErr ?? new Error("Nenhum provider de imagem disponível.");
+    }
 
     // Auto-persist image to R2 + database when projectId is provided
     let publicUrl: string | undefined;
