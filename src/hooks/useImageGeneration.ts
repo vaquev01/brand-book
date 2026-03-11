@@ -565,6 +565,29 @@ export function useImageGeneration({
     }
   }
 
+  /**
+   * Upload a user file as the official asset for a specific AssetKey.
+   * Replaces any previously generated image for that key.
+   */
+  async function uploadForKey(key: AssetKey, file: File) {
+    try {
+      setLoadingKey(key);
+      const dataUrl = await rasterFileToOptimizedDataUrl(file, 2048, "image/webp", 0.9);
+      const asset: GeneratedAsset = {
+        key,
+        url: dataUrl,
+        provider: "upload",
+        prompt: `Upload oficial: ${file.name}`,
+        generatedAt: new Date().toISOString(),
+      };
+      onAssetGenerated(key, asset);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao processar upload");
+    } finally {
+      setLoadingKey(null);
+    }
+  }
+
   async function downloadImage(url: string, name: string) {
     try {
       await downloadImageUrl(url, data.brandName, name);
@@ -594,6 +617,7 @@ export function useImageGeneration({
     generateAllApplications,
     cancelBatch,
     saveGeneratedToAssets,
+    uploadForKey,
     downloadImage,
     PROVIDER_KEY_MAP,
   };

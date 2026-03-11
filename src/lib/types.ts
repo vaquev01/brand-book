@@ -358,11 +358,14 @@ export interface WorkflowProviders {
 
 export type ImageProvider = "dalle3" | "stability" | "ideogram" | "imagen";
 
+/** Source of an asset — AI provider or user upload */
+export type AssetSource = ImageProvider | "upload";
+
 export interface GeneratedAsset {
   key: string;
   url: string;
   originalUrl?: string;
-  provider: ImageProvider;
+  provider: AssetSource;
   prompt: string;
   generatedAt: string;
   brandFingerprint?: string;

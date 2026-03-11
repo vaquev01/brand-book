@@ -6,12 +6,14 @@ import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
+import { AssetUploadButton, OfficialBadge } from "@/components/AssetUploadButton";
 
 interface Props {
   data: BrandbookData;
   num: number;
   generatedImages?: Record<string, string>;
   onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
+  onUploadForKey?: (key: AssetKey, file: File) => void | Promise<void>;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -39,7 +41,7 @@ function downloadImageDirect(url: string, name: string) {
   });
 }
 
-export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
+export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, onUploadForKey, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
   const isAdvanced = !!data.keyVisual.iconography;
   const hasFlora = data.keyVisual.flora && data.keyVisual.flora.length > 0;
   const hasFauna = data.keyVisual.fauna && data.keyVisual.fauna.length > 0;
@@ -231,6 +233,15 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
               <button type="button" onClick={() => handleGenerateWithDirection(assetKey)} disabled={loadingKey !== null} className="flex-1 text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
                 {loadingKey === assetKey ? "Gerando..." : `✦ Gerar ${label}`}
               </button>
+              {onUploadForKey && (
+                <AssetUploadButton
+                  assetKey={assetKey}
+                  onUpload={onUploadForKey}
+                  loading={loadingKey === assetKey}
+                  isOfficial={generatedAssets[assetKey]?.provider === "upload"}
+                  compact
+                />
+              )}
             </div>
           </div>
         )}
@@ -281,7 +292,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
             <div className="rounded-xl overflow-hidden border shadow-sm relative group">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={generatedImages["hero_visual"]} alt="Hero Visual" className="w-full aspect-video object-cover" />
-              <span className="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Hero · IA</span>
+              <span className={`absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow ${generatedAssets["hero_visual"]?.provider === "upload" ? "bg-emerald-600" : "bg-green-500"}`}>{generatedAssets["hero_visual"]?.provider === "upload" ? "Hero · Oficial" : "Hero · IA"}</span>
               {loadingKey === "hero_visual" && (
                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                   <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
@@ -302,7 +313,7 @@ export function SectionKeyVisual({ data, num, generatedImages = {}, onGenerate, 
             <div className="rounded-xl overflow-hidden border shadow-sm relative group">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={generatedImages["hero_lifestyle"]} alt="Lifestyle" className="w-full aspect-video object-cover" />
-              <span className="absolute top-2 left-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">Lifestyle · IA</span>
+              <span className={`absolute top-2 left-2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow ${generatedAssets["hero_lifestyle"]?.provider === "upload" ? "bg-emerald-600" : "bg-green-500"}`}>{generatedAssets["hero_lifestyle"]?.provider === "upload" ? "Lifestyle · Oficial" : "Lifestyle · IA"}</span>
               {loadingKey === "hero_lifestyle" && (
                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
                   <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />

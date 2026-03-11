@@ -6,6 +6,7 @@ import { EditableField } from "@/components/EditableField";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
+import { AssetUploadButton } from "@/components/AssetUploadButton";
 
 interface Props {
   data: BrandbookData;
@@ -13,6 +14,7 @@ interface Props {
   generatedImages?: Record<string, string>;
   uploadedAssets?: UploadedAsset[];
   onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
+  onUploadForKey?: (key: AssetKey, file: File) => void | Promise<void>;
   loadingKey?: string | null;
   onDownload?: (url: string, name: string) => void;
   onSaveToAssets?: (asset: GeneratedAsset, label: string, key?: AssetKey) => void;
@@ -185,7 +187,7 @@ function downloadImageDirect(url: string, name: string) {
   });
 }
 
-export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, loadingKey, onDownload, onSaveToAssets, generatedAssets = {}, onUpdateData }: Props) {
+export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = [], onGenerate, onUploadForKey, loadingKey, onDownload, onSaveToAssets, generatedAssets = {}, onUpdateData }: Props) {
   const uploadedLogos = useMemo(
     () => uploadedAssets.filter((a) => a.type === "logo"),
     [uploadedAssets]
@@ -390,14 +392,25 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
                 </div>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => handleGenerateWithDirection(assetKey)}
-              disabled={loadingKey !== null}
-              className="w-full text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
-            >
-              {loadingKey === assetKey ? "Gerando..." : "✦ Gerar com direcionamento"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleGenerateWithDirection(assetKey)}
+                disabled={loadingKey !== null}
+                className="flex-1 text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                {loadingKey === assetKey ? "Gerando..." : "✦ Gerar com direcionamento"}
+              </button>
+              {onUploadForKey && (
+                <AssetUploadButton
+                  assetKey={assetKey}
+                  onUpload={onUploadForKey}
+                  loading={loadingKey === assetKey}
+                  isOfficial={generatedAssets[assetKey]?.provider === "upload"}
+                  compact
+                />
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -82,6 +82,7 @@ export type BrandbookViewerImageGenerationControls = {
   generate: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => void | Promise<void>;
   generateAllApplications: () => void | Promise<void>;
   generateApplication: (index: number, aspectRatio: "1:1" | "16:9" | "9:16" | "4:3" | "21:9", customInstruction?: string, userReferenceImages?: string[], providerOverride?: import("@/lib/types").ImageProvider) => void | Promise<void>;
+  uploadForKey: (key: AssetKey, file: File) => void | Promise<void>;
   loadingKey: string | null;
   saveGeneratedToAssets: (asset: GeneratedAsset, label: string, key?: AssetKey) => void | Promise<void>;
 };
@@ -198,6 +199,7 @@ export function buildSectionDefs({
           generatedImages={generatedImages}
           uploadedAssets={uploadedAssets}
           onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
+          onUploadForKey={hasGeneration ? (key: AssetKey, file: File) => imgGen.uploadForKey(key, file) : undefined}
           loadingKey={imgGen.loadingKey}
           onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
           onSaveToAssets={hasGeneration ? (asset: GeneratedAsset, label: string, key?: AssetKey) => imgGen.saveGeneratedToAssets(asset, label, key) : undefined}
@@ -226,6 +228,7 @@ export function buildSectionDefs({
           num={num}
           generatedImages={generatedImages}
           onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
+          onUploadForKey={hasGeneration ? (key: AssetKey, file: File) => imgGen.uploadForKey(key, file) : undefined}
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
           onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}
@@ -251,6 +254,7 @@ export function buildSectionDefs({
           uploadedAssets={uploadedAssets}
           generatedImages={generatedImages}
           onGenerate={hasGeneration ? (key: AssetKey, opts?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string }) => imgGen.generate(key, opts) : undefined}
+          onUploadForKey={hasGeneration ? (key: AssetKey, file: File) => imgGen.uploadForKey(key, file) : undefined}
           loadingKey={imgGen.loadingKey}
           generatedAssets={generatedAssets}
           onDownload={hasGeneration ? (url: string, name: string) => imgGen.downloadImage(url, name) : undefined}

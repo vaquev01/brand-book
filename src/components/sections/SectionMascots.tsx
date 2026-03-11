@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { BrandbookData, UploadedAsset, GeneratedAsset, Mascot, BrandPattern, ImageProvider } from "@/lib/types";
 import { PerImageProviderSelect } from "@/components/PerImageProviderSelect";
+import { AssetUploadButton } from "@/components/AssetUploadButton";
 import type { AssetKey } from "@/lib/imagePrompts";
 import { downloadImageUrl } from "@/lib/imageTransport";
 import { downloadJsonFile } from "@/lib/browserDownload";
@@ -12,6 +13,7 @@ interface Props {
   uploadedAssets?: UploadedAsset[];
   generatedImages?: Record<string, string>;
   onGenerate?: (key: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => void | Promise<void>;
+  onUploadForKey?: (key: AssetKey, file: File) => void | Promise<void>;
   loadingKey?: string | null;
   generatedAssets?: Record<string, GeneratedAsset>;
   onDownload?: (url: string, name: string) => void;
@@ -39,7 +41,7 @@ function downloadImageDirect(url: string, name: string) {
   });
 }
 
-export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
+export function SectionMascots({ data, num, uploadedAssets = [], generatedImages = {}, onGenerate, onUploadForKey, loadingKey, generatedAssets = {}, onDownload, onUpdateData }: Props) {
   const mascots = useMemo(() => data.keyVisual.mascots ?? [], [data.keyVisual.mascots]);
   const symbols = useMemo(() => data.keyVisual.symbols ?? [], [data.keyVisual.symbols]);
   const patterns = useMemo(() => data.keyVisual.patterns ?? [], [data.keyVisual.patterns]);
@@ -402,6 +404,15 @@ export function SectionMascots({ data, num, uploadedAssets = [], generatedImages
               <button type="button" onClick={() => handleGenerateWithDirection(ak, briefingKey !== ak ? briefingKey : undefined, extraContext)} disabled={loadingKey !== null} className="flex-1 text-xs font-bold bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition">
                 {isLoadingThis ? "Gerando..." : `✦ Gerar ${label}`}
               </button>
+              {onUploadForKey && (
+                <AssetUploadButton
+                  assetKey={ak}
+                  onUpload={onUploadForKey}
+                  loading={isLoadingThis}
+                  isOfficial={generatedAssets[ak]?.provider === "upload"}
+                  compact
+                />
+              )}
             </div>
           </div>
         )}
