@@ -77,11 +77,17 @@ function ColorCard({
     setTimeout(() => setCopied(false), 1500);
   }
 
+  function handleColorPick(newHex: string) {
+    if (!onChange) return;
+    const upper = newHex.toUpperCase();
+    onChange({ ...color, hex: upper, rgb: hexToRgb(upper) });
+  }
+
   const hasTonal = color.tonalScale && color.tonalScale.length > 0;
 
   return (
     <div className="color-card bg-white rounded-xl shadow-sm border overflow-hidden group relative">
-      {/* Large color block */}
+      {/* Large color block — clickable for color picker */}
       <div
         className="h-24 w-full relative flex items-end px-3 pb-2"
         style={{ backgroundColor: color.hex }}
@@ -100,8 +106,19 @@ function ColorCard({
         >
           {color.hex}
         </span>
+        {/* Invisible color picker overlay on the color block */}
+        {onChange && (
+          <input
+            type="color"
+            value={color.hex}
+            onChange={(e) => handleColorPick(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            title="Clique para trocar a cor"
+            aria-label={`Trocar cor ${color.name}`}
+          />
+        )}
         {/* Actions */}
-        <div className="absolute top-2 right-2 flex gap-1">
+        <div className="absolute top-2 right-2 flex gap-1 z-10">
           <button
             onClick={handleCopy}
             className="no-print w-7 h-7 bg-black/20 backdrop-blur-sm text-white rounded-lg text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-black/40"
@@ -129,7 +146,24 @@ function ColorCard({
 
         {/* Color codes grid */}
         <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] font-mono text-gray-500">
-          <div><span className="font-semibold text-gray-600">HEX</span> {color.hex}</div>
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-gray-600">HEX</span>
+            {onChange ? (
+              <input
+                type="text"
+                value={color.hex}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (/^#[0-9a-fA-F]{6}$/.test(v)) handleColorPick(v);
+                  else onChange({ ...color, hex: v });
+                }}
+                className="w-16 bg-transparent border-b border-dashed border-gray-300 focus:border-gray-500 outline-none text-[10px] font-mono"
+                maxLength={7}
+              />
+            ) : (
+              <span>{color.hex}</span>
+            )}
+          </div>
           <div><span className="font-semibold text-gray-600">RGB</span> <EditableField value={color.rgb} onSave={(v) => onChange?.({ ...color, rgb: v })} readOnly={!onChange} /></div>
           <div><span className="font-semibold text-gray-600">CMYK</span> <EditableField value={color.cmyk} onSave={(v) => onChange?.({ ...color, cmyk: v })} readOnly={!onChange} /></div>
           {color.pantone && (

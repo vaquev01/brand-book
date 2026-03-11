@@ -534,7 +534,7 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
           const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
           const url = await generateImagenWithFallback(
             ai,
-            ["imagen-3.0-generate-002", "imagen-3.0-fast-generate-001"],
+            ["imagen-3.0-generate-002", "imagen-3.0-fast-generate-002"],
             finalPrompt,
             IMAGEN_RATIOS[pickedAspectRatio]
           );
@@ -545,7 +545,7 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
       const finalPrompt = `${positive.slice(0, 1600)}\n\nDo not include: ${negative.slice(0, 800)}.`.slice(0, 2000);
       const url = await generateImagenWithFallback(
         ai,
-        [selectedModel, "imagen-3.0-generate-002", "imagen-3.0-fast-generate-001"].filter(Boolean),
+        [selectedModel, "imagen-3.0-generate-002", "imagen-3.0-fast-generate-002"].filter(Boolean),
         finalPrompt,
         IMAGEN_RATIOS[pickedAspectRatio]
       );
