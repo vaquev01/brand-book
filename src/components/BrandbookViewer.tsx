@@ -82,6 +82,7 @@ interface Props {
   promptProvider?: AiTextProvider;
   onAssetGenerated?: (key: string, asset: GeneratedAsset) => void;
   onSaveToAssets?: (asset: UploadedAsset) => void;
+  onUpdateAssetPack?: (updater: (prev: AssetPackState) => AssetPackState) => void;
   onUpdateColors?: (colors: Colors) => void;
   onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
   projectId?: string | null;
@@ -100,6 +101,7 @@ export function BrandbookViewer({
   promptProvider = "openai",
   onAssetGenerated,
   onSaveToAssets,
+  onUpdateAssetPack,
   onUpdateColors,
   onUpdateData,
   projectId,
@@ -141,6 +143,7 @@ export function BrandbookViewer({
     isAdvanced,
     onAssetGenerated,
     onGenerateAssetPack,
+    onUpdateAssetPack,
     onUpdateApplicationImageKey,
     onUpdateColors,
     onUpdateData,

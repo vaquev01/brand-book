@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AssetPackFile, AssetPackQualityStatus, AssetPackState, BrandbookData, UploadedAsset } from "@/lib/types";
 import { downloadTextFile } from "@/lib/browserDownload";
+import { IconSwapModal } from "@/components/IconSwapModal";
 
 interface Props {
   data: BrandbookData;
@@ -12,6 +13,7 @@ interface Props {
   assetPack?: AssetPackState;
   generating?: boolean;
   onGenerate?: () => void;
+  onUpdateAssetPack?: (updater: (prev: AssetPackState) => AssetPackState) => void;
 }
 
 const EXPECTED_BUCKET_COUNTS = {
@@ -101,8 +103,10 @@ function FileThumb({ file }: { file: AssetPackFile }) {
   );
 }
 
-export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImages = {}, assetPack = { files: [] }, generating = false, onGenerate }: Props) {
+export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImages = {}, assetPack = { files: [] }, generating = false, onGenerate, onUpdateAssetPack }: Props) {
   const [previewFile, setPreviewFile] = useState<AssetPackFile | null>(null);
+  const [swapTarget, setSwapTarget] = useState<{ path: string; name: string } | null>(null);
+  const [fetchingProIcons, setFetchingProIcons] = useState(false);
   const assetPackFiles = assetPack.files;
 
   useEffect(() => {
@@ -151,6 +155,66 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
     { key: "motion", label: "Motion — Animated SVG", files: byBucket.motion, strip: "motion/", expected: EXPECTED_BUCKET_COUNTS.motion, covered: coverage?.motion ?? byBucket.motion.length },
   ] as const;
 
+  const primaryColor = data.colors?.primary?.[0]?.hex;
+
+  const handleSwapIcon = useCallback((svg: string, source: string) => {
+    if (!swapTarget || !onUpdateAssetPack) return;
+    onUpdateAssetPack((prev) => ({
+      ...prev,
+      files: prev.files.map((f) =>
+        f.path === swapTarget.path ? { ...f, content: svg } : f
+      ),
+    }));
+  }, [swapTarget, onUpdateAssetPack]);
+
+  const fetchProIcons = useCallback(async () => {
+    if (!onUpdateAssetPack) return;
+    setFetchingProIcons(true);
+    try {
+      const res = await fetch("/api/icons/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          values: data.brandConcept?.values?.slice(0, 4),
+          personality: data.brandConcept?.personality?.slice(0, 4),
+          industry: data.positioning?.category,
+          keywords: [
+            data.brandName,
+            ...(data.keyVisual?.symbols ?? []).slice(0, 3),
+            ...(data.keyVisual?.objects ?? []).slice(0, 3),
+          ].filter(Boolean),
+          color: primaryColor,
+          size: 24,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const { icons } = await res.json() as { icons: Array<{ name: string; svg: string; source: string }> };
+      if (!icons?.length) return;
+
+      // Replace icon files in asset pack with professional Iconify icons
+      onUpdateAssetPack((prev) => {
+        const existingIcons = prev.files.filter((f) => f.path.startsWith("vectors/icons/"));
+        const otherFiles = prev.files.filter((f) => !f.path.startsWith("vectors/icons/"));
+        const newIconFiles: AssetPackFile[] = icons.slice(0, 16).map((icon, i) => {
+          // Keep existing path names if available, otherwise create new ones
+          const existingPath = existingIcons[i]?.path;
+          const path = existingPath ?? `vectors/icons/${icon.name}.svg`;
+          return { path, content: icon.svg };
+        });
+        // Keep any remaining original icons beyond what we replaced
+        const remaining = existingIcons.slice(newIconFiles.length);
+        return {
+          ...prev,
+          files: [...otherFiles, ...newIconFiles, ...remaining],
+        };
+      });
+    } catch {
+      // Silent fail
+    } finally {
+      setFetchingProIcons(false);
+    }
+  }, [data, primaryColor, onUpdateAssetPack]);
+
   return (
     <section className="page-break mb-6">
       <div className="flex items-center justify-between gap-4 mb-3 border-b border-gray-100 pb-2">
@@ -160,14 +224,27 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">Logo · padrões · imagens · ícones SVG · motion gerado por IA</p>
         </div>
-        <button
-          type="button"
-          onClick={onGenerate}
-          disabled={!onGenerate || generating}
-          className="shrink-0 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold hover:bg-gray-700 transition disabled:opacity-60"
-        >
-          {generating ? "Gerando..." : "Gerar Asset Pack"}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {onUpdateAssetPack && byBucket.icons.length > 0 && (
+            <button
+              type="button"
+              onClick={fetchProIcons}
+              disabled={fetchingProIcons}
+              className="no-print px-3 py-2 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition disabled:opacity-60"
+              title="Substituir ícones gerados por IA com ícones profissionais do Iconify (Lucide, Phosphor, Tabler)"
+            >
+              {fetchingProIcons ? "Buscando..." : "Ícones Pro"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onGenerate}
+            disabled={!onGenerate || generating}
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold hover:bg-gray-700 transition disabled:opacity-60"
+          >
+            {generating ? "Gerando..." : "Gerar Asset Pack"}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -362,13 +439,24 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
                         {f.path.replace(bucket.strip, "")}
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      className="text-xs font-bold text-indigo-700 hover:text-indigo-900 shrink-0"
-                      onClick={() => setPreviewFile(f)}
-                    >
-                      Baixar
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {bucket.key === "icons" && onUpdateAssetPack && (
+                        <button
+                          type="button"
+                          className="no-print text-[10px] font-bold text-indigo-600 hover:text-indigo-800"
+                          onClick={() => setSwapTarget({ path: f.path, name: f.path.replace(bucket.strip, "").replace(".svg", "") })}
+                        >
+                          Trocar
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="text-xs font-bold text-indigo-700 hover:text-indigo-900"
+                        onClick={() => setPreviewFile(f)}
+                      >
+                        Baixar
+                      </button>
+                    </div>
                   </div>
                 ))}
                 {bucket.files.length > 8 && (
@@ -465,8 +553,21 @@ export function SectionAssetPack({ data, num, uploadedAssets = [], generatedImag
         <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Notas</div>
         <div className="mt-2 text-sm text-gray-700 leading-relaxed">
           Este pack é gerado a partir do estilo descrito no brandbook ({data.brandName}). Para handoff, exporte o ZIP na aba Exportar — ele inclui estes arquivos.
+          {onUpdateAssetPack && (
+            <span className="block mt-1 text-xs text-gray-500">
+              Use &quot;Ícones Pro&quot; para substituir ícones IA por ícones profissionais (Lucide, Phosphor, Tabler, Solar). Clique &quot;Trocar&quot; em cada ícone para buscar individualmente.
+            </span>
+          )}
         </div>
       </div>
+
+      <IconSwapModal
+        open={!!swapTarget}
+        onClose={() => setSwapTarget(null)}
+        onSelect={handleSwapIcon}
+        brandColor={primaryColor}
+        initialQuery={swapTarget?.name ?? ""}
+      />
     </section>
   );
 }

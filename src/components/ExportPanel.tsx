@@ -13,6 +13,9 @@ import { Code2, Coins, Wind, FileText, Link2, Download, Check, AlertCircle, Load
 interface Props {
   brandbook: BrandbookData;
   viewerElementId: string;
+  projectId?: string | null;
+  /** Called before sharing — should sync all images to the server and return true on success */
+  onForceSyncImages?: () => Promise<boolean>;
 }
 
 type ExportStatus = "idle" | "loading" | "done" | "error";
@@ -29,7 +32,7 @@ type ExportKey = keyof ExportState;
 
 type ExportErrors = Partial<Record<ExportKey, string>>;
 
-export function ExportPanel({ brandbook, viewerElementId }: Props) {
+export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSyncImages }: Props) {
   const [status, setStatus] = useState<ExportState>({
     css: "idle", tokens: "idle", tailwind: "idle", pdf: "idle", share: "idle",
   });
@@ -151,14 +154,53 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
     setErr("share", "");
     setShareMsg("");
     try {
-      const result = await copyShareUrl(brandbook);
-      if (!result) throw new Error("Falha ao comprimir dados");
-      const sizeLabel = result.sizeKB > 100 ? ` (${result.sizeKB}KB — URL longa)` : "";
-      if (!result.copied) {
-        window.prompt("Clipboard bloqueado. Copie o link manualmente:", result.url);
-        setShareMsg(`Link gerado. Copie manualmente.${sizeLabel}`);
+      // Prefer DB-based share link (includes images) when projectId is available
+      if (projectId) {
+        // 1. Force sync all images to server first
+        if (onForceSyncImages) {
+          setShareMsg("Sincronizando imagens...");
+          await onForceSyncImages();
+        }
+
+        // 2. Create share link via API
+        setShareMsg("Gerando link...");
+        const res = await fetch("/api/share", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId, expiresInDays: 30 }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({})) as { error?: string };
+          throw new Error(err.error ?? "Falha ao criar link de compartilhamento");
+        }
+        const { data } = await res.json() as { data: { url: string; token: string } };
+
+        // 3. Copy to clipboard
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(data.url);
+          copied = true;
+        } catch {
+          copied = false;
+        }
+
+        if (!copied) {
+          window.prompt("Copie o link manualmente:", data.url);
+          setShareMsg("Link gerado com imagens. Copie manualmente.");
+        } else {
+          setShareMsg("Link copiado! Inclui todas as imagens geradas.");
+        }
       } else {
-        setShareMsg(`URL copiada para o clipboard!${sizeLabel}`);
+        // Fallback: URL-compressed share (no images, but works without project)
+        const result = await copyShareUrl(brandbook);
+        if (!result) throw new Error("Falha ao comprimir dados");
+        const sizeLabel = result.sizeKB > 100 ? ` (${result.sizeKB}KB — URL longa)` : "";
+        if (!result.copied) {
+          window.prompt("Clipboard bloqueado. Copie o link manualmente:", result.url);
+          setShareMsg(`Link gerado (sem imagens).${sizeLabel}`);
+        } else {
+          setShareMsg(`URL copiada (sem imagens).${sizeLabel}`);
+        }
       }
       setS("share", "done");
       setTimeout(() => { setS("share", "idle"); setShareMsg(""); }, 5000);
@@ -255,8 +297,8 @@ export function ExportPanel({ brandbook, viewerElementId }: Props) {
           key: "share" as const,
           Icon: Link2,
           label: "Copiar link de compartilhamento",
-          sub: shareMsg || "URL comprimida do brandbook",
-          loadingLabel: "Comprimindo...",
+          sub: shareMsg || (projectId ? "Link com imagens — sincroniza antes de compartilhar" : "URL comprimida do brandbook (sem imagens)"),
+          loadingLabel: "Sincronizando e gerando link...",
           onClick: handleShare,
         },
       ],

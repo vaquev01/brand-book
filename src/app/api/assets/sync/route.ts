@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 /**
  * POST /api/assets/sync — Bulk-sync generated images from browser to server.
- * Called when the editor detects images in IndexedDB that aren't on the server yet.
+ * Stores images in PostgreSQL (sourceUrl) and optionally in R2 (publicUrl).
  * This ensures share links always show the latest images.
  */
 export async function POST(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Get existing asset keys to skip already-synced ones
     const existingAssets = await prisma.projectAsset.findMany({
       where: { projectId },
-      select: { key: true, publicUrl: true, sourceUrl: true },
+      select: { id: true, key: true, publicUrl: true, sourceUrl: true },
     });
     const existingMap = new Map(existingAssets.map((a) => [a.key, a]));
 
@@ -50,15 +50,53 @@ export async function POST(request: NextRequest) {
       if (!asset.key || !asset.url) continue;
 
       const existing = existingMap.get(asset.key);
-      // Skip if the exact same URL is already stored (avoid redundant uploads)
-      if (existing?.publicUrl && !existing.publicUrl.includes("_placeholder") && existing.sourceUrl === asset.url) continue;
+
+      // Skip if the exact same URL is already stored
       if (existing?.sourceUrl === asset.url) continue;
+      if (existing?.publicUrl && !existing.publicUrl.includes("_placeholder") && existing.sourceUrl === asset.url) continue;
 
       let publicUrl: string | undefined;
-      let sourceUrl: string | undefined;
+      let sourceUrl: string = asset.url; // ALWAYS store the URL — this is the fallback that goes to PostgreSQL
 
-      // Try R2 upload first
-      if (asset.url.startsWith("data:")) {
+      // If it's an external URL, download it and convert to data URL for reliable storage
+      if (/^https?:\/\//i.test(asset.url)) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 15_000);
+          const imgRes = await fetch(asset.url, {
+            signal: controller.signal,
+            headers: { "User-Agent": "brandbook-app/1.0" },
+          }).finally(() => clearTimeout(timeout));
+
+          if (imgRes.ok) {
+            const contentType = imgRes.headers.get("content-type")?.split(";")[0].trim() ?? "image/png";
+            const buffer = Buffer.from(await imgRes.arrayBuffer());
+            if (buffer.byteLength < 12 * 1024 * 1024) {
+              // Convert to data URL for PostgreSQL storage (reliable, no external dependency)
+              const b64 = buffer.toString("base64");
+              const safeMime = contentType.startsWith("image/") ? contentType : "image/png";
+              sourceUrl = `data:${safeMime};base64,${b64}`;
+
+              // Also try R2 upload if configured
+              try {
+                const ext = safeMime.split("/")[1] ?? "png";
+                const storageKey = buildAssetKey(projectId, asset.key, ext);
+                const result = await storageUpload(storageKey, buffer, { contentType: safeMime });
+                if (!result.publicUrl.includes("_placeholder")) {
+                  publicUrl = result.publicUrl;
+                }
+              } catch {
+                // R2 not configured or failed — fine, we have sourceUrl
+              }
+            }
+          }
+        } catch {
+          // Download failed — store the original external URL as fallback
+          sourceUrl = asset.url;
+        }
+      } else if (asset.url.startsWith("data:")) {
+        // Data URL — try R2 upload, but always keep data URL in sourceUrl
+        sourceUrl = asset.url;
         try {
           const match = asset.url.match(/^data:([^;]+);base64,(.+)$/);
           if (match) {
@@ -72,23 +110,18 @@ export async function POST(request: NextRequest) {
             }
           }
         } catch {
-          // R2 failed — fall back to storing data URL directly
-        }
-
-        // If R2 failed or not configured, store the data URL directly
-        if (!publicUrl) {
-          sourceUrl = asset.url;
+          // R2 not configured or failed — fine, we have sourceUrl in PostgreSQL
         }
       }
 
-      // Upsert asset record
+      // Upsert asset record — ALWAYS stores sourceUrl so share page works
       if (existing) {
         await prisma.projectAsset.update({
-          where: { id: (await prisma.projectAsset.findFirst({ where: { projectId, key: asset.key } }))!.id },
+          where: { id: existing.id },
           data: {
+            sourceUrl,
             ...(publicUrl ? { publicUrl } : {}),
-            ...(sourceUrl ? { sourceUrl } : {}),
-            prompt: asset.prompt || existing.sourceUrl ? undefined : asset.prompt,
+            prompt: asset.prompt ?? undefined,
             provider: asset.provider,
           },
         });
@@ -98,8 +131,8 @@ export async function POST(request: NextRequest) {
             projectId,
             key: asset.key,
             name: asset.key.replace(/_/g, " "),
-            publicUrl,
             sourceUrl,
+            publicUrl,
             prompt: asset.prompt,
             provider: asset.provider,
             mimeType: "image/png",

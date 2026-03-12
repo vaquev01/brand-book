@@ -85,132 +85,173 @@ export async function exportBrandbookPDFMultiPage(
   const element = document.getElementById(elementId);
   if (!element) throw new Error("Elemento não encontrado para exportar PDF.");
 
-  const isImmersive = element.classList.contains("bb-immersive");
-  const varsToInline: Array<
-    "--bb-pattern-url" | "--bb-atmosphere-url" | "--bb-watermark-url"
-  > = ["--bb-pattern-url", "--bb-atmosphere-url", "--bb-watermark-url"];
+  // If element is offscreen (e.g. viewer hidden while on export tab), temporarily make it visible
+  const wrapper = element.parentElement;
+  const wasOffscreen = wrapper?.style.position === "absolute" && wrapper?.style.left === "-9999px";
+  const savedWrapperStyle = wasOffscreen ? wrapper!.getAttribute("style") : null;
+  if (wasOffscreen && wrapper) {
+    wrapper.style.position = "fixed";
+    wrapper.style.left = "0";
+    wrapper.style.top = "0";
+    wrapper.style.width = "800px";
+    wrapper.style.zIndex = "-1";
+    wrapper.style.opacity = "0";
+    wrapper.style.pointerEvents = "none";
+    wrapper.style.overflow = "visible";
+    // Force layout recalc
+    void element.offsetHeight;
+  }
 
-  const computed = isImmersive ? getComputedStyle(element) : null;
-  const rawUrls = isImmersive
-    ? Object.fromEntries(
-        varsToInline.map((k) => [k, cssUrlToRawUrl(computed!.getPropertyValue(k))])
-      )
-    : ({} as Record<string, string | null>);
-
-  const inlineVarMap = new Map<string, string>();
-  const externalAssetMap = new Map<string, string>();
-  let hadConversionFailure = false;
-
-  const externalUrls = new Set<string>();
-
-  const originalNodes = [element, ...Array.from(element.querySelectorAll("*"))] as HTMLElement[];
-  for (const node of originalNodes) {
-    const bg = getComputedStyle(node).backgroundImage;
-    for (const bgUrl of extractCssUrls(bg)) {
-      if (!bgUrl.startsWith("data:") && /^https?:\/\//i.test(bgUrl)) {
-        externalUrls.add(bgUrl);
-      }
-    }
-    if (node.tagName.toLowerCase() === "img") {
-      const img = node as HTMLImageElement;
-      const candidates = [img.currentSrc, img.src, img.getAttribute("src") ?? ""];
-      for (const src of candidates) {
-        if (src && !src.startsWith("data:") && /^https?:\/\//i.test(src)) {
-          externalUrls.add(src);
-        }
-      }
+  function restoreWrapper() {
+    if (wasOffscreen && wrapper && savedWrapperStyle !== null) {
+      wrapper.setAttribute("style", savedWrapperStyle);
     }
   }
 
-  if (isImmersive) {
-    for (const k of varsToInline) {
-      const raw = rawUrls[k];
-      if (!raw) continue;
-      if (raw.startsWith("data:")) {
-        inlineVarMap.set(k, `url(${JSON.stringify(raw)})`);
-        continue;
+  try {
+    const isImmersive = element.classList.contains("bb-immersive");
+    const varsToInline: Array<
+      "--bb-pattern-url" | "--bb-atmosphere-url" | "--bb-watermark-url"
+    > = ["--bb-pattern-url", "--bb-atmosphere-url", "--bb-watermark-url"];
+
+    const computed = isImmersive ? getComputedStyle(element) : null;
+    const rawUrls = isImmersive
+      ? Object.fromEntries(
+          varsToInline.map((k) => [k, cssUrlToRawUrl(computed!.getPropertyValue(k))])
+        )
+      : ({} as Record<string, string | null>);
+
+    const inlineVarMap = new Map<string, string>();
+    const externalAssetMap = new Map<string, string>();
+    let hadConversionFailure = false;
+
+    const externalUrls = new Set<string>();
+
+    const originalNodes = [element, ...Array.from(element.querySelectorAll("*"))] as HTMLElement[];
+    for (const node of originalNodes) {
+      const bg = getComputedStyle(node).backgroundImage;
+      for (const bgUrl of extractCssUrls(bg)) {
+        if (!bgUrl.startsWith("data:") && /^https?:\/\//i.test(bgUrl)) {
+          externalUrls.add(bgUrl);
+        }
       }
+      if (node.tagName.toLowerCase() === "img") {
+        const img = node as HTMLImageElement;
+        const candidates = [img.currentSrc, img.src, img.getAttribute("src") ?? ""];
+        for (const src of candidates) {
+          if (src && !src.startsWith("data:") && /^https?:\/\//i.test(src)) {
+            externalUrls.add(src);
+          }
+        }
+      }
+    }
+
+    if (isImmersive) {
+      for (const k of varsToInline) {
+        const raw = rawUrls[k];
+        if (!raw) continue;
+        if (raw.startsWith("data:")) {
+          inlineVarMap.set(k, `url(${JSON.stringify(raw)})`);
+          continue;
+        }
+        try {
+          const dataUrl = await toDataUrlViaProxy(raw);
+          inlineVarMap.set(k, `url(${JSON.stringify(dataUrl)})`);
+        } catch {
+          hadConversionFailure = true;
+        }
+      }
+    }
+
+    for (const url of externalUrls) {
       try {
-        const dataUrl = await toDataUrlViaProxy(raw);
-        inlineVarMap.set(k, `url(${JSON.stringify(dataUrl)})`);
+        const dataUrl = await toDataUrlViaProxy(url);
+        externalAssetMap.set(url, dataUrl);
       } catch {
         hadConversionFailure = true;
       }
     }
-  }
 
-  for (const url of externalUrls) {
-    try {
-      const dataUrl = await toDataUrlViaProxy(url);
-      externalAssetMap.set(url, dataUrl);
-    } catch {
-      hadConversionFailure = true;
-    }
-  }
+    // Hide no-print elements (edit buttons, etc.) during export
+    const noPrintEls = element.querySelectorAll<HTMLElement>(".no-print");
+    for (const el of noPrintEls) el.style.display = "none";
 
-  const A4_W = 595;
-  const A4_H = 842;
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    const A4_W = 595;
+    const A4_H = 842;
+    const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
 
-  const canvas = await html2canvas(element, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: false,
-    backgroundColor: "#ffffff",
-    logging: false,
-    windowWidth: element.scrollWidth,
-    windowHeight: element.scrollHeight,
-    onclone: (doc) => {
-      const el = doc.getElementById(elementId);
-      if (!el) return;
-      const h = el as HTMLElement;
-      if (hadConversionFailure) h.setAttribute("data-exporting", "1");
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: "#ffffff",
+      logging: false,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+      onclone: (doc) => {
+        const el = doc.getElementById(elementId);
+        if (!el) return;
+        const h = el as HTMLElement;
+        if (hadConversionFailure) h.setAttribute("data-exporting", "1");
 
-      const cloneNodes = [h, ...Array.from(h.querySelectorAll("*"))] as HTMLElement[];
-      for (const n of cloneNodes) {
-        if (n.tagName.toLowerCase() === "img") {
-          const img = n as HTMLImageElement;
-          const candidates = [img.currentSrc, img.src, img.getAttribute("src") ?? ""];
-          for (const src of candidates) {
-            const mapped = externalAssetMap.get(src);
-            if (mapped) {
-              img.src = mapped;
-              break;
+        // Hide no-print elements in clone too
+        const cloneNoPrint = h.querySelectorAll<HTMLElement>(".no-print");
+        for (const np of cloneNoPrint) np.style.display = "none";
+
+        const cloneNodes = [h, ...Array.from(h.querySelectorAll("*"))] as HTMLElement[];
+        for (const n of cloneNodes) {
+          if (n.tagName.toLowerCase() === "img") {
+            const img = n as HTMLImageElement;
+            const candidates = [img.currentSrc, img.src, img.getAttribute("src") ?? ""];
+            for (const src of candidates) {
+              const mapped = externalAssetMap.get(src);
+              if (mapped) {
+                img.src = mapped;
+                break;
+              }
+            }
+          }
+
+          const view = doc.defaultView;
+          if (view) {
+            const bg = view.getComputedStyle(n).backgroundImage;
+            const replaced = replaceCssUrls(bg, externalAssetMap);
+            if (replaced && replaced !== "none" && replaced !== bg) {
+              n.style.backgroundImage = replaced;
             }
           }
         }
 
-        const view = doc.defaultView;
-        if (view) {
-          const bg = view.getComputedStyle(n).backgroundImage;
-          const replaced = replaceCssUrls(bg, externalAssetMap);
-          if (replaced && replaced !== "none" && replaced !== bg) {
-            n.style.backgroundImage = replaced;
-          }
+        if (!isImmersive) return;
+        for (const [k, v] of inlineVarMap.entries()) {
+          h.style.setProperty(k, v);
         }
-      }
+      },
+    });
 
-      if (!isImmersive) return;
-      for (const [k, v] of inlineVarMap.entries()) {
-        h.style.setProperty(k, v);
-      }
-    },
-  });
+    // Restore no-print visibility
+    for (const el of noPrintEls) el.style.display = "";
 
-  const imgData = canvas.toDataURL("image/jpeg", 0.90);
-  const imgW = A4_W;
-  const imgH = (canvas.height * A4_W) / canvas.width;
+    const imgData = canvas.toDataURL("image/jpeg", 0.90);
+    const imgW = A4_W;
+    const imgH = (canvas.height * A4_W) / canvas.width;
 
-  let posY = 0;
-  let pageCount = 0;
+    let posY = 0;
+    let pageCount = 0;
 
-  while (posY < imgH) {
-    if (pageCount > 0) pdf.addPage();
-    pdf.addImage(imgData, "JPEG", 0, -posY, imgW, imgH);
-    posY += A4_H;
-    pageCount++;
+    while (posY < imgH) {
+      if (pageCount > 0) pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, -posY, imgW, imgH);
+      posY += A4_H;
+      pageCount++;
+    }
+
+    restoreWrapper();
+
+    const slug = data.brandName.toLowerCase().replace(/\s+/g, "-");
+    pdf.save(`${slug}-brandbook.pdf`);
+  } catch (err) {
+    restoreWrapper();
+    throw err;
   }
-
-  const slug = data.brandName.toLowerCase().replace(/\s+/g, "-");
-  pdf.save(`${slug}-brandbook.pdf`);
 }

@@ -99,6 +99,7 @@ export function buildSectionDefs({
   isAdvanced,
   onAssetGenerated,
   onGenerateAssetPack,
+  onUpdateAssetPack,
   onUpdateApplicationImageKey,
   onUpdateColors,
   onUpdateData,
@@ -115,6 +116,7 @@ export function buildSectionDefs({
   onAssetGenerated?: (key: string, asset: GeneratedAsset) => void;
   onGenerateAssetPack?: () => void;
   onUpdateApplicationImageKey?: (index: number, imageKey: AssetKey | undefined) => void;
+  onUpdateAssetPack?: (updater: (prev: AssetPackState) => AssetPackState) => void;
   onUpdateColors?: (colors: Colors) => void;
   onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
   uploadedAssets: UploadedAsset[];
@@ -303,6 +305,7 @@ export function buildSectionDefs({
           assetPack={assetPack}
           generating={assetPackGenerating}
           onGenerate={onGenerateAssetPack}
+          onUpdateAssetPack={onUpdateAssetPack}
         />
       ),
     },
