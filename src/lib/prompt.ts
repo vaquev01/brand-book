@@ -1,5 +1,6 @@
 import type { GenerateScope, CreativityLevel } from "./types";
 import { ASSET_CATALOG } from "./imagePrompts";
+import { getGoldenQualityAnchors } from "./goldenBrandbook";
 
 const IMAGE_KEY_OPTIONS = ASSET_CATALOG.map((a) => a.key).join(" | ");
 
@@ -158,6 +159,8 @@ NOTA SOBRE ICONOGRAFIA E ILUSTRAÇÃO:
 - "uiGuidelines.illustrationStyle" = diretrizes de IMPLEMENTAÇÃO (paleta permitida, nível de detalhe, formato de entrega)
 - "keyVisual.illustrations" = estilo CONCEITUAL (técnica artística, referências de ilustradores, mood)
 Não duplique o conteúdo — cada campo tem propósito distinto.
+
+${getGoldenQualityAnchors()}
 
 CAMPOS CRÍTICOS — VALIDAÇÃO RIGOROSA (se ausentes, o brandbook será REJEITADO):
 • "colors" (OBRIGATÓRIO): objeto com "primary" (array min 2 cores) e "secondary" (array min 1 cor). Cada cor: { name, hex, rgb, cmyk, usage }. NUNCA omitir este campo.
@@ -819,13 +822,15 @@ SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
 • audiencePersonas (3-4 personas RICAS — nomes reais, contexto de vida, goals com emoção, dores profundas, objeções específicas, canais)
 • verbalIdentity (tagline memorável, oneLiner, brandVoiceTraits, messagingPillars com copy REAL, vocabulary 8+, doDont, headlines 5+, CTAs, tonePerChannel para 4+ canais)
 
-QUALIDADE ESPERADA:
-- Cada persona deve ter HISTÓRIA DE VIDA, não apenas bullet points
-- O manifesto deve emocionar — deve soar como peça publicitária premiada
-- O positioningStatement deve ser citável e memorável
-- Os messagingPillars devem ter copy pronta para uso REAL em cada canal
-- O vocabulário preferred e avoid deve ter 10+ palavras cada
-- O tonePerChannel deve cobrir pelo menos 4 canais com exemplos prontos
+QUALIDADE ESPERADA (BARRA MÍNIMA — abaixo disso será REJEITADO):
+- Cada persona deve ter HISTÓRIA DE VIDA completa: nome real, idade, cidade, bairro, renda, situação familiar, comportamento específico, apps que usa, conteúdo que consome. NUNCA "João, 30 anos, profissional urbano"
+- O manifesto deve emocionar — deve soar como peça publicitária premiada, 2-3 parágrafos NA VOZ DA MARCA
+- O positioningStatement deve ser citável e memorável — frase única que define a marca
+- Os messagingPillars devem ter exampleCopy com copy REAL para 3+ canais (headline, CTA, push/email/social). NUNCA placeholder vazio
+- Cada value deve seguir formato "Nome Expressivo — Manifestação concreta com exemplos". NUNCA valor genérico de uma só palavra
+- O vocabulário preferred e avoid deve ter 10+ palavras cada, específicas para a marca e indústria
+- O tonePerChannel deve cobrir pelo menos 4 canais com exemplos de posts/mensagens PRONTOS PARA PUBLICAR
+- brandArchetype: arquétipo dominante + secundário com 2-3 frases explicando manifestação visual e verbal
 
 Retorne APENAS um JSON válido com estas seções. NÃO gere seções visuais (logo, colors, typography, keyVisual, applications, etc).`;
 }
@@ -875,11 +880,15 @@ SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
 • typography (marketing com personalidade forte, ui funcional, monospace técnica — CADA uma com fallbackFont, textTransform, category, antiBlandingRationale explicando como combate a mesmice)
 • typographyScale (mínimo 10 níveis — Display até Overline — com medidas em px, lineHeight, fontWeight, letterSpacing, usage)
 
-REGRAS CRÍTICAS:
+REGRAS CRÍTICAS (abaixo disso será REJEITADO):
 - O logo DEVE ser CONSEQUÊNCIA do propósito, archetype e positioning — não um truque visual${hasLogoImage ? "\n- O LOGO REAL DA MARCA (imagem anexada) é a ÂNCORA IMUTÁVEL — extraia cores e estilo dele" : ""}
 - Tipografia: a marketing font deve CONTRASTAR com a ui font — uma com personalidade forte, outra funcional
-- NOMES DE CORES devem ser criativos e específicos da marca (ex: "Verde Caraca" não "Verde Escuro")
-- Cada cor primária e secundária DEVE ter tonalScale com mínimo 7 shades (50, 100, 200, 300, 500, 700, 900)
+- NOMES DE CORES devem ser criativos e específicos da marca (ex: "Vermelho Bdesk" não "Vermelho Escuro", "Dourado Kairo" não "Amarelo"). Cada nome deve revelar a psicologia/história da cor
+- Cada cor DEVE ter "usage" que explica ONDE e PORQUÊ (ex: "Fundos de autoridade. Representa profundidade do conhecimento."). NUNCA apenas "Cor principal"
+- Cada cor DEVE ter "pantone" quando aplicável (séries Coated). Se não tiver certeza, use "Pantone (verificar com Color Bridge)"
+- Cada cor primária e secundária DEVE ter tonalScale com mínimo 7 shades (50, 100, 200, 300, 500, 700, 900). Shade 500 = cor principal
+- typography.antiBlandingRationale: explicar COMO a fonte combate a mesmice do setor, com referência visual concreta
+- typographyScale: mínimo 10 níveis de Display a Overline com medidas EXATAS (px, lineHeight, fontWeight, letterSpacing)
 - Os placehold.co URLs devem usar as cores HEX reais da paleta
 
 Retorne APENAS um JSON válido com estas seções. NÃO inclua brandConcept, positioning, personas, verbalIdentity, brandStory.`;
@@ -954,13 +963,23 @@ TODOS estes campos com profundidade máxima:
 • brandArchetype — archetype dominante + secundário com tradução visual
 • sensoryProfile — perfil sensorial completo (5 sentidos traduzidos em linguagem visual)
 
-REGRAS CRÍTICAS DE CROSS-REFERENCING:
-- Cada cor referenciada DEVE usar o NOME EXATO da paleta (ex: "Verde Caraca" não "verde escuro")
-- typographyHierarchy de cada application DEVE nomear as fontes exatas (ex: "Títulos em Barlow Condensed ExtraBold")
+REGRAS CRÍTICAS DE CROSS-REFERENCING (abaixo disso será REJEITADO):
+- Cada cor referenciada DEVE usar o NOME EXATO da paleta (ex: "Vermelho Bdesk" não "vermelho", "Dourado Kairo" não "dourado"). NUNCA dizer "cor de destaque" ou "cor principal" genericamente
+- typographyHierarchy de cada application DEVE nomear fontes EXATAS com tamanho e peso (ex: "Títulos: DM Serif Display 32px Bold Azul Profundidade. Labels: Inter 11px SemiBold uppercase Cinza Contexto")
 - borderRadii devem refletir a geometria do logo (orgânico → maiores, angular → menores)
-- structuredPatterns devem usar cores da paleta nos backgrounds
-- productionMethods devem conter restrições técnicas REAIS
-- imageGenerationBriefing DEVE conectar emotionalCore ao manifesto e archetype
+- structuredPatterns devem usar cores da paleta nos backgrounds, referenciadas pelo NOME
+- productionMethods: mínimo 4 métodos (offset, digital, serigrafia, bordado/flexografia) com restrições TÉCNICAS REAIS. Ex: "O pattern X é inviável em serigrafia (dots < 1mm) — usar versão simplificada"
+- applications: mínimo 5 aplicações variadas. Cada uma com dimensions exatas (mm ou px), materialSpecs (gramatura, acabamento), artDirection específico
+- socialMediaGuidelines: mínimo 3 plataformas com examplePost COMPLETO pronto para publicar (legenda + hashtags + formato)
+- imageGenerationBriefing: TODOS os 17 campos preenchidos com profundidade técnica:
+  • emotionalCore: sensação CORPORAL + metáfora (ex: "exalação de alívio seguida de confiança silenciosa")
+  • lightingSignature: temperatura Kelvin + ratio key:fill + direção + qualidade
+  • cameraSignature: lente mm + aperture + perspectiva POR TIPO de peça
+  • sensoryProfile: 5 sentidos traduzidos em linguagem visual
+  • textureLanguage: materiais táteis específicos (ex: "metal escovado, linho, madeira de demolição")
+  NUNCA campos vagos como "iluminação bonita" ou "fotos profissionais"
+- keyVisual.elements: mínimo 6 elementos que são FORMAS VISUAIS CONCRETAS derivadas do logo/conceito. NUNCA conceitos abstratos como "inovação" ou "confiança"
+- uiGuidelines.components: mínimo 6 componentes com estados (default, hover, focus, active, disabled, error) + do/dont + accessibilityNotes
 
 Retorne APENAS um JSON válido com estas seções. NÃO inclua brandConcept, positioning, personas, verbalIdentity, brandStory, logo, colors, typography, typographyScale.`;
 }
@@ -1030,6 +1049,82 @@ const SYSTEM_SECTION_INSTRUCTIONS = `INSTRUÇÕES POR SEÇÃO:
 • "governance": designTools, documentationPlatform, componentLibrary, versioningStrategy, updateProcess, ownershipRoles.
 • "imageGenerationBriefing": TODOS os campos com profundidade máxima — visualStyle, colorMood (nomes EXATOS), compositionNotes, moodKeywords 10+, artisticReferences REAIS, avoidElements, logoStyleGuide, photographyMood, patternStyle, marketingVisualLanguage, negativePrompt COMPLETO, emotionalCore (conectado ao manifesto), textureLanguage, lightingSignature (Kelvin, ratio), cameraSignature (lente, DOF), brandArchetype (dominante + secundário visual), sensoryProfile (5 sentidos).`;
 
+// ═══════════════════════════════════════════════════════════════════
+// QUALITY ANCHORS — Injected into chain prompts to teach gold-standard output
+// ═══════════════════════════════════════════════════════════════════
+
+const QUALITY_ANCHORS_STRATEGY = `
+EXEMPLOS DE PROFUNDIDADE GOLD-STANDARD (esta é a BARRA MÍNIMA de qualidade):
+
+▸ brandConcept.purpose (BOM):
+"Democratizar a inteligência financeira para que cada brasileiro possa construir riqueza com consciência, não com medo."
+→ Específico, emocional, com tensão "consciência vs medo". NUNCA escrever "Oferecer soluções inovadoras" (genérico).
+
+▸ values (BOM): "Transparência Radical — Sem letras miúdas. Sem taxas escondidas. Sem jargão."
+→ Nome expressivo + manifestação concreta. NUNCA apenas "Transparência" sem contexto.
+
+▸ messagingPillar.exampleCopy (BOM):
+["Headline: 'Seu dinheiro merece mais que a poupança. Você merece entender por quê.'",
+ "CTA: 'Descubra seu perfil em 3 minutos'",
+ "Push: 'O Tesouro Selic subiu para 13,75%. Quer entender o que isso muda para você?'"]
+→ 3 canais, copy REAL, dados concretos. NUNCA placeholders como "Texto de exemplo aqui".
+
+▸ audiencePersona (BOM):
+"Camila Ribeiro, Analista de Marketing Digital, 29 anos. Mora em São Paulo (Pinheiros), ganha R$7.500/mês, tem R$12.000 na poupança. Já baixou 3 apps de investimento e desinstalou todos em < 1 semana."
+→ Nome, idade, bairro, renda, comportamento ESPECÍFICO. NUNCA "João, 30, profissional urbano."
+
+▸ tonePerChannel (BOM):
+channel: "Instagram", tone: "Visual e direto. Dados em cards. Humor seco em carrosséis. Nunca vendedor.",
+example: "Carrossel: '5 mentiras que seu banco te conta' — Slide 1: 'A poupança rende bem.' Realidade: ..."
+→ Tom ESPECÍFICO para canal + exemplo de post REAL completo. NUNCA "Tom casual e amigável".
+`;
+
+const QUALITY_ANCHORS_VISUAL = `
+EXEMPLOS DE PROFUNDIDADE GOLD-STANDARD (esta é a BARRA MÍNIMA de qualidade):
+
+▸ colors (BOM): name: "Azul Profundidade" / usage: "Fundos principais. Representa a profundidade do conhecimento e a seriedade do compromisso."
+→ Nome criativo evocativo + usage psicológico. NUNCA "Azul Escuro" / "Cor principal da marca".
+
+▸ tonalScale (BOM): 7+ shades de 50 a 900, shade 500 = cor principal. Claros para backgrounds/hover, escuros para texto.
+→ NUNCA omitir tonalScale. NUNCA menos de 7 shades.
+
+▸ typography.antiBlandingRationale (BOM):
+"DM Serif Display injeta gravitas humanista num setor dominado por Helvetica e Inter — seus serifas triangulares evocam a precisão de relógios suíços."
+→ Referência ao setor + razão VISUAL específica. NUNCA "Fonte bonita e moderna".
+
+▸ logo.clearSpace (BOM):
+"O símbolo é construído a partir de um 'K' inscrito num círculo que representa Kairos (momento certo). O ângulo de 23.5° reflete ciclos naturais."
+→ Geometria + etimologia + significado. NUNCA "Logo com espaço de respiro adequado".
+`;
+
+const QUALITY_ANCHORS_SYSTEM = `
+EXEMPLOS DE PROFUNDIDADE GOLD-STANDARD (esta é a BARRA MÍNIMA de qualidade):
+
+▸ keyVisual.elements (BOM):
+"Arco circular derivado do símbolo Kairo — usado como moldura, separador e elemento de composição. Representa ciclos de aprendizado."
+→ FORMA visual concreta + derivação do logo + aplicações + significado. NUNCA "Inovação" ou "Formas geométricas".
+
+▸ applications.typographyHierarchy (BOM):
+"Saldo: DM Serif Display 32px Regular Azul Profundidade. Labels: Inter 11px SemiBold uppercase Cinza Contexto. Valores: JetBrains Mono 16px Medium."
+→ Nomes EXATOS de fontes + tamanhos + pesos + CORES da paleta. NUNCA "Títulos grandes, corpo menor".
+
+▸ productionMethods (BOM):
+Serigrafia — restrictions: "O pattern Kairo Grid é inviável em serigrafia (dots muito pequenos) — usar Arcos simplificado. Base branca obrigatória em tecido escuro."
+→ Restrição TÉCNICA real nomeando elementos da marca. NUNCA "Seguir boas práticas de serigrafia".
+
+▸ imageGenerationBriefing.photographyMood (BOM):
+"Iluminação: golden hour (5600K-6500K). DOF: f/2.8-4.0 para retratos. Cenários: cafés de especialidade, coworkings. Grain sutil (ISO 400)."
+→ Parâmetros técnicos + cenários + emoções. NUNCA "Fotos bonitas e profissionais".
+
+▸ imageGenerationBriefing.lightingSignature (BOM):
+"4200K warm neutral, key:fill 3:1, 45° upper-left, soft diffused through linen — evoca confiança intelectual sem frieza clínica."
+→ Kelvin + ratio + direção + qualidade + emoção. NUNCA "Iluminação quente e convidativa".
+
+▸ imageGenerationBriefing.emotionalCore (BOM):
+"Uma exalação de alívio seguida de confiança silenciosa — como entrar num espaço onde tudo foi pensado para você."
+→ Sensação CORPORAL específica + metáfora. NUNCA "Sentimento de confiança e modernidade".
+`;
+
 /** Creativity-level instruction for user prompts */
 const CREATIVITY_USER_INSTRUCTION: Record<CreativityLevel, string> = {
   conservative: "POSTURA: Mantenha sobriedade e confiança atemporal em cada decisão. Pense IBM, Rolex — o resultado deve inspirar autoridade máxima.",
@@ -1063,7 +1158,9 @@ ${STRATEGY_SECTION_INSTRUCTIONS}
 ETAPA 1 DE 3 — FOCO EXCLUSIVO EM ESTRATÉGIA:
 Gere APENAS: brandConcept, brandStory, positioning, audiencePersonas, verbalIdentity.
 Esta é a etapa MAIS CRIATIVA — invista profundidade máxima em cada persona, cada messaging pillar, cada crença da marca.
-O manifesto deve emocionar. O positioningStatement deve ser citável. As personas devem ter HISTÓRIA DE VIDA.`;
+O manifesto deve emocionar. O positioningStatement deve ser citável. As personas devem ter HISTÓRIA DE VIDA.
+
+${QUALITY_ANCHORS_STRATEGY}`;
   }
 
   if (step === 2) {
@@ -1079,7 +1176,9 @@ ${VISUAL_SECTION_INSTRUCTIONS}
 ETAPA 2 DE 3 — FOCO EXCLUSIVO EM IDENTIDADE VISUAL:
 Gere APENAS: logo, logoVariants, colors, typography, typographyScale.
 Recebeu um RESUMO ESTRATÉGICO da Etapa 1. Cada escolha visual DEVE ser rastreável ao propósito, archetype e posicionamento.
-Esta é a etapa de TRADUÇÃO VISUAL — transforme estratégia em forma, cor e tipo.`;
+Esta é a etapa de TRADUÇÃO VISUAL — transforme estratégia em forma, cor e tipo.
+
+${QUALITY_ANCHORS_VISUAL}`;
   }
 
   // Step 3
@@ -1095,5 +1194,7 @@ ETAPA 3 DE 3 — SISTEMA, APLICAÇÕES, OPERACIONAL & IMAGE BRIEFING:
 Recebeu resumos de estratégia e visual + detalhes completos de cores/tipografia/logo para cross-referencing.
 Gere: keyVisual, designTokens, uiGuidelines, applications, productionGuidelines, socialMediaGuidelines, governance, imageGenerationBriefing.
 Esta é a etapa de PRECISÃO — use nomes exatos de cores e fontes em TODAS as referências cruzadas.
-O imageGenerationBriefing deve ser tão detalhado que um designer ou IA gere peças PERFEITAS sem mais contexto.`;
+O imageGenerationBriefing deve ser tão detalhado que um designer ou IA gere peças PERFEITAS sem mais contexto.
+
+${QUALITY_ANCHORS_SYSTEM}`;
 }

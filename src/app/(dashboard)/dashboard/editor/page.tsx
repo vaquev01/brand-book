@@ -408,7 +408,8 @@ export default function Home() {
               if (json.data?.assets?.length) {
                 const serverAssets: Record<string, GeneratedAsset> = {};
                 for (const a of json.data.assets) {
-                  const url = a.publicUrl ?? a.sourceUrl;
+                  const hasRealPublicUrl = a.publicUrl && !a.publicUrl.includes("_placeholder");
+                  const url = hasRealPublicUrl ? a.publicUrl : (a.sourceUrl ?? a.publicUrl);
                   if (a.key && url) {
                     serverAssets[a.key] = {
                       key: a.key,
@@ -936,10 +937,9 @@ export default function Home() {
   // Sync images to server whenever generatedAssets change and projectId is available
   const syncedKeysRef = useRef<Set<string>>(new Set());
   const imageSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
+  const syncImagesToServer = useCallback(() => {
     if (!currentProjectId || Object.keys(generatedAssets).length === 0) return;
 
-    // Find assets not yet synced to server
     const assetsToSync = Object.entries(generatedAssets)
       .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt))
       .map(([key, a]) => ({
@@ -952,30 +952,45 @@ export default function Home() {
 
     if (assetsToSync.length === 0) return;
 
-    // Debounce to avoid hammering the server during batch generation
-    if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current);
-    imageSyncTimerRef.current = setTimeout(() => {
-      fetch("/api/assets/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: currentProjectId, assets: assetsToSync }),
-      })
-        .then((res) => {
-          if (res.ok) {
-            // Mark these as synced so we don't re-upload
-            for (const a of assetsToSync) {
-              const asset = generatedAssets[a.key];
-              if (asset) syncedKeysRef.current.add(a.key + ":" + asset.generatedAt);
-            }
+    fetch("/api/assets/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId: currentProjectId, assets: assetsToSync }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          for (const a of assetsToSync) {
+            const asset = generatedAssets[a.key];
+            if (asset) syncedKeysRef.current.add(a.key + ":" + asset.generatedAt);
           }
-        })
-        .catch(() => { /* non-fatal */ });
-    }, 2000);
-
-    return () => { if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current); };
+          // If there are more un-synced assets, schedule another sync
+          const remaining = Object.entries(generatedAssets)
+            .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt));
+          if (remaining.length > 0) {
+            setTimeout(syncImagesToServer, 1000);
+          }
+        }
+      })
+      .catch(() => { /* non-fatal */ });
   }, [currentProjectId, generatedAssets]);
 
-  // Also save immediately on page unload
+  useEffect(() => {
+    if (!currentProjectId || Object.keys(generatedAssets).length === 0) return;
+
+    // Find assets not yet synced to server
+    const assetsToSync = Object.entries(generatedAssets)
+      .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt));
+
+    if (assetsToSync.length === 0) return;
+
+    // Debounce to avoid hammering the server during batch generation
+    if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current);
+    imageSyncTimerRef.current = setTimeout(syncImagesToServer, 2000);
+
+    return () => { if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current); };
+  }, [currentProjectId, generatedAssets, syncImagesToServer]);
+
+  // Also save immediately on page unload — includes images
   useEffect(() => {
     const handleBeforeUnload = () => {
       persistAll();
@@ -987,10 +1002,23 @@ export default function Home() {
           new Blob([JSON.stringify({ brandbookData })], { type: "application/json" })
         );
       }
+      // Also sync any un-synced images via sendBeacon
+      if (currentProjectId && Object.keys(generatedAssets).length > 0) {
+        const unsyncedAssets = Object.entries(generatedAssets)
+          .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt))
+          .map(([key, a]) => ({ key, url: a.url, provider: a.provider, prompt: a.prompt }))
+          .slice(0, 10);
+        if (unsyncedAssets.length > 0) {
+          navigator.sendBeacon?.(
+            "/api/assets/sync",
+            new Blob([JSON.stringify({ projectId: currentProjectId, assets: unsyncedAssets })], { type: "application/json" })
+          );
+        }
+      }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [persistAll, brandbookData]);
+  }, [persistAll, brandbookData, currentProjectId, generatedAssets]);
 
   // ─── Force save to cloud (manual trigger) ──────────────────────────
   const [cloudSaving, setCloudSaving] = useState(false);
@@ -1049,14 +1077,21 @@ export default function Home() {
         if (assetsToSync.length > 0) {
           // Sync in batches of 10
           for (let i = 0; i < assetsToSync.length; i += 10) {
-            await fetch("/api/assets/sync", {
+            const batch = assetsToSync.slice(i, i + 10);
+            const res = await fetch("/api/assets/sync", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 projectId: resolvedProjectId,
-                assets: assetsToSync.slice(i, i + 10),
+                assets: batch,
               }),
             });
+            if (res.ok) {
+              for (const a of batch) {
+                const asset = generatedAssets[a.key];
+                if (asset) syncedKeysRef.current.add(a.key + ":" + asset.generatedAt);
+              }
+            }
           }
         }
       }
@@ -1627,8 +1662,8 @@ export default function Home() {
               );
             })()}
 
-            {/* Sub-tab: Brandbook Preview */}
-            {viewerTab === "preview" && (
+            {/* Brandbook Preview — always rendered (hidden when not active) so PDF export can access the DOM */}
+            <div style={viewerTab !== "preview" ? { position: "absolute", left: "-9999px", top: 0, width: "800px", pointerEvents: "none", overflow: "hidden" } : undefined}>
               <BrandbookViewer
                 data={brandbookData}
                 generatedImages={Object.fromEntries(
@@ -1638,6 +1673,7 @@ export default function Home() {
                 assetPack={assetPack}
                 assetPackGenerating={assetPackGenerating}
                 onGenerateAssetPack={handleGenerateAssetPack}
+                onUpdateAssetPack={(updater) => setAssetPack(updater)}
                 generatedAssets={generatedAssets}
                 apiKeys={apiKeys}
                 promptProvider={promptOpsProvider}
@@ -1659,7 +1695,7 @@ export default function Home() {
                 onUpdateData={(updater) => updateBrandbook(updater)}
                 projectId={currentProjectId}
               />
-            )}
+            </div>
 
             {/* Sub-tab: Edit Brandbook */}
             {viewerTab === "edit" && (
@@ -1748,6 +1784,12 @@ export default function Home() {
                   <ExportPanel
                     brandbook={brandbookData}
                     viewerElementId="brandbook-content"
+                    projectId={currentProjectId}
+                    onForceSyncImages={async () => {
+                      // Force save brandbook + sync all images before sharing
+                      await handleForceSaveToCloud();
+                      return true;
+                    }}
                   />
                 </div>
                 <div className="app-shell p-6 sm:p-8">

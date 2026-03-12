@@ -40,9 +40,11 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   const brandbook = latestVersion?.brandbookJson as any
   const generatedImages: Record<string, string> = {}
 
-  // Collect asset URLs for viewer (use publicUrl or sourceUrl)
+  // Collect asset URLs for viewer — prefer real publicUrl, fall back to sourceUrl (data: URL)
+  // Skip placeholder URLs that won't resolve to actual images
   for (const asset of shareLink.project.assets ?? []) {
-    const url = asset.publicUrl ?? asset.sourceUrl
+    const hasRealPublicUrl = asset.publicUrl && !asset.publicUrl.includes("_placeholder");
+    const url = hasRealPublicUrl ? asset.publicUrl : (asset.sourceUrl ?? asset.publicUrl);
     if (asset.key && url) {
       generatedImages[asset.key] = url
     }
