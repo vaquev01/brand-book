@@ -3,6 +3,7 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import type { Project, BrandbookVersion } from "@/generated/prisma"
 import { DuplicateProjectButton } from "@/components/DuplicateProjectButton"
+import { parseBrandbookJson, safeHex } from "@/lib/brandbookJsonHelper"
 
 type ProjectWithVersions = Project & {
   brandbookVersions: BrandbookVersion[]
@@ -159,12 +160,6 @@ function EmptyState() {
   )
 }
 
-function safeHex(value: unknown): string {
-  if (typeof value !== "string") return "#ccc"
-  const clean = value.replace(/[^#a-fA-F0-9]/g, "")
-  return /^#[a-fA-F0-9]{3,8}$/.test(clean) ? clean : "#ccc"
-}
-
 const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
   draft: { bg: "bg-gray-100", text: "text-gray-500", label: "Rascunho" },
   in_review: { bg: "bg-amber-50", text: "text-amber-600", label: "Em revisão" },
@@ -206,7 +201,7 @@ function ProjectCard({ project, index }: { project: ProjectWithVersions; index: 
       <p className="text-xs text-gray-400 mt-1 truncate">{project.industry}</p>
       {/* Mini palette preview */}
       {(() => {
-        const bbJson = project.brandbookVersions[0]?.brandbookJson as any
+        const bbJson = parseBrandbookJson(project.brandbookVersions[0]?.brandbookJson)
         const colors = [
           ...(bbJson?.colors?.primary ?? []).slice(0, 3),
           ...(bbJson?.colors?.secondary ?? []).slice(0, 2),
@@ -214,7 +209,7 @@ function ProjectCard({ project, index }: { project: ProjectWithVersions; index: 
         if (colors.length === 0) return null
         return (
           <div className="flex gap-1 mt-3">
-            {colors.map((c: any, i: number) => (
+            {colors.map((c, i) => (
               <div
                 key={i}
                 className="h-2.5 flex-1 rounded-full first:rounded-l-full last:rounded-r-full"

@@ -43,7 +43,7 @@ interface BrandElements {
   illustrationStyle: string;
 }
 
-function extractElements(bb: BrandbookData): BrandElements {
+export function extractElements(bb: BrandbookData): BrandElements {
   const primaryColors = (bb.colors?.primary ?? []).map((c) => `${c.name} ${c.hex}`);
   const secondaryColors = (bb.colors?.secondary ?? []).map((c) => `${c.name} ${c.hex}`);
   const allColorNames = [
@@ -77,7 +77,7 @@ function extractElements(bb: BrandbookData): BrandElements {
   };
 }
 
-function buildMotifVocabulary(el: BrandElements): string {
+export function buildMotifVocabulary(el: BrandElements): string {
   const motifs: string[] = [];
 
   if (el.flora.length > 0) motifs.push(`FLORA: ${el.flora.join(", ")} — use as organic rhythm elements, varying scale (large hero + small accent)`);

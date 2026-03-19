@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/app/auth"
 import { prisma } from "@/lib/prisma"
+import type { Prisma } from "@/generated/prisma"
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
         data: {
           projectId: duplicate.id,
           versionNumber: 1,
-          brandbookJson: latestVersion.brandbookJson as any,
+          brandbookJson: latestVersion.brandbookJson as Prisma.InputJsonValue,
           lintScore: latestVersion.lintScore,
           qualityScore: latestVersion.qualityScore,
           notes: `Duplicado de "${original.name}"`,

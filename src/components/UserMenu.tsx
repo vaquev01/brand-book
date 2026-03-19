@@ -1,6 +1,7 @@
 "use client"
 import { signOut } from "next-auth/react"
 import { useState } from "react"
+import Image from "next/image"
 
 interface UserMenuProps {
   user: { name?: string | null; email?: string | null; image?: string | null }
@@ -16,10 +17,13 @@ export function UserMenu({ user }: UserMenuProps) {
         className="flex items-center gap-2 rounded-full focus:outline-none"
       >
         {user.image ? (
-          <img
+          <Image
             src={user.image}
             alt=""
             className="w-8 h-8 rounded-full ring-2 ring-violet-200"
+            width={32}
+            height={32}
+            unoptimized
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-bold">

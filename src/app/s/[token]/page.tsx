@@ -2,6 +2,9 @@ import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { ShareBrandbookClient } from "./ShareBrandbookClient"
+import { parseBrandbookJson } from "@/lib/brandbookJsonHelper"
+
+export const revalidate = 60 // Cache for 60 seconds
 
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> | { token: string } }): Promise<Metadata> {
   const { token } = await Promise.resolve(params)
@@ -13,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
     })
 
     if (shareLink?.project) {
-      const bb = shareLink.project.brandbookVersions[0]?.brandbookJson as any
+      const bb = parseBrandbookJson(shareLink.project.brandbookVersions[0]?.brandbookJson)
       const brandName = shareLink.project.name
       const tagline = bb?.verbalIdentity?.tagline ?? bb?.brandConcept?.mission ?? ""
 
@@ -77,7 +80,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   })
 
   const latestVersion = shareLink.project.brandbookVersions[0]
-  const brandbook = latestVersion?.brandbookJson as any
+  const brandbook = parseBrandbookJson(latestVersion?.brandbookJson)
   const generatedImages: Record<string, string> = {}
 
   // Collect asset URLs for viewer — prefer real publicUrl, fall back to sourceUrl (data: URL)
@@ -100,5 +103,20 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     )
   }
 
-  return <ShareBrandbookClient brandbook={brandbook} generatedImages={generatedImages} projectName={shareLink.project.name} shareToken={token} />
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: `${shareLink.project.name} — Brand Identity`,
+    description: brandbook?.verbalIdentity?.tagline ?? brandbook?.brandConcept?.mission ?? `Manual de identidade visual de ${shareLink.project.name}`,
+    creator: { "@type": "Organization", name: shareLink.project.name },
+    dateCreated: shareLink.project.createdAt.toISOString(),
+    image: `${process.env.NEXT_PUBLIC_APP_URL || ""}/s/${token}/opengraph-image`,
+  }
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ShareBrandbookClient brandbook={brandbook} generatedImages={generatedImages} projectName={shareLink.project.name} shareToken={token} />
+    </>
+  )
 }

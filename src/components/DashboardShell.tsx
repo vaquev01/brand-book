@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { MobileDrawer } from "./MobileDrawer"
 
 interface DashboardShellProps {
@@ -34,7 +35,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </div>
         <div className="flex items-center gap-2">
           {user.image ? (
-            <img src={user.image} alt="" className="w-7 h-7 rounded-full ring-2 ring-gray-100" />
+            <Image src={user.image} alt="" className="w-7 h-7 rounded-full ring-2 ring-gray-100" width={28} height={28} unoptimized />
           ) : (
             <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center text-[10px] font-bold text-white">
               {user.name?.[0]?.toUpperCase() ?? "U"}

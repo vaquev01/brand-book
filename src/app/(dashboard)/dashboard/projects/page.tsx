@@ -9,7 +9,15 @@ type ProjectWithVersions = Project & {
 
 export default async function ProjectsPage() {
   const session = await auth()
-  const userId = session!.user!.id
+
+  if (!session?.user?.id) {
+    return (
+      <div className="flex items-center justify-center h-full py-20">
+        <p className="text-gray-400 text-sm">Sessão expirada. Faça login novamente.</p>
+      </div>
+    )
+  }
+  const userId = session.user.id
 
   const projects: ProjectWithVersions[] = await prisma.project.findMany({
     where: { ownerId: userId },

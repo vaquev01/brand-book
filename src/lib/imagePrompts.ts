@@ -1,6 +1,7 @@
 import { BrandbookData, ImageProvider } from "./types";
 import { buildBrandNameFidelityBlock, buildBrandNameFidelityNegativeTerms } from "./brandNameFidelity";
 import { buildImageGenerationIntentSummary } from "./imageGenerationIntention";
+import { extractElements, buildMotifVocabulary } from "./patternEngine";
 
 export const ASSET_CATALOG = [
   // ─── LOGO ──────────────────────────────────────────────────────────────────
@@ -1515,6 +1516,10 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         ? `PRIMARY PATTERN SPEC: "${ppat.name}" — ${ppat.composition}. Visual density: ${ppat.density ?? "moderate"}. Background ground: ${ppat.background ?? "neutral"}. Application contexts: ${ppat.usage ?? "packaging, stationery, backgrounds"}.`
         : `PATTERN DIRECTION: ${ctx.patternStyle}.`;
 
+      // Enrich motif vocabulary with the pattern engine's structured analysis
+      const patternEngineElements = extractElements(data);
+      const enrichedMotifs = buildMotifVocabulary(patternEngineElements);
+
       // Determine the pattern construction technique based on what's available
       const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
       const patternTechnique: Record<string, string> = {
@@ -1539,6 +1544,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
         soul, journey, spDir, idAssets, tree,
         patternDirective,
         patternEls,
+        enrichedMotifs ? `SUPPLEMENTAL MOTIF ANALYSIS (pattern engine): ${enrichedMotifs}` : "",
         technique,
         `STRICT COLOR PALETTE — use ONLY these exact colors, absolutely no others: ${ctx.allPrimaryColors}. Background may use a very light tint (5-10% opacity) of the primary color, or pure white, or pure ${ctx.primaryColor} depending on density.`,
         `VISUAL LANGUAGE: ${ctx.visualStyle}. Mood: ${ctx.moodWords}.`,

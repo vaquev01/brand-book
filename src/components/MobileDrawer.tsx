@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 
@@ -169,7 +170,7 @@ export function MobileDrawer({ open, onClose, user }: MobileDrawerProps) {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white">
           <div className="flex items-center gap-3 px-2 py-2 mb-2">
             {user.image ? (
-              <img src={user.image} alt="" className="w-9 h-9 rounded-full ring-2 ring-gray-100" />
+              <Image src={user.image} alt="" className="w-9 h-9 rounded-full ring-2 ring-gray-100" width={36} height={36} unoptimized />
             ) : (
               <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center text-xs font-bold text-white">
                 {user.name?.[0]?.toUpperCase() ?? "U"}

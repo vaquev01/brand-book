@@ -1,10 +1,12 @@
 import { ImageResponse } from "next/og"
 import { prisma } from "@/lib/prisma"
+import { parseBrandbookJson } from "@/lib/brandbookJsonHelper"
 
 export const runtime = "nodejs"
 export const alt = "Brandbook"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
+export const revalidate = 300 // Cache OG image for 5 minutes
 
 export default async function Image({ params }: { params: Promise<{ token: string }> | { token: string } }) {
   const { token } = await Promise.resolve(params)
@@ -28,12 +30,12 @@ export default async function Image({ params }: { params: Promise<{ token: strin
 
     if (shareLink?.project) {
       brandName = shareLink.project.name
-      const bb = shareLink.project.brandbookVersions[0]?.brandbookJson as any
+      const bb = parseBrandbookJson(shareLink.project.brandbookVersions[0]?.brandbookJson)
       if (bb) {
         industry = bb.industry ?? ""
         tagline = bb.verbalIdentity?.tagline ?? bb.brandConcept?.mission ?? ""
-        const primaryColors = (bb.colors?.primary ?? []).map((c: any) => c.hex).filter(Boolean)
-        const secondaryColors = (bb.colors?.secondary ?? []).map((c: any) => c.hex).filter(Boolean)
+        const primaryColors = (bb.colors?.primary ?? []).map((c) => c.hex).filter(Boolean)
+        const secondaryColors = (bb.colors?.secondary ?? []).map((c) => c.hex).filter(Boolean)
         if (primaryColors.length > 0 || secondaryColors.length > 0) {
           colors = [...primaryColors, ...secondaryColors].slice(0, 6)
         }
