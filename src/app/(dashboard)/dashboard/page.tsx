@@ -2,6 +2,7 @@ import { auth } from "@/app/auth"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import type { Project, BrandbookVersion } from "@/generated/prisma"
+import { DuplicateProjectButton } from "@/components/DuplicateProjectButton"
 
 type ProjectWithVersions = Project & {
   brandbookVersions: BrandbookVersion[]
@@ -21,10 +22,11 @@ export default async function DashboardPage() {
   const projects: ProjectWithVersions[] = await prisma.project.findMany({
     where: { ownerId: userId },
     orderBy: { updatedAt: "desc" },
-    take: 12,
+    take: 50,
     include: { brandbookVersions: { take: 1, orderBy: { createdAt: "desc" } } },
   })
 
+  const totalCount = await prisma.project.count({ where: { ownerId: userId } })
   const totalProjects = projects.length
   const withBrandbook = projects.filter((p) => p.brandbookVersions.length > 0).length
   const inReview = projects.filter((p) => p.status === "in_review").length
@@ -72,6 +74,13 @@ export default async function DashboardPage() {
               <ProjectCard key={project.id} project={project} index={i} />
             ))}
           </div>
+          {totalCount > projects.length && (
+            <div className="mt-6 text-center">
+              <a href="/dashboard/projects" className="text-sm font-medium text-violet-600 hover:text-violet-700 transition-colors">
+                Ver todos os {totalCount} projetos &rarr;
+              </a>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -150,6 +159,12 @@ function EmptyState() {
   )
 }
 
+function safeHex(value: unknown): string {
+  if (typeof value !== "string") return "#ccc"
+  const clean = value.replace(/[^#a-fA-F0-9]/g, "")
+  return /^#[a-fA-F0-9]{3,8}$/.test(clean) ? clean : "#ccc"
+}
+
 const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
   draft: { bg: "bg-gray-100", text: "text-gray-500", label: "Rascunho" },
   in_review: { bg: "bg-amber-50", text: "text-amber-600", label: "Em revisão" },
@@ -178,9 +193,12 @@ function ProjectCard({ project, index }: { project: ProjectWithVersions; index: 
         >
           {initial}
         </div>
-        <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold ${status.bg} ${status.text}`}>
-          {status.label}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <DuplicateProjectButton projectId={project.id} projectName={project.name} />
+          <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold ${status.bg} ${status.text}`}>
+            {status.label}
+          </span>
+        </div>
       </div>
       <h3 className="font-bold text-gray-900 truncate group-hover:text-violet-700 transition-colors text-[15px]">
         {project.name}
@@ -200,7 +218,7 @@ function ProjectCard({ project, index }: { project: ProjectWithVersions; index: 
               <div
                 key={i}
                 className="h-2.5 flex-1 rounded-full first:rounded-l-full last:rounded-r-full"
-                style={{ background: c.hex ?? "#ccc" }}
+                style={{ background: safeHex(c.hex) }}
               />
             ))}
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { BrandbookData } from "@/lib/types";
 import type { BrandbookLintReport } from "@/lib/brandbookLinter";
 import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
@@ -33,6 +33,9 @@ type ExportKey = keyof ExportState;
 type ExportErrors = Partial<Record<ExportKey, string>>;
 
 export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSyncImages }: Props) {
+  const mountedRef = useRef(true)
+  useEffect(() => { return () => { mountedRef.current = false } }, [])
+
   const [status, setStatus] = useState<ExportState>({
     css: "idle", tokens: "idle", tailwind: "idle", pdf: "idle", share: "idle",
   });
@@ -79,14 +82,14 @@ export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSync
     if (!lintReport) {
       setS(key, "error");
       setErr(key, "Aguarde a verificação de qualidade ser concluída antes de exportar.");
-      setTimeout(() => setS(key, "idle"), 4000);
+      setTimeout(() => { if (mountedRef.current) setS(key, "idle") }, 4000);
       return false;
     }
     const guard = getProtectedExportGuard(intent, lintReport);
     if (guard.allowed) return true;
     setS(key, "error");
     setErr(key, guard.reason ?? "Export bloqueado pelo quality gate.");
-    setTimeout(() => setS(key, "idle"), 4000);
+    setTimeout(() => { if (mountedRef.current) setS(key, "idle") }, 4000);
     return false;
   }
 
@@ -99,7 +102,7 @@ export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSync
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
       downloadTextFile(content, `${slug}-tokens.css`, "text/css");
       setS("css", "done");
-      setTimeout(() => setS("css", "idle"), 3000);
+      setTimeout(() => { if (mountedRef.current) setS("css", "idle") }, 3000);
     } catch (err: unknown) {
       setS("css", "error");
       setErr("css", err instanceof Error ? err.message : "Falha ao exportar CSS.");
@@ -115,7 +118,7 @@ export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSync
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
       downloadTextFile(content, `${slug}-tokens.json`, "application/json");
       setS("tokens", "done");
-      setTimeout(() => setS("tokens", "idle"), 3000);
+      setTimeout(() => { if (mountedRef.current) setS("tokens", "idle") }, 3000);
     } catch (err: unknown) {
       setS("tokens", "error");
       setErr("tokens", err instanceof Error ? err.message : "Falha ao exportar tokens.");
@@ -131,7 +134,7 @@ export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSync
       const slug = brandbook.brandName.toLowerCase().replace(/\s+/g, "-");
       downloadTextFile(content, `${slug}-tailwind.config.js`, "text/javascript");
       setS("tailwind", "done");
-      setTimeout(() => setS("tailwind", "idle"), 3000);
+      setTimeout(() => { if (mountedRef.current) setS("tailwind", "idle") }, 3000);
     } catch (err: unknown) {
       setS("tailwind", "error");
       setErr("tailwind", err instanceof Error ? err.message : "Falha ao exportar Tailwind config.");
@@ -145,12 +148,12 @@ export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSync
     try {
       await exportBrandbookPDFMultiPage(viewerElementId, brandbook);
       setS("pdf", "done");
-      setTimeout(() => setS("pdf", "idle"), 3000);
+      setTimeout(() => { if (mountedRef.current) setS("pdf", "idle") }, 3000);
     } catch (err: unknown) {
       console.error(err);
       setS("pdf", "error");
       setErr("pdf", err instanceof Error ? err.message : "Falha ao exportar PDF.");
-      setTimeout(() => setS("pdf", "idle"), 4000);
+      setTimeout(() => { if (mountedRef.current) setS("pdf", "idle") }, 4000);
     }
   }
 
@@ -208,13 +211,13 @@ export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSync
         }
       }
       setS("share", "done");
-      setTimeout(() => { setS("share", "idle"); setShareMsg(""); }, 5000);
+      setTimeout(() => { if (mountedRef.current) { setS("share", "idle"); setShareMsg(""); } }, 5000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao gerar link.";
       setShareMsg(message);
       setS("share", "error");
       setErr("share", message);
-      setTimeout(() => { setS("share", "idle"); setShareMsg(""); }, 4000);
+      setTimeout(() => { if (mountedRef.current) { setS("share", "idle"); setShareMsg(""); } }, 4000);
     }
   }
 

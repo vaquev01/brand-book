@@ -1,6 +1,46 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { ShareBrandbookClient } from "./ShareBrandbookClient"
+
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> | { token: string } }): Promise<Metadata> {
+  const { token } = await Promise.resolve(params)
+
+  try {
+    const shareLink = await prisma.shareLink.findUnique({
+      where: { token },
+      include: { project: { include: { brandbookVersions: { orderBy: { createdAt: "desc" }, take: 1 } } } },
+    })
+
+    if (shareLink?.project) {
+      const bb = shareLink.project.brandbookVersions[0]?.brandbookJson as any
+      const brandName = shareLink.project.name
+      const tagline = bb?.verbalIdentity?.tagline ?? bb?.brandConcept?.mission ?? ""
+
+      return {
+        title: `${brandName} — Brand Identity`,
+        description: tagline || `Manual de identidade visual de ${brandName}`,
+        openGraph: {
+          title: `${brandName} — Brand Identity`,
+          description: tagline || `Manual de identidade visual de ${brandName}`,
+          type: "article",
+        },
+        twitter: {
+          card: "summary_large_image",
+          title: `${brandName} — Brand Identity`,
+          description: tagline || `Manual de identidade visual de ${brandName}`,
+        },
+      }
+    }
+  } catch {
+    // Fall through with defaults
+  }
+
+  return {
+    title: "Brandbook",
+    description: "Manual de identidade visual",
+  }
+}
 
 export default async function SharePage({ params }: { params: Promise<{ token: string }> | { token: string } }) {
   const { token } = await Promise.resolve(params);
