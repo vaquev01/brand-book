@@ -60,5 +60,5 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     )
   }
 
-  return <ShareBrandbookClient brandbook={brandbook} generatedImages={generatedImages} projectName={shareLink.project.name} />
+  return <ShareBrandbookClient brandbook={brandbook} generatedImages={generatedImages} projectName={shareLink.project.name} shareToken={token} />
 }

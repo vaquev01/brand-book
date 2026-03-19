@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -194,6 +195,26 @@ interface PlanCardProps {
 
 function PlanCard({ plan, isCurrent }: PlanCardProps) {
   const isHighlighted = plan.highlighted
+  const [loading, setLoading] = useState(false)
+
+  async function handleCheckout() {
+    if (isCurrent || plan.id === "free") return
+    setLoading(true)
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: plan.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Erro ao iniciar checkout")
+      if (data.url) window.location.href = data.url
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Erro desconhecido")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div
@@ -255,20 +276,29 @@ function PlanCard({ plan, isCurrent }: PlanCardProps) {
       </div>
 
       {/* CTA Button */}
-      <a
-        href={isCurrent ? "#" : plan.ctaHref}
-        aria-disabled={isCurrent}
+      <button
+        onClick={handleCheckout}
+        disabled={isCurrent || loading || plan.id === "free"}
         className={cn(
           "mb-6 block w-full rounded-xl py-2.5 text-center text-sm font-semibold transition-colors",
           isCurrent
-            ? "cursor-default bg-gray-100 text-gray-400 pointer-events-none"
+            ? "cursor-default bg-gray-100 text-gray-400"
             : isHighlighted
-            ? "bg-violet-600 text-white hover:bg-violet-700 shadow-sm"
-            : "bg-gray-900 text-white hover:bg-gray-800"
+            ? "bg-violet-600 text-white hover:bg-violet-700 shadow-sm disabled:opacity-50"
+            : "bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
         )}
       >
-        {isCurrent ? "Plano atual" : plan.ctaLabel}
-      </a>
+        {loading ? (
+          <span className="inline-flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Redirecionando...
+          </span>
+        ) : isCurrent ? (
+          "Plano atual"
+        ) : (
+          plan.ctaLabel
+        )}
+      </button>
 
       {/* Feature list */}
       <ul className="space-y-2.5">

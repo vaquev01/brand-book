@@ -12,12 +12,13 @@ import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
 import { GenerateBriefingForm, type GenerateBriefingData } from "@/components/GenerateBriefingForm";
 import { GenerationProgress } from "@/components/GenerationProgress";
 import { RefinePanel } from "@/components/RefinePanel";
+import { AICopilot } from "@/components/AICopilot";
 import { ConsistencyPanel } from "@/components/ConsistencyPanel";
 import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
 import { SystemHealthBadge } from "@/components/SystemHealthBadge";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackState } from "@/lib/types";
+import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackState, type GenerateScope, type CreativityLevel } from "@/lib/types";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
 import { generateProductionManifest } from "@/lib/productionExport";
 import { validateLooseBrandbook } from "@/lib/brandbookValidation";
@@ -43,6 +44,7 @@ import {
   saveBrandAssets,
   saveAssetPack,
 } from "@/lib/imageStorage";
+import { pullServerAssets } from "@/lib/imageSync";
 import { computeBrandFingerprint, countStaleAssets } from "@/lib/brandFingerprint";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
@@ -97,6 +99,10 @@ export default function Home() {
   const [prefillBrandName, setPrefillBrandName] = useState("");
   const [prefillIndustry, setPrefillIndustry] = useState("");
   const [prefillBriefing, setPrefillBriefing] = useState("");
+  const [templateScope, setTemplateScope] = useState<GenerateScope | undefined>();
+  const [templateCreativity, setTemplateCreativity] = useState<CreativityLevel | undefined>();
+  const [templateGuidedBriefing, setTemplateGuidedBriefing] = useState<Record<string, string> | undefined>();
+  const [templateName, setTemplateName] = useState<string | undefined>();
   const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
   const brandbookRef = useRef<BrandbookData | null>(null);
   const [jsonText, setJsonText] = useState("");
@@ -308,6 +314,21 @@ export default function Home() {
       resetHistory();
       setError("");
       setTab("generate");
+
+      // ── CHECK for template data (from /dashboard/new-brandbook?template=X) ──
+      try {
+        const templateRaw = sessionStorage.getItem("bb_template");
+        if (templateRaw) {
+          sessionStorage.removeItem("bb_template");
+          const tmpl = JSON.parse(templateRaw);
+          if (tmpl.industry) setPrefillIndustry(tmpl.industry);
+          if (tmpl.creativityLevel) setTemplateCreativity(tmpl.creativityLevel);
+          if (tmpl.suggestedScope) setTemplateScope(tmpl.suggestedScope);
+          if (tmpl.guidedBriefing) setTemplateGuidedBriefing(tmpl.guidedBriefing);
+          if (tmpl.name) setTemplateName(tmpl.name);
+        }
+      } catch {}
+
       migrateLegacyLocalStorageToIndexedDB().catch(() => {});
       return; // ← HARD STOP. Clean slate, no auto-restore.
     }
@@ -990,6 +1011,21 @@ export default function Home() {
     return () => { if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current); };
   }, [currentProjectId, generatedAssets, syncImagesToServer]);
 
+  // Pull server-side assets into IndexedDB on load (server → local reconciliation)
+  const serverPullDoneRef = useRef(false);
+  useEffect(() => {
+    if (!currentProjectId || !brandbookData || serverPullDoneRef.current) return;
+    serverPullDoneRef.current = true;
+    const slug = slugifyForStorage(brandbookData.brandName);
+    pullServerAssets(currentProjectId, slug)
+      .then((downloaded) => {
+        if (Object.keys(downloaded).length > 0) {
+          setGeneratedAssets((prev) => ({ ...prev, ...downloaded }));
+        }
+      })
+      .catch(() => { /* non-fatal: server pull is best-effort */ });
+  }, [currentProjectId, brandbookData]);
+
   // Also save immediately on page unload — includes images
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -1439,6 +1475,10 @@ export default function Home() {
                   initialBrandName={prefillBrandName}
                   initialIndustry={prefillIndustry}
                   initialBriefing={prefillBriefing}
+                  initialScope={templateScope}
+                  initialCreativity={templateCreativity}
+                  initialGuidedBriefing={templateGuidedBriefing}
+                  templateName={templateName}
                 />
               )}
 
@@ -1871,6 +1911,21 @@ export default function Home() {
         }}
         onCancel={() => setConfirmDialog(null)}
       />
+
+      {/* AI Co-pilot Chat */}
+      {brandbookData && (
+        <AICopilot
+          brandbook={brandbookData}
+          apiKeys={apiKeys}
+          strategyProvider={strategyProvider}
+          onApplyChanges={(changes) => {
+            setBrandbookData((prev) => {
+              if (!prev) return prev;
+              return { ...prev, ...changes } as BrandbookData;
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

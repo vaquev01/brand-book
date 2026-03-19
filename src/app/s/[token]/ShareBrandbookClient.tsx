@@ -1,13 +1,49 @@
 "use client"
 
 import { BrandbookViewer } from "@/components/BrandbookViewer"
+import { ClientPortal } from "@/components/ClientPortal"
 import type { BrandbookData } from "@/lib/types"
 import { useMemo, useState, useEffect } from "react"
+
+const SECTION_IDS = [
+  "dna", "brand-story", "positioning", "personas", "verbal-identity",
+  "logo", "logo-variants", "colors", "typography", "typography-scale",
+  "key-visual", "mascots", "applications", "social-media",
+  "tokens-a11y", "ui-guidelines", "ux-microcopy-motion",
+  "brand-world", "brand-health", "governance", "asset-pack",
+  "production-guidelines",
+]
+
+const SECTION_LABELS: Record<string, string> = {
+  "dna": "DNA da Marca",
+  "brand-story": "Brand Story",
+  "positioning": "Posicionamento",
+  "personas": "Personas",
+  "verbal-identity": "Identidade Verbal",
+  "logo": "Logo",
+  "logo-variants": "Variantes do Logo",
+  "colors": "Paleta de Cores",
+  "typography": "Tipografia",
+  "typography-scale": "Escala Tipográfica",
+  "key-visual": "Key Visual",
+  "mascots": "Mascotes",
+  "applications": "Aplicações",
+  "social-media": "Social Media",
+  "tokens-a11y": "Tokens & Acessibilidade",
+  "ui-guidelines": "Guidelines de UI",
+  "ux-microcopy-motion": "UX, Microcopy & Motion",
+  "brand-world": "Brand World",
+  "brand-health": "Brand Health",
+  "governance": "Governança",
+  "asset-pack": "Pack de Assets",
+  "production-guidelines": "Guidelines de Produção",
+}
 
 interface Props {
   brandbook: BrandbookData
   generatedImages: Record<string, string>
   projectName: string
+  shareToken?: string
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -32,7 +68,7 @@ function hexWithAlpha(hex: string, alpha: number): string {
   return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`
 }
 
-export function ShareBrandbookClient({ brandbook, generatedImages, projectName }: Props) {
+export function ShareBrandbookClient({ brandbook, generatedImages, projectName, shareToken }: Props) {
   const [showIntro, setShowIntro] = useState(true)
   const [introPhase, setIntroPhase] = useState(0) // 0=brand, 1=tagline, 2=fade-out
 
@@ -280,6 +316,15 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName }
             generatedImages={generatedImages}
           />
         </main>
+
+        {/* ─── Client Review Portal ─── */}
+        {shareToken && (
+          <ClientPortal
+            shareToken={shareToken}
+            sections={SECTION_IDS}
+            sectionLabels={SECTION_LABELS}
+          />
+        )}
 
         {/* ─── Premium Footer ─── */}
         <footer className="relative overflow-hidden" style={{ background: primaryHex }}>

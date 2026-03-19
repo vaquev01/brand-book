@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 
 interface MobileDrawerProps {
@@ -15,9 +15,19 @@ const navItems = [
   {
     href: "/dashboard",
     label: "Dashboard",
+    exact: true,
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/projects",
+    label: "Projetos",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
       </svg>
     ),
   },
@@ -31,9 +41,17 @@ const navItems = [
     ),
   },
   {
-    href: "/dashboard/editor",
+    href: "/dashboard/templates",
+    label: "Templates",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 8.25 20.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6Z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/new-brandbook",
     label: "Novo Brandbook",
-    action: "new-brandbook",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -62,7 +80,6 @@ const navItems = [
 
 export function MobileDrawer({ open, onClose, user }: MobileDrawerProps) {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const drawerRef = useRef<HTMLDivElement>(null)
 
   // Close on route change
@@ -125,26 +142,10 @@ export function MobileDrawer({ open, onClose, user }: MobileDrawerProps) {
         {/* Nav */}
         <nav className="px-3 mt-2 space-y-1">
           {navItems.map((item) => {
-            const isNewBrandbook = (item as { action?: string }).action === "new-brandbook"
-            const isActive = isNewBrandbook
-              ? false
-              : item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname === item.href || pathname.startsWith(item.href)
-
-            if (isNewBrandbook) {
-              return (
-                <Link
-                  key="new-brandbook"
-                  href="/dashboard/new-brandbook"
-                  onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                >
-                  <span className="text-gray-400">{item.icon}</span>
-                  {item.label}
-                </Link>
-              )
-            }
+            const isExact = (item as { exact?: boolean }).exact
+            const isActive = isExact
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(item.href + "/")
 
             return (
               <Link

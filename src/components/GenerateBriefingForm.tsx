@@ -36,23 +36,41 @@ interface Props {
   initialBrandName?: string;
   initialIndustry?: string;
   initialBriefing?: string;
+  initialScope?: GenerateScope;
+  initialCreativity?: CreativityLevel;
+  initialGuidedBriefing?: Partial<GuidedBriefing>;
+  templateName?: string;
 }
 
-export function GenerateBriefingForm({ onSubmit, loading, error, initialBrandName, initialIndustry, initialBriefing }: Props) {
+export function GenerateBriefingForm({
+  onSubmit,
+  loading,
+  error,
+  initialBrandName,
+  initialIndustry,
+  initialBriefing,
+  initialScope,
+  initialCreativity,
+  initialGuidedBriefing,
+  templateName,
+}: Props) {
   const [brandName, setBrandName] = useState(initialBrandName ?? "");
   const [industry, setIndustry] = useState(initialIndustry ?? "");
   const [rawBriefing, setRawBriefing] = useState(initialBriefing ?? "");
   const [externalUrlsRaw, setExternalUrlsRaw] = useState("");
   const [projectMode, setProjectMode] = useState<ProjectMode>("new_brand");
-  const [scope, setScope] = useState<GenerateScope>("full");
-  const [creativity, setCreativity] = useState<CreativityLevel>("balanced");
+  const [scope, setScope] = useState<GenerateScope>(initialScope ?? "full");
+  const [creativity, setCreativity] = useState<CreativityLevel>(initialCreativity ?? "balanced");
   const intentionality = true; // Always-on: semiotic analysis is now always active
-  const [showGuided, setShowGuided] = useState(false);
+  const [showGuided, setShowGuided] = useState(!!initialGuidedBriefing);
   const [referenceImages, setReferenceImages] = useState<UploadedAsset[]>([]);
   const [logoImage, setLogoImage] = useState<UploadedAsset | null>(null);
   const [logoUploadError, setLogoUploadError] = useState("");
   const [logoDragActive, setLogoDragActive] = useState(false);
-  const [guided, setGuided] = useState<GuidedBriefing>(createEmptyGuidedBriefing());
+  const [guided, setGuided] = useState<GuidedBriefing>({
+    ...createEmptyGuidedBriefing(),
+    ...initialGuidedBriefing,
+  });
 
   function updateGuided(field: keyof GuidedBriefing, value: string | boolean) {
     setGuided((prev) => ({ ...prev, [field]: value }));
@@ -114,6 +132,18 @@ export function GenerateBriefingForm({ onSubmit, loading, error, initialBrandNam
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {templateName && (
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-violet-50 border border-violet-200 rounded-xl">
+          <svg className="w-4 h-4 text-violet-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 8.25 20.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6Z" />
+          </svg>
+          <span className="text-sm font-medium text-violet-700">
+            Usando template: {templateName}
+          </span>
+          <span className="text-[10px] text-violet-400 ml-auto">Campos pre-preenchidos — edite como quiser</span>
+        </div>
+      )}
+
       <LogoUploadSection
         logoDragActive={logoDragActive}
         logoImage={logoImage}

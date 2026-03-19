@@ -6,6 +6,54 @@ import { storageUpload, buildAssetKey } from "@/lib/storage";
 export const runtime = "nodejs";
 
 /**
+ * GET /api/assets/sync?projectId=xxx — Return all ProjectAsset records for a project.
+ * Used by the client to pull server-side assets into IndexedDB on page load.
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    const projectId = request.nextUrl.searchParams.get("projectId");
+    if (!projectId) {
+      return NextResponse.json({ error: "projectId é obrigatório." }, { status: 400 });
+    }
+
+    // Verify project ownership
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project || project.ownerId !== session.user.id) {
+      return NextResponse.json({ error: "Projeto não encontrado ou sem permissão." }, { status: 403 });
+    }
+
+    const assets = await prisma.projectAsset.findMany({
+      where: { projectId },
+      select: {
+        id: true,
+        key: true,
+        sourceUrl: true,
+        publicUrl: true,
+        provider: true,
+        prompt: true,
+        mimeType: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    return NextResponse.json({ assets });
+  } catch (error: unknown) {
+    console.error("[GET /api/assets/sync]", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Erro ao buscar assets" },
+      { status: 500 },
+    );
+  }
+}
+
+/**
  * POST /api/assets/sync — Bulk-sync generated images from browser to server.
  * Stores images in PostgreSQL (sourceUrl) and optionally in R2 (publicUrl).
  * This ensures share links always show the latest images.

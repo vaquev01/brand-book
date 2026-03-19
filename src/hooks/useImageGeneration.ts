@@ -19,6 +19,7 @@ import {
   refineImagePromptClient,
 } from "@/lib/imagePromptClient";
 import { readJsonResponse } from "@/lib/http";
+import { syncSingleAsset } from "@/lib/imageSync";
 
 const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
   dalle3: "openai",
@@ -133,6 +134,7 @@ export function useImageGeneration({
   );
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [refineBeforeGenerate, setRefineBeforeGenerate] = useState(true);
   const [useReferenceImages, setUseReferenceImages] = useState(true);
   const batchAbortRef = useRef(false);
@@ -310,13 +312,20 @@ export function useImageGeneration({
         );
         if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
         if (!result.url) throw new Error("API não retornou URL de imagem");
-        onAssetGenerated(effectiveKey, {
+        const generatedAsset: GeneratedAsset = {
           key: effectiveKey,
           url: result.url,
           provider: activeProvider,
           prompt,
           generatedAt: new Date().toISOString(),
-        });
+        };
+        onAssetGenerated(effectiveKey, generatedAsset);
+
+        // Fire-and-forget: sync to server if projectId is available
+        if (projectId) {
+          setIsSyncing(true);
+          syncSingleAsset(projectId, generatedAsset).finally(() => setIsSyncing(false));
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Erro desconhecido");
       } finally {
@@ -455,13 +464,20 @@ export function useImageGeneration({
         );
         if (!res.ok) throw new Error(result.error ?? "Erro ao gerar imagem");
         if (!result.url) throw new Error("API não retornou URL de imagem");
-        onAssetGenerated(appKey, {
+        const generatedAsset: GeneratedAsset = {
           key: appKey,
           url: result.url,
           provider: activeProvider,
           prompt,
           generatedAt: new Date().toISOString(),
-        });
+        };
+        onAssetGenerated(appKey, generatedAsset);
+
+        // Fire-and-forget: sync to server if projectId is available
+        if (projectId) {
+          setIsSyncing(true);
+          syncSingleAsset(projectId, generatedAsset).finally(() => setIsSyncing(false));
+        }
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Erro desconhecido");
       } finally {
@@ -618,6 +634,7 @@ export function useImageGeneration({
     loadingKey,
     error,
     setError,
+    isSyncing,
     refineBeforeGenerate,
     setRefineBeforeGenerate,
     useReferenceImages,

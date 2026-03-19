@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react"
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; image?: string | null }
+  plan?: string
 }
 
 /** Key used by Sidebar/Dashboard to signal "create new brandbook" to the editor */
@@ -14,9 +15,19 @@ const navItems = [
   {
     href: "/dashboard",
     label: "Dashboard",
+    exact: true,
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/projects",
+    label: "Projetos",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
       </svg>
     ),
   },
@@ -30,9 +41,17 @@ const navItems = [
     ),
   },
   {
-    href: "/dashboard/editor",
+    href: "/dashboard/templates",
+    label: "Templates",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 8.25 20.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6Z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/dashboard/new-brandbook",
     label: "Novo Brandbook",
-    action: "new-brandbook",
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -59,8 +78,11 @@ const navItems = [
   },
 ]
 
-export function Sidebar({ user }: SidebarProps) {
+const WORKSPACE_PLANS = ["team", "agency", "enterprise"]
+
+export function Sidebar({ user, plan }: SidebarProps) {
   const pathname = usePathname()
+  const showWorkspace = plan ? WORKSPACE_PLANS.includes(plan) : false
 
   return (
     <aside className="w-60 bg-white flex flex-col h-full border-r border-gray-100 shrink-0">
@@ -78,25 +100,10 @@ export function Sidebar({ user }: SidebarProps) {
       <nav className="flex-1 px-3 space-y-0.5">
         <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-300 px-3 mb-2">Menu</div>
         {navItems.map((item) => {
-          const isNewBrandbook = (item as { action?: string }).action === "new-brandbook"
-          const isActive = isNewBrandbook
-            ? false // "Novo Brandbook" is an action, never shows as active
-            : item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname === item.href || pathname.startsWith(item.href)
-
-          if (isNewBrandbook) {
-            return (
-              <Link
-                key="new-brandbook"
-                href="/dashboard/new-brandbook"
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <span className="text-gray-400">{item.icon}</span>
-                {item.label}
-              </Link>
-            )
-          }
+          const isExact = (item as { exact?: boolean }).exact
+          const isActive = isExact
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(item.href + "/")
 
           return (
             <Link
@@ -113,6 +120,26 @@ export function Sidebar({ user }: SidebarProps) {
             </Link>
           )
         })}
+        {showWorkspace && (() => {
+          const isActive = pathname === "/dashboard/workspace" || pathname.startsWith("/dashboard/workspace/")
+          return (
+            <Link
+              href="/dashboard/workspace"
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${
+                isActive
+                  ? "bg-gray-900 text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              <span className={isActive ? "text-white" : "text-gray-400"}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+                </svg>
+              </span>
+              Workspace
+            </Link>
+          )
+        })()}
       </nav>
 
       {/* User */}

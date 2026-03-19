@@ -9,6 +9,7 @@ import {
   buildImageGenerationFrameworkPrimer,
   buildImageGenerationIntentSummary,
 } from "@/lib/imageGenerationIntention";
+import { buildStyleAnchor, formatStyleAnchorForPrompt } from "@/lib/brandStyleAnchor";
 
 export const runtime = "nodejs";
 
@@ -328,10 +329,16 @@ Regras por provider:
 
 Saída: retorne EXCLUSIVAMENTE um JSON válido no formato { "prompt": "..." }.`;
 
+    // Build style anchor for visual coherence across all assets
+    const styleAnchor = buildStyleAnchor(body.brandbook);
+    const styleAnchorBlock = formatStyleAnchorForPrompt(styleAnchor);
+
     const userPrompt = `IMAGE PROVIDER: ${imageProvider}
 ASPECT RATIO: ${ratio}
 CREATIVITY_MODE: ${creativity}
 REFERENCE_IMAGE_MODE: ${referenceImageDataUrl ? referenceImageMode : "none"}
+
+${styleAnchorBlock}
 
 BRANDBOOK CONTEXT:
 ${compactBrandContext(body.brandbook, {
