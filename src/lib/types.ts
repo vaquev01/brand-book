@@ -64,6 +64,15 @@ export interface Logo {
   secondary: string;
   symbol: string;
   favicon?: string;
+  symbolConcept?: string;
+  semioticAnalysis?: {
+    natureOfSymbol: "Icon" | "Index" | "Symbol";
+    denotation: string;
+    connotation: string;
+  };
+  shapePsychology?: string;
+  negativeSpaceMetaphor?: string;
+  evolutionaryStage?: "Descriptive" | "Transitional" | "Iconic";
   clearSpace: string;
   minimumSize: string;
   incorrectUsages: string[];

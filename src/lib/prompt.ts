@@ -55,7 +55,7 @@ Cada decisão criativa DEVE ser fundamentada na Matriz Analítica de 5 Pilares. 
 5. ESTÁGIO EVOLUTIVO: A marca nasce em fase descritiva (necessita explicação visual) ou fase icônica (pura abstração confiante)?
 
 REGRAS DE APLICAÇÃO DA MATRIZ:
-• Logo → O campo "clearSpace" deve detalhar a geometria emocional (Pilar 2) e o uso do espaço negativo/metáfora (Pilar 4).
+• Logo → O campo "symbolConcept" deve detalhar a geometria emocional (Pilar 2) e o uso do espaço negativo/metáfora (Pilar 4). O campo "clearSpace" deve conter APENAS regras de área de proteção/respiro.
 • Typography → O "usage" deve explicar como a fonte combate o blanding e qual sua carga semiótica (Pilar 3).
 • Colors → O "name" deve revelar a conotação (Pilar 1) e o impacto psicológico. Ex: "Índigo Crepúsculo — conota profundidade intelectual; geometria associada a quadrados passará extrema segurança".
 • KeyVisual.elements → Detalhar a relação de significante/significado (Pilar 1). Ex: "Linha diagonal 23° (significante) — conota progresso contínuo sem exaustão (significado)".
@@ -132,7 +132,32 @@ INSTRUÇÕES POR SEÇÃO:
 3. "positioning": categoria inovadora (não a óbvia), mercado-alvo preciso, positioning statement memorável, diferenciais realmente únicos, concorrentes honestos, RTBs concretos.
 4. "audiencePersonas": 2-4 personas ricas — nomes reais, contextos de vida detalhados, objetivos com emoção por trás, dores com profundidade, objeções específicas, canais preferidos com frequência de uso. Para SaaS/produtos digitais, inclua também: "companySize" (tamanho da empresa — ex: "Startup 10-50 pessoas", "Scale-up 200-500", "Enterprise 1000+") e "digitalMaturity" (maturidade digital — ex: "Avançada: usa ferramentas integradas, data-driven", "Intermediária: planilhas + ferramentas básicas", "Iniciante: processos manuais").
 5. "verbalIdentity": tagline memorável e intraduzível (que se perde algo na tradução), one-liner com ganchos, traços de voz com exemplos, messaging pillars com copy real, vocabulário com pelo menos 8 palavras em cada lista, do/don'ts acionáveis, 5+ headlines e CTAs variados.
-6. "logo": URLs placehold.co realistas (use cores da paleta no URL). O logo deve ser a representação visual do conceito central da marca, não um ornamento isolado. Explique no clearSpace como o símbolo deriva do brandConcept, do positioning e da verbalIdentity. Se houver recurso expressivo específico (ex: pontuação, monograma, contraforma, gesto caligráfico, estrutura modular), ele deve ser adotado apenas se for a solução estratégica mais coerente e precisa ser descrito como sistema replicável, não como detalhe casual. Regras de uso incorreto específicas e ilustrativas (mínimo 5).
+6. "logo": URLs placehold.co realistas (use cores da paleta no URL). O logo deve ser a representação visual do conceito central da marca, não um ornamento isolado. Se houver recurso expressivo específico (ex: pontuação, monograma, contraforma, gesto caligráfico, estrutura modular), ele deve ser adotado apenas se for a solução estratégica mais coerente e precisa ser descrito como sistema replicável, não como detalhe casual. Regras de uso incorreto específicas e ilustrativas (mínimo 5).
+
+O campo symbolConcept é o MAIS IMPORTANTE de todo o brandbook — ele é a semente que gera todo o sistema visual. Deve conter:
+1. FORMA BASE: qual geometria (círculos, triângulos, linhas, formas orgânicas) e POR QUÊ essa forma traduz a personalidade da marca
+2. METÁFORA VISUAL: qual ideia abstrata o símbolo comunica (não literal — um restaurante NÃO precisa de garfo/faca; qual é a ESSÊNCIA que transcende o literal?)
+3. TÉCNICA DE CONSTRUÇÃO: como os elementos se combinam (sobreposição, intersecção, negativo, fragmentação, rotação)
+4. CONEXÃO COM ARCHETYPE: como a forma física do mark traduz o arquétipo da marca
+5. DIFERENCIAÇÃO: por que este mark NÃO seria confundido com nenhum outro do setor
+
+REGRA DE OURO DO SYMBOLCONCEPT: Se o symbolConcept poderia descrever qualquer marca de qualquer setor, ele está ERRADO. Deve ser tão específico que só poderia pertencer a ESTA marca.
+
+Mapeamento archetype → forma base (use como guia, não como regra rígida):
+- Hero: formas ascendentes, ângulos agudos, escudos, setas para cima
+- Caregiver: formas arredondadas, abraços, contenção, espaço acolhedor
+- Explorer: formas abertas, horizontes, caminhos, fragmentos que sugerem movimento
+- Sage: geometria precisa, simetria, grids, proporção áurea
+- Outlaw: quebras, ângulos inesperados, assimetria deliberada, tensão
+- Creator: formas orgânicas com precisão, ferramentas abstratas, processo visível
+- Ruler: verticalidade, coroa abstrata, estrutura imponente, peso visual
+- Magician: espirais, transformação, dualidade, formas impossíveis
+- Lover: curvas sensuais, fluidez, formas que se tocam, calor
+- Jester: assimetria divertida, surpresa geométrica, movimento implícito
+- Innocent: simplicidade, formas puras, círculos perfeitos, leveza
+- Everyman: formas familiares, acessíveis, sem pretensão, honestas
+
+O campo clearSpace agora contém APENAS regras de área de respiro/proteção. NÃO incluir o conceito do símbolo em clearSpace — isso vai exclusivamente em symbolConcept.
 7. "logoVariants": todas as 6 variações com URLs placehold.co.
 8. "colors": paleta primária (2-3 cores), secundária (2-4 cores), semântica completa, dataViz (5-8 cores). Nomes criativos e específicos. HEX preciso, RGB e CMYK corretos. Cada cor DEVE ter "usage" explicando onde e como usar (ex: "Fundo principal de materiais impressos", "Texto primário e blocos sólidos", "Destaques e call-to-action"). Inclua "pantone" quando aplicável (ex: "Pantone 286 C" para cores sólidas) — essencial para produção física (uniformes, sinalização, embalagens). ESCALA TONAL (OBRIGATÓRIA PARA CORES PRIMÁRIAS E SECUNDÁRIAS): Cada cor primária e secundária DEVE incluir "tonalScale" — array de shades de 50 a 900 (mínimo 7 shades: 50, 100, 200, 300, 500, 700, 900). Shade 500 deve ser a cor principal. Shades claros (50-200) para backgrounds e hover states. Shades escuros (700-900) para textos e estados pressed. Ex: [{"shade":"50","hex":"#EFF6FF"},{"shade":"100","hex":"#DBEAFE"},{"shade":"500","hex":"#3B82F6"},{"shade":"700","hex":"#1D4ED8"},{"shade":"900","hex":"#1E3A8A"}]. Essencial para UI/produto digital.
 9. "typography": 3 famílias distintas com personalidades complementares — marketing/display, UI/interface, monospace/código. Cada fonte DEVE ter: "fallbackFont" (alternativa Google Fonts gratuita), "textTransform" se aplicável (lowercase, uppercase, capitalize, none), "category" (Script, Sans-Serif, Serif, Display, Monospace). Explique como a tipografia reforça a mesma ideia central do símbolo e como sustenta qualquer recurso expressivo eventualmente adotado pela marca.
@@ -237,7 +262,8 @@ ESTRUTURA JSON EXIGIDA:
     "secondary": "string (URL placehold.co)",
     "symbol": "string (URL placehold.co quadrado, ex: https://placehold.co/400x400/...)",
     "favicon": "string (descrição do favicon/app icon)",
-    "clearSpace": "string (conceito do símbolo + regra de respiro + explicação de como ele deriva do conceito central da marca)",
+    "symbolConcept": "string (OBRIGATÓRIO — descrição detalhada do conceito visual do símbolo/mark. NÃO é URL. É a explicação do que o símbolo representa e POR QUÊ. Exemplo: 'Duas semicircunferências entrelaçadas formando um símbolo de infinito assimétrico — representando ciclos de aprendizado contínuo, com a assimetria comunicando que cada ciclo transforma. Formas arredondadas refletem o arquétipo Caregiver e o tom acolhedor da marca. O espaço negativo central forma sutilmente a letra D de Desk.' DEVE derivar diretamente do brandConcept.purpose, do brandArchetype e do positioning. NUNCA um conceito genérico.)",
+    "clearSpace": "string (APENAS regras de área de respiro/proteção — NÃO incluir o conceito do símbolo aqui, isso vai em symbolConcept. Ex: 'Área mínima de proteção igual a 1x a altura do mark em todos os lados. Em aplicações digitais, mínimo 16px.')",
     "minimumSize": "string",
     "incorrectUsages": ["string (mínimo 5 usos incorretos específicos)"],
     "semioticAnalysis": {
@@ -775,7 +801,8 @@ export function compactVisualSummary(data: Record<string, unknown>): string {
     }).filter(Boolean).join("\n  ");
 
   return `RESUMO VISUAL (Etapa 2):
-• Logo clearSpace/conceito: ${(logo.clearSpace as string ?? "").slice(0, 300)}
+• Logo symbolConcept: ${(logo.symbolConcept as string ?? "").slice(0, 400)}
+• Logo clearSpace: ${(logo.clearSpace as string ?? "").slice(0, 200)}
 • Forma/psicologia: ${logo.shapePsychology ?? "?"}
 • Estágio: ${logo.evolutionaryStage ?? "?"}
 • Semiótica: ${(logo.semioticAnalysis as Record<string, unknown>)?.natureOfSymbol ?? "?"} — ${(logo.semioticAnalysis as Record<string, unknown>)?.connotation ?? "?"}
@@ -874,7 +901,7 @@ As imagens de referência contêm pistas visuais importantes. Analise:
 - Composição → sugere o sistema de design` : ""}
 
 SEÇÕES OBRIGATÓRIAS NESTA ETAPA:
-• logo (primary, secondary, symbol, favicon, clearSpace DETALHADO explicando como o símbolo nasce do propósito e posicionamento, minimumSize, incorrectUsages 5+, semioticAnalysis completa, shapePsychology, negativeSpaceMetaphor, evolutionaryStage)
+• logo (primary, secondary, symbol, favicon, symbolConcept DETALHADO explicando o conceito visual do mark e como nasce do propósito/archetype/positioning, clearSpace com regras de respiro, minimumSize, incorrectUsages 5+, semioticAnalysis completa, shapePsychology, negativeSpaceMetaphor, evolutionaryStage)
 • logoVariants (horizontal, stacked, mono, negative, markOnly, wordmarkOnly — todos com URLs placehold.co usando cores da paleta)
 • colors (primary 2-3 com tonalScale 50-900, secondary 2-4 com tonalScale, semantic completa, dataViz 5-8 — CADA cor com nome criativo que revela sua psicologia, usage detalhado, CMYK correto)
 • typography (marketing com personalidade forte, ui funcional, monospace técnica — CADA uma com fallbackFont, textTransform, category, antiBlandingRationale explicando como combate a mesmice)
@@ -1015,7 +1042,7 @@ const VISUAL_PRINCIPLES = `PRINCÍPIOS PARA IDENTIDADE VISUAL:
 5. PANTONE CRITERIOSO: Use apenas códigos com alta confiança. Se não tiver certeza, use "Pantone (verificar com Pantone Color Bridge)".`;
 
 const VISUAL_SECTION_INSTRUCTIONS = `INSTRUÇÕES POR SEÇÃO:
-• "logo": URLs placehold.co com cores da paleta. clearSpace = como o símbolo deriva do conceito central. Regras de uso incorreto mínimo 5.
+• "logo": URLs placehold.co com cores da paleta. symbolConcept = conceito visual detalhado do mark (forma, metáfora, técnica, archetype, diferenciação). clearSpace = regras de respiro/proteção. Regras de uso incorreto mínimo 5.
 • "logoVariants": 6 variações com placehold.co.
 • "colors": primária 2-3, secundária 2-4, semântica, dataViz 5-8. Nomes criativos. ESCALA TONAL OBRIGATÓRIA: "tonalScale" com mínimo 7 shades (50-900) para primárias e secundárias.
 • "typography": 3 famílias (marketing/ui/monospace) com fallbackFont, textTransform, category, antiBlandingRationale.
@@ -1092,9 +1119,13 @@ EXEMPLOS DE PROFUNDIDADE GOLD-STANDARD (esta é a BARRA MÍNIMA de qualidade):
 "DM Serif Display injeta gravitas humanista num setor dominado por Helvetica e Inter — seus serifas triangulares evocam a precisão de relógios suíços."
 → Referência ao setor + razão VISUAL específica. NUNCA "Fonte bonita e moderna".
 
+▸ logo.symbolConcept (BOM):
+"O símbolo é construído a partir de um 'K' inscrito num círculo que representa Kairos (momento certo). O ângulo de 23.5° reflete ciclos naturais. A forma circular comunica o arquétipo Sage — precisão e completude. A intersecção K+círculo cria espaço negativo que forma uma seta sutil apontando para frente, reforçando progresso contínuo. Nenhuma outra EdTech usa geometria angular inscrita em curva — o contraste é o diferenciador."
+→ Forma + metáfora + técnica + archetype + diferenciação. NUNCA genérico. NUNCA algo que poderia descrever outra marca.
+
 ▸ logo.clearSpace (BOM):
-"O símbolo é construído a partir de um 'K' inscrito num círculo que representa Kairos (momento certo). O ângulo de 23.5° reflete ciclos naturais."
-→ Geometria + etimologia + significado. NUNCA "Logo com espaço de respiro adequado".
+"Área mínima de proteção igual a 1x a altura do mark em todos os lados. Em fundos fotográficos, aumentar para 1.5x. Em aplicações digitais, mínimo 16px."
+→ Regras de respiro TÉCNICAS. NUNCA incluir conceito do símbolo aqui (isso vai em symbolConcept).
 `;
 
 const QUALITY_ANCHORS_SYSTEM = `

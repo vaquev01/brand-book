@@ -36,6 +36,7 @@ const LogoSchema = z.object({
   secondary: NonEmptyString,
   symbol: NonEmptyString,
   favicon: z.string().optional(),
+  symbolConcept: z.string().optional(),
   clearSpace: NonEmptyString,
   minimumSize: NonEmptyString,
   incorrectUsages: z.array(NonEmptyString).min(3),

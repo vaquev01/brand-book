@@ -333,7 +333,10 @@ function extractBrandContext(data: BrandbookData) {
   const avoid = igb?.avoidElements ?? "clutter, low quality, stock-photo clichés, generic";
 
   // Logo
-  const logoSymbol = data.logo.symbol ?? `abstract symbol for ${data.brandName}`;
+  const logoSymbol = (data.logo as any).symbolConcept
+    ?? ((data.logo as any).semioticAnalysis?.denotation)
+    ?? (data.logo.symbol && !data.logo.symbol.startsWith("http") ? data.logo.symbol : "")
+    ?? `abstract mark for ${data.brandName}`;
   const logoPrimary = data.logo.primary ?? `clean logotype for ${data.brandName}`;
   const logoStyle = igb?.logoStyleGuide ?? `precise vector, ${logoPrimary}`;
   const patternStyle = igb?.patternStyle ?? `geometric repeating motifs derived from brand symbol`;
@@ -1376,6 +1379,52 @@ function logoGovernanceDirective(
   ].filter(Boolean).join(" ");
 }
 
+function logoSoulAnchor(ctx: ReturnType<typeof extractBrandContext>, data: BrandbookData): string {
+  const lines: string[] = [];
+
+  // Archetype → form guidance
+  const archetypeName = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
+  const archetypeFormMap: Record<string, string> = {
+    Hero: "ascending angular forms, shield-like geometry, upward momentum, bold weight",
+    Caregiver: "rounded embracing forms, open protective shapes, warm soft geometry",
+    Explorer: "open horizon forms, path-suggesting lines, fragments implying journey",
+    Sage: "precise symmetric geometry, golden-ratio proportions, grid-based construction",
+    Outlaw: "deliberate asymmetry, unexpected angles, tension and breaking-point forms",
+    Creator: "organic precision, visible construction process, tool-abstracted shapes",
+    Ruler: "vertical imposing forms, crown abstractions, structural weight and authority",
+    Magician: "transformation spirals, duality forms, impossible geometry, optical shifts",
+    Lover: "sensuous curves, flowing connected forms, intimate touching shapes",
+    Jester: "playful asymmetry, geometric surprise, implied movement and bounce",
+    Innocent: "pure simple forms, perfect circles, lightness, minimal strokes",
+    Everyman: "familiar accessible forms, honest shapes, unpretentious geometry",
+  };
+
+  const formGuidance = archetypeFormMap[archetypeName] ?? archetypeFormMap.Creator;
+  lines.push(`ARCHETYPE_FORM_GUIDANCE: As a ${archetypeName} brand, the mark's geometry should embody: ${formGuidance}.`);
+
+  // Brand purpose → visual translation
+  if (ctx.purpose) lines.push(`BRAND_PURPOSE (encode this into the mark's meaning): "${ctx.purpose}".`);
+  if (ctx.brandPromise) lines.push(`BRAND_PROMISE (the mark must visually embody this): "${ctx.brandPromise}".`);
+
+  // Emotional core
+  const igb = data.imageGenerationBriefing as Record<string, unknown> | undefined;
+  const emotionalCore = igb?.emotionalCore as string | undefined;
+  if (emotionalCore) lines.push(`EMOTIONAL_CORE (translate into geometry, NOT photography): ${emotionalCore}.`);
+
+  // Industry grounding
+  lines.push(`INDUSTRY: ${data.industry}. The mark must feel native to this sector while being distinctive within it.`);
+
+  // Key personality traits → visual cues
+  const personality = data.brandConcept.personality.slice(0, 3).join(", ");
+  if (personality) lines.push(`PERSONALITY (infuse into form language): ${personality}.`);
+
+  // Tone of voice → visual rhythm
+  const tone = data.brandConcept.toneOfVoice;
+  if (tone) lines.push(`TONE (translate verbal rhythm into visual rhythm): ${tone}.`);
+
+  return lines.join(" ");
+}
+
 function buildDiffusionLogoPrompt(
   ctx: ReturnType<typeof extractBrandContext>,
   data: BrandbookData,
@@ -1427,6 +1476,15 @@ function buildDiffusionLogoPrompt(
   prompt += `Focus exclusively on abstract graphic design, pure geometry, and typography. The canvas must remain entirely empty except for the central logo lockup. `;
   prompt += `Strategic Core: the logo must be the visual consequence of the brand concept, not an isolated decorative idea. Translate the brand's purpose (${ctx.purpose}), unique value (${ctx.uniqueValue}), differentiators (${ctx.differentiators}), personality (${ctx.personality}), and tone of voice (${ctx.toneOfVoice}) into one coherent identity decision. ${coherence} ${rebrandCritical} ${scorecard} ${planning} ${consciousness} ${execution} ${governance} `;
   prompt += `${generativeIntent} `;
+  prompt += `${logoSoulAnchor(ctx, data)} `;
+
+  // Inject archetype-matched structural reference
+  const structRefs = (LOGO_STRUCTURAL_REFS as Record<string, Array<{mark: string; structure: string; principle: string}>>)[archetype];
+  if (structRefs?.length) {
+    const selected = structRefs.slice(0, 2);
+    const refBlock = selected.map(r => `${r.mark}: ${r.principle}`).join(". ");
+    prompt += `STRUCTURAL_REFERENCES (study the construction LOGIC, do NOT copy the visual): ${refBlock}. `;
+  }
 
   // 3. TYPOGRAPHY
   const typographyRationale = (data.typography.marketing as any)?.antiBlandingRationale ?? "excellent optical kerning";
@@ -1494,7 +1552,7 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
       const basePrompt = buildDiffusionLogoPrompt(ctx, data, provider, "dark");
       return parts(
         basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
-        `CRITICAL: Exactly the same mark as primary, just reversed palette.`,
+        `VARIANT: Dark background version. Create the same conceptual mark (same symbol concept, same construction logic, same proportions) but optimized for dark backgrounds. Primary palette reversed: light elements on ${ctx.primaryColor} or deep brand color background. The mark's meaning and recognition must be identical to the light version.`,
         sTags, q, neg(ctx, provider, `photography, photorealistic, 3D render, mockup, scene, environment, bokeh, gradient background, lighting effects, glow, 3D, perspective, bevel, emboss, halo, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept, ${namingNegativeTerms}`),
       );
     }
