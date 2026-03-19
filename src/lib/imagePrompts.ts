@@ -1419,7 +1419,7 @@ function buildDiffusionLogoPrompt(
 
   // 1. ABSOLUTE MEDIUM & SUBJECT ANCHOR
   let prompt = provider === "imagen" 
-    ? `CRITICAL SYSTEM DIRECTIVE: YOU MUST DRAW A FLAT 2D VECTOR CORPORATE LOGO. YOU ARE STRICTLY FORBIDDEN FROM DRAWING SCENES, PHYSICAL OBJECTS, PEOPLE, BUILDINGS, OR REALISTIC ILLUSTRATIONS OF THE INDUSTRY. ZERO PHOTOREALISM. If the logo contains text, reproduce the exact canonical brand name "${data.brandName}" with zero spelling drift, punctuation drift, accent drift, or character substitution.\n\nAn isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `
+    ? `A flat 2D vector corporate logo mark. Pure solid-color background. No photorealism, no scenes, no objects, no gradients, no shadows, no 3D effects. If the logo contains text, reproduce the exact canonical brand name "${data.brandName}" with zero spelling drift, punctuation drift, accent drift, or character substitution.\n\nAn isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `
     : `An isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `;
 
   // 2. FOCUS STRICTLY ON GEOMETRY (DO NOT mention what we don't want, as it triggers attention)
@@ -1584,7 +1584,7 @@ The viewer should discover new details at each zoom level — overall texture at
         humanLayer,
         `DESIGN PHILOSOPHY: The mascot must be instantly recognizable in silhouette alone. Scalable from 64px favicon to poster. Animation-ready with consistent proportions. The character should feel like it has a life beyond this single image.`,
         `STYLE: premium modern 2D illustration, crisp edges, consistent line weights, minimal shading (flat color with max 2 shadow tones), no 3D, no photorealism.`,
-        `PALETTE (strict): ${ctx.allColors}. ${ctx.primaryColor} as dominant body color, ${ctx.accentColor} for expressive details (eyes, accessories, small highlights).`,
+        `PALETTE (strict): ${ctx.allColors}. ${ctx.primaryColor} as the primary recognition color — apply to the most distinctive feature (hat, scarf, accessory, marking), NOT as the entire body color. The character needs natural body tones with strategic brand-color accents for recognition. ${ctx.accentColor} for expressive details (eyes, accessories, small highlights).`,
         `EXPRESSION & POSE: The character's default expression should embody ${ctx.toneOfVoice}. Body language should communicate ${ctx.moodWords}.`,
         `COMPOSITION: centered full-body character, clear negative space around, square 1:1 framing. The character should feel grounded, not floating.`,
         `BACKGROUND: clean solid background (white or very light tint of ${ctx.secondaryColor}). No scene, no props.`,
@@ -1644,7 +1644,14 @@ The viewer should discover new details at each zoom level — overall texture at
         ctx.competitiveAngle,
         sensory,
         `CAMERA: ${camera}.`,
-        `LIGHTING: Golden hour or soft diffused daylight. Warm key 3200K, cool fill 5600K. Film-like tonal range — Kodak Portra 400 palette with subtle grain.`,
+        (() => {
+          const filmRef = /tech|digital|futur|innov/i.test(data.industry)
+            ? "clean digital clarity, slight teal-and-orange color grade"
+            : /luxury|fashion|premium|beauty/i.test(data.industry)
+              ? "Fuji Pro 400H palette, smooth highlight roll-off"
+              : "Kodak Portra 400 palette with subtle grain";
+          return `LIGHTING: Golden hour or soft diffused daylight. Warm key 3200K, cool fill 5600K. Film-like tonal range — ${filmRef}.`;
+        })(),
         `PEOPLE: Authentic, diverse, non-model-perfect. Real micro-expressions — not corporate smiling. Candid or near-candid. Hands doing something meaningful.`,
         `${ctx.artisticRef} editorial approach. Wide 16:9. Left or center third kept clear for optional copy overlay.`,
         `No logos visible, no text on clothing, no brand placement that breaks the documentary spell.`,
@@ -1655,17 +1662,15 @@ The viewer should discover new details at each zoom level — overall texture at
     case "instagram_carousel": {
       return parts(
         prefix,
-        `RENDER A REALISTIC INSTAGRAM FEED SCREENSHOT showing a carousel post by the brand ${B}.`,
-        `MANDATORY MOCKUP FRAME: Show the FULL Instagram mobile app interface — profile photo (round, small, top-left with ${ctx.primaryColor} brand icon), username "${data.brandName.toLowerCase().replace(/\s+/g, "")}" in bold, three-dot menu, the IMAGE CONTENT as the main post area (square), and below it: heart/comment/send/save icons row, "Liked by..." text, caption preview with "... more", and timestamp. This must look like a REAL screenshot of the Instagram app on an iPhone.`,
+        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not attempt to render interface text, buttons, follower counts, or navigation elements — these will be unreadable. Generate only the visual content that would appear in this format.`,
+        `A branded Instagram carousel post image for ${B}. Square 1:1 format.`,
         soul, platCtx,
         `THE POST CONTENT (the square image inside the frame): A bold, editorial first slide designed to stop the scroll. ${ctx.marketingArch}. Dominant color: ${ctx.primaryColor}. Brand visual: ${ctx.visualMetaphor}.`,
         `POST DESIGN STYLE: Clean graphic design — NOT a random photo. Think @spotify, @stripe, @linear carousel content. Bold typography zones (placeholder blocks, not real text), strong brand color blocks, one hero visual element.`,
         `INDUSTRY: ${data.industry}. INDUSTRY VISUAL LANGUAGE: ${ctx.industryLang}.`,
         idAssets,
         `COLOR PALETTE (strict): ${ctx.allPrimaryColors}. High-contrast accent: ${ctx.accentColor}.`,
-        `The carousel pagination dots below the image should show dot 1 of 5 active (${ctx.accentColor}).`,
-        `OVERALL SCENE: iPhone 15 Pro held naturally or flat on surface, screen showing the Instagram post. Alternatively, just a clean screenshot with the app chrome visible.`,
-        `MOOD: ${ctx.moodWords}. Social-native, premium, thumb-stopping. This must look like a REAL brand's Instagram, not an abstract artwork.`,
+        `MOOD: ${ctx.moodWords}. Social-native, premium, thumb-stopping.`,
         humanLayer,
         sTags, q, neg(ctx, provider, `abstract art without context, no phone frame, no app interface, generic gradient, floating graphics without platform context${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
@@ -1674,42 +1679,42 @@ The viewer should discover new details at each zoom level — overall texture at
     case "instagram_story": {
       return parts(
         prefix,
-        `RENDER A REALISTIC INSTAGRAM STORY SCREENSHOT as seen on a mobile phone for the brand ${B}.`,
-        `MANDATORY MOCKUP FRAME: Show a smartphone screen (iPhone 15 Pro frame or just the screen) displaying an Instagram Story. Include the STORY UI ELEMENTS: top progress bar (showing this is story 2 of 5), profile photo + username "${data.brandName.toLowerCase().replace(/\s+/g, "")}" + time "2h" in the top-left, X close button top-right. At the bottom: message input bar "Send message..." and the paper plane send icon. This must look like a REAL Instagram Story screenshot.`,
+        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not attempt to render interface text, buttons, follower counts, or navigation elements — these will be unreadable. Generate only the visual content that would appear in this format.`,
+        `A branded Instagram Story visual for ${B}. Full-bleed vertical 9:16 format.`,
         soul, platCtx,
         `THE STORY CONTENT (full-bleed 9:16 behind the UI): Branded visual in ${ctx.primaryColor} dominant, ${ctx.secondaryColor} accent. ${ctx.visualMetaphor} as hero element in the center. Brand pattern or gradient as background. Clean, vertical, mobile-first design.`,
         `STORY DESIGN STYLE: Think branded Instagram Stories by @airbnb, @nike, @notion — not a random photo. Graphic design with intentional layout: hero visual center, brand color background, maybe a sticker-like CTA element ("Swipe up", poll, quiz visual — just the visual shape, no real text).`,
         `INDUSTRY: ${data.industry}. Purpose: ${ctx.purpose}. Personality: ${ctx.personality}.`,
         `COLOR: Full-bleed ${ctx.primaryColor} background with ${ctx.accentColor} accent elements. Strict palette: ${ctx.allPrimaryColors}.`,
         `Key visual elements: ${ctx.elements}.`,
-        `MOOD: ${ctx.moodWords}. Immediate, bold, vertically dynamic. Must look like a REAL brand story, not abstract art.`,
+        `MOOD: ${ctx.moodWords}. Immediate, bold, vertically dynamic.`,
         humanLayer,
-        sTags, q, neg(ctx, provider, "horizontal layout, no phone frame, no story UI elements, abstract floating graphics, landscape orientation, no platform context"),
+        sTags, q, neg(ctx, provider, "horizontal layout, abstract floating graphics, landscape orientation"),
       );
     }
 
     case "social_cover": {
       return parts(
         prefix,
-        `RENDER A REALISTIC LINKEDIN PROFILE PAGE SCREENSHOT showing ${B}'s company page with the cover banner applied.`,
-        `MANDATORY MOCKUP FRAME: Show the LinkedIn company page layout — the 16:9 cover banner at the top, then below it the round company logo (${ctx.primaryColor} background with brand symbol), company name "${data.brandName}", industry "${data.industry}", follower count "12.4K followers", and the Follow / Visit website buttons. Show enough of the LinkedIn UI (navigation bar at top, sidebar) to make it unmistakably LinkedIn.`,
+        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not attempt to render interface text, buttons, follower counts, or navigation elements — these will be unreadable. Generate only the visual content that would appear in this format.`,
+        `A branded social media cover banner for ${B}. Wide 16:9 format, suitable for LinkedIn or similar platform header.`,
         soul, platCtx,
         `THE BANNER CONTENT (16:9 inside the LinkedIn frame): Bold brand graphic. Dominant ${ctx.primaryColor} background. ${ctx.visualMetaphor} as abstract geometric/graphic element on the right 60%. Left 35% kept clean (profile photo overlaps here).`,
         `BANNER DESIGN STYLE: Professional, premium, architectural. Think Stripe, Linear, Figma LinkedIn pages — strong brand presence without being busy. ${ctx.marketingArch}. ${ctx.visualStyle}.`,
         `KEY VISUAL ELEMENTS: ${ctx.elements}. ${ctx.accentColor} accent stripe or highlight.`,
         `INDUSTRY: ${data.industry}. Brand message: ${ctx.messagingPillar}.`,
         `COLOR: ${ctx.primaryColor} dominant, ${ctx.secondaryColor} structural accent, ${ctx.accentColor} highlight. Strict palette.`,
-        `MOOD: ${ctx.moodWords}. Confident, credible, premium. Must look like a REAL LinkedIn page, not an isolated banner graphic.`,
+        `MOOD: ${ctx.moodWords}. Confident, credible, premium.`,
         humanLayer,
-        sTags, q, neg(ctx, provider, "isolated banner without page context, no LinkedIn UI, text overlays on banner, generic corporate clip art, low contrast, abstract art without platform frame"),
+        sTags, q, neg(ctx, provider, "text overlays on banner, generic corporate clip art, low contrast"),
       );
     }
 
     case "social_post_square": {
       return parts(
         prefix,
-        `RENDER A REALISTIC INSTAGRAM FEED VIEW showing ${B}'s post in a feed scroll context.`,
-        `MANDATORY MOCKUP: Show either (A) an iPhone screen displaying the Instagram feed with ${B}'s post visible as one of the posts — with profile photo, username, the square post image, and engagement icons below, OR (B) a clean Instagram post screenshot with full app chrome (profile pic, username, dots menu, image, icons row, likes, caption).`,
+        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not attempt to render interface text, buttons, follower counts, or navigation elements — these will be unreadable. Generate only the visual content that would appear in this format.`,
+        `A branded social media post image for ${B}. Square 1:1 format for Instagram feed.`,
         soul, platCtx,
         `THE POST IMAGE (square, inside the frame): A strong branded visual — ${ctx.marketingArch}. Bold, single-minded graphic design piece. NOT a random photo — a designed post with clear brand identity.`,
         `POST DESIGN: ${ctx.visualMetaphor} rendered as graphic content. Dominant ${ctx.primaryColor}. Brand pattern or solid color background. One hero element. Clean composition that reads in 0.5 seconds in a feed thumbnail.`,
@@ -1718,9 +1723,9 @@ The viewer should discover new details at each zoom level — overall texture at
         idAssets,
         `COLOR PALETTE (brand-strict): ${ctx.allColors}. Dominant: ${ctx.primaryColor}.`,
         `STYLE: Think @stripe, @notion, @linear, @figma — designed feed content, not stock photos. ${ctx.visualStyle}.`,
-        `MOOD: ${ctx.moodWords}. Social-native, recognizable, save-worthy. Must look like a REAL Instagram post, not floating artwork.`,
+        `MOOD: ${ctx.moodWords}. Social-native, recognizable, save-worthy.`,
         humanLayer,
-        sTags, q, neg(ctx, provider, `no app frame, no Instagram UI, abstract artwork without platform context, generic stock imagery, overcrowded${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
+        sTags, q, neg(ctx, provider, `abstract artwork, generic stock imagery, overcrowded${ctx.verbAvoid ? ", " + ctx.verbAvoid : ""}`),
       );
     }
 
@@ -1733,7 +1738,7 @@ The viewer should discover new details at each zoom level — overall texture at
         `THE THUMBNAIL CONTENT (16:9, inside the frame): High-contrast, bold, maximum visual impact. ${ctx.visualMetaphor} as dominant subject — close-up, hyper-sharp, taking 55% of frame. Background: solid ${ctx.primaryColor} or strong gradient to ${ctx.secondaryColor}. ${ctx.accentColor} rim light or highlight accent.`,
         `THUMBNAIL DESIGN: Reference top creators — MrBeast, Kurzgesagt, MKBHD, top ${data.industry} channels. Bold graphic treatment, extreme contrast, reads at 168×94px. Brand palette: ${ctx.allPrimaryColors}.`,
         `INDUSTRY: ${data.industry}. Brand: ${B}. ${ctx.tagline}`,
-        `MOOD: ${ctx.moodWords}. Clickable, bold, premium, unmistakable. Must look like a REAL YouTube page, not an isolated thumbnail.`,
+        `MOOD: ${ctx.moodWords}. Clickable, bold, premium, unmistakable.`,
         `LIGHTING: Dramatic rim light in ${ctx.accentColor}, dark shadow depth.`,
         humanLayer,
         sTags, q, neg(ctx, provider, "no YouTube UI, isolated thumbnail without platform context, low contrast, muddy tones, flat lighting, blurry"),
@@ -3596,6 +3601,43 @@ export function detectApplicationAssetKey(
 }
 
 /**
+ * Enrich application prompts with material/scene knowledge derived
+ * from the dedicated catalog prompts, so generic applications benefit
+ * from the same production quality as catalog assets.
+ */
+function applicationSpecificKnowledge(key: string, data: BrandbookData, provider: ImageProvider): string {
+  const ctx = extractBrandContext(data);
+  const directives: string[] = [];
+
+  // Material and scene specifics derived from the dedicated prompts
+  if (key === "business_card" || key.includes("card")) {
+    directives.push("MATERIAL: 350-400gsm premium cardstock. FINISH: consider letterpress, foil stamp, emboss, or soft-touch matte.");
+    directives.push("CAMERA: Macro lens, shallow DOF, 35mm on full-frame. Show front and subtle back peek.");
+  } else if (key === "delivery_packaging" || key === "takeaway_bag" || key === "food_container") {
+    directives.push(`MATERIAL: Kraft paper, food-grade cardboard, or premium coated stock in brand colors. COMPOSITION: Show the complete kit — multiple pieces together creating a branded system.`);
+    directives.push("SCENE: Warm studio with directional light, wooden surface or marble countertop.");
+  } else if (key === "uniform_tshirt" || key === "uniform_apron" || key === "polo_uniform") {
+    directives.push("MATERIAL: High-quality fabric with visible texture. Logo applied via embroidery or screen print — NOT digital overlay.");
+    directives.push("SCENE: Real person wearing the garment in a workplace context. Natural posture, not stiff.");
+  } else if (key === "storefront_facade" || key === "window_display" || key === "neon_sign") {
+    directives.push("SCENE: Blue hour or golden hour urban setting. Real street context with environmental depth.");
+    directives.push("ARCHITECTURE: Materials appropriate to brand personality — glass, wood, steel, exposed brick, painted surfaces.");
+  } else if (key === "outdoor_billboard" || key === "bus_shelter_ad" || key === "banner_rollup") {
+    directives.push("SCENE: Real urban context at street level. The piece must be readable and impactful at 3 seconds viewing distance.");
+    directives.push("COMPOSITION: Bold headline zone, clear brand identification, minimal detail that degrades at distance.");
+  } else if (key === "beverage_bottle" || key === "beverage_can" || key === "cup_sleeve") {
+    directives.push("MATERIAL: Premium packaging material with visible label detail. Condensation or temperature cues add realism.");
+    directives.push("LIGHTING: Studio product photography with rim light separating the product from background.");
+  } else if (key === "product_box" || key === "gift_box" || key === "shopping_bag") {
+    directives.push("SCENE: Premium unboxing moment or flat-lay arrangement. Show finishing details (foil, emboss, ribbon, tissue).");
+    directives.push("MATERIAL: Structural packaging with haptic quality — visible paper grain, clean die-cut edges.");
+  }
+
+  if (directives.length === 0) return "";
+  return `PRODUCTION KNOWLEDGE (apply to ensure premium quality): ${directives.join(" ")}`;
+}
+
+/**
  * Build scene/photography guidance based on detected type — used as
  * STYLE hints, NOT as subject override. The user's description always
  * determines WHAT is shown; this determines HOW it's photographed.
@@ -3772,6 +3814,11 @@ export function buildApplicationPrompt(
   // Scene guidance from detection — HOW to photograph, not WHAT to show
   const sceneHints = applicationSceneGuidance(detectedKey);
 
+  // Enrich with specific prompt knowledge when detected key matches a catalog asset
+  const specificKnowledge = detectedKey !== "brand_collateral" // brand_collateral is the generic fallback
+    ? applicationSpecificKnowledge(detectedKey, data, provider)
+    : "";
+
   return parts(
     prefix,
 
@@ -3788,6 +3835,7 @@ export function buildApplicationPrompt(
 
     // ── 3. SCENE & PHOTOGRAPHY STYLE (from detection) ─────────────
     `PHOTOGRAPHY STYLE: ${sceneHints}`,
+    specificKnowledge,
     soul, journey,
 
     // ── 4. BRAND SYSTEM (consistent identity) ─────────────────────

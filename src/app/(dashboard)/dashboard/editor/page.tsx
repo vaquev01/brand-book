@@ -173,6 +173,22 @@ export default function Home() {
     });
   }
 
+  // Keyboard shortcuts for undo/redo (Cmd+Z / Cmd+Shift+Z)
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && e.shiftKey) {
+        e.preventDefault();
+        handleRedo();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
   const restoreBrandbookSession = useCallback(async (
     nextBrandbook: BrandbookData,
     options: { nextTab?: Tab; nextViewerTab?: ViewerTab } = {}
