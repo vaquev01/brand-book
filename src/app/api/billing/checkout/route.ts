@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/app/auth"
 import { prisma } from "@/lib/prisma"
-import { stripe, PRICE_IDS, isValidBillablePlan } from "@/lib/stripe"
+import { getStripe, PRICE_IDS, isValidBillablePlan } from "@/lib/stripe"
 
 export const runtime = "nodejs"
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Create or reuse Stripe customer
     let customerId = user.stripeCustomerId
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: user.email,
         metadata: { userId: user.id },
       })
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     const origin = request.headers.get("origin") || process.env.NEXTAUTH_URL || "http://localhost:3000"
 
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripe().checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],

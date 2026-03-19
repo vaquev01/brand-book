@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { stripe } from "@/lib/stripe"
+import { getStripe } from "@/lib/stripe"
 import type Stripe from "stripe"
 
 export const runtime = "nodejs"
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const rawBody = await getRawBody(request)
-    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
+    event = getStripe().webhooks.constructEvent(rawBody, signature, webhookSecret)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error"
     console.error("[webhook] Signature verification failed:", message)
