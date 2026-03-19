@@ -72,11 +72,11 @@ export default async function DashboardPage() {
         <div>
           <ProjectFilter
             projects={projects.map(p => ({ id: p.id, name: p.name, industry: p.industry, status: p.status }))}
-            renderCard={(project, i) => {
-              const fullProject = projects.find(p => p.id === project.id)!
-              return <ProjectCard key={project.id} project={fullProject} index={i} />
-            }}
-          />
+          >
+            {projects.map((project, i) => (
+              <ProjectCard key={project.id} project={project} index={i} />
+            ))}
+          </ProjectFilter>
           {totalCount > projects.length && (
             <div className="mt-6 text-center">
               <a href="/dashboard/projects" className="text-sm font-medium text-violet-600 hover:text-violet-700 transition-colors">

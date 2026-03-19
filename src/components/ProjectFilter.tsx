@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, type ReactNode, Children, isValidElement } from "react"
 
 interface Project {
   id: string
@@ -11,19 +11,21 @@ interface Project {
 
 interface Props {
   projects: Project[]
-  renderCard: (project: Project, index: number) => React.ReactNode
+  children: ReactNode
 }
 
-export function ProjectFilter({ projects, renderCard }: Props) {
+export function ProjectFilter({ projects, children }: Props) {
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
 
-  const filtered = useMemo(() => {
-    return projects.filter((p) => {
+  const filteredIds = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of projects) {
       const matchesQuery = !query || p.name.toLowerCase().includes(query.toLowerCase()) || p.industry.toLowerCase().includes(query.toLowerCase())
       const matchesStatus = statusFilter === "all" || p.status === statusFilter
-      return matchesQuery && matchesStatus
-    })
+      if (matchesQuery && matchesStatus) set.add(p.id)
+    }
+    return set
   }, [projects, query, statusFilter])
 
   const statuses = [
@@ -33,11 +35,17 @@ export function ProjectFilter({ projects, renderCard }: Props) {
     { value: "approved", label: "Aprovado" },
   ]
 
+  // Filter children by matching their key to filteredIds
+  const visibleChildren = Children.toArray(children).filter((child) => {
+    if (!isValidElement(child)) return false
+    return filteredIds.has(String(child.key ?? "").replace(/^\.\$/, ""))
+  })
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          Projetos ({filtered.length})
+          Projetos ({visibleChildren.length})
         </h2>
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           <div className="flex gap-1">
@@ -70,7 +78,7 @@ export function ProjectFilter({ projects, renderCard }: Props) {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {visibleChildren.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
           <p className="text-gray-400 text-sm">
             {query ? `Nenhum projeto encontrado para "${query}"` : "Nenhum projeto com este status"}
@@ -78,7 +86,7 @@ export function ProjectFilter({ projects, renderCard }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((project, i) => renderCard(project, i))}
+          {visibleChildren}
         </div>
       )}
     </div>
