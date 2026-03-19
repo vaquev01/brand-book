@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
@@ -83,41 +84,64 @@ const WORKSPACE_PLANS = ["team", "agency", "enterprise"]
 export function Sidebar({ user, plan }: SidebarProps) {
   const pathname = usePathname()
   const showWorkspace = plan ? WORKSPACE_PLANS.includes(plan) : false
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <aside className="w-60 bg-white flex flex-col h-full border-r border-gray-100 shrink-0">
+    <aside className={`${collapsed ? 'w-[72px]' : 'w-60'} transition-all duration-300 ease-out bg-white flex flex-col h-full border-r border-gray-100 shrink-0 overflow-hidden`}>
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
-            <span className="text-[10px] font-black text-white">B</span>
+      <div className={`${collapsed ? 'px-3' : 'px-5'} pt-6 pb-5`}>
+        <Link href="/dashboard" className="flex items-center gap-2.5" title="brandbook">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md shrink-0" style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}>
+            <span className="text-xs font-black text-white">B</span>
           </div>
-          <span className="text-sm font-bold text-gray-900 tracking-tight">brandbook</span>
+          {!collapsed && <span className="text-sm font-bold text-gray-900 tracking-tight">brandbook</span>}
         </Link>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5">
-        <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-300 px-3 mb-2">Menu</div>
-        {navItems.map((item) => {
+        {!collapsed && <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-300 px-3 mb-2">Menu</div>}
+        {collapsed && <div className="mb-2" />}
+        {navItems.map((item, idx) => {
           const isExact = (item as { exact?: boolean }).exact
           const isActive = isExact
             ? pathname === item.href
             : pathname === item.href || pathname.startsWith(item.href + "/")
+          const isNovoBrandbook = item.label === "Novo Brandbook"
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${
-                isActive
-                  ? "bg-gray-900 text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-              }`}
-            >
-              <span className={isActive ? "text-white" : "text-gray-400"}>{item.icon}</span>
-              {item.label}
-            </Link>
+            <div key={item.href}>
+              {/* Divider between nav groups: after Templates (idx 3) and before Analytics (idx 5) */}
+              {(idx === 4 || idx === 5) && <div className="mx-4 my-2 h-px bg-gray-100" />}
+              {isNovoBrandbook ? (
+                <Link
+                  href={item.href}
+                  className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} px-3 py-2 rounded-xl text-[13px] font-semibold transition-all text-white shadow-sm`}
+                  style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)", textShadow: "0 1px 2px rgba(0,0,0,0.2)" }}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <span className="text-white shrink-0">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+                    </svg>
+                  </span>
+                  {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                </Link>
+              ) : (
+                <Link
+                  href={item.href}
+                  className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${
+                    isActive
+                      ? "bg-gray-900 text-white shadow-sm"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  }`}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <span className={`shrink-0 ${isActive ? "text-white" : "text-gray-400"}`}>{item.icon}</span>
+                  {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                </Link>
+              )}
+            </div>
           )
         })}
         {showWorkspace && (() => {
@@ -125,44 +149,82 @@ export function Sidebar({ user, plan }: SidebarProps) {
           return (
             <Link
               href="/dashboard/workspace"
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${
+              className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${
                 isActive
                   ? "bg-gray-900 text-white shadow-sm"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               }`}
+              title={collapsed ? "Workspace" : undefined}
             >
-              <span className={isActive ? "text-white" : "text-gray-400"}>
+              <span className={`shrink-0 ${isActive ? "text-white" : "text-gray-400"}`}>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
                 </svg>
               </span>
-              Workspace
+              {!collapsed && <span className="whitespace-nowrap">Workspace</span>}
             </Link>
           )
         })()}
       </nav>
 
+      {/* Search hint (Cmd+K) */}
+      <div
+        className={`mx-3 mb-2 flex items-center ${collapsed ? 'justify-center' : ''} gap-1.5 py-1.5 ${collapsed ? 'px-0' : 'px-2'} rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors`}
+        onClick={() => { const e = new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }); window.dispatchEvent(e) }}
+        title={collapsed ? "Buscar (Cmd+K)" : undefined}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        {!collapsed && <span className="text-[11px] text-gray-400 font-medium">Buscar</span>}
+        {!collapsed && <kbd className="ml-auto text-[9px] font-bold text-gray-300 bg-white px-1 py-0.5 rounded border border-gray-200">&#8984;K</kbd>}
+      </div>
+
+      {/* Collapse toggle */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="mx-auto mb-3 flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+        title={collapsed ? "Expandir menu" : "Recolher menu"}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${collapsed ? 'rotate-180' : ''}`}>
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </button>
+
       {/* User */}
       <div className="p-3 border-t border-gray-100 m-3 mt-0">
-        <div className="flex items-center gap-2.5 px-2 py-2">
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'} px-2 py-2`}>
           {user.image ? (
-            <img src={user.image} alt="" className="w-7 h-7 rounded-full ring-2 ring-gray-100" />
+            <img src={user.image} alt="" className="w-7 h-7 rounded-full ring-2 ring-gray-100 shrink-0" />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center text-[10px] font-bold text-white">
+            <div className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
               {user.name?.[0]?.toUpperCase() ?? "U"}
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-gray-900 truncate">{user.name ?? "Usuário"}</p>
-            <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
-          </div>
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium text-gray-900 truncate">{user.name ?? "Usuario"}</p>
+              <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
+            </div>
+          )}
         </div>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full text-left px-3 py-1.5 text-[11px] text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors mt-1"
-        >
-          Sair da conta
-        </button>
+        {!collapsed && (
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full text-left px-3 py-1.5 text-[11px] text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors mt-1"
+          >
+            Sair da conta
+          </button>
+        )}
+        {collapsed && (
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full flex items-center justify-center py-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors mt-1"
+            title="Sair da conta"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+            </svg>
+          </button>
+        )}
       </div>
     </aside>
   )

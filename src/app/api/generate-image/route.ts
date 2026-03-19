@@ -89,8 +89,10 @@ export async function POST(request: NextRequest) {
       stability: "stabilityKey",
       ideogram: "ideogramKey",
       imagen: "googleKey",
+      recraft: "recraftKey",
+      flux: "fluxKey",
     };
-    const ALL_PROVIDERS = ["imagen", "dalle3", "stability", "ideogram"] as const;
+    const ALL_PROVIDERS = ["imagen", "dalle3", "recraft", "flux", "stability", "ideogram"] as const;
     const fallbackOrder = [
       provider,
       ...ALL_PROVIDERS.filter((p) => p !== provider && payload[PROVIDER_KEY_FIELDS[p] as keyof typeof payload]),

@@ -1,6 +1,7 @@
 import { auth } from "@/app/auth"
 import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/Sidebar"
+import { CommandPalette } from "@/components/CommandPalette"
 import { DashboardShell } from "@/components/DashboardShell"
 import { prisma } from "@/lib/prisma"
 
@@ -19,8 +20,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex h-screen bg-[#f8f9fb] overflow-hidden">
+      <CommandPalette />
       {/* Sidebar hidden on mobile, visible on md+ */}
-      <div className="hidden md:block">
+      <div className="hidden md:flex h-full">
         <Sidebar user={session.user} plan={plan} />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">

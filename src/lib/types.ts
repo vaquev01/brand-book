@@ -356,7 +356,7 @@ export interface WorkflowProviders {
   promptOps: AiTextProvider;
 }
 
-export type ImageProvider = "dalle3" | "stability" | "ideogram" | "imagen";
+export type ImageProvider = "dalle3" | "stability" | "ideogram" | "imagen" | "recraft" | "flux";
 
 /** Source of an asset — AI provider or user upload */
 export type AssetSource = ImageProvider | "upload";

@@ -456,6 +456,7 @@ export function LandingClient() {
   const [expandedBrand, setExpandedBrand] = useState<number | null>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [scrollY, setScrollY] = useState(0)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const typedWord = useTypingEffect(TYPING_WORDS)
   const { status } = useSession()
   const router = useRouter()
@@ -583,13 +584,72 @@ export function LandingClient() {
             <button
               onClick={handleAccess}
               disabled={loading}
-              className="text-[13px] font-semibold text-white/70 hover:text-white bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] px-5 py-2 rounded-xl transition-all duration-200 disabled:opacity-50"
+              className="hidden sm:block text-[13px] font-semibold text-white/70 hover:text-white bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] px-5 py-2 rounded-xl transition-all duration-200 disabled:opacity-50"
             >
               {loading ? "Entrando..." : "Entrar"}
+            </button>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden relative w-10 h-10 flex items-center justify-center rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
+              aria-label="Menu"
+            >
+              <div className="flex flex-col gap-1.5">
+                <span className={`block w-5 h-0.5 bg-white/70 transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[4px]' : ''}`} />
+                <span className={`block w-5 h-0.5 bg-white/70 transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+                <span className={`block w-5 h-0.5 bg-white/70 transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-[4px]' : ''}`} />
+              </div>
             </button>
           </div>
         </div>
       </nav>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-x-0 top-[64px] z-[90] md:hidden"
+          >
+            <div className="mx-4 mt-2 rounded-2xl border border-white/10 bg-black/95 backdrop-blur-2xl shadow-2xl p-6">
+              <nav className="flex flex-col gap-4">
+                {["Demo", "Features", "Pricing", "FAQ"].map((item) => (
+                  <a
+                    key={item}
+                    href={`#${item.toLowerCase()}`}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setMobileMenuOpen(false)
+                      scrollToSection(
+                        item === "Demo" ? "showcase" :
+                        item === "Features" ? "features" :
+                        item === "Pricing" ? "pricing" :
+                        "faq"
+                      )
+                    }}
+                    className="text-sm font-medium text-white/70 hover:text-white transition-colors py-2 border-b border-white/5 last:border-0"
+                  >
+                    {item === "Pricing" ? "Precos" : item === "Features" ? "Recursos" : item}
+                  </a>
+                ))}
+                <button
+                  onClick={() => { setMobileMenuOpen(false); handleAccess(); }}
+                  className="mt-2 w-full py-3 rounded-xl text-sm font-semibold text-white transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                    boxShadow: "0 12px 24px -8px rgba(99, 102, 241, 0.4)",
+                  }}
+                >
+                  Criar Brandbook Gratis
+                </button>
+              </nav>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════════════════════════════════════════════════════════
           HERO
@@ -666,7 +726,7 @@ export function LandingClient() {
                 </button>
                 <button
                   onClick={() => scrollToSection("showcase")}
-                  className="flex items-center gap-2 text-[14px] font-semibold text-white/40 hover:text-white/70 px-6 py-[18px] rounded-2xl border border-white/[0.06] hover:border-white/[0.12] bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300"
+                  className="flex items-center gap-2 text-[14px] font-semibold text-white/80 hover:text-white px-6 py-[18px] rounded-2xl border border-white/20 hover:border-white/30 bg-white/10 hover:bg-white/15 transition-all duration-300"
                 >
                   Ver Demo
                   <ChevronDown className="w-4 h-4" />

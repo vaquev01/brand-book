@@ -4,6 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 
 import { withGoogleTextModelFallback } from "@/lib/googleTextFallback";
 import { BrandbookValidationError, validateLooseBrandbook } from "@/lib/brandbookValidation";
+import { generateBrandIcon, brandColorsToRecraft, type RecraftSubstyle } from "@/lib/services/recraftProvider";
 import {
   AssetPackGenerationError,
   buildAssetPackRepairPrompt,
@@ -274,6 +275,7 @@ export async function POST(request: NextRequest) {
       googleKey?: string;
       openaiModel?: string;
       googleModel?: string;
+      recraftKey?: string;
     };
 
     bbLog("debug", "api.generate-asset-pack.payload", {
@@ -680,6 +682,49 @@ ${JSON.stringify(assetPlan, null, 2)}
           requestId,
           attempt: repairAttempts,
           error: serializeError(error),
+        });
+      }
+    }
+
+    // ─── Recraft SVG Enhancement ─────────────────────────────────────────────
+    // If Recraft key is available, replace LLM-generated icons with real SVG vectors
+    const recraftKey = body.recraftKey?.trim() || process.env.RECRAFT_API_KEY;
+    if (recraftKey && normalized.files.length > 0) {
+      const brandColors = brandColorsToRecraft([primaryColor, secondaryColor, accentColor].filter(Boolean));
+      const iconFiles = normalized.files.filter((f) => f.path.startsWith("vectors/icons/"));
+      let recraftUpgraded = 0;
+
+      for (const iconFile of iconFiles) {
+        try {
+          const iconName = iconFile.path.replace("vectors/icons/", "").replace(".svg", "").replace(/-/g, " ");
+          const iconPrompt = `Brand icon for "${brandName}" (${industry}): ${iconName}. Style: ${iconographyStyle || "modern flat"}. Personality: ${personality}. Clean, minimal, 24x24 grid, consistent stroke weight.`;
+          const svgDataUrl = await generateBrandIcon({
+            prompt: iconPrompt,
+            apiKey: recraftKey,
+            colors: brandColors,
+            substyle: "flat_2" as RecraftSubstyle,
+          });
+          // Extract SVG content from data URL
+          if (svgDataUrl.startsWith("data:image/svg+xml;base64,")) {
+            const svgContent = Buffer.from(svgDataUrl.split(",")[1], "base64").toString("utf-8");
+            iconFile.content = svgContent;
+            recraftUpgraded++;
+          }
+        } catch (err) {
+          bbLog("warn", "api.generate-asset-pack.recraft-icon-fail", {
+            requestId,
+            iconPath: iconFile.path,
+            error: serializeError(err),
+          });
+          // Keep original LLM-generated icon as fallback
+        }
+      }
+
+      if (recraftUpgraded > 0) {
+        bbLog("info", "api.generate-asset-pack.recraft-upgrade", {
+          requestId,
+          upgraded: recraftUpgraded,
+          total: iconFiles.length,
         });
       }
     }

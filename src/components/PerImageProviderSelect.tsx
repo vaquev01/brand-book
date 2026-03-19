@@ -14,6 +14,8 @@ const SHORT_LABELS: Record<ImageProvider, string> = {
   stability: "SD",
   ideogram: "IDG",
   imagen: "G·I",
+  recraft: "RCR",
+  flux: "FLX",
 };
 
 export function PerImageProviderSelect({ value, onChange }: Props) {

@@ -21,20 +21,20 @@ function WeightShowcase({ typo, name }: { typo: Typography; name: string }) {
   return (
     <div className="mt-3">
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Pesos disponíveis</p>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {typo.weights.map((w, i) => (
-          <span
+          <div
             key={i}
-            className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-full px-2.5 py-0.5"
+            className="flex flex-col items-center bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 min-w-[4.5rem]"
           >
-            <span className="text-[10px] font-mono text-gray-400">{w}</span>
             <span
-              className="text-gray-900 text-sm leading-none"
+              className="text-gray-900 text-2xl leading-none mb-1"
               style={{ fontFamily: `'${name}', sans-serif`, fontWeight: resolveWeight(w) }}
             >
-              Abc
+              Aa
             </span>
-          </span>
+            <span className="text-[10px] font-mono text-gray-400">{w}</span>
+          </div>
         ))}
       </div>
     </div>
@@ -52,6 +52,15 @@ function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo:
         <div className="absolute inset-0 opacity-[0.04]" style={{
           backgroundImage: `repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 28px)`,
         }} />
+        {/* Giant specimen */}
+        <div className="mb-2 overflow-hidden">
+          <p
+            className="text-[4rem] sm:text-[6rem] lg:text-[8rem] font-bold leading-[0.85] tracking-tight select-none"
+            style={{ fontFamily: `'${typo.name}', sans-serif`, opacity: 0.12, color: '#fff' }}
+          >
+            Aa
+          </p>
+        </div>
         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gray-400 mb-2">{title}</p>
         <div
           className="text-white leading-[1.0] break-words"
@@ -180,6 +189,18 @@ function TypoCard({ title, typo, typoKey, onUpdateData }: { title: string; typo:
 
         {/* Weight showcase */}
         <WeightShowcase typo={typo} name={typo.name} />
+
+        {/* Real-world text specimen */}
+        <div className="mt-6 max-w-[65ch]">
+          <p
+            className="text-[15px] leading-relaxed text-gray-600"
+            style={{ fontFamily: `'${typo.name}', sans-serif`, fontWeight: resolveWeight(bodyWeight) }}
+          >
+            A identidade tipográfica define como a marca respira em cada ponto de contato.
+            Das headlines que capturam atenção aos textos que constroem confiança, cada peso
+            e espaçamento foi escolhido para comunicar a personalidade única desta marca.
+          </p>
+        </div>
       </div>
     </div>
   );

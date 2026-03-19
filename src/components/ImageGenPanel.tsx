@@ -75,6 +75,8 @@ const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
   stability: "stability",
   ideogram: "ideogram",
   imagen: "google",
+  recraft: "recraft",
+  flux: "flux",
 };
 
 function defaultUploadedTypeFromAssetKey(assetKey?: AssetKey): UploadedAsset["type"] {

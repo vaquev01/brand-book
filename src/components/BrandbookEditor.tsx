@@ -6,24 +6,30 @@ import { BrandbookData, Color, Mascot, Typography } from "@/lib/types";
 
 type Tab =
   | "dna"
+  | "brandstory"
+  | "posicionamento"
+  | "personas"
   | "logo"
   | "cores"
   | "tipografia"
   | "keyvisual"
-  | "estrategia"
   | "verbal"
   | "aplicacoes"
+  | "social"
   | "imagebriefing";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "dna", label: "Estratégia", icon: "🧭" },
-  { id: "estrategia", label: "Personas", icon: "🎯" },
+  { id: "brandstory", label: "Brand Story", icon: "📖" },
+  { id: "posicionamento", label: "Posicionamento", icon: "🎯" },
+  { id: "personas", label: "Personas", icon: "👤" },
   { id: "verbal", label: "Linguagem", icon: "🗣️" },
   { id: "logo", label: "Logo", icon: "🖼️" },
   { id: "cores", label: "Cores", icon: "🎨" },
   { id: "tipografia", label: "Tipografia", icon: "🔤" },
   { id: "keyvisual", label: "Sistema Visual", icon: "✦" },
   { id: "aplicacoes", label: "Aplicações", icon: "🖨️" },
+  { id: "social", label: "Social Media", icon: "📱" },
   { id: "imagebriefing", label: "Operacional", icon: "📋" },
 ];
 
@@ -224,6 +230,18 @@ function MascotEditorCard({ mascot, index, onChange, onRemove }: MascotEditorPro
       <Field label="Descrição Visual" value={mascot.description} onChange={(v) => onChange({ ...mascot, description: v })} multiline rows={3} placeholder="Aparência, cores, traços, estilo de ilustração..." />
       <Field label="Personalidade" value={mascot.personality} onChange={(v) => onChange({ ...mascot, personality: v })} multiline rows={2} placeholder="Como se comporta, voz, valores do personagem..." />
       <ArrayEditor label="Diretrizes de Uso" items={mascot.usageGuidelines} onChange={(g) => onChange({ ...mascot, usageGuidelines: g })} addLabel="Diretriz de uso" />
+    </div>
+  );
+}
+
+function EmptySection({ label, onAdd }: { label: string; onAdd: () => void }) {
+  return (
+    <div className="app-surface-soft border-2 border-dashed border-slate-200 py-10 text-center text-gray-400">
+      <p className="text-sm font-medium">Nenhum dado de {label}</p>
+      <p className="mt-1 text-xs">Clique abaixo para adicionar manualmente</p>
+      <button type="button" onClick={onAdd} className="app-primary-button mt-4 px-4 py-2 text-xs">
+        + Criar {label}
+      </button>
     </div>
   );
 }
@@ -503,7 +521,28 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
-          {activeTab === "estrategia" && editForm.positioning && (
+          {activeTab === "brandstory" && !editForm.brandStory && (
+            <EmptySection
+              label="Brand Story"
+              onAdd={() => patch({ brandStory: { manifesto: "", originStory: "", brandPromise: "", brandBeliefs: [] } })}
+            />
+          )}
+          {activeTab === "brandstory" && editForm.brandStory && (
+            <>
+              <Field label="Manifesto" value={editForm.brandStory.manifesto} onChange={(v) => patch({ brandStory: { ...editForm.brandStory!, manifesto: v } })} multiline rows={4} placeholder="O manifesto da marca..." />
+              <Field label="Origin Story" value={editForm.brandStory.originStory} onChange={(v) => patch({ brandStory: { ...editForm.brandStory!, originStory: v } })} multiline rows={4} placeholder="Como a marca nasceu..." />
+              <Field label="Brand Promise" value={editForm.brandStory.brandPromise} onChange={(v) => patch({ brandStory: { ...editForm.brandStory!, brandPromise: v } })} multiline rows={3} placeholder="A promessa da marca ao público..." />
+              <ArrayEditor label="Brand Beliefs" items={editForm.brandStory.brandBeliefs ?? []} onChange={(v) => patch({ brandStory: { ...editForm.brandStory!, brandBeliefs: v } })} addLabel="Crença da marca" />
+            </>
+          )}
+
+          {activeTab === "posicionamento" && !editForm.positioning && (
+            <EmptySection
+              label="Posicionamento"
+              onAdd={() => patch({ positioning: { category: "", targetMarket: "", positioningStatement: "", primaryDifferentiators: [], competitiveAlternatives: [], reasonsToBelieve: [] } })}
+            />
+          )}
+          {activeTab === "posicionamento" && editForm.positioning && (
             <>
               <Field label="Categoria" value={editForm.positioning.category} onChange={(v) => patch({ positioning: { ...editForm.positioning!, category: v } })} />
               <Field label="Mercado-alvo" value={editForm.positioning.targetMarket} onChange={(v) => patch({ positioning: { ...editForm.positioning!, targetMarket: v } })} multiline />
@@ -514,6 +553,12 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
             </>
           )}
 
+          {activeTab === "verbal" && !editForm.verbalIdentity && (
+            <EmptySection
+              label="Identidade Verbal"
+              onAdd={() => patch({ verbalIdentity: { tagline: "", oneLiner: "", brandVoiceTraits: [], messagingPillars: [], vocabulary: { preferred: [], avoid: [] }, doDont: { do: [], dont: [] }, sampleHeadlines: [], sampleCTAs: [] } })}
+            />
+          )}
           {activeTab === "verbal" && editForm.verbalIdentity && (
             <>
               <Field label="Tagline" value={editForm.verbalIdentity.tagline} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, tagline: v } })} />
@@ -530,6 +575,70 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
                 <ArrayEditor label="Don't (Não faça)" items={editForm.verbalIdentity.doDont.dont} onChange={(v) => patch({ verbalIdentity: { ...editForm.verbalIdentity!, doDont: { ...editForm.verbalIdentity!.doDont, dont: v } } })} addLabel="Don't" />
               </div>
             </>
+          )}
+
+          {activeTab === "personas" && (
+            <div className="space-y-4">
+              {(editForm.audiencePersonas ?? []).map((persona, i) => (
+                <div key={i} className="app-surface-soft space-y-3 p-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Persona {i + 1}</h4>
+                    <button
+                      type="button"
+                      onClick={() => patch({ audiencePersonas: (editForm.audiencePersonas ?? []).filter((_, j) => j !== i) })}
+                      className="text-xs font-medium text-gray-400 transition hover:text-red-500"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                  <Field label="Nome" value={persona.name} onChange={(v) => {
+                    const next = [...(editForm.audiencePersonas ?? [])];
+                    next[i] = { ...next[i], name: v };
+                    patch({ audiencePersonas: next });
+                  }} placeholder="Ex: Maria, CEO de startup..." />
+                  <Field label="Cargo / Papel" value={persona.role} onChange={(v) => {
+                    const next = [...(editForm.audiencePersonas ?? [])];
+                    next[i] = { ...next[i], role: v };
+                    patch({ audiencePersonas: next });
+                  }} placeholder="Ex: CEO, Designer, Marketing Manager..." />
+                  <Field label="Contexto" value={persona.context} onChange={(v) => {
+                    const next = [...(editForm.audiencePersonas ?? [])];
+                    next[i] = { ...next[i], context: v };
+                    patch({ audiencePersonas: next });
+                  }} multiline rows={2} placeholder="Cenário em que essa persona interage com a marca..." />
+                  <ArrayEditor label="Objetivos" items={persona.goals} onChange={(v) => {
+                    const next = [...(editForm.audiencePersonas ?? [])];
+                    next[i] = { ...next[i], goals: v };
+                    patch({ audiencePersonas: next });
+                  }} addLabel="Objetivo" />
+                  <ArrayEditor label="Dores" items={persona.painPoints} onChange={(v) => {
+                    const next = [...(editForm.audiencePersonas ?? [])];
+                    next[i] = { ...next[i], painPoints: v };
+                    patch({ audiencePersonas: next });
+                  }} addLabel="Dor / frustração" />
+                  <ArrayEditor label="Objeções" items={persona.objections} onChange={(v) => {
+                    const next = [...(editForm.audiencePersonas ?? [])];
+                    next[i] = { ...next[i], objections: v };
+                    patch({ audiencePersonas: next });
+                  }} addLabel="Objeção" />
+                  <ArrayEditor label="Canais" items={persona.channels} onChange={(v) => {
+                    const next = [...(editForm.audiencePersonas ?? [])];
+                    next[i] = { ...next[i], channels: v };
+                    patch({ audiencePersonas: next });
+                  }} addLabel="Canal" />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const newPersona = { name: "Nova Persona", role: "", context: "", goals: [], painPoints: [], objections: [], channels: [] };
+                  patch({ audiencePersonas: [...(editForm.audiencePersonas ?? []), newPersona] });
+                }}
+                className="app-surface-soft w-full border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-gray-500 transition hover:border-slate-500 hover:text-gray-700"
+              >
+                + Adicionar Persona
+              </button>
+            </div>
           )}
 
           {activeTab === "aplicacoes" && (
@@ -570,6 +679,78 @@ export function BrandbookEditor({ data, onUpdate, onCancel }: Props) {
               >
                 + Adicionar Aplicação
               </button>
+            </div>
+          )}
+
+          {activeTab === "social" && !editForm.socialMediaGuidelines && (
+            <EmptySection
+              label="Social Media"
+              onAdd={() => patch({ socialMediaGuidelines: { platforms: [] } })}
+            />
+          )}
+          {activeTab === "social" && editForm.socialMediaGuidelines && (
+            <div className="space-y-4">
+              {editForm.socialMediaGuidelines.platforms.map((platform, i) => (
+                <div key={i} className="app-surface-soft space-y-3 p-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">{platform.platform || `Plataforma ${i + 1}`}</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = editForm.socialMediaGuidelines!.platforms.filter((_, j) => j !== i);
+                        patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: next } });
+                      }}
+                      className="text-xs font-medium text-gray-400 transition hover:text-red-500"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                  <Field label="Plataforma" value={platform.platform} onChange={(v) => {
+                    const next = [...editForm.socialMediaGuidelines!.platforms];
+                    next[i] = { ...next[i], platform: v };
+                    patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: next } });
+                  }} placeholder="Ex: Instagram, LinkedIn, TikTok..." />
+                  <Field label="Formatos Principais" value={platform.primaryFormats} onChange={(v) => {
+                    const next = [...editForm.socialMediaGuidelines!.platforms];
+                    next[i] = { ...next[i], primaryFormats: v };
+                    patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: next } });
+                  }} placeholder="Ex: Reels, Stories, Carrossel..." />
+                  <Field label="Tom" value={platform.tone} onChange={(v) => {
+                    const next = [...editForm.socialMediaGuidelines!.platforms];
+                    next[i] = { ...next[i], tone: v };
+                    patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: next } });
+                  }} placeholder="Ex: Casual, Profissional..." />
+                  <ArrayEditor label="Pilares de Conteúdo" items={platform.contentPillars} onChange={(v) => {
+                    const next = [...editForm.socialMediaGuidelines!.platforms];
+                    next[i] = { ...next[i], contentPillars: v };
+                    patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: next } });
+                  }} addLabel="Pilar" />
+                  <ArrayEditor label="Faça (Do)" items={platform.doList} onChange={(v) => {
+                    const next = [...editForm.socialMediaGuidelines!.platforms];
+                    next[i] = { ...next[i], doList: v };
+                    patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: next } });
+                  }} addLabel="Prática recomendada" />
+                  <ArrayEditor label="Não Faça (Don't)" items={platform.dontList} onChange={(v) => {
+                    const next = [...editForm.socialMediaGuidelines!.platforms];
+                    next[i] = { ...next[i], dontList: v };
+                    patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: next } });
+                  }} addLabel="Prática a evitar" />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  const newPlatform = { platform: "Nova Plataforma", primaryFormats: "", tone: "", contentPillars: [], doList: [], dontList: [] };
+                  patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, platforms: [...editForm.socialMediaGuidelines!.platforms, newPlatform] } });
+                }}
+                className="app-surface-soft w-full border-2 border-dashed border-slate-300 py-3 text-sm font-medium text-gray-500 transition hover:border-slate-500 hover:text-gray-700"
+              >
+                + Adicionar Plataforma
+              </button>
+              <div className="border-t border-slate-200/80 pt-4 space-y-4">
+                <Field label="Estratégia Global de Hashtags" value={editForm.socialMediaGuidelines.globalHashtagStrategy ?? ""} onChange={(v) => patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, globalHashtagStrategy: v || undefined } })} multiline rows={2} />
+                <Field label="Adaptação da Voz por Canal" value={editForm.socialMediaGuidelines.brandVoiceAdaptation ?? ""} onChange={(v) => patch({ socialMediaGuidelines: { ...editForm.socialMediaGuidelines!, brandVoiceAdaptation: v || undefined } })} multiline rows={2} />
+              </div>
             </div>
           )}
 

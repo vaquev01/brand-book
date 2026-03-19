@@ -1499,8 +1499,16 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
     }
 
     case "brand_pattern": {
-      const patternEls = data.keyVisual.patterns?.length
-        ? `MOTIF VOCABULARY: ${data.keyVisual.patterns.slice(0, 5).join(", ")}. Use ONLY these motifs — do not invent new ones.`
+      const brandMotifs: string[] = [];
+      if (data.keyVisual.patterns?.length) brandMotifs.push(`Pattern DNA: ${data.keyVisual.patterns.slice(0, 5).join(", ")}`);
+      if (data.keyVisual.flora?.length) brandMotifs.push(`Flora elements: ${data.keyVisual.flora.slice(0, 4).join(", ")} — use as organic rhythm accents at varying scales`);
+      if (data.keyVisual.fauna?.length) brandMotifs.push(`Fauna silhouettes: ${data.keyVisual.fauna.slice(0, 4).join(", ")} — abstract into geometric forms`);
+      if (data.keyVisual.objects?.length) brandMotifs.push(`Brand objects: ${data.keyVisual.objects.slice(0, 4).join(", ")} — simplified iconic representations`);
+      if (data.keyVisual.symbols?.length) brandMotifs.push(`Symbols: ${data.keyVisual.symbols.slice(0, 4).join(", ")}`);
+      if (ctx.logoSymbol) brandMotifs.push(`Logo root: deconstruct "${ctx.logoSymbol}" into arcs, angles, lines and weave throughout`);
+
+      const patternEls = brandMotifs.length > 0
+        ? `MOTIF VOCABULARY — use ONLY these brand-derived elements, do not invent unrelated motifs:\n${brandMotifs.map((m) => `  • ${m}`).join("\n")}`
         : `MOTIF VOCABULARY: Geometric abstractions derived from the brand symbol: ${ctx.logoSymbol}. Deconstruct the symbol into its fundamental shapes (circles, lines, angles, curves) and recombine them into a repeating system.`;
       const ppat = ctx.primaryPattern;
       const patternDirective = ppat
@@ -1546,6 +1554,12 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 6. At 50% zoom the overall texture should read as an even surface. At 100% zoom individual motifs should be beautiful.
 7. DENSITY: Leave adequate negative space — overcrowded patterns look amateur. The space between motifs is as designed as the motifs themselves.`,
         `WHAT MAKES A PATTERN WORLD-CLASS: Restraint (fewer motifs, perfectly placed > many motifs scattered). Rhythm (visual pulse the eye can follow). Depth (subtle weight variation creates foreground/background). Intentionality (every element has a reason to exist). Brand derivation (motifs trace back to the logo/symbol DNA).`,
+        `MULTI-LAYER COMPOSITION (CRITICAL for depth and richness):
+Layer 1 — GROUND: Solid color or very subtle texture base using primary brand color at 5-10% opacity.
+Layer 2 — RHYTHM: Primary motifs (largest) at regular intervals creating the visual pulse and brand recognition.
+Layer 3 — ACCENT: Secondary motifs (medium) filling negative spaces, creating depth and visual interest.
+Layer 4 — DETAIL: Micro-elements (dots, thin lines, tiny symbols) adding refinement and premium texture.
+The viewer should discover new details at each zoom level — overall texture at 50%, beautiful motifs at 100%, micro-refinement at 200%.`,
         `FORMAT: Square 1:1 composition showing the full repeat unit. Flat vector-style illustration (no 3D, no shadows, no gradients, no photographic textures). Clean, precise, professional.`,
         `ABSOLUTELY NO: text, words, letters, logos, wordmarks, brand names, human figures, realistic objects, photographic elements, lens flares, drop shadows, 3D effects, watermarks. PURE pattern only.`,
         sTags, q, neg(ctx, provider, "visible seams, text, words, letters, logos, wordmarks, brand name, photographic content, random noise, asymmetric scattered layout, gradient washes, 3D effects, drop shadows, blurry edges, inconsistent stroke weights, overcrowded composition, realistic objects, human figures"),

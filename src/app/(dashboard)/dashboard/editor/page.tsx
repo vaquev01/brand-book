@@ -191,9 +191,9 @@ export default function Home() {
 
   async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, promptProvider: AiTextProvider, projectId?: string | null) {
     const providerKeyMap: Record<ImageProvider, keyof ApiKeys> = {
-      dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google",
+      dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google", recraft: "recraft", flux: "flux",
     };
-    const order: ImageProvider[] = ["imagen", "dalle3", "stability", "ideogram"];
+    const order: ImageProvider[] = ["imagen", "dalle3", "stability", "ideogram", "recraft", "flux"];
     const provider = order.find((p) => !!keys[providerKeyMap[p]]);
     if (!provider) return;
 

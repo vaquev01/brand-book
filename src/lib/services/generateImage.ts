@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import { ASSET_CATALOG } from "@/lib/imagePrompts";
 import { bytesToBase64, fnv1a32, isPrivateHostname } from "@/lib/common";
+import { generateWithRecraft, RECRAFT_SIZES, brandColorsToRecraft } from "./recraftProvider";
 
 export type AspectRatioKey = "1:1" | "16:9" | "9:16" | "4:3" | "21:9";
 
@@ -19,11 +20,14 @@ export type GenerateImageInput = {
   ideogramModel?: string;
   googleImageModel?: string;
   referenceImages?: string[];
+  recraftKey?: string;
+  fluxKey?: string;
+  recraftModel?: string;
 };
 
 export type GenerateImageResult = {
   aspectRatio: AspectRatioKey;
-  provider: "dalle3" | "stability" | "ideogram" | "imagen";
+  provider: "dalle3" | "stability" | "ideogram" | "imagen" | "recraft" | "flux";
   size?: string;
   url: string;
   fallback?: boolean;
@@ -330,6 +334,9 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
     ideogramModel,
     googleImageModel,
     referenceImages,
+    recraftKey,
+    fluxKey,
+    recraftModel,
   } = input;
 
   const pickedAspectRatio = pickGenerateImageAspectRatio(assetKey, aspectRatio);
@@ -614,7 +621,95 @@ export async function generateImageWithProvider(input: GenerateImageInput): Prom
       }
     }
 
+    case "recraft": {
+      const apiKey = recraftKey?.trim() || process.env.RECRAFT_API_KEY;
+      if (!apiKey) throw new Error("RECRAFT_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho.");
+
+      const { positive } = extractNegativePrompt(prompt);
+      const isLogo = assetKey === "logo_primary" || assetKey === "logo_dark_bg";
+      const isPattern = assetKey === "brand_pattern";
+      const isIcon = assetKey?.startsWith("icon_");
+
+      // Determine style based on asset type
+      const style = isIcon ? "icon" as const : "vector_illustration" as const;
+      const outputFormat = (isLogo || isIcon || isPattern) ? "svg" as const : "png" as const;
+      const size = RECRAFT_SIZES[pickedAspectRatio] ?? "1024x1024";
+
+      const result = await generateWithRecraft({
+        prompt: positive.slice(0, 2000),
+        style,
+        substyle: "flat_2",
+        model: recraftModel?.trim() || "recraftv3",
+        size,
+        outputFormat,
+        apiKey,
+      });
+
+      return {
+        url: result.url,
+        provider: "recraft",
+        aspectRatio: pickedAspectRatio,
+      };
+    }
+
+    case "flux": {
+      // Flux by Black Forest Labs — high quality raster at low cost
+      const apiKey = fluxKey?.trim() || process.env.FLUX_API_KEY;
+      if (!apiKey) throw new Error("FLUX_API_KEY não configurada. Clique em ⚙ APIs no cabeçalho.");
+
+      const { positive, negative } = extractNegativePrompt(prompt);
+      const fluxRatios: Record<AspectRatioKey, string> = {
+        "1:1": "1:1",
+        "16:9": "16:9",
+        "9:16": "9:16",
+        "4:3": "4:3",
+        "21:9": "21:9",
+      };
+
+      const response = await fetch("https://api.bfl.ml/v1/flux-pro-1.1", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Key": apiKey,
+        },
+        body: JSON.stringify({
+          prompt: `${positive.slice(0, 3000)}\n\nDo not include: ${negative.slice(0, 500)}`,
+          width: pickedAspectRatio === "9:16" ? 768 : pickedAspectRatio === "16:9" || pickedAspectRatio === "21:9" ? 1344 : 1024,
+          height: pickedAspectRatio === "9:16" ? 1344 : pickedAspectRatio === "16:9" || pickedAspectRatio === "21:9" ? 768 : 1024,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = (await response.json().catch(() => ({}))) as { detail?: string };
+        throw new Error(error.detail ?? `Flux API error ${response.status}`);
+      }
+
+      const data = (await response.json()) as { id?: string };
+      if (!data.id) throw new Error("Flux não retornou ID de geração");
+
+      // Flux is async — poll for result
+      let resultUrl: string | undefined;
+      for (let attempt = 0; attempt < 60; attempt++) {
+        await new Promise((r) => setTimeout(r, 1000));
+        const pollRes = await fetch(`https://api.bfl.ml/v1/get_result?id=${data.id}`, {
+          headers: { "X-Key": apiKey },
+        });
+        if (!pollRes.ok) continue;
+        const pollData = (await pollRes.json()) as { status?: string; result?: { sample?: string } };
+        if (pollData.status === "Ready" && pollData.result?.sample) {
+          resultUrl = pollData.result.sample;
+          break;
+        }
+        if (pollData.status === "Error") {
+          throw new Error("Flux geração falhou");
+        }
+      }
+
+      if (!resultUrl) throw new Error("Flux timeout — imagem não ficou pronta em 60s");
+      return { url: resultUrl, provider: "flux", aspectRatio: pickedAspectRatio };
+    }
+
     default:
-      throw new GenerateImageInputError("Provider inválido. Use: dalle3 | stability | ideogram | imagen");
+      throw new GenerateImageInputError("Provider inválido. Use: dalle3 | stability | ideogram | imagen | recraft | flux");
   }
 }

@@ -26,6 +26,8 @@ const PROVIDER_KEY_MAP: Record<ImageProvider, keyof ApiKeys> = {
   stability: "stability",
   ideogram: "ideogram",
   imagen: "google",
+  recraft: "recraft",
+  flux: "flux",
 };
 
 export const PROVIDERS: {
@@ -62,6 +64,20 @@ export const PROVIDERS: {
     desc: "Google · Imagen 3 por padrão, Gemini com referências · alta qualidade e velocidade",
     envKey: "GOOGLE_API_KEY",
     color: "bg-blue-50 border-blue-200 text-blue-800",
+  },
+  {
+    id: "recraft",
+    name: "Recraft V4",
+    desc: "Recraft · SVG nativo, ícones vetoriais e ilustrações — único que gera vetores reais",
+    envKey: "RECRAFT_API_KEY",
+    color: "bg-rose-50 border-rose-200 text-rose-800",
+  },
+  {
+    id: "flux",
+    name: "Flux Pro",
+    desc: "Black Forest Labs · Alta qualidade fotorrealista a baixo custo",
+    envKey: "FLUX_API_KEY",
+    color: "bg-cyan-50 border-cyan-200 text-cyan-800",
   },
 ];
 
@@ -304,6 +320,9 @@ export function useImageGeneration({
             stabilityModel: apiKeys.stabilityModel || undefined,
             ideogramModel: apiKeys.ideogramModel || undefined,
             googleImageModel: apiKeys.googleImageModel || undefined,
+            recraftKey: apiKeys.recraft || undefined,
+            fluxKey: apiKeys.flux || undefined,
+            recraftModel: apiKeys.recraftModel || undefined,
           }),
         });
         const result = await readJsonResponse<{ url?: string; publicUrl?: string; error?: string }>(
@@ -456,6 +475,9 @@ export function useImageGeneration({
             stabilityModel: apiKeys.stabilityModel || undefined,
             ideogramModel: apiKeys.ideogramModel || undefined,
             googleImageModel: apiKeys.googleImageModel || undefined,
+            recraftKey: apiKeys.recraft || undefined,
+            fluxKey: apiKeys.flux || undefined,
+            recraftModel: apiKeys.recraftModel || undefined,
           }),
         });
         const result = await readJsonResponse<{ url?: string; publicUrl?: string; error?: string }>(

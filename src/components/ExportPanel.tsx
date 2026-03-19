@@ -76,7 +76,12 @@ export function ExportPanel({ brandbook, viewerElementId, projectId, onForceSync
   }
 
   function guardProtectedExport(intent: ProtectedExportIntent, key: ExportKey): boolean {
-    if (!lintReport) return true;
+    if (!lintReport) {
+      setS(key, "error");
+      setErr(key, "Aguarde a verificação de qualidade ser concluída antes de exportar.");
+      setTimeout(() => setS(key, "idle"), 4000);
+      return false;
+    }
     const guard = getProtectedExportGuard(intent, lintReport);
     if (guard.allowed) return true;
     setS(key, "error");

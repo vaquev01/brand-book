@@ -74,7 +74,7 @@ const PLANS: PricingPlan[] = [
     id: "pro",
     name: "Pro",
     description: "Para designers e profissionais de marca",
-    price: "R$ 149",
+    price: "R$ 49",
     priceNote: "/ mês",
     badge: "Mais popular",
     highlighted: true,

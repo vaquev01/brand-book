@@ -2,8 +2,10 @@
 
 import { BrandbookViewer } from "@/components/BrandbookViewer"
 import { ClientPortal } from "@/components/ClientPortal"
+import { FontLoader } from "@/components/FontLoader"
 import type { BrandbookData } from "@/lib/types"
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 
 const SECTION_IDS = [
   "dna", "brand-story", "positioning", "personas", "verbal-identity",
@@ -70,7 +72,7 @@ function hexWithAlpha(hex: string, alpha: number): string {
 
 export function ShareBrandbookClient({ brandbook, generatedImages, projectName, shareToken }: Props) {
   const [showIntro, setShowIntro] = useState(true)
-  const [introPhase, setIntroPhase] = useState(0) // 0=brand, 1=tagline, 2=fade-out
+  const [scrolled, setScrolled] = useState(false)
 
   const primaryHex = brandbook.colors?.primary?.[0]?.hex ?? "#111111"
   const accentHex = brandbook.colors?.primary?.[1]?.hex ?? brandbook.colors?.secondary?.[0]?.hex ?? "#6366f1"
@@ -87,111 +89,137 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName, 
   const tagline = brandbook.verbalIdentity?.tagline ?? brandbook.brandConcept?.mission ?? ""
   const industry = brandbook.industry ?? ""
 
-  // Cinematic intro sequence
+  // Scroll-linked parallax for hero section
+  const heroRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  })
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 150])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.05])
+  const textureY = useTransform(scrollYProgress, [0, 1], [0, -50])
+
+  // Progressive header reveal on scroll
   useEffect(() => {
-    const t1 = setTimeout(() => setIntroPhase(1), 800)
-    const t2 = setTimeout(() => setIntroPhase(2), 2400)
-    const t3 = setTimeout(() => setShowIntro(false), 3200)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+    function onScroll() {
+      setScrolled(window.scrollY > 80)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   return (
     <>
       {/* ─── Cinematic Intro Splash ─── */}
-      {showIntro && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center"
-          style={{
-            background: isDark
-              ? `linear-gradient(135deg, ${primaryHex} 0%, #0a0a0a 100%)`
-              : `linear-gradient(135deg, ${primaryHex} 0%, #fafafa 100%)`,
-            opacity: introPhase === 2 ? 0 : 1,
-            transition: "opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-          }}
-        >
-          {/* Ambient glow */}
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] rounded-full pointer-events-none"
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center"
             style={{
-              background: `radial-gradient(circle, ${hexWithAlpha(accentHex, 0.15)}, transparent 60%)`,
+              background: isDark
+                ? `linear-gradient(135deg, ${primaryHex} 0%, #0a0a0a 100%)`
+                : `linear-gradient(135deg, ${primaryHex} 0%, #fafafa 100%)`,
             }}
-          />
-
-          <div className="relative text-center px-6">
-            {/* Color strip */}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            onAnimationComplete={(definition) => {
+              // When exit animation completes, hide the intro
+              if (definition && typeof definition === "object" && "opacity" in definition && definition.opacity === 0) {
+                setShowIntro(false)
+              }
+            }}
+          >
+            {/* Ambient glow */}
             <div
-              className="flex items-center justify-center gap-2 mb-8"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] rounded-full pointer-events-none"
               style={{
-                opacity: introPhase >= 0 ? 1 : 0,
-                transform: introPhase >= 0 ? "translateY(0)" : "translateY(10px)",
-                transition: "all 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
+                background: `radial-gradient(circle, ${hexWithAlpha(accentHex, 0.15)}, transparent 60%)`,
               }}
-            >
-              {allColors.slice(0, 5).map((c, i) => (
-                <div
-                  key={i}
-                  className="w-3 h-3 rounded-full"
+            />
+
+            <div className="relative text-center px-6">
+              {/* Phase 0: Color palette dots — spring bounce, staggered 80ms */}
+              <div className="flex items-center justify-center gap-2 mb-8">
+                {allColors.slice(0, 5).map((c, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-3 h-3 rounded-full"
+                    style={{ background: c }}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 15,
+                      delay: i * 0.08,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Phase 1: Brand name — spring entrance from translateY(30) */}
+              <motion.h1
+                className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight"
+                style={{ color: isDark ? "#ffffff" : primaryHex }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 20,
+                  delay: 0.4,
+                }}
+              >
+                {brandName}
+              </motion.h1>
+
+              {/* Phase 2: Tagline — softer spring from below */}
+              {tagline && (
+                <motion.p
+                  className="mt-4 text-lg sm:text-xl font-medium max-w-md mx-auto"
                   style={{
-                    background: c,
-                    opacity: introPhase >= 0 ? 1 : 0,
-                    transform: introPhase >= 0 ? "scale(1)" : "scale(0)",
-                    transition: `all 0.4s cubic-bezier(0.22, 1, 0.36, 1) ${i * 0.08}s`,
+                    color: isDark ? "rgba(255,255,255,0.45)" : hexWithAlpha(primaryHex, 0.4),
                   }}
-                />
-              ))}
-            </div>
-
-            {/* Brand name */}
-            <h1
-              className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight"
-              style={{
-                color: isDark ? "#ffffff" : primaryHex,
-                opacity: introPhase >= 0 ? 1 : 0,
-                transform: introPhase >= 0 ? "translateY(0)" : "translateY(20px)",
-                transition: "all 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
-            >
-              {brandName}
-            </h1>
-
-            {/* Tagline */}
-            {tagline && (
-              <p
-                className="mt-4 text-lg sm:text-xl font-medium max-w-md mx-auto"
-                style={{
-                  color: isDark ? "rgba(255,255,255,0.45)" : hexWithAlpha(primaryHex, 0.4),
-                  opacity: introPhase >= 1 ? 1 : 0,
-                  transform: introPhase >= 1 ? "translateY(0)" : "translateY(12px)",
-                  transition: "all 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
-                }}
-              >
-                {tagline}
-              </p>
-            )}
-
-            {/* Industry badge */}
-            {industry && (
-              <div
-                className="mt-6"
-                style={{
-                  opacity: introPhase >= 1 ? 1 : 0,
-                  transition: "opacity 0.5s ease 0.2s",
-                }}
-              >
-                <span
-                  className="text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border"
-                  style={{
-                    color: isDark ? "rgba(255,255,255,0.3)" : hexWithAlpha(primaryHex, 0.3),
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : hexWithAlpha(primaryHex, 0.1),
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 20,
+                    delay: 1.0,
                   }}
                 >
-                  {industry}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                  {tagline}
+                </motion.p>
+              )}
+
+              {/* Phase 3: Industry badge — fade in before exit */}
+              {industry && (
+                <motion.div
+                  className="mt-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 2.2 }}
+                >
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border"
+                    style={{
+                      color: isDark ? "rgba(255,255,255,0.3)" : hexWithAlpha(primaryHex, 0.3),
+                      borderColor: isDark ? "rgba(255,255,255,0.08)" : hexWithAlpha(primaryHex, 0.1),
+                    }}
+                  >
+                    {industry}
+                  </span>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Trigger the exit after Phase 3 completes */}
+            <IntroTimer onComplete={() => setShowIntro(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── Main Immersive Experience ─── */}
       <div
@@ -218,12 +246,13 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName, 
           />
         </div>
 
-        {/* ─── Premium header ─── */}
+        {/* ─── Premium header with progressive reveal ─── */}
         <header
           className="sticky top-0 z-50 backdrop-blur-2xl border-b"
           style={{
-            background: "rgba(255,255,255,0.90)",
-            borderColor: "rgba(0,0,0,0.04)",
+            background: scrolled ? "rgba(255,255,255,0.90)" : "transparent",
+            borderColor: scrolled ? "rgba(0,0,0,0.04)" : "transparent",
+            transition: "background 0.4s ease, border-color 0.4s ease",
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -270,18 +299,23 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName, 
 
         {/* ─── Brand Hero Section ─── */}
         <div
+          ref={heroRef}
           className="relative overflow-hidden"
           style={{
             background: `linear-gradient(135deg, ${primaryHex} 0%, ${hexWithAlpha(primaryHex, 0.85)} 50%, ${accentHex} 100%)`,
           }}
         >
           {/* Subtle texture overlay */}
-          <div className="absolute inset-0 opacity-[0.04]" style={{
+          <motion.div className="absolute inset-0 opacity-[0.04]" style={{
             backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)",
             backgroundSize: "24px 24px",
+            y: textureY,
           }} />
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative">
+          <motion.div
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative"
+            style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
+          >
             <div className="text-center">
               <h1
                 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-4"
@@ -303,19 +337,45 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName, 
                 Manual de Identidade{industry ? ` · ${industry}` : ""}
               </span>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Scroll indicator */}
+          <motion.div
+            className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          >
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "rgba(255,255,255,0.3)" }}>
+              Scroll to explore
+            </span>
+            <motion.svg
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <path d="M6 9l6 6 6-6" />
+            </motion.svg>
+          </motion.div>
 
           {/* Bottom gradient fade into content */}
           <div className="h-16 bg-gradient-to-b from-transparent to-[#fafafa]" />
         </div>
 
-        {/* ─── Content ─── */}
-        <main className="max-w-7xl mx-auto py-8 px-3 sm:px-6 lg:px-8 relative">
+        {/* ─── Content with section reveal animation ─── */}
+        <motion.main
+          className="max-w-7xl mx-auto py-8 px-3 sm:px-6 lg:px-8 relative"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <FontLoader data={brandbook} />
           <BrandbookViewer
             data={brandbook}
             generatedImages={generatedImages}
           />
-        </main>
+        </motion.main>
 
         {/* ─── Client Review Portal ─── */}
         {shareToken && (
@@ -360,4 +420,13 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName, 
       </div>
     </>
   )
+}
+
+/** Small helper component that triggers intro exit after the full sequence plays */
+function IntroTimer({ onComplete }: { onComplete: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onComplete, 3500) // Phase 3 ends ~3.5s
+    return () => clearTimeout(timer)
+  }, [onComplete])
+  return null
 }

@@ -42,6 +42,15 @@ function textColor(hex: string): string {
   return relativeLuminance(hex) > 0.4 ? "#000" : "#fff";
 }
 
+function isLightColor(hex: string): boolean {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return false;
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.5;
+}
+
 function copyToClipboard(text: string) {
   navigator.clipboard?.writeText(text);
 }
@@ -89,7 +98,7 @@ function ColorCard({
     <div className="color-card bg-white rounded-xl shadow-sm border overflow-hidden group relative">
       {/* Large color block — clickable for color picker */}
       <div
-        className="h-24 w-full relative flex items-end px-3 pb-2"
+        className="h-32 sm:h-40 w-full relative flex items-end px-3 pb-2"
         style={{ backgroundColor: color.hex }}
       >
         {label && (
@@ -101,7 +110,7 @@ function ColorCard({
           </span>
         )}
         <span
-          className="text-sm font-mono font-bold drop-shadow-sm"
+          className="text-base sm:text-lg font-mono font-bold drop-shadow-sm"
           style={{ color: textColor(color.hex) }}
         >
           {color.hex}
@@ -483,6 +492,31 @@ export function SectionColors({ data, num, onUpdateColors }: Props) {
       <h2 className="text-xl md:text-2xl font-extrabold tracking-tight mb-4 border-b border-gray-100 pb-2">
         {String(num).padStart(2, "0")}. Paleta de Cores
       </h2>
+
+      {/* Full Palette Overview Strip */}
+      {[...(data.colors?.primary ?? []), ...(data.colors?.secondary ?? [])].length > 0 && (
+        <div className="mb-10 overflow-hidden rounded-2xl shadow-lg">
+          <div className="flex h-16 sm:h-20">
+            {[...(data.colors?.primary ?? []), ...(data.colors?.secondary ?? [])].map((color, i) => (
+              <div
+                key={`strip-${i}`}
+                className="flex-1 relative group cursor-crosshair transition-all duration-500 hover:flex-[2]"
+                style={{ background: color.hex }}
+                title={`${color.name} — ${color.hex}`}
+              >
+                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap px-2 py-0.5 rounded-full backdrop-blur-sm"
+                  style={{
+                    color: isLightColor(color.hex) ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
+                    background: isLightColor(color.hex) ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
+                  }}
+                >
+                  {color.hex}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Basics — always present */}
       <BasicsRow />

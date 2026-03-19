@@ -298,7 +298,7 @@ export function BrandbookViewer({
           }
         });
       },
-      { threshold: 0.07, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
     );
     // Only observe sections not yet revealed
     els.forEach((el) => { if (!el.classList.contains("revealed")) obs.observe(el); });
@@ -991,7 +991,21 @@ export function BrandbookViewer({
                   </div>
                 );
               })()}
-              <div className="page-break mb-5 mt-7">
+              {/* Breathing moment — editorial rhythm divider */}
+              <div className="relative py-12 sm:py-16 my-8 sm:my-12 overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px section-divider-gradient" style={{ "--divider-color": "rgba(0,0,0,0.08)" } as React.CSSProperties} />
+                <div className="text-center">
+                  <span className="section-watermark absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    {catIdx + 1}
+                  </span>
+                  <h2 className="relative text-xs font-bold uppercase tracking-[0.2em] text-gray-400">
+                    {g.cat}
+                  </h2>
+                </div>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px section-divider-gradient" style={{ "--divider-color": "rgba(0,0,0,0.08)" } as React.CSSProperties} />
+              </div>
+
+              <div className="page-break mb-5 mt-2">
                 {immersive ? (
                   <div className="bb-cat-banner">
                     <div className="flex items-center justify-between">
@@ -1009,7 +1023,7 @@ export function BrandbookViewer({
                   </div>
                 ) : (
                   <div
-                    className="rounded-[1.45rem] border px-4 py-4 md:px-5"
+                    className="rounded-[1.45rem] border px-5 py-5 md:px-6"
                     style={{
                       background: `linear-gradient(135deg, rgba(255,255,255,0.98) 0%, ${rgba(theme.accentHex, 0.08)} 100%)`,
                       borderColor: rgba(theme.primaryHex, 0.08),

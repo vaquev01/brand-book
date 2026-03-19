@@ -9,7 +9,14 @@ type ProjectWithVersions = Project & {
 
 export default async function DashboardPage() {
   const session = await auth()
-  const userId = session!.user!.id
+  if (!session?.user?.id) {
+    return (
+      <div className="flex items-center justify-center h-full py-20">
+        <p className="text-gray-400 text-sm">Sessão expirada. Faça login novamente.</p>
+      </div>
+    )
+  }
+  const userId = session.user.id
 
   const projects: ProjectWithVersions[] = await prisma.project.findMany({
     where: { ownerId: userId },
@@ -48,10 +55,10 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Projetos" value={totalProjects} delay={0} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>} />
-        <StatCard label="Brandbooks" value={withBrandbook} delay={1} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-violet-400"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>} />
-        <StatCard label="Em revisão" value={inReview} delay={2} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>} />
-        <StatCard label="Aprovados" value={approved} delay={3} icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>} />
+        <StatCard label="Projetos" value={totalProjects} delay={0} emptyHint="Crie seu primeiro" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>} />
+        <StatCard label="Brandbooks" value={withBrandbook} delay={1} emptyHint="Gere com IA" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-violet-400"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>} />
+        <StatCard label="Em revisão" value={inReview} delay={2} emptyHint="—" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>} />
+        <StatCard label="Aprovados" value={approved} delay={3} emptyHint="—" icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>} />
       </div>
 
       {/* Projects grid */}
@@ -71,18 +78,27 @@ export default async function DashboardPage() {
   )
 }
 
-function StatCard({ label, value, delay, icon }: { label: string; value: number; delay: number; icon: React.ReactNode }) {
+function StatCard({ label, value, delay, icon, emptyHint }: { label: string; value: number; delay: number; icon: React.ReactNode; emptyHint?: string }) {
   return (
     <div
-      className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm animate-fade-in-up stagger-${delay + 1}`}
+      className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm animate-fade-in-up stagger-${delay + 1} group hover:shadow-md hover:border-gray-200/80 transition-all duration-300`}
     >
       <div className="flex items-center justify-between mb-3">
-        <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
           {icon}
         </div>
       </div>
-      <div className="text-2xl font-bold text-gray-900 animate-count-up">{value}</div>
-      <div className="text-xs text-gray-400 mt-1 font-medium">{label}</div>
+      {value === 0 && emptyHint ? (
+        <div>
+          <div className="text-2xl font-bold text-gray-200">0</div>
+          <div className="text-[10px] text-gray-300 mt-1 font-medium">{emptyHint}</div>
+        </div>
+      ) : (
+        <div>
+          <div className="text-2xl font-bold text-gray-900">{value}</div>
+          <div className="text-xs text-gray-400 mt-1 font-medium">{label}</div>
+        </div>
+      )}
     </div>
   )
 }
@@ -101,6 +117,15 @@ function EmptyState() {
       <p className="text-gray-400 mb-8 max-w-sm mx-auto text-sm leading-relaxed">
         Envie um logo ou descreva sua marca — identidade visual completa em minutos.
       </p>
+      {/* Mini preview of what they'll create */}
+      <div className="flex items-center justify-center gap-3 mb-8 opacity-60">
+        <div className="flex gap-1">
+          {["#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ede9fe"].map((c, i) => (
+            <div key={i} className="w-6 h-6 rounded-full shadow-sm" style={{ background: c }} />
+          ))}
+        </div>
+        <div className="text-[10px] text-gray-300 font-medium">Paleta + Logo + Tipografia + Aplicações</div>
+      </div>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
           href="/dashboard/new-brandbook"
@@ -161,6 +186,26 @@ function ProjectCard({ project, index }: { project: ProjectWithVersions; index: 
         {project.name}
       </h3>
       <p className="text-xs text-gray-400 mt-1 truncate">{project.industry}</p>
+      {/* Mini palette preview */}
+      {(() => {
+        const bbJson = project.brandbookVersions[0]?.brandbookJson as any
+        const colors = [
+          ...(bbJson?.colors?.primary ?? []).slice(0, 3),
+          ...(bbJson?.colors?.secondary ?? []).slice(0, 2),
+        ]
+        if (colors.length === 0) return null
+        return (
+          <div className="flex gap-1 mt-3">
+            {colors.map((c: any, i: number) => (
+              <div
+                key={i}
+                className="h-2.5 flex-1 rounded-full first:rounded-l-full last:rounded-r-full"
+                style={{ background: c.hex ?? "#ccc" }}
+              />
+            ))}
+          </div>
+        )
+      })()}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
         <p className="text-[11px] text-gray-300 font-medium">
           {new Date(project.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}

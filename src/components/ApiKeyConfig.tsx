@@ -14,6 +14,9 @@ export interface ApiKeys {
   googleImageModel: string;
   stabilityModel: string;
   ideogramModel: string;
+  recraft: string;
+  flux: string;
+  recraftModel: string;
 }
 
 export const EMPTY_KEYS: ApiKeys = {
@@ -21,6 +24,7 @@ export const EMPTY_KEYS: ApiKeys = {
   openaiTextModel: "", openaiImageModel: "",
   googleTextModel: "", googleImageModel: "",
   stabilityModel: "", ideogramModel: "",
+  recraft: "", flux: "", recraftModel: "",
 };
 
 const LS: Record<keyof ApiKeys, string> = {
@@ -34,6 +38,9 @@ const LS: Record<keyof ApiKeys, string> = {
   googleImageModel: "bb_google_image_model",
   stabilityModel: "bb_stability_model",
   ideogramModel: "bb_ideogram_model",
+  recraft: "bb_recraft_key",
+  flux: "bb_flux_key",
+  recraftModel: "bb_recraft_model",
 };
 
 function normalizeGoogleModel(val: string | undefined): string {
