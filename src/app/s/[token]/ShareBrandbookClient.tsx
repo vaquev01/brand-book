@@ -374,6 +374,7 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName, 
           <BrandbookViewer
             data={brandbook}
             generatedImages={generatedImages}
+            shareToken={shareToken}
           />
         </motion.main>
 

@@ -13,6 +13,7 @@ import { SectionCover } from "./sections/SectionCover";
 import { FontLoader } from "./FontLoader";
 import { useImageGeneration, PROVIDERS } from "@/hooks/useImageGeneration";
 import { EMPTY_KEYS } from "@/components/ApiKeyConfig";
+import { SectionComments } from "./SectionComments";
 import { ASSET_CATALOG, type AssetKey } from "@/lib/imagePrompts";
 import type { ApiKeys } from "@/components/ApiKeyConfig";
 import {
@@ -86,6 +87,7 @@ interface Props {
   onUpdateColors?: (colors: Colors) => void;
   onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void;
   projectId?: string | null;
+  shareToken?: string;
 }
 
 export function BrandbookViewer({
@@ -105,6 +107,7 @@ export function BrandbookViewer({
   onUpdateColors,
   onUpdateData,
   projectId,
+  shareToken,
 }: Props) {
   const isAdvanced = !!data.uxPatterns;
   const hasGeneration = !!apiKeys && !!onAssetGenerated;
@@ -1110,12 +1113,12 @@ export function BrandbookViewer({
                   style={immersive ? undefined : defaultShellStyle}
                 >
                   {/* Collapsible section header bar */}
-                  <button
-                    type="button"
-                    onClick={() => toggleSectionCollapse(s.id)}
-                    className={`no-print flex items-center justify-between cursor-pointer px-4 py-3 hover:bg-gray-50/50 transition w-full text-left ${isSectionCollapsed ? "rounded-[1.6rem]" : "rounded-t-[1.6rem]"}`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`no-print flex items-center justify-between px-4 py-3 hover:bg-gray-50/50 transition w-full ${isSectionCollapsed ? "rounded-[1.6rem]" : "rounded-t-[1.6rem]"}`}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSectionCollapse(s.id)}
+                      className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer text-left"
+                    >
                       <span className="text-sm flex-shrink-0">{sectionCatIcon}</span>
                       <span
                         className="text-xs font-extrabold uppercase tracking-[0.15em] truncate"
@@ -1123,9 +1126,24 @@ export function BrandbookViewer({
                       >
                         {s.num}. {s.title}
                       </span>
+                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      {shareToken && (
+                        <SectionComments
+                          shareToken={shareToken}
+                          section={s.id}
+                          sectionLabel={s.title}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => toggleSectionCollapse(s.id)}
+                        className="text-gray-400 text-xs cursor-pointer"
+                      >
+                        {isSectionCollapsed ? "▶" : "▼"}
+                      </button>
                     </div>
-                    <span className="flex-shrink-0 text-gray-400 text-xs ml-2">{isSectionCollapsed ? "▶" : "▼"}</span>
-                  </button>
+                  </div>
 
                   {!isSectionCollapsed && (
                     <>

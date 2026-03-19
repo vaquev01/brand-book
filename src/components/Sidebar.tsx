@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
+import { LanguageSwitcher } from "./LanguageSwitcher"
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; image?: string | null }
@@ -177,6 +178,11 @@ export function Sidebar({ user, plan }: SidebarProps) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         {!collapsed && <span className="text-[11px] text-gray-400 font-medium">Buscar</span>}
         {!collapsed && <kbd className="ml-auto text-[9px] font-bold text-gray-300 bg-white px-1 py-0.5 rounded border border-gray-200">&#8984;K</kbd>}
+      </div>
+
+      {/* Language switcher */}
+      <div className={`mx-3 mb-1 flex ${collapsed ? 'justify-center' : 'justify-center'}`}>
+        <LanguageSwitcher />
       </div>
 
       {/* Collapse toggle */}

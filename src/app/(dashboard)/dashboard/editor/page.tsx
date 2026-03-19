@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { BrandbookViewer } from "@/components/BrandbookViewer";
@@ -9,7 +9,7 @@ import { JsonBySectionPanel } from "@/components/JsonBySectionPanel";
 import { ApiKeyConfig, ApiKeyStatusBadge, loadApiKeys, loadApiKeysFromServer, saveApiKeys, EMPTY_KEYS, type ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookEditor } from "@/components/BrandbookEditor";
 import { UploadedAssetsPanel } from "@/components/UploadedAssetsPanel";
-import { GenerateBriefingForm, type GenerateBriefingData } from "@/components/GenerateBriefingForm";
+import { GenerateBriefingForm } from "@/components/GenerateBriefingForm";
 import { GenerationProgress } from "@/components/GenerationProgress";
 import { RefinePanel } from "@/components/RefinePanel";
 import { AICopilot } from "@/components/AICopilot";
@@ -18,41 +18,29 @@ import { ExportPanel } from "@/components/ExportPanel";
 import { RegenerateSectionsPanel } from "@/components/RegenerateSectionsPanel";
 import { SystemHealthBadge } from "@/components/SystemHealthBadge";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { BrandbookData, GeneratedAsset, UploadedAsset, ImageProvider, type AiTextProvider, type AssetPackState, type GenerateScope, type CreativityLevel } from "@/lib/types";
+import { BrandbookData, GeneratedAsset } from "@/lib/types";
+import { type AssetKey } from "@/lib/imagePrompts";
 import { saasExample, barExample, sushiExample, caracaBarExample } from "@/lib/examples";
-import { generateProductionManifest } from "@/lib/productionExport";
 import { validateLooseBrandbook } from "@/lib/brandbookValidation";
 import { decompressBrandbook } from "@/lib/shareUtils";
-import { buildImagePrompt, type AssetKey } from "@/lib/imagePrompts";
-import { downloadBlob, downloadJsonFile } from "@/lib/browserDownload";
+import { downloadJsonFile } from "@/lib/browserDownload";
 import {
   hasPromptOpsProviderKey,
-  refineImagePromptClient,
 } from "@/lib/imagePromptClient";
 import {
-  clearBrandbookGeneratedAssetSession,
-  loadBrandbookSessionAssets,
   migrateLegacyLocalStorageToIndexedDB,
   slugifyForStorage,
 } from "@/lib/brandbookLocalSession";
-import { readJsonResponse } from "@/lib/http";
-import { fetchImageDataUrl } from "@/lib/imageTransport";
 import {
-  getActiveSlug, setActiveSlug,
-  saveBrandbookData, loadBrandbookData,
-  saveGeneratedImage,
-  saveBrandAssets,
-  saveAssetPack,
+  getActiveSlug,
+  loadBrandbookData,
 } from "@/lib/imageStorage";
-import { pullServerAssets } from "@/lib/imageSync";
 import { computeBrandFingerprint, countStaleAssets } from "@/lib/brandFingerprint";
 import {
   Settings, Sparkles, Library, Eye, BookOpen, Pencil, LayoutDashboard,
   Image as ImageIcon, Wand2, ShieldCheck, Download, CloudUpload, Check,
   Trash2, UploadCloud, FileJson, Hexagon, Undo2, Redo2,
 } from "lucide-react";
-import { fetchBrandbookLintReport } from "@/lib/brandbookLintClient";
-import { getProtectedExportGuard } from "@/lib/brandbookQualityGate";
 import {
   selectHasHydrated,
   selectPromptOpsProvider,
@@ -61,62 +49,49 @@ import {
   selectStrategyProvider,
   useAppPreferencesStore,
 } from "@/store/appPreferences";
-
-type Tab = "generate" | "examples" | "viewer";
-type ViewerTab = "preview" | "edit" | "assets" | "refine" | "consistency" | "export";
-
-function isAiTextProvider(value: string | null | undefined): value is AiTextProvider {
-  return value === "openai" || value === "gemini";
-}
-
-function pickDefaultTextProvider(keys: ApiKeys): AiTextProvider {
-  if (keys.openai) return "openai";
-  if (keys.google) return "gemini";
-  return "openai";
-}
-
-function resolveTextProviderPreference(rawValue: string | null | undefined, keys: ApiKeys): AiTextProvider {
-  const fallback = pickDefaultTextProvider(keys);
-  if (!isAiTextProvider(rawValue)) return fallback;
-  if (hasPromptOpsProviderKey(rawValue, keys) || (!keys.openai && !keys.google)) return rawValue;
-  return fallback;
-}
-
-function getTextProviderModel(provider: AiTextProvider, keys: ApiKeys): string {
-  return provider === "openai"
-    ? keys.openaiTextModel || "GPT-4o"
-    : keys.googleTextModel || "Gemini 1.5";
-}
+import { useEditorSession } from "@/hooks/useEditorSession";
+import { useEditorGeneration } from "@/hooks/useEditorGeneration";
+import { useEditorAssets } from "@/hooks/useEditorAssets";
+import { resolveTextProviderPreference, getTextProviderModel } from "./editorHelpers";
 
 export default function Home() {
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<Tab>("generate");
-  const [loading, setLoading] = useState(false);
-  const [loadingShared, setLoadingShared] = useState(false);
-  const [generationPhase, setGenerationPhase] = useState("");
-  const [generationPct, setGenerationPct] = useState(0);
-  const [error, setError] = useState("");
-  const [prefillBrandName, setPrefillBrandName] = useState("");
-  const [prefillIndustry, setPrefillIndustry] = useState("");
-  const [prefillBriefing, setPrefillBriefing] = useState("");
-  const [templateScope, setTemplateScope] = useState<GenerateScope | undefined>();
-  const [templateCreativity, setTemplateCreativity] = useState<CreativityLevel | undefined>();
-  const [templateGuidedBriefing, setTemplateGuidedBriefing] = useState<Record<string, string> | undefined>();
-  const [templateName, setTemplateName] = useState<string | undefined>();
-  const [brandbookData, setBrandbookData] = useState<BrandbookData | null>(null);
-  const brandbookRef = useRef<BrandbookData | null>(null);
-  const [jsonText, setJsonText] = useState("");
-  const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
-  const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>({});
-  const [uploadedBrandAssets, setUploadedBrandAssets] = useState<UploadedAsset[]>([]);
-  const [assetPack, setAssetPack] = useState<AssetPackState>({ files: [] });
-  const [assetPackGenerating, setAssetPackGenerating] = useState(false);
-  const [savedProjects, setSavedProjects] = useState<Array<{
-    id: string; slug: string; name: string; industry: string; status: string;
-    updatedAt: string; brandbookVersions: Array<{ brandbookJson?: unknown }>;
-  }>>([]);
-  const [loadingSavedProjects, setLoadingSavedProjects] = useState(false);
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+
+  // ─── Session State (from useEditorSession hook) ───────────────────
+  const session = useEditorSession();
+  const {
+    tab, setTab,
+    viewerTab, setViewerTab,
+    loadingShared, setLoadingShared,
+    error, setError,
+    prefillBrandName, setPrefillBrandName,
+    prefillIndustry, setPrefillIndustry,
+    prefillBriefing, setPrefillBriefing,
+    templateScope, setTemplateScope,
+    templateCreativity, setTemplateCreativity,
+    templateGuidedBriefing, setTemplateGuidedBriefing,
+    templateName, setTemplateName,
+    brandbookData, setBrandbookData,
+    brandbookRef,
+    jsonText, setJsonText,
+    generatedAssets, setGeneratedAssets,
+    uploadedBrandAssets, setUploadedBrandAssets,
+    assetPack, setAssetPack,
+    savedProjects, setSavedProjects,
+    loadingSavedProjects,
+    currentProjectId, setCurrentProjectId,
+    undoStack, redoStack,
+    saveError,
+    resetHistory,
+    updateBrandbook,
+    handleUndo,
+    handleRedo,
+    restoreBrandbookSession,
+    startNewBrandbook,
+    persistAll,
+  } = session;
+
+  // ─── Local UI State ───────────────────────────────────────────────
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ ...EMPTY_KEYS });
   const strategyProvider = useAppPreferencesStore(selectStrategyProvider);
   const promptOpsProvider = useAppPreferencesStore(selectPromptOpsProvider);
@@ -124,177 +99,65 @@ export default function Home() {
   const setStrategyProvider = useAppPreferencesStore(selectSetStrategyProvider);
   const setPromptOpsProvider = useAppPreferencesStore(selectSetPromptOpsProvider);
   const [showApiConfig, setShowApiConfig] = useState(false);
-  const [exportingPack, setExportingPack] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string; description?: string; variant?: "danger" | "default"; onConfirm: () => void;
   } | null>(null);
-  const [undoStack, setUndoStack] = useState<BrandbookData[]>([]);
-  const [redoStack, setRedoStack] = useState<BrandbookData[]>([]);
-  const assetPackFiles = assetPack.files;
 
-  useEffect(() => {
-    brandbookRef.current = brandbookData;
-  }, [brandbookData]);
-
-  function resetHistory() {
-    setUndoStack([]);
-    setRedoStack([]);
-  }
-
-  function updateBrandbook(updater: (prev: BrandbookData) => BrandbookData) {
-    setBrandbookData((prev) => {
-      if (!prev) return prev;
-      const next = updater(prev);
-      setUndoStack((s) => [...s.slice(-19), prev]);
-      setRedoStack([]);
-      return next;
-    });
-  }
-
-  function handleUndo() {
-    setUndoStack((s) => {
-      if (s.length === 0) return s;
-      const current = brandbookRef.current;
-      const prev = s[s.length - 1];
-      if (current) setRedoStack((r) => [...r.slice(-19), current]);
-      setBrandbookData(prev);
-      return s.slice(0, -1);
-    });
-  }
-
-  function handleRedo() {
-    setRedoStack((s) => {
-      if (s.length === 0) return s;
-      const current = brandbookRef.current;
-      const next = s[s.length - 1];
-      if (current) setUndoStack((u) => [...u.slice(-19), current]);
-      setBrandbookData(next);
-      return s.slice(0, -1);
-    });
-  }
-
-  // Keyboard shortcuts for undo/redo (Cmd+Z / Cmd+Shift+Z)
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        handleUndo();
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === "z" && e.shiftKey) {
-        e.preventDefault();
-        handleRedo();
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+  // ─── Generation State (from useEditorGeneration hook) ─────────────
+  const {
+    loading,
+    generationPhase,
+    generationPct,
+    handleGenerate,
+    autoGenerateLogos,
+  } = useEditorGeneration({
+    strategyProvider,
+    promptOpsProvider,
+    apiKeys,
+    restoreBrandbookSession,
+    setBrandbookData,
+    setGeneratedAssets,
+    setUploadedBrandAssets: setUploadedBrandAssets as (a: never[]) => void,
+    setAssetPack: setAssetPack as (a: { files: never[] }) => void,
+    setCurrentProjectId,
+    resetHistory,
+    setError,
   });
 
-  const restoreBrandbookSession = useCallback(async (
-    nextBrandbook: BrandbookData,
-    options: { nextTab?: Tab; nextViewerTab?: ViewerTab } = {}
-  ) => {
-    resetHistory();
-    setBrandbookData(nextBrandbook);
-    const slug = slugifyForStorage(nextBrandbook.brandName);
-    const session = await loadBrandbookSessionAssets(slug);
-    setGeneratedAssets(session.generatedAssets);
-    setUploadedBrandAssets(session.uploadedBrandAssets);
-    setAssetPack(session.assetPack);
-    if (options.nextViewerTab) setViewerTab(options.nextViewerTab);
-    if (options.nextTab) setTab(options.nextTab);
-    setError("");
-  }, []);
+  // ─── Asset State (from useEditorAssets hook) ──────────────────────
+  const {
+    assetPackGenerating,
+    exportingPack,
+    cloudSaving,
+    cloudSaved,
+    handleAssetGenerated,
+    handleGenerateAssetPack,
+    handleForceSaveToCloud,
+    handleClearImageCache,
+    handleExportPack,
+    handleExportBrandbook,
+    handleExportProduction,
+  } = useEditorAssets({
+    brandbookData,
+    brandbookRef,
+    currentProjectId,
+    generatedAssets,
+    setGeneratedAssets,
+    uploadedBrandAssets,
+    setUploadedBrandAssets,
+    assetPack,
+    setAssetPack,
+    apiKeys,
+    promptOpsProvider,
+    persistAll,
+    setError,
+    setCurrentProjectId,
+    setConfirmDialog,
+  });
 
-  async function autoGenerateLogos(bbData: BrandbookData, keys: ApiKeys, promptProvider: AiTextProvider, projectId?: string | null) {
-    const providerKeyMap: Record<ImageProvider, keyof ApiKeys> = {
-      dalle3: "openai", stability: "stability", ideogram: "ideogram", imagen: "google", recraft: "recraft", flux: "flux",
-    };
-    const order: ImageProvider[] = ["imagen", "dalle3", "stability", "ideogram", "recraft", "flux"];
-    const provider = order.find((p) => !!keys[providerKeyMap[p]]);
-    if (!provider) return;
+  const assetPackFiles = assetPack.files;
 
-    const logoKeys: AssetKey[] = ["logo_primary", "logo_dark_bg"];
-    const slug = slugifyForStorage(bbData.brandName);
-    const session = await loadBrandbookSessionAssets(slug).catch((): {
-      assetPack: AssetPackState;
-      generatedAssets: Record<string, GeneratedAsset>;
-      uploadedBrandAssets: UploadedAsset[];
-    } => ({
-      assetPack: { files: [] },
-      generatedAssets: {},
-      uploadedBrandAssets: [],
-    }));
-    const merged = session.generatedAssets;
-    const toGenerate = logoKeys.filter((k) => !merged[k]);
-    if (toGenerate.length === 0) return;
-
-    setGenerationPhase("Gerando logos automaticamente...");
-    setGenerationPct(85);
-
-    for (let i = 0; i < toGenerate.length; i++) {
-      const assetKey = toGenerate[i];
-      const label = assetKey === "logo_primary" ? "Logo (Fundo Claro)" : "Logo (Versão Invertida)";
-      setGenerationPhase(`Gerando ${label}...`);
-      setGenerationPct(85 + Math.round(((i) / toGenerate.length) * 12));
-
-      try {
-        const basePrompt = buildImagePrompt(assetKey, bbData, provider);
-        let prompt = basePrompt;
-
-        const hasTextKey = hasPromptOpsProviderKey(promptProvider, keys);
-        if (hasTextKey) {
-          try {
-            const refinedPrompt = await refineImagePromptClient({
-              basePrompt,
-              imageProvider: provider,
-              assetKey,
-              promptProvider,
-              apiKeys: keys,
-            });
-            if (refinedPrompt) prompt = refinedPrompt;
-          } catch { /* use base prompt */ }
-        }
-
-        const res = await fetch("/api/generate-image", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt,
-            provider,
-            assetKey,
-            aspectRatio: "1:1",
-            projectId: projectId || undefined,
-            openaiKey: keys.openai || undefined,
-            stabilityKey: keys.stability || undefined,
-            ideogramKey: keys.ideogram || undefined,
-            googleKey: keys.google || undefined,
-            openaiImageModel: keys.openaiImageModel || undefined,
-            stabilityModel: keys.stabilityModel || undefined,
-            ideogramModel: keys.ideogramModel || undefined,
-            googleImageModel: keys.googleImageModel || undefined,
-          }),
-        });
-        const result = await readJsonResponse<{ url?: string; error?: string }>(
-          res,
-          "/api/generate-image"
-        );
-        if (res.ok && result.url) {
-          const asset: GeneratedAsset = {
-            key: assetKey,
-            url: result.url,
-            provider,
-            prompt,
-            generatedAt: new Date().toISOString(),
-          };
-          setGeneratedAssets((prev) => ({ ...prev, [assetKey]: asset }));
-        }
-      } catch { /* skip silently, user can generate manually */ }
-    }
-
-    setGenerationPct(100);
-    setGenerationPhase("");
-  }
-
+  // ─── Init: load API keys, handle URL params, restore session ──────
   useEffect(() => {
     const keys = loadApiKeys();
     setApiKeys(keys);
@@ -346,7 +209,7 @@ export default function Home() {
       } catch {}
 
       migrateLegacyLocalStorageToIndexedDB().catch(() => {});
-      return; // ← HARD STOP. Clean slate, no auto-restore.
+      return; // HARD STOP. Clean slate, no auto-restore.
     }
 
     // ── CRITICAL: Read ALL URL params SYNCHRONOUSLY before any async work ──
@@ -374,7 +237,6 @@ export default function Home() {
     if (briefingParam) setPrefillBriefing(briefingParam);
 
     // If user wants to create a new brandbook, clean everything and STOP.
-    // No auto-restore, no loading, nothing.
     if (tabParam === "generate" && !bbParam && !slugParam) {
       setBrandbookData(null);
       setGeneratedAssets({});
@@ -383,9 +245,8 @@ export default function Home() {
       setCurrentProjectId(null);
       resetHistory();
       setError("");
-      // Still run migration in background (non-blocking)
       migrateLegacyLocalStorageToIndexedDB().catch(() => {});
-      return; // ← HARD STOP. Don't touch anything else.
+      return; // HARD STOP. Don't touch anything else.
     }
 
     // For all other cases, run the async init logic
@@ -399,7 +260,7 @@ export default function Home() {
         setViewerTab("preview");
         decompressBrandbook(bbParam)
           .then(async (raw) => {
-            if (!raw) throw new Error("Link inválido");
+            if (!raw) throw new Error("Link invalido");
             const validated = validateLooseBrandbook(raw, {
               action: "abrir link compartilhado",
               subject: "Brandbook do link",
@@ -410,7 +271,7 @@ export default function Home() {
             });
           })
           .catch(() => {
-            setError("Link compartilhado inválido ou expirado.");
+            setError("Link compartilhado invalido ou expirado.");
             setTab("examples");
           })
           .finally(() => {
@@ -484,7 +345,7 @@ export default function Home() {
           }
         }
         // Both API and localStorage failed — show error
-        setError(`Não foi possível carregar o projeto "${slugParam}". Tente novamente.`);
+        setError(`Nao foi possivel carregar o projeto "${slugParam}". Tente novamente.`);
         setTab("examples");
         setLoadingShared(false);
         return;
@@ -492,7 +353,6 @@ export default function Home() {
 
       // No special params — restore last active session
       if (tabParam === "examples") {
-        // User wants to see examples, don't auto-restore
         return;
       }
 
@@ -502,7 +362,7 @@ export default function Home() {
         if (savedData) {
           try {
             const validated = validateLooseBrandbook(savedData, {
-              action: "restaurar a sessão salva",
+              action: "restaurar a sessao salva",
               subject: "Brandbook salvo",
             });
             void restoreBrandbookSession(validated, { nextTab: "viewer" });
@@ -512,22 +372,10 @@ export default function Home() {
         }
       }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoreBrandbookSession]);
 
-  // Fetch saved projects for the examples gallery
-  useEffect(() => {
-    setLoadingSavedProjects(true);
-    fetch("/api/projects")
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((json: { data?: typeof savedProjects }) => {
-        if (json.data) setSavedProjects(json.data);
-      })
-      .catch(() => {
-        // Not logged in or API error — silently skip
-      })
-      .finally(() => setLoadingSavedProjects(false));
-  }, []);
-
+  // Resolve text provider preferences when API keys or preferences change
   useEffect(() => {
     if (!hasHydratedPreferences) return;
 
@@ -550,160 +398,32 @@ export default function Home() {
     strategyProvider,
   ]);
 
-  async function handleGenerate(formData: GenerateBriefingData) {
-    setLoading(true);
-    setError("");
-    setBrandbookData(null);
-    setGeneratedAssets({});
-    setUploadedBrandAssets([]);
-    setAssetPack({ files: [] });
-    setCurrentProjectId(null);
-    resetHistory();
-    setGenerationPhase("Preparando geração...");
-    setGenerationPct(0);
-
+  async function handleImportJson() {
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandName: formData.brandName,
-          industry: formData.industry,
-          briefing: formData.briefing,
-          externalUrls: formData.externalUrls,
-          projectMode: formData.projectMode,
-          provider: strategyProvider,
-          openaiKey: apiKeys.openai || undefined,
-          googleKey: apiKeys.google || undefined,
-          openaiModel: strategyProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-          googleModel: strategyProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-          referenceImages: formData.referenceImages.length > 0
-            ? formData.referenceImages.map((img) => img.dataUrl)
-            : undefined,
-          logoImage: formData.logoImage?.dataUrl ?? undefined,
-          scope: formData.scope,
-          creativityLevel: formData.creativityLevel,
-          intentionality: formData.intentionality,
-        }),
+      const parsed = JSON.parse(jsonText);
+      const validated = validateLooseBrandbook(parsed, {
+        action: "importar JSON",
+        subject: "JSON do brandbook",
       });
-
-      if (!res.body) throw new Error("Streaming não suportado pelo servidor.");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (!done) {
-          buffer += decoder.decode(value, { stream: true });
-        }
-
-        const lines = buffer.split("\n");
-        buffer = done ? "" : (lines.pop() ?? "");
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith("data: ")) continue;
-          try {
-            const event = JSON.parse(trimmed.slice(6)) as {
-              type: string;
-              phase?: string;
-              pct?: number;
-              data?: BrandbookData;
-              error?: string;
-            };
-
-            if (event.type === "progress") {
-              setGenerationPhase(event.phase ?? "");
-              setGenerationPct(event.pct ?? 0);
-            } else if (event.type === "complete" && event.data) {
-              const validated = validateLooseBrandbook(event.data, {
-                action: "gerar brandbook",
-                subject: "Brandbook gerado",
-              });
-              await restoreBrandbookSession(validated, { nextTab: "viewer" });
-              toast.success("Brandbook gerado com sucesso", {
-                description: `${validated.brandName} — ${validated.industry}`,
-              });
-
-              // Auto-save to database and capture projectId, then generate logos
-              let savedProjectId: string | undefined;
-              try {
-                const saveRes = await fetch("/api/projects", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    name: validated.brandName,
-                    industry: validated.industry,
-                    briefing: formData.briefing,
-                    projectMode: formData.projectMode,
-                    brandbookData: validated,
-                  }),
-                });
-                if (saveRes.ok) {
-                  const json = await saveRes.json() as { data?: { id?: string } };
-                  if (json.data?.id) {
-                    savedProjectId = json.data.id;
-                    setCurrentProjectId(savedProjectId);
-                  }
-                }
-              } catch { /* non-fatal */ }
-
-              // Auto-generate logo images (with projectId for R2 persistence)
-              const currentKeys = loadApiKeys();
-              autoGenerateLogos(validated, currentKeys, promptOpsProvider, savedProjectId).catch(() => {});
-            } else if (event.type === "error") {
-              throw new Error(event.error ?? "Erro desconhecido");
-            }
-          } catch (parseErr) {
-            if (parseErr instanceof SyntaxError) continue;
-            throw parseErr;
-          }
-        }
-        if (done) break;
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido";
-      setError(message);
-      toast.error("Falha na geração", { description: message.slice(0, 120) });
-    } finally {
-      setLoading(false);
-      setGenerationPhase("");
-      setGenerationPct(0);
+      await restoreBrandbookSession(validated, {
+        nextTab: "viewer",
+        nextViewerTab: "preview",
+      });
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "JSON invalido. Verifique a formatacao.");
     }
-  }
-
-  /** Reset all state and navigate to the generate form for a fresh brandbook */
-  function startNewBrandbook() {
-    setBrandbookData(null);
-    setGeneratedAssets({});
-    setUploadedBrandAssets([]);
-    setAssetPack({ files: [] });
-    setCurrentProjectId(null);
-    resetHistory();
-    setError("");
-    setPrefillBrandName("");
-    setPrefillIndustry("");
-    setPrefillBriefing("");
-    setJsonText("");
-    setTab("generate");
   }
 
   // React to client-side navigations to ?tab=generate (e.g. clicking "Novo Brandbook"
   // while already on the editor page). useSearchParams changes trigger this effect.
-  // We track whether init has completed to avoid double-processing on mount.
   const initDoneRef = useRef(false);
   useEffect(() => {
-    // Mark init as done after a tick (init effect runs first, same commit)
     const timer = setTimeout(() => { initDoneRef.current = true; }, 100);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    // Skip until init effect has had time to process
     if (!initDoneRef.current) return;
-    // Only react if there's actually a tab param in the live URL
     const tabParam = searchParams.get("tab");
     if (!tabParam) return;
     if (tabParam === "generate") {
@@ -731,478 +451,6 @@ export default function Home() {
       setError(e instanceof Error ? e.message : "Erro ao carregar exemplo");
       return;
     }
-  }
-
-  async function handleExportPack() {
-    if (!brandbookData) return;
-    setExportingPack(true);
-    setError("");
-    try {
-      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
-        action: "exportar o pack completo",
-        subject: "Brandbook atual",
-      });
-      const lintReport = await fetchBrandbookLintReport(validatedBrandbook);
-      const guard = getProtectedExportGuard("pack", lintReport);
-      if (!guard.allowed) throw new Error(guard.reason ?? "Pack bloqueado pelo quality gate.");
-
-      const res = await fetch("/api/export-pack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandbookData: validatedBrandbook,
-          generatedAssets: Object.values(generatedAssets),
-          uploadedAssets: uploadedBrandAssets,
-          assetPackFiles,
-        }),
-      });
-      if (!res.ok) {
-        const j = await readJsonResponse<{ error?: string }>(res, "/api/export-pack").catch(() => ({}));
-        throw new Error((j as { error?: string }).error ?? "Erro ao exportar pack");
-      }
-      const blob = await res.blob();
-      const slug = slugifyForStorage(validatedBrandbook.brandName);
-      downloadBlob(blob, `${slug}-brandbook-pack.zip`, { rel: "noopener" });
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao exportar pack");
-    } finally {
-      setExportingPack(false);
-    }
-  }
-
-  function handleExportBrandbook() {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    downloadJsonFile(brandbookData, `${slug}-brandbook.json`);
-    toast.success("JSON exportado", { description: `${slug}-brandbook.json` });
-  }
-
-  async function handleExportProduction() {
-    if (!brandbookData) return;
-    setError("");
-    try {
-      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
-        action: "exportar o manifesto de produção",
-        subject: "Brandbook atual",
-      });
-      const lintReport = await fetchBrandbookLintReport(validatedBrandbook);
-      const guard = getProtectedExportGuard("production_manifest", lintReport);
-      if (!guard.allowed) throw new Error(guard.reason ?? "Manifesto de produção bloqueado pelo quality gate.");
-
-      const manifest = generateProductionManifest(validatedBrandbook);
-      const slug = slugifyForStorage(validatedBrandbook.brandName);
-      downloadJsonFile(manifest, `${slug}-production-manifest.json`);
-      toast.success("Manifesto de produção exportado");
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erro ao exportar manifesto de produção";
-      setError(msg);
-      toast.error("Falha na exportação", { description: msg.slice(0, 120) });
-    }
-  }
-
-  async function handleImportJson() {
-    try {
-      const parsed = JSON.parse(jsonText);
-      const validated = validateLooseBrandbook(parsed, {
-        action: "importar JSON",
-        subject: "JSON do brandbook",
-      });
-      await restoreBrandbookSession(validated, {
-        nextTab: "viewer",
-        nextViewerTab: "preview",
-      });
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "JSON inválido. Verifique a formatação.");
-    }
-  }
-
-  async function handleGenerateAssetPack() {
-    if (!brandbookData) return;
-
-    const hasKey = hasPromptOpsProviderKey(promptOpsProvider, apiKeys);
-    if (!hasKey) {
-      setError("Configure uma chave de IA (OpenAI ou Google) para gerar o Asset Pack.");
-      return;
-    }
-
-    setAssetPackGenerating(true);
-    setError("");
-    try {
-      const validatedBrandbook = validateLooseBrandbook(brandbookData, {
-        action: "gerar o Asset Pack",
-        subject: "Brandbook atual",
-      });
-      const res = await fetch("/api/generate-asset-pack", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandbookData: validatedBrandbook,
-          textProvider: promptOpsProvider,
-          openaiKey: apiKeys.openai || undefined,
-          googleKey: apiKeys.google || undefined,
-          openaiModel: promptOpsProvider === "openai" ? apiKeys.openaiTextModel || undefined : undefined,
-          googleModel: promptOpsProvider === "gemini" ? apiKeys.googleTextModel || undefined : undefined,
-        }),
-      });
-      const j = await readJsonResponse<(AssetPackState & { error?: string }) | { error?: string }>(
-        res,
-        "/api/generate-asset-pack"
-      ).catch((): { error?: string } => ({}));
-      if (!res.ok) throw new Error(j.error ?? "Erro ao gerar Asset Pack");
-      if (!("files" in j) || !Array.isArray(j.files)) throw new Error("Resposta inválida ao gerar Asset Pack");
-      setAssetPack({
-        files: j.files,
-        coverage: j.coverage ?? null,
-        quality: j.quality ?? null,
-        plan: j.plan ?? null,
-      });
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erro ao gerar Asset Pack");
-    } finally {
-      setAssetPackGenerating(false);
-    }
-  }
-
-  // ─── Robust auto-save with debounce + error feedback ─────────────
-  const saveStatusRef = useRef<"idle" | "saving" | "error">("idle");
-  const [saveError, setSaveError] = useState(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastServerSaveRef = useRef<string>("");
-
-  const persistAll = useCallback(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    setSaveError(false);
-    saveStatusRef.current = "saving";
-
-    // 1. localStorage for brandbook JSON (instant)
-    try {
-      saveBrandbookData(slug, brandbookData);
-      setActiveSlug(slug);
-    } catch {
-      setSaveError(true);
-      saveStatusRef.current = "error";
-      toast.error("Erro ao salvar — localStorage cheio. Exporte seu brandbook para não perder dados.");
-      return;
-    }
-
-    // 2. IndexedDB for assets (async, with error reporting)
-    const promises: Promise<void>[] = [];
-    for (const [key, asset] of Object.entries(generatedAssets)) {
-      promises.push(saveGeneratedImage(slug, key, asset));
-    }
-    promises.push(saveBrandAssets(slug, uploadedBrandAssets));
-    promises.push(saveAssetPack(slug, assetPack));
-
-    Promise.all(promises)
-      .then(() => { saveStatusRef.current = "idle"; })
-      .catch(() => {
-        setSaveError(true);
-        saveStatusRef.current = "error";
-        toast.error("Erro ao salvar assets no IndexedDB. Exporte para não perder dados.");
-      });
-  }, [brandbookData, generatedAssets, uploadedBrandAssets, assetPack]);
-
-  // Server-side persist — saves brandbook to database so share links & other devices stay in sync
-  const persistToServer = useCallback(() => {
-    if (!brandbookData) return;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    const dataHash = JSON.stringify(brandbookData).length.toString() + ":" + brandbookData.brandName;
-    // Skip if nothing meaningful changed since last server save
-    if (dataHash === lastServerSaveRef.current) return;
-    lastServerSaveRef.current = dataHash;
-
-    fetch(`/api/projects/${encodeURIComponent(slug)}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ brandbookData }),
-    }).catch(() => {
-      // Server save is best-effort — localStorage is the primary backup
-      // If user is not authenticated or project doesn't exist yet, this silently fails
-    });
-  }, [brandbookData]);
-
-  // Debounced auto-save to localStorage: triggers 800ms after last change
-  useEffect(() => {
-    if (!brandbookData) return;
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(persistAll, 800);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [brandbookData, generatedAssets, uploadedBrandAssets, assetPack, persistAll]);
-
-  // Debounced auto-save to server: triggers 3s after last change (less aggressive)
-  useEffect(() => {
-    if (!brandbookData) return;
-    if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
-    serverSaveTimerRef.current = setTimeout(persistToServer, 3000);
-    return () => { if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current); };
-  }, [brandbookData, persistToServer]);
-
-  // Ensure currentProjectId is always resolved — required for image persistence to R2/DB
-  const projectIdResolveRef = useRef(false);
-  useEffect(() => {
-    if (!brandbookData || currentProjectId || projectIdResolveRef.current) return;
-    projectIdResolveRef.current = true;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    fetch(`/api/projects/${encodeURIComponent(slug)}`)
-      .then((res) => res.ok ? res.json() as Promise<{ data?: { id?: string } }> : null)
-      .then((json) => {
-        if (json?.data?.id) {
-          setCurrentProjectId(json.data.id);
-        } else {
-          // Project doesn't exist on server yet — create it
-          return fetch("/api/projects", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: brandbookData.brandName,
-              industry: brandbookData.industry,
-              brandbookData,
-            }),
-          })
-            .then((r) => r.ok ? r.json() as Promise<{ data?: { id?: string } }> : null)
-            .then((r) => {
-              if (r?.data?.id) setCurrentProjectId(r.data.id);
-            });
-        }
-      })
-      .catch(() => { /* non-fatal — images will still work locally */ })
-      .finally(() => { projectIdResolveRef.current = false; });
-  }, [brandbookData, currentProjectId]);
-
-  // Sync images to server whenever generatedAssets change and projectId is available
-  const syncedKeysRef = useRef<Set<string>>(new Set());
-  const imageSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const syncImagesToServer = useCallback(() => {
-    if (!currentProjectId || Object.keys(generatedAssets).length === 0) return;
-
-    const assetsToSync = Object.entries(generatedAssets)
-      .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt))
-      .map(([key, a]) => ({
-        key,
-        url: a.url,
-        provider: a.provider,
-        prompt: a.prompt,
-      }))
-      .slice(0, 10);
-
-    if (assetsToSync.length === 0) return;
-
-    fetch("/api/assets/sync", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId: currentProjectId, assets: assetsToSync }),
-    })
-      .then((res) => {
-        if (res.ok) {
-          for (const a of assetsToSync) {
-            const asset = generatedAssets[a.key];
-            if (asset) syncedKeysRef.current.add(a.key + ":" + asset.generatedAt);
-          }
-          // If there are more un-synced assets, schedule another sync
-          const remaining = Object.entries(generatedAssets)
-            .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt));
-          if (remaining.length > 0) {
-            setTimeout(syncImagesToServer, 1000);
-          }
-        }
-      })
-      .catch(() => { /* non-fatal */ });
-  }, [currentProjectId, generatedAssets]);
-
-  useEffect(() => {
-    if (!currentProjectId || Object.keys(generatedAssets).length === 0) return;
-
-    // Find assets not yet synced to server
-    const assetsToSync = Object.entries(generatedAssets)
-      .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt));
-
-    if (assetsToSync.length === 0) return;
-
-    // Debounce to avoid hammering the server during batch generation
-    if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current);
-    imageSyncTimerRef.current = setTimeout(syncImagesToServer, 2000);
-
-    return () => { if (imageSyncTimerRef.current) clearTimeout(imageSyncTimerRef.current); };
-  }, [currentProjectId, generatedAssets, syncImagesToServer]);
-
-  // Pull server-side assets into IndexedDB on load (server → local reconciliation)
-  const serverPullDoneRef = useRef(false);
-  useEffect(() => {
-    if (!currentProjectId || !brandbookData || serverPullDoneRef.current) return;
-    serverPullDoneRef.current = true;
-    const slug = slugifyForStorage(brandbookData.brandName);
-    pullServerAssets(currentProjectId, slug)
-      .then((downloaded) => {
-        if (Object.keys(downloaded).length > 0) {
-          setGeneratedAssets((prev) => ({ ...prev, ...downloaded }));
-        }
-      })
-      .catch(() => { /* non-fatal: server pull is best-effort */ });
-  }, [currentProjectId, brandbookData]);
-
-  // Also save immediately on page unload — includes images
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      persistAll();
-      // Fire-and-forget server save via sendBeacon for reliability on tab close
-      if (brandbookData) {
-        const slug = slugifyForStorage(brandbookData.brandName);
-        navigator.sendBeacon?.(
-          `/api/projects/${encodeURIComponent(slug)}`,
-          new Blob([JSON.stringify({ brandbookData })], { type: "application/json" })
-        );
-      }
-      // Also sync any un-synced images via sendBeacon
-      if (currentProjectId && Object.keys(generatedAssets).length > 0) {
-        const unsyncedAssets = Object.entries(generatedAssets)
-          .filter(([key, a]) => a.url && !syncedKeysRef.current.has(key + ":" + a.generatedAt))
-          .map(([key, a]) => ({ key, url: a.url, provider: a.provider, prompt: a.prompt }))
-          .slice(0, 10);
-        if (unsyncedAssets.length > 0) {
-          navigator.sendBeacon?.(
-            "/api/assets/sync",
-            new Blob([JSON.stringify({ projectId: currentProjectId, assets: unsyncedAssets })], { type: "application/json" })
-          );
-        }
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [persistAll, brandbookData, currentProjectId, generatedAssets]);
-
-  // ─── Force save to cloud (manual trigger) ──────────────────────────
-  const [cloudSaving, setCloudSaving] = useState(false);
-  const [cloudSaved, setCloudSaved] = useState(false);
-
-  async function handleForceSaveToCloud() {
-    if (!brandbookData || cloudSaving) return;
-    setCloudSaving(true);
-    setCloudSaved(false);
-    const slug = slugifyForStorage(brandbookData.brandName);
-
-    try {
-      // 1. Save brandbook JSON to server
-      const saveRes = await fetch(`/api/projects/${encodeURIComponent(slug)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandbookData }),
-      });
-
-      // If project didn't exist, create it
-      let resolvedProjectId = currentProjectId;
-      if (!saveRes.ok && saveRes.status === 401) {
-        toast.error("Faça login para salvar na nuvem.");
-        return;
-      }
-      if (!resolvedProjectId) {
-        const createRes = await fetch("/api/projects", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: brandbookData.brandName,
-            industry: brandbookData.industry,
-            brandbookData,
-          }),
-        });
-        if (createRes.ok) {
-          const json = await createRes.json() as { data?: { id?: string } };
-          if (json.data?.id) {
-            resolvedProjectId = json.data.id;
-            setCurrentProjectId(resolvedProjectId);
-          }
-        }
-      }
-
-      // 2. Sync all images to server
-      if (resolvedProjectId && Object.keys(generatedAssets).length > 0) {
-        const assetsToSync = Object.entries(generatedAssets)
-          .filter(([, a]) => a.url)
-          .map(([key, a]) => ({
-            key,
-            url: a.url,
-            provider: a.provider,
-            prompt: a.prompt,
-          }));
-
-        if (assetsToSync.length > 0) {
-          // Sync in batches of 10
-          for (let i = 0; i < assetsToSync.length; i += 10) {
-            const batch = assetsToSync.slice(i, i + 10);
-            const res = await fetch("/api/assets/sync", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                projectId: resolvedProjectId,
-                assets: batch,
-              }),
-            });
-            if (res.ok) {
-              for (const a of batch) {
-                const asset = generatedAssets[a.key];
-                if (asset) syncedKeysRef.current.add(a.key + ":" + asset.generatedAt);
-              }
-            }
-          }
-        }
-      }
-
-      // 3. Also persist locally
-      persistAll();
-
-      setCloudSaved(true);
-      toast.success("Salvo na nuvem", {
-        description: "Brandbook + imagens sincronizados. Qualquer pessoa com o link verá a versão atual.",
-      });
-      setTimeout(() => setCloudSaved(false), 4000);
-    } catch (err) {
-      toast.error("Erro ao salvar na nuvem", {
-        description: err instanceof Error ? err.message : "Tente novamente",
-      });
-    } finally {
-      setCloudSaving(false);
-    }
-  }
-
-  function handleClearImageCache() {
-    if (!brandbookData) return;
-    setConfirmDialog({
-      title: "Limpar cache de imagens",
-      description: "Todas as imagens geradas salvas para este brandbook serão removidas. Essa ação não pode ser desfeita.",
-      variant: "danger",
-      onConfirm: () => {
-        const slug = slugifyForStorage(brandbookData.brandName);
-        void clearBrandbookGeneratedAssetSession(slug);
-        setGeneratedAssets({});
-        toast.success("Cache de imagens limpo");
-      },
-    });
-  }
-
-  async function handleAssetGenerated(key: string, asset: GeneratedAsset) {
-    // Stamp with current brand fingerprint so we can detect staleness later
-    const fp = brandbookRef.current ? computeBrandFingerprint(brandbookRef.current) : undefined;
-    let storedAsset: GeneratedAsset = { ...asset, brandFingerprint: fp };
-    // For DALL-E 3 / Ideogram: external URLs expire — display immediately,
-    // then convert to permanent data URL in the background
-    if (asset.url.startsWith("https://")) {
-      storedAsset = { ...storedAsset, originalUrl: asset.url };
-      setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
-      fetchImageDataUrl(asset.url)
-        .then((dataUrl) => {
-          const permanent = { ...storedAsset, url: dataUrl };
-          setGeneratedAssets((prev) => ({ ...prev, [key]: permanent }));
-          const current = brandbookRef.current;
-          if (current) {
-            const slug = slugifyForStorage(current.brandName);
-            saveGeneratedImage(slug, key, permanent).catch(() => {});
-          }
-        })
-        .catch(() => {}); // Keep external URL if conversion fails
-      return;
-    }
-    setGeneratedAssets((prev) => ({ ...prev, [key]: storedAsset }));
   }
 
   const strategyProviderHasKey = hasPromptOpsProviderKey(strategyProvider, apiKeys);

@@ -5,7 +5,7 @@ import { z } from "zod";
 export const runtime = "nodejs";
 
 const CreateCommentSchema = z.object({
-  versionId: z.string(),
+  versionId: z.string().optional(),
   section: z.string().optional(),
   text: z.string().min(1).max(2000),
   authorName: z.string().min(1).max(100),
@@ -14,17 +14,46 @@ const CreateCommentSchema = z.object({
 });
 
 // GET — list comments for a brandbook version
+// Supports: ?versionId=xxx or ?shareToken=xxx (resolves to latest version)
+// Optional: ?section=xxx to filter by section
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const versionId = searchParams.get("versionId");
+  let versionId = searchParams.get("versionId");
   const shareToken = searchParams.get("shareToken");
+  const section = searchParams.get("section");
 
-  if (!versionId) {
-    return NextResponse.json({ error: "versionId is required" }, { status: 400 });
+  // If shareToken provided without versionId, resolve to latest version
+  if (!versionId && shareToken) {
+    const shareLink = await prisma.shareLink.findUnique({
+      where: { token: shareToken },
+      include: {
+        project: {
+          include: {
+            brandbookVersions: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { id: true },
+            },
+          },
+        },
+      },
+    });
+    if (!shareLink || !shareLink.isActive) {
+      return NextResponse.json({ error: "Invalid share token" }, { status: 403 });
+    }
+    const latestVersion = shareLink.project.brandbookVersions[0];
+    if (!latestVersion) {
+      return NextResponse.json({ error: "No version found" }, { status: 404 });
+    }
+    versionId = latestVersion.id;
   }
 
-  // If accessing via share token, verify it's valid
-  if (shareToken) {
+  if (!versionId) {
+    return NextResponse.json({ error: "versionId or shareToken is required" }, { status: 400 });
+  }
+
+  // If accessing via share token with explicit versionId, verify it's valid
+  if (shareToken && searchParams.get("versionId")) {
     const shareLink = await prisma.shareLink.findUnique({
       where: { token: shareToken },
       include: { project: { include: { brandbookVersions: { select: { id: true } } } } },
@@ -38,8 +67,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const where: { versionId: string; section?: string } = { versionId };
+  if (section) {
+    where.section = section;
+  }
+
   const comments = await prisma.brandbookComment.findMany({
-    where: { versionId },
+    where,
     orderBy: { createdAt: "desc" },
     include: { user: { select: { name: true, email: true, image: true } } },
   });
@@ -56,11 +90,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid body" }, { status: 400 });
     }
 
-    const { versionId, section, text, authorName, authorEmail, shareToken } = parsed.data;
+    const { versionId: rawVersionId, section, text, authorName, authorEmail, shareToken } = parsed.data;
+
+    let resolvedVersionId = rawVersionId;
+
+    // If no versionId but shareToken provided, resolve to latest version
+    if (!resolvedVersionId && shareToken) {
+      const shareLink = await prisma.shareLink.findUnique({
+        where: { token: shareToken },
+        include: {
+          project: {
+            include: {
+              brandbookVersions: {
+                orderBy: { createdAt: "desc" as const },
+                take: 1,
+                select: { id: true },
+              },
+            },
+          },
+        },
+      });
+      if (!shareLink || !shareLink.isActive) {
+        return NextResponse.json({ error: "Invalid share token" }, { status: 403 });
+      }
+      const latestVersion = shareLink.project.brandbookVersions[0];
+      if (!latestVersion) {
+        return NextResponse.json({ error: "No version found" }, { status: 404 });
+      }
+      resolvedVersionId = latestVersion.id;
+    }
+
+    if (!resolvedVersionId) {
+      return NextResponse.json({ error: "versionId or shareToken is required" }, { status: 400 });
+    }
 
     // Verify version exists and is accessible
     const version = await prisma.brandbookVersion.findUnique({
-      where: { id: versionId },
+      where: { id: resolvedVersionId },
       include: { project: { include: { shareLinks: true } } },
     });
 
@@ -68,8 +134,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Version not found" }, { status: 404 });
     }
 
-    // If share token provided, verify it matches this project
-    if (shareToken) {
+    // If share token provided with explicit versionId, verify it matches this project
+    if (shareToken && rawVersionId) {
       const validToken = version.project.shareLinks.some(
         (sl) => sl.token === shareToken && sl.isActive
       );
@@ -95,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     const comment = await prisma.brandbookComment.create({
       data: {
-        versionId,
+        versionId: resolvedVersionId,
         userId: user.id,
         section: section ?? null,
         text,
