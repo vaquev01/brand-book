@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import type { Project, BrandbookVersion } from "@/generated/prisma"
 import { DuplicateProjectButton } from "@/components/DuplicateProjectButton"
 import { parseBrandbookJson, safeHex } from "@/lib/brandbookJsonHelper"
+import { ProjectFilter } from "@/components/ProjectFilter"
 
 type ProjectWithVersions = Project & {
   brandbookVersions: BrandbookVersion[]
@@ -69,12 +70,13 @@ export default async function DashboardPage() {
         <EmptyState />
       ) : (
         <div>
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Projetos recentes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project, i) => (
-              <ProjectCard key={project.id} project={project} index={i} />
-            ))}
-          </div>
+          <ProjectFilter
+            projects={projects.map(p => ({ id: p.id, name: p.name, industry: p.industry, status: p.status }))}
+            renderCard={(project, i) => {
+              const fullProject = projects.find(p => p.id === project.id)!
+              return <ProjectCard key={project.id} project={fullProject} index={i} />
+            }}
+          />
           {totalCount > projects.length && (
             <div className="mt-6 text-center">
               <a href="/dashboard/projects" className="text-sm font-medium text-violet-600 hover:text-violet-700 transition-colors">

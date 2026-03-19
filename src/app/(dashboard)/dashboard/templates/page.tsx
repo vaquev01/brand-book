@@ -214,28 +214,33 @@ function TemplateCard({
           {template.description}
         </p>
 
-        {/* Color preview */}
-        <div className="flex items-center gap-3">
+        {/* Palette bar preview */}
+        <div className="flex h-3 rounded-full overflow-hidden mb-3">
+          {template.suggestedColors.primary.map((color, i) => (
+            <div key={i} className="flex-1" style={{ backgroundColor: color }} />
+          ))}
+          {template.suggestedColors.secondary.slice(0, 2).map((color, i) => (
+            <div key={`s-${i}`} className="flex-1" style={{ backgroundColor: color }} />
+          ))}
+        </div>
+
+        {/* Font pairing */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-gray-400 font-medium">Fontes:</span>
+            <span className="text-[11px] text-gray-600 font-semibold">{template.suggestedFonts.marketing}</span>
+            <span className="text-[10px] text-gray-300">+</span>
+            <span className="text-[11px] text-gray-500">{template.suggestedFonts.ui}</span>
+          </div>
           <div className="flex -space-x-1">
             {template.suggestedColors.primary.map((color, i) => (
               <div
                 key={i}
-                className="w-5 h-5 rounded-full border-2 border-white shadow-sm"
-                style={{ backgroundColor: color }}
-              />
-            ))}
-            {template.suggestedColors.secondary.slice(0, 2).map((color, i) => (
-              <div
-                key={`s-${i}`}
-                className="w-5 h-5 rounded-full border-2 border-white shadow-sm"
+                className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
                 style={{ backgroundColor: color }}
               />
             ))}
           </div>
-          <div className="flex-1" />
-          <span className="text-[10px] text-gray-300 font-medium uppercase tracking-wider">
-            {template.suggestedFonts.marketing}
-          </span>
         </div>
 
         {/* Tags */}
