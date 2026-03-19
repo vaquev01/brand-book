@@ -14,7 +14,7 @@ describe("generate service helpers", () => {
 
     expect(input.scope).toBe("full");
     expect(input.creativityLevel).toBe("balanced");
-    expect(input.intentionality).toBe(false);
+    expect(input.intentionality).toBe(true);
     expect(input.referenceImages).toEqual(["a", "b"]);
     expect(input.externalUrls).toEqual(["https://example.com", "https://foo.bar"]);
   });

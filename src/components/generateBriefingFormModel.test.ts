@@ -20,6 +20,10 @@ describe("generateBriefingFormModel", () => {
       hasMascot: false,
       mascotDescription: "",
       extraContext: "",
+      brandValues: "",
+      emotionalTerritory: "",
+      physicalTouchpoints: "",
+      competitorWeaknesses: "",
     });
   });
 
