@@ -42,6 +42,19 @@ export function migrateBrandbook(raw: unknown): BrandbookData {
 
   if (!data.schemaVersion) data.schemaVersion = LATEST_SCHEMA_VERSION;
 
+  // Migrate old brandbooks that stored symbol concept in clearSpace
+  if (data.logo && typeof data.logo === "object") {
+    const logo = data.logo as unknown as Record<string, unknown>;
+    if (!logo.symbolConcept && logo.clearSpace && typeof logo.clearSpace === "string") {
+      // Old brandbooks stored the concept in clearSpace
+      // Extract it if it looks like a concept (longer than spacing rules)
+      if (logo.clearSpace.length > 100) {
+        logo.symbolConcept = logo.clearSpace;
+        logo.clearSpace = "Area minima de protecao igual a 1x a altura do mark em todos os lados.";
+      }
+    }
+  }
+
   if (Array.isArray(data.applications)) {
     data.applications = data.applications.map((app) => {
       const normalizedImageKey = normalizeLegacyAssetKey(app.imageKey);

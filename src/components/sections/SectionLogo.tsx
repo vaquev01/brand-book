@@ -575,6 +575,112 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
         </div>
       )}
 
+      {/* Symbol Concept */}
+      {data.logo.symbolConcept && (
+        <div className="mb-6 bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 rounded-[1.2rem] p-5">
+          <div className="flex items-start gap-3 mb-3">
+            <span className="w-7 h-7 bg-indigo-600 text-white rounded flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">&#9830;</span>
+            <h3 className="font-bold text-indigo-900">Conceito do Simbolo</h3>
+          </div>
+          <EditableField
+            value={data.logo.symbolConcept}
+            onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, symbolConcept: val } }))}
+            className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap"
+            readOnly={!onUpdateData}
+            multiline
+          />
+        </div>
+      )}
+
+      {/* Semiotic Analysis & Shape Psychology */}
+      {(data.logo.semioticAnalysis || data.logo.shapePsychology || data.logo.negativeSpaceMetaphor || data.logo.evolutionaryStage) && (
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          {data.logo.semioticAnalysis && (
+            <div className="bg-white border rounded-xl p-5 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-5 h-5 bg-violet-100 text-violet-600 rounded flex items-center justify-center text-[10px] font-bold">S</span>
+                Analise Semiotica
+              </h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div>
+                  <span className="font-semibold text-gray-700">Natureza: </span>
+                  <EditableField
+                    value={data.logo.semioticAnalysis.natureOfSymbol}
+                    onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, semioticAnalysis: { ...prev.logo.semioticAnalysis!, natureOfSymbol: val as "Icon" | "Index" | "Symbol" } } }))}
+                    className="inline"
+                    readOnly={!onUpdateData}
+                  />
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700">Denotacao: </span>
+                  <EditableField
+                    value={data.logo.semioticAnalysis.denotation}
+                    onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, semioticAnalysis: { ...prev.logo.semioticAnalysis!, denotation: val } } }))}
+                    className="inline"
+                    readOnly={!onUpdateData}
+                    multiline
+                  />
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700">Conotacao: </span>
+                  <EditableField
+                    value={data.logo.semioticAnalysis.connotation}
+                    onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, semioticAnalysis: { ...prev.logo.semioticAnalysis!, connotation: val } } }))}
+                    className="inline"
+                    readOnly={!onUpdateData}
+                    multiline
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          {data.logo.shapePsychology && (
+            <div className="bg-white border rounded-xl p-5 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-5 h-5 bg-amber-100 text-amber-600 rounded flex items-center justify-center text-[10px] font-bold">P</span>
+                Psicologia das Formas
+              </h4>
+              <EditableField
+                value={data.logo.shapePsychology}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, shapePsychology: val } }))}
+                className="text-gray-600 text-sm leading-relaxed"
+                readOnly={!onUpdateData}
+                multiline
+              />
+            </div>
+          )}
+          {data.logo.negativeSpaceMetaphor && (
+            <div className="bg-white border rounded-xl p-5 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-5 h-5 bg-gray-100 text-gray-600 rounded flex items-center justify-center text-[10px] font-bold">N</span>
+                Metafora do Espaco Negativo
+              </h4>
+              <EditableField
+                value={data.logo.negativeSpaceMetaphor}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, negativeSpaceMetaphor: val } }))}
+                className="text-gray-600 text-sm leading-relaxed"
+                readOnly={!onUpdateData}
+                multiline
+              />
+            </div>
+          )}
+          {data.logo.evolutionaryStage && (
+            <div className="bg-white border rounded-xl p-5 shadow-sm">
+              <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded flex items-center justify-center text-[10px] font-bold">E</span>
+                Estagio Evolutivo
+              </h4>
+              <EditableField
+                value={data.logo.evolutionaryStage}
+                onSave={(val) => onUpdateData?.(prev => ({ ...prev, logo: { ...prev.logo, evolutionaryStage: val as "Descriptive" | "Transitional" | "Iconic" } }))}
+                className="text-gray-600 text-sm leading-relaxed"
+                readOnly={!onUpdateData}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Logo variants */}
       {variantEntries.length > 0 && (
         <div className="mb-6">
