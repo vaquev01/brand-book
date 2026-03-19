@@ -112,7 +112,8 @@ export function useEditorSession() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const restoreBrandbookSession = useCallback(async (
     nextBrandbook: BrandbookData,
