@@ -134,28 +134,82 @@ INSTRUÇÕES POR SEÇÃO:
 5. "verbalIdentity": tagline memorável e intraduzível (que se perde algo na tradução), one-liner com ganchos, traços de voz com exemplos, messaging pillars com copy real, vocabulário com pelo menos 8 palavras em cada lista, do/don'ts acionáveis, 5+ headlines e CTAs variados.
 6. "logo": URLs placehold.co realistas (use cores da paleta no URL). O logo deve ser a representação visual do conceito central da marca, não um ornamento isolado. Se houver recurso expressivo específico (ex: pontuação, monograma, contraforma, gesto caligráfico, estrutura modular), ele deve ser adotado apenas se for a solução estratégica mais coerente e precisa ser descrito como sistema replicável, não como detalhe casual. Regras de uso incorreto específicas e ilustrativas (mínimo 5).
 
-O campo symbolConcept é o MAIS IMPORTANTE de todo o brandbook — ele é a semente que gera todo o sistema visual. Deve conter:
-1. FORMA BASE: qual geometria (círculos, triângulos, linhas, formas orgânicas) e POR QUÊ essa forma traduz a personalidade da marca
-2. METÁFORA VISUAL: qual ideia abstrata o símbolo comunica (não literal — um restaurante NÃO precisa de garfo/faca; qual é a ESSÊNCIA que transcende o literal?)
-3. TÉCNICA DE CONSTRUÇÃO: como os elementos se combinam (sobreposição, intersecção, negativo, fragmentação, rotação)
-4. CONEXÃO COM ARCHETYPE: como a forma física do mark traduz o arquétipo da marca
-5. DIFERENCIAÇÃO: por que este mark NÃO seria confundido com nenhum outro do setor
+O campo symbolConcept é o MAIS IMPORTANTE de todo o brandbook — é a SEMENTE de onde nasce todo o sistema visual. Um bom symbolConcept permite que qualquer designer do mundo reconstrua o logo sem nunca tê-lo visto.
 
-REGRA DE OURO DO SYMBOLCONCEPT: Se o symbolConcept poderia descrever qualquer marca de qualquer setor, ele está ERRADO. Deve ser tão específico que só poderia pertencer a ESTA marca.
+COMO PENSAR O SYMBOLCONCEPT (processo criativo obrigatório):
 
-Mapeamento archetype → forma base (use como guia, não como regra rígida):
-- Hero: formas ascendentes, ângulos agudos, escudos, setas para cima
-- Caregiver: formas arredondadas, abraços, contenção, espaço acolhedor
-- Explorer: formas abertas, horizontes, caminhos, fragmentos que sugerem movimento
-- Sage: geometria precisa, simetria, grids, proporção áurea
-- Outlaw: quebras, ângulos inesperados, assimetria deliberada, tensão
-- Creator: formas orgânicas com precisão, ferramentas abstratas, processo visível
-- Ruler: verticalidade, coroa abstrata, estrutura imponente, peso visual
-- Magician: espirais, transformação, dualidade, formas impossíveis
-- Lover: curvas sensuais, fluidez, formas que se tocam, calor
-- Jester: assimetria divertida, surpresa geométrica, movimento implícito
-- Innocent: simplicidade, formas puras, círculos perfeitos, leveza
-- Everyman: formas familiares, acessíveis, sem pretensão, honestas
+PASSO 1 — ENCONTRAR A TENSÃO CRIATIVA:
+Toda grande marca vive numa tensão entre dois polos. Encontre a tensão ESPECÍFICA desta marca:
+- BDesk: "digital + humano" → tecnologia que acolhe
+- Nubank: "financeiro + descomplicado" → seriedade com leveza
+- Airbnb: "estranho + pertencimento" → o mundo como lar
+Qual é a tensão DESTA marca? O símbolo deve VIVER nessa tensão, não resolver ela — deve mantê-la viva visualmente.
+
+PASSO 2 — ESCOLHER A IDEIA VISUAL (não o objeto literal):
+O símbolo NÃO representa o que a marca VENDE. Representa o que ela FAZ SENTIR.
+- Uma padaria NÃO precisa de pão/trigo. Pode ser o calor que aquece as mãos.
+- Uma fintech NÃO precisa de moeda/gráfico. Pode ser o alívio de uma porta que se abre.
+- Uma escola NÃO precisa de livro/lápis. Pode ser o momento em que a luz entra.
+Pergunte: "Se eu fechasse os olhos e sentisse essa marca, qual FORMA apareceria?" Essa é a forma base.
+
+PASSO 3 — CONSTRUIR COM INTENÇÃO (cada traço justificado):
+Descreva o mark como se estivesse dando instruções a um designer que vai construí-lo num grid:
+- "Dois arcos de 180° se cruzam em ângulo de 23°, formando..."
+- "A letra B é desconstruída em 3 segmentos que, juntos, sugerem..."
+- "Um círculo perfeito é cortado por uma diagonal — o corte representa..."
+CADA elemento tem um PORQUÊ. Se não tem, remova.
+
+PASSO 4 — O TESTE DO GUARDANAPO:
+O mark deve ser tão simples que alguém consiga desenhá-lo de memória num guardanapo depois de ver uma vez.
+Se precisa de mais de 5 traços para esboçar, está complexo demais.
+Se não é reconhecível a 16px (favicon), precisa simplificar.
+
+PASSO 5 — A SURPRESA ESCONDIDA:
+Os melhores logos do mundo têm um segredo que você descobre depois:
+- FedEx: a seta entre o E e o x
+- Amazon: o sorriso que vai do A ao Z
+- Toblerone: o urso na montanha
+O mark deve ter UMA camada oculta que recompensa quem olha com atenção. Pode ser no espaço negativo, na sobreposição, ou na forma que duas letras criam juntas.
+
+ESTRUTURA DO SYMBOLCONCEPT (todos obrigatórios):
+1. CONCEITO CENTRAL: Uma frase que captura a ideia do mark. "O encontro entre X e Y."
+2. FORMA DESCRITIVA: Descrição geométrica precisa — como se estivesse escrevendo código SVG em palavras. Formas, ângulos, proporções, espessuras de traço.
+3. SIGNIFICADO: O que cada elemento representa e POR QUÊ (não decoração — intenção).
+4. ESPAÇO NEGATIVO: O que o espaço entre as formas comunica (nem que seja "respiro intencional").
+5. TÉCNICA: Como é construído (sobreposição, corte, rotação, ligatura, modular, gestual).
+6. ESCALA: Como se comporta de 16px (favicon) até 2m (fachada). O que simplifica.
+7. COR NO MARK: O mark funciona em preto puro? Funciona invertido? As cores são estruturais ou decorativas?
+
+REGRA DE OURO: Se você lê o symbolConcept e não consegue VISUALIZAR o mark mentalmente, está vago demais. Se consegue visualizá-lo e ele poderia ser de OUTRA marca, está genérico demais. O symbolConcept perfeito é tão preciso que gera a MESMA imagem mental em qualquer designer que o leia.
+
+ANTI-PATTERNS (NUNCA faça isso):
+- "Formas geométricas representando inovação" → vazio, descreve 10.000 logos
+- "Um símbolo moderno e clean" → não diz nada sobre a forma
+- "Inspirado na natureza com cores vibrantes" → não há mark, só mood
+- "A letra X estilizada" → estilizada COMO? Cada decisão precisa de descrição
+- "Círculos interconectados" → quantos? Que tamanho? Qual sobreposição? Que espessura?
+
+EXEMPLOS DE PROFUNDIDADE (esta é a barra mínima):
+
+Exemplo BOM para cafeteria premium:
+"Duas vírgulas espelhadas verticalmente formam um grão de café abstrato visto de cima. A vírgula superior tem peso de traço 2x maior que a inferior, criando tensão visual que sugere o vapor subindo da xícara. O espaço negativo entre as vírgulas forma sutilmente o número 1 — referência ao compromisso 'o melhor da sua manhã'. Construção: grid de 24x24, formas derivadas de círculos de 8u cortados a 60°. Em 16px, as vírgulas se simplificam em dois pontos assimétricos. Funciona em preto puro sobre branco e invertido."
+
+Exemplo BOM para fintech:
+"A letra N do nome é reconstruída com apenas dois traços: uma diagonal ascendente (45°, peso 3px) e um arco que a intercepta (raio 12u, 180°). A diagonal representa crescimento; o arco representa proteção. Onde se cruzam, o espaço negativo forma uma seta apontando para nordeste — progresso com segurança. Construção modular: os dois traços são os únicos elementos, derivados do grid de 24x24 com proporção 1:1.618. Stroke-weight uniforme para funcionar em qualquer escala. Em versão mínima (favicon), apenas a interseção é visível como um chevron."
+
+Archetype → sensibilidade formal (guia, não regra):
+- Hero: peso visual concentrado embaixo, formas que empurram para cima, sem fragilidade
+- Caregiver: formas que envolvem ou contêm outras, cantos nunca agressivos, abraço implícito
+- Explorer: assimetria que sugere caminho, formas que parecem em movimento mesmo paradas
+- Sage: construção visível (grid, proporção áurea), cada proporção é intencional e demonstrável
+- Outlaw: pelo menos um elemento que "quebra" a regra do próprio grid, tensão controlada
+- Creator: as marcas de construção fazem parte da estética (juntas, overlaps, camadas visíveis)
+- Ruler: verticalidade dominante, peso visual que comunica autoridade, simetria como poder
+- Magician: dualidade (formas que são duas coisas ao mesmo tempo), ilusão óptica sutil
+- Lover: curvas que se tocam sem se fundir, sensualidade geométrica, calor no traço
+- Jester: pelo menos um elemento inesperado que quebra a expectativa formal
+- Innocent: redução máxima, cada traço é essencial, nenhuma decoração
+- Everyman: formas que qualquer pessoa reconhece sem manual, zero pretensão formal
 
 O campo clearSpace agora contém APENAS regras de área de respiro/proteção. NÃO incluir o conceito do símbolo em clearSpace — isso vai exclusivamente em symbolConcept.
 7. "logoVariants": todas as 6 variações com URLs placehold.co.
@@ -1119,9 +1173,9 @@ EXEMPLOS DE PROFUNDIDADE GOLD-STANDARD (esta é a BARRA MÍNIMA de qualidade):
 "DM Serif Display injeta gravitas humanista num setor dominado por Helvetica e Inter — seus serifas triangulares evocam a precisão de relógios suíços."
 → Referência ao setor + razão VISUAL específica. NUNCA "Fonte bonita e moderna".
 
-▸ logo.symbolConcept (BOM):
-"O símbolo é construído a partir de um 'K' inscrito num círculo que representa Kairos (momento certo). O ângulo de 23.5° reflete ciclos naturais. A forma circular comunica o arquétipo Sage — precisão e completude. A intersecção K+círculo cria espaço negativo que forma uma seta sutil apontando para frente, reforçando progresso contínuo. Nenhuma outra EdTech usa geometria angular inscrita em curva — o contraste é o diferenciador."
-→ Forma + metáfora + técnica + archetype + diferenciação. NUNCA genérico. NUNCA algo que poderia descrever outra marca.
+▸ logo.symbolConcept (BOM — nível Pentagram):
+"CONCEITO: O encontro entre o analógico e o digital — a mesa de trabalho que pensa. FORMA: A letra B é desconstruída em dois segmentos: um arco superior (180°, raio 8u, peso 3px) e uma base retangular (12u × 4u, cantos arredondados 2u). O arco sugere uma tela/monitor; a base é a mesa/desk. Onde se conectam, o espaço negativo forma uma porta aberta — acesso. CONSTRUÇÃO: Grid 24×24, proporção 1:1.414 (√2, papel A). Stroke uniforme 2.5px. O arco nasce de um círculo perfeito cortado na horizontal — a metade superior é a B, a metade inferior é descartada. ESCALA: Em 16px (favicon), apenas arco+base como duas formas simples. Em fachada, as proporções geométricas ficam visíveis. ESPAÇO NEGATIVO: A abertura entre arco e base sugere uma porta/janela — convite para entrar no workspace digital. COR: Funciona em preto puro. Em versão colorida, o arco usa a cor primária e a base usa escala tonal 700."
+→ Conceito + tensão + forma precisa + grid + construção + escala + negativo + cor. Cada decisão visual tem um PORQUÊ rastreável à estratégia. Um designer lê isso e VISUALIZA o mark sem nunca tê-lo visto.
 
 ▸ logo.clearSpace (BOM):
 "Área mínima de proteção igual a 1x a altura do mark em todos os lados. Em fundos fotográficos, aumentar para 1.5x. Em aplicações digitais, mínimo 16px."

@@ -1435,9 +1435,11 @@ function buildDiffusionLogoPrompt(
   const archetype = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
   const coreValue = ctx.values.split(",")[0]?.trim() ?? ctx.personality.split(",")[0]?.trim();
   
-  const symbolConcept = (data.logo.symbol && !data.logo.symbol.toLowerCase().startsWith("abstract symbol for"))
-    ? data.logo.symbol
-    : coreValue;
+  // Priority chain for logo concept: symbolConcept > semioticAnalysis > non-URL symbol > brand values
+  const symbolConcept = data.logo.symbolConcept
+    ?? data.logo.semioticAnalysis?.denotation
+    ?? (data.logo.symbol && !data.logo.symbol.startsWith("http") && !data.logo.symbol.toLowerCase().startsWith("abstract symbol for") ? data.logo.symbol : null)
+    ?? `abstract mark that visually encodes: ${ctx.purpose}. Archetype: ${archetype}. Core value: ${coreValue}. Industry: ${data.industry}`;
   const palette = [ctx.primaryColor, ctx.secondaryColor, ctx.accentColor]
     .filter((color, index, arr) => arr.indexOf(color) === index)
     .slice(0, 3);
@@ -1495,7 +1497,7 @@ function buildDiffusionLogoPrompt(
   prompt += `Visual hierarchy: the main wordmark must be the primary verbal signal. Any descriptor, second line, category label, or supporting text must be visibly subordinate in size and emphasis. Typography must reinforce the same conceptual thesis as the symbol and feel strategically connected to the verbal identity. Symbol and wordmark must feel like one coherent identity system, not disconnected stacked parts. If the brand's strength lives in warmth, spontaneity, signature energy, or colloquial humanity, preserve that in the letterform behavior instead of neutralizing it. `;
 
   // 4. SHAPE & CONCEPT
-  prompt += `Symbol Concept: A highly abstracted, geometric mark representing "${symbolConcept}". Build the mark around one central symbolic thesis only, with immediate recognition and no competing metaphors. The chosen formal idea must clearly derive from the brand concept and verbal identity rather than from a random visual gimmick. Shape Psychology: ${shapePsychology}. `;
+  prompt += `SYMBOL CONCEPT (this is the creative brief — follow it precisely): ${symbolConcept}. BUILD the mark around this single symbolic thesis. Every geometric decision (angle, proportion, weight, intersection) must serve this concept. If the concept describes specific forms, USE those forms. If it describes a metaphor, TRANSLATE that metaphor into geometry. No competing ideas — one mark, one thesis, total commitment. Shape Psychology: ${shapePsychology}. `;
   prompt += `If a distinctive verbal or naming cue exists — such as punctuation, initials, a ligature, an accent mark, or a signature character — you may integrate it into the symbol only when it emerges naturally from the strategy, strengthens recognition, remains instantly legible, and can be implemented consistently across the identity system. Do not predefine or force this move. When simplifying, preserve what is emotionally or semantically core to the brand instead of flattening it into a generic mark. `;
   
   const negativeSpaceMetaphor = (data.logo as any).negativeSpaceMetaphor;
