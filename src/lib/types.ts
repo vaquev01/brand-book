@@ -228,6 +228,7 @@ export interface AudiencePersona {
   channels: string[];
   companySize?: string;
   digitalMaturity?: string;
+  imageUrl?: string;
 }
 
 export interface LogoVariants {

@@ -75,12 +75,25 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
 
               {/* Avatar + Name header */}
               <div className="px-5 py-4 bg-gray-50 border-b pr-14 flex items-center gap-4">
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-extrabold shrink-0 shadow-md"
-                  style={{ background: accentColor }}
-                >
-                  {initial}
-                </div>
+                {p.imageUrl ? (
+                  <div className="w-14 h-14 rounded-2xl shrink-0 shadow-md overflow-hidden relative group/avatar">
+                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                    <span className="absolute bottom-0.5 right-0.5 text-[7px] font-bold bg-black/60 text-white px-1 py-0.5 rounded-md">IA</span>
+                  </div>
+                ) : (
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-extrabold shrink-0 shadow-md relative group/avatar cursor-default"
+                    style={{ background: accentColor }}
+                    title="Persona sem imagem"
+                  >
+                    {initial}
+                    {onUpdateData && (
+                      <div className="absolute inset-0 rounded-2xl border-2 border-dashed border-white/40 flex items-center justify-center bg-black/20 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                        <span className="text-[9px] font-bold text-white/90 text-center leading-tight">✨<br/>IA</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Persona {i + 1}</div>
                   <div className="text-lg font-extrabold mt-0.5 leading-tight">

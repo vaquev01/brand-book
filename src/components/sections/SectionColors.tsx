@@ -160,26 +160,27 @@ function ColorCard({
           <EditableField value={color.name} onSave={(v) => onChange?.({ ...color, name: v })} readOnly={!onChange} />
         </h4>
 
-        {/* Color codes grid */}
-        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] font-mono text-gray-500">
-          <div className="flex items-center gap-1">
-            <span className="font-semibold text-gray-600">HEX</span>
-            {onChange ? (
-              <input
-                type="text"
-                value={color.hex}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (/^#[0-9a-fA-F]{6}$/.test(v)) handleColorPick(v);
-                  else onChange({ ...color, hex: v });
-                }}
-                className="w-16 bg-transparent border-b border-dashed border-gray-300 focus:border-gray-500 outline-none text-[10px] font-mono"
-                maxLength={7}
-              />
-            ) : (
-              <span>{color.hex}</span>
-            )}
-          </div>
+        {/* HEX always visible */}
+        <div className="flex items-center gap-1 text-[11px] font-mono text-gray-500">
+          <span className="font-semibold text-gray-600">HEX</span>
+          {onChange ? (
+            <input
+              type="text"
+              value={color.hex}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/^#[0-9a-fA-F]{6}$/.test(v)) handleColorPick(v);
+                else onChange({ ...color, hex: v });
+              }}
+              className="w-16 bg-transparent border-b border-dashed border-gray-300 focus:border-gray-500 outline-none text-[11px] font-mono"
+              maxLength={7}
+            />
+          ) : (
+            <span>{color.hex}</span>
+          )}
+        </div>
+        {/* Technical values: visible on hover or in edit mode */}
+        <div className={`grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] font-mono text-gray-500 transition-all ${onChange ? "" : "max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100 overflow-hidden"}`}>
           <div><span className="font-semibold text-gray-600">RGB</span> <EditableField value={color.rgb} onSave={(v) => onChange?.({ ...color, rgb: v })} readOnly={!onChange} /></div>
           <div><span className="font-semibold text-gray-600">CMYK</span> <EditableField value={color.cmyk} onSave={(v) => onChange?.({ ...color, cmyk: v })} readOnly={!onChange} /></div>
           {color.pantone && (
@@ -391,14 +392,23 @@ function WCAGCombinations({
   const others = pairs.filter(p => !p.passAA);
 
   return (
-    <div className="mt-5">
-      <h3 className="text-sm font-semibold mb-1 border-l-[3px] border-indigo-500 pl-3">
-        Combinações de Cores
-      </h3>
-      <p className="text-[10px] text-gray-400 mb-3 pl-3">
-        Clique para aprovar/reprovar. AA ≥ 4.5 · AAA ≥ 7. Preto e branco disponíveis em todas.
-      </p>
+    <details className="mt-5 group/wcag">
+      <summary className="cursor-pointer select-none list-none">
+        <div className="flex items-center gap-2 mb-1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 transition-transform group-open/wcag:rotate-90"><polyline points="9 18 15 12 9 6"/></svg>
+          <h3 className="text-sm font-semibold border-l-[3px] border-indigo-500 pl-3">
+            Combinações de Cores &amp; WCAG
+          </h3>
+          <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
+            {suggested.length} aprovadas
+          </span>
+        </div>
+        <p className="text-[10px] text-gray-400 mb-3 pl-8">
+          Clique para expandir. AA ≥ 4.5 · AAA ≥ 7.
+        </p>
+      </summary>
 
+      <div className="pl-2 mt-2">
       {suggested.length > 0 && (
         <>
           <p className="text-[10px] font-semibold text-green-600 mb-1.5 pl-1">Recomendadas</p>
@@ -436,7 +446,8 @@ function WCAGCombinations({
           </div>
         </>
       )}
-    </div>
+      </div>
+    </details>
   );
 }
 
