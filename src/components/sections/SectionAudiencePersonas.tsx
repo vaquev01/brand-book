@@ -76,14 +76,14 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
               {/* Avatar + Name header */}
               <div className="px-5 py-4 bg-gray-50 border-b pr-14 flex items-center gap-4">
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-extrabold shrink-0 shadow-md"
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-extrabold shrink-0 shadow-md"
                   style={{ background: accentColor }}
                 >
                   {initial}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Persona {i + 1}</div>
-                  <div className="text-xl font-extrabold mt-0.5 truncate">
+                  <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Persona {i + 1}</div>
+                  <div className="text-lg font-extrabold mt-0.5 leading-tight">
                     <EditableField
                       value={p.name}
                       onSave={(val) => onUpdateData?.(prev => {
@@ -94,7 +94,7 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
                       readOnly={!onUpdateData}
                     />
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-500 mt-0.5">
                     <EditableField
                       value={p.role}
                       onSave={(val) => onUpdateData?.(prev => {
@@ -109,7 +109,10 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
               </div>
 
               <div className="p-4 space-y-4">
+                {/* Porte / Maturidade Digital — only show if filled */}
+                {((p.companySize && p.companySize !== "—") || (p.digitalMaturity && p.digitalMaturity !== "—") || onUpdateData) && (
                 <div className="flex flex-wrap gap-3">
+                  {(p.companySize && p.companySize !== "—" || onUpdateData) && (
                   <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 flex-1 min-w-[140px]">
                     <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">Porte</div>
                     <div className="text-xs text-blue-900 font-medium">
@@ -124,6 +127,8 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
                       />
                     </div>
                   </div>
+                  )}
+                  {(p.digitalMaturity && p.digitalMaturity !== "—" || onUpdateData) && (
                   <div className="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 flex-1 min-w-[140px]">
                     <div className="text-[11px] font-bold text-purple-600 uppercase tracking-wider mb-0.5">Maturidade Digital</div>
                     <div className="text-xs text-purple-900 font-medium">
@@ -138,7 +143,9 @@ export function SectionAudiencePersonas({ data, num, onUpdateData }: { data: Bra
                       />
                     </div>
                   </div>
+                  )}
                 </div>
+                )}
                 <div>
                   <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contexto</div>
                   <div className="text-sm text-gray-700">

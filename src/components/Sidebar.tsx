@@ -95,10 +95,11 @@ const WORKSPACE_PLANS = ["team", "agency", "enterprise"]
 export function Sidebar({ user, plan }: SidebarProps) {
   const pathname = usePathname()
   const showWorkspace = plan ? WORKSPACE_PLANS.includes(plan) : false
-  const [collapsed, setCollapsed] = useState(false)
+  // Default collapsed on screens < 1440px, expanded on larger
+  const [collapsed, setCollapsed] = useState(true)
 
   return (
-    <aside className={`${collapsed ? 'w-[72px]' : 'w-60'} transition-all duration-300 ease-out bg-white flex flex-col h-full border-r border-gray-100 shrink-0 overflow-hidden`}>
+    <aside className={`${collapsed ? 'w-[52px]' : 'w-60'} transition-all duration-300 ease-out bg-white flex flex-col h-full border-r border-gray-100 shrink-0 overflow-hidden`}>
       {/* Logo */}
       <div className={`${collapsed ? 'px-3' : 'px-5'} pt-6 pb-5`}>
         <Link href="/dashboard" className="flex items-center gap-2.5" title="brandbook">
