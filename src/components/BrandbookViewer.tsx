@@ -200,6 +200,81 @@ export function BrandbookViewer({
     });
   }, []);
 
+  /** Returns a 1-2 line text preview for any section when collapsed */
+  const getSectionSummary = useCallback((sectionId: string): string => {
+    const trunc = (s: string | undefined | null, max = 140) => {
+      if (!s) return "";
+      const clean = s.replace(/\n+/g, " ").trim();
+      return clean.length > max ? clean.slice(0, max).trimEnd() + "…" : clean;
+    };
+    const list = (items: string[] | undefined, label: string) =>
+      items && items.length > 0 ? `${items.length} ${label}: ${items.slice(0, 3).join(", ")}${items.length > 3 ? "…" : ""}` : "";
+
+    switch (sectionId) {
+      case "dna":
+        return trunc(data.brandConcept.purpose) || trunc(data.brandConcept.mission) || "DNA estratégico da marca";
+      case "positioning":
+        return trunc(data.positioning?.positioningStatement) || trunc(data.positioning?.category) || "Posicionamento de mercado";
+      case "brand-story":
+        return trunc(data.brandStory?.brandPromise) || trunc(data.brandStory?.manifesto, 120) || "Narrativa da marca";
+      case "personas": {
+        const ps = data.audiencePersonas ?? [];
+        return ps.length > 0 ? `${ps.length} persona${ps.length > 1 ? "s" : ""}: ${ps.map(p => p.name).join(", ")}` : "Público-alvo";
+      }
+      case "verbal-identity":
+        return trunc(data.verbalIdentity?.tagline) || trunc(data.verbalIdentity?.oneLiner) || "Identidade verbal";
+      case "logo":
+        return trunc(data.logo?.symbolConcept) || "Logo primário, variações e especificações técnicas";
+      case "logo-variants":
+        return "Horizontal, vertical, monocromático, negativo e marca d'água";
+      case "colors": {
+        const np = data.colors.primary?.length ?? 0;
+        const ns = data.colors.secondary?.length ?? 0;
+        return `${np} cor${np !== 1 ? "es" : ""} primária${np !== 1 ? "s" : ""}, ${ns} secundária${ns !== 1 ? "s" : ""}${data.colors.semantic ? " + semânticas" : ""}`;
+      }
+      case "typography": {
+        const fonts = [data.typography.primary?.name, data.typography.secondary?.name, data.typography.marketing?.name].filter(Boolean);
+        return fonts.length > 0 ? `Fontes: ${fonts.join(" · ")}` : "Sistema tipográfico";
+      }
+      case "typography-scale":
+        return "Hierarquia de tamanhos, pesos e espaçamentos";
+      case "key-visual": {
+        const n = data.keyVisual?.elements?.length ?? 0;
+        return n > 0 ? list(data.keyVisual.elements, "elementos") : "Elementos visuais, padrões e iconografia";
+      }
+      case "mascots": {
+        const m = data.keyVisual?.mascots ?? [];
+        return m.length > 0 ? `${m.length} mascote${m.length > 1 ? "s" : ""}: ${m.map(x => x.name).join(", ")}` : "Mascotes e personagens";
+      }
+      case "applications": {
+        const apps = data.applications ?? [];
+        return apps.length > 0 ? `${apps.length} aplicação${apps.length > 1 ? "ões" : ""}: ${apps.slice(0, 3).map(a => a.type).join(", ")}${apps.length > 3 ? "…" : ""}` : "Aplicações da marca";
+      }
+      case "social-media":
+        return trunc(data.socialMediaGuidelines?.brandVoiceAdaptation) || "Guia de tom, frequência e conteúdo para redes sociais";
+      case "brand-world":
+        return "Mundo da marca: universo visual e atmosfera";
+      case "asset-pack":
+        return "Pack de assets prontos para uso";
+      case "governance":
+        return "Governança, versionamento e processo de aprovação";
+      case "ui-guidelines":
+        return "Componentes UI, botões, inputs e cards";
+      case "ux-microcopy":
+        return "Microcopy, motion design e padrões de interação";
+      case "production-guidelines":
+        return "Especificações para impressão e produção";
+      case "tokens-a11y":
+        return "Design tokens e acessibilidade (WCAG)";
+      case "brand-health":
+        return "Métricas de saúde e consistência da marca";
+      case "brand-assets":
+        return "Catálogo de assets da marca";
+      default:
+        return "";
+    }
+  }, [data]);
+
   const theme = useMemo(() => getImmersiveTheme(data), [data]);
 
   const getAssetUrl = useMemo(
@@ -1150,11 +1225,18 @@ export function BrandbookViewer({
                         >
                           {s.title}
                         </span>
-                        {isSectionCollapsed && (
-                          <span className="text-xs text-gray-400 truncate block mt-0.5">
-                            Clique para expandir
-                          </span>
-                        )}
+                        {isSectionCollapsed && (() => {
+                          const summary = getSectionSummary(s.id);
+                          return summary ? (
+                            <span className="text-xs text-gray-400 truncate block mt-0.5 max-w-[500px]" title={summary}>
+                              {summary}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400 truncate block mt-0.5">
+                              Clique para expandir
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
