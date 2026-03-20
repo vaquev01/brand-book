@@ -2,8 +2,6 @@ import { auth } from "@/app/auth"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import type { Project, BrandbookVersion } from "@/generated/prisma"
-import { DuplicateProjectButton } from "@/components/DuplicateProjectButton"
-import { parseBrandbookJson, safeHex } from "@/lib/brandbookJsonHelper"
 import { ProjectFilter } from "@/components/ProjectFilter"
 
 type ProjectWithVersions = Project & {
@@ -71,12 +69,18 @@ export default async function DashboardPage() {
       ) : (
         <div>
           <ProjectFilter
-            projects={projects.map(p => ({ id: p.id, name: p.name, industry: p.industry, status: p.status }))}
-          >
-            {projects.map((project, i) => (
-              <ProjectCard key={project.id} project={project} index={i} />
-            ))}
-          </ProjectFilter>
+            projects={projects.map(p => ({
+              id: p.id,
+              slug: p.slug,
+              name: p.name,
+              industry: p.industry,
+              status: p.status,
+              updatedAt: p.updatedAt.toISOString(),
+              brandbookVersions: p.brandbookVersions.map(v => ({
+                brandbookJson: v.brandbookJson as unknown,
+              })),
+            }))}
+          />
           {totalCount > projects.length && (
             <div className="mt-6 text-center">
               <a href="/dashboard/projects" className="text-sm font-medium text-violet-600 hover:text-violet-700 transition-colors">
@@ -162,75 +166,4 @@ function EmptyState() {
   )
 }
 
-const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-  draft: { bg: "bg-gray-100", text: "text-gray-500", label: "Rascunho" },
-  in_review: { bg: "bg-amber-50", text: "text-amber-600", label: "Em revisão" },
-  approved: { bg: "bg-emerald-50", text: "text-emerald-600", label: "Aprovado" },
-  archived: { bg: "bg-gray-50", text: "text-gray-400", label: "Arquivado" },
-}
-
-function ProjectCard({ project, index }: { project: ProjectWithVersions; index: number }) {
-  const status = statusConfig[project.status] ?? statusConfig.draft
-  const initial = project.name[0]?.toUpperCase() ?? "B"
-
-  // Generate consistent color from brand name
-  const hue = project.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
-
-  return (
-    <Link
-      href={`/dashboard/editor?slug=${project.slug}`}
-      className={`group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-lg hover:border-violet-200/60 transition-all hover:-translate-y-0.5 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
-          style={{
-            background: `linear-gradient(135deg, hsl(${hue}, 65%, 52%) 0%, hsl(${(hue + 30) % 360}, 55%, 42%) 100%)`,
-          }}
-        >
-          {initial}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <DuplicateProjectButton projectId={project.id} projectName={project.name} />
-          <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold ${status.bg} ${status.text}`}>
-            {status.label}
-          </span>
-        </div>
-      </div>
-      <h3 className="font-bold text-gray-900 truncate group-hover:text-violet-700 transition-colors text-[15px]">
-        {project.name}
-      </h3>
-      <p className="text-xs text-gray-400 mt-1 truncate">{project.industry}</p>
-      {/* Mini palette preview */}
-      {(() => {
-        const bbJson = parseBrandbookJson(project.brandbookVersions[0]?.brandbookJson)
-        const colors = [
-          ...(bbJson?.colors?.primary ?? []).slice(0, 3),
-          ...(bbJson?.colors?.secondary ?? []).slice(0, 2),
-        ]
-        if (colors.length === 0) return null
-        return (
-          <div className="flex gap-1 mt-3">
-            {colors.map((c, i) => (
-              <div
-                key={i}
-                className="h-2.5 flex-1 rounded-full first:rounded-l-full last:rounded-r-full"
-                style={{ background: safeHex(c.hex) }}
-              />
-            ))}
-          </div>
-        )
-      })()}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
-        <p className="text-[11px] text-gray-300 font-medium">
-          {new Date(project.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
-        </p>
-        {project.brandbookVersions.length > 0 && (
-          <span className="text-[10px] text-violet-500 font-semibold bg-violet-50 px-2 py-0.5 rounded-full">
-            v{project.brandbookVersions.length}
-          </span>
-        )}
-      </div>
-    </Link>
-  )
-}
+// ProjectCard is now inside ProjectFilter.tsx (client component)

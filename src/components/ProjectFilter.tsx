@@ -1,31 +1,41 @@
 "use client"
 
-import { useState, useMemo, type ReactNode, Children, isValidElement } from "react"
+import { useState, useMemo } from "react"
+import Link from "next/link"
+import { DuplicateProjectButton } from "./DuplicateProjectButton"
+import { parseBrandbookJson, safeHex } from "@/lib/brandbookJsonHelper"
 
-interface Project {
+interface ProjectData {
   id: string
+  slug: string
   name: string
   industry: string
   status: string
+  updatedAt: string
+  brandbookVersions: Array<{ brandbookJson?: unknown }>
 }
 
 interface Props {
-  projects: Project[]
-  children: ReactNode
+  projects: ProjectData[]
 }
 
-export function ProjectFilter({ projects, children }: Props) {
+const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+  draft: { bg: "bg-gray-100", text: "text-gray-500", label: "Rascunho" },
+  in_review: { bg: "bg-amber-50", text: "text-amber-600", label: "Em revisão" },
+  approved: { bg: "bg-emerald-50", text: "text-emerald-600", label: "Aprovado" },
+  archived: { bg: "bg-gray-50", text: "text-gray-400", label: "Arquivado" },
+}
+
+export function ProjectFilter({ projects }: Props) {
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
 
-  const filteredIds = useMemo(() => {
-    const set = new Set<string>()
-    for (const p of projects) {
+  const filtered = useMemo(() => {
+    return projects.filter((p) => {
       const matchesQuery = !query || p.name.toLowerCase().includes(query.toLowerCase()) || p.industry.toLowerCase().includes(query.toLowerCase())
       const matchesStatus = statusFilter === "all" || p.status === statusFilter
-      if (matchesQuery && matchesStatus) set.add(p.id)
-    }
-    return set
+      return matchesQuery && matchesStatus
+    })
   }, [projects, query, statusFilter])
 
   const statuses = [
@@ -35,17 +45,11 @@ export function ProjectFilter({ projects, children }: Props) {
     { value: "approved", label: "Aprovado" },
   ]
 
-  // Filter children by matching their key to filteredIds
-  const visibleChildren = Children.toArray(children).filter((child) => {
-    if (!isValidElement(child)) return false
-    return filteredIds.has(String(child.key ?? "").replace(/^\.\$/, ""))
-  })
-
   return (
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          Projetos ({visibleChildren.length})
+          Projetos ({filtered.length})
         </h2>
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           <div className="flex gap-1">
@@ -78,7 +82,7 @@ export function ProjectFilter({ projects, children }: Props) {
         </div>
       </div>
 
-      {visibleChildren.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
           <p className="text-gray-400 text-sm">
             {query ? `Nenhum projeto encontrado para "${query}"` : "Nenhum projeto com este status"}
@@ -86,9 +90,75 @@ export function ProjectFilter({ projects, children }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {visibleChildren}
+          {filtered.map((project, i) => (
+            <FilterProjectCard key={project.id} project={project} index={i} />
+          ))}
         </div>
       )}
     </div>
+  )
+}
+
+function FilterProjectCard({ project, index }: { project: ProjectData; index: number }) {
+  const status = statusConfig[project.status] ?? statusConfig.draft
+  const initial = project.name[0]?.toUpperCase() ?? "B"
+  const hue = project.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
+
+  return (
+    <Link
+      href={`/dashboard/editor?slug=${project.slug}`}
+      className={`group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-lg hover:border-violet-200/60 transition-all hover:-translate-y-0.5 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
+          style={{
+            background: `linear-gradient(135deg, hsl(${hue}, 65%, 52%) 0%, hsl(${(hue + 30) % 360}, 55%, 42%) 100%)`,
+          }}
+        >
+          {initial}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <DuplicateProjectButton projectId={project.id} projectName={project.name} />
+          <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold ${status.bg} ${status.text}`}>
+            {status.label}
+          </span>
+        </div>
+      </div>
+      <h3 className="font-bold text-gray-900 truncate group-hover:text-violet-700 transition-colors text-[15px]">
+        {project.name}
+      </h3>
+      <p className="text-xs text-gray-400 mt-1 truncate">{project.industry}</p>
+      {/* Mini palette preview */}
+      {(() => {
+        const bbJson = parseBrandbookJson(project.brandbookVersions[0]?.brandbookJson)
+        const colors = [
+          ...(bbJson?.colors?.primary ?? []).slice(0, 3),
+          ...(bbJson?.colors?.secondary ?? []).slice(0, 2),
+        ]
+        if (colors.length === 0) return null
+        return (
+          <div className="flex gap-1 mt-3">
+            {colors.map((c, i) => (
+              <div
+                key={i}
+                className="h-2.5 flex-1 rounded-full first:rounded-l-full last:rounded-r-full"
+                style={{ background: safeHex(c.hex) }}
+              />
+            ))}
+          </div>
+        )
+      })()}
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
+        <p className="text-[11px] text-gray-300 font-medium">
+          {new Date(project.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+        </p>
+        {project.brandbookVersions.length > 0 && (
+          <span className="text-[10px] text-violet-500 font-semibold bg-violet-50 px-2 py-0.5 rounded-full">
+            v{project.brandbookVersions.length}
+          </span>
+        )}
+      </div>
+    </Link>
   )
 }
