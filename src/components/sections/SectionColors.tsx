@@ -98,22 +98,29 @@ function ColorCard({
     <div className="color-card bg-white rounded-xl shadow-sm border overflow-hidden group relative">
       {/* Large color block — clickable for color picker */}
       <div
-        className="h-32 sm:h-40 w-full relative flex items-end px-3 pb-2"
+        className="h-36 sm:h-44 w-full relative flex flex-col justify-end px-4 pb-3 transition-all duration-300 group-hover:h-40 sm:group-hover:h-48"
         style={{ backgroundColor: color.hex }}
       >
         {label && (
           <span
-            className="absolute top-2 left-3 text-[9px] font-bold uppercase tracking-wider opacity-70"
+            className="absolute top-2.5 left-3.5 text-[10px] font-bold uppercase tracking-wider opacity-70"
             style={{ color: textColor(color.hex) }}
           >
             {label}
           </span>
         )}
         <span
-          className="text-base sm:text-lg font-mono font-bold drop-shadow-sm"
+          className="text-lg sm:text-xl font-mono font-bold drop-shadow-sm"
           style={{ color: textColor(color.hex) }}
         >
           {color.hex}
+        </span>
+        {/* Show RGB on hover */}
+        <span
+          className="text-[11px] font-mono opacity-0 group-hover:opacity-70 transition-opacity mt-0.5"
+          style={{ color: textColor(color.hex) }}
+        >
+          RGB {color.rgb}
         </span>
         {/* Invisible color picker overlay on the color block */}
         {onChange && (

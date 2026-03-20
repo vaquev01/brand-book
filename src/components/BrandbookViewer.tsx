@@ -371,9 +371,10 @@ export function BrandbookViewer({
     ) : null;
 
   const defaultShellStyle: CSSProperties = {
-    background: `linear-gradient(180deg, rgba(255,255,255,0.98) 0%, ${rgba(theme.primaryHex, 0.025)} 100%)`,
-    borderColor: rgba(theme.primaryHex, 0.08),
-    boxShadow: `0 24px 70px ${rgba(theme.primaryHex, 0.08)}, inset 3px 0 0 ${rgba(theme.primaryHex, 0.28)}`,
+    background: `linear-gradient(180deg, #ffffff 0%, ${rgba(theme.primaryHex, 0.02)} 100%)`,
+    borderColor: rgba(theme.primaryHex, 0.1),
+    boxShadow: `0 20px 60px ${rgba(theme.primaryHex, 0.06)}, inset 3px 0 0 ${rgba(theme.primaryHex, 0.3)}`,
+    transition: "box-shadow 0.3s ease, border-color 0.3s ease",
   };
 
   const defaultCardStyle: CSSProperties = {
@@ -1057,33 +1058,52 @@ export function BrandbookViewer({
               </div>
             </>
           ) : (
-            <div className="page-break mb-6 mt-8">
+            <div className="page-break mb-6 mt-10">
               <div
-                className="rounded-2xl overflow-hidden"
+                className="rounded-2xl overflow-hidden relative"
                 style={{ background: `linear-gradient(135deg, ${theme.primaryHex} 0%, ${theme.accentHex} 100%)` }}
               >
-                <div className="px-5 py-4 flex items-center justify-between">
-                  <div>
-                    <div className="text-[9px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: rgba("#fff", 0.5) }}>
-                      {data.brandName}
+                {/* Subtle pattern overlay on category banner */}
+                <div className="absolute inset-0 opacity-[0.06]" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                }} aria-hidden="true" />
+                <div className="px-6 py-5 flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-4">
+                    <span className="text-2xl">{CATEGORY_ICONS[g.cat as keyof typeof CATEGORY_ICONS] ?? ""}</span>
+                    <div>
+                      <div className="text-[9px] font-black uppercase tracking-[0.3em] mb-1" style={{ color: rgba("#fff", 0.55) }}>
+                        {data.brandName}
+                      </div>
+                      <h2 className="text-base font-black uppercase tracking-[0.18em] text-white">{g.cat}</h2>
+                      {CATEGORY_DESCRIPTIONS[g.cat] && (
+                        <p className="text-xs mt-1 font-medium" style={{ color: rgba("#fff", 0.6) }}>
+                          {CATEGORY_DESCRIPTIONS[g.cat]}
+                        </p>
+                      )}
                     </div>
-                    <h2 className="text-sm font-black uppercase tracking-[0.22em] text-white">{g.cat}</h2>
                   </div>
-                  <a
-                    href="#sumario"
-                    className="no-print text-[11px] font-bold transition-opacity hover:opacity-100 px-3 py-1.5 rounded-lg border"
-                    style={{ color: rgba("#fff", 0.6), borderColor: rgba("#fff", 0.2), background: rgba("#000", 0.12) }}
-                  >
-                    ↑ Sumário
-                  </a>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: rgba("#fff", 0.15), color: rgba("#fff", 0.8) }}>
+                      {g.items.length} {g.items.length === 1 ? "seção" : "seções"}
+                    </span>
+                    <a
+                      href="#sumario"
+                      className="no-print text-[11px] font-bold transition-opacity hover:opacity-100 px-3 py-1.5 rounded-lg border"
+                      style={{ color: rgba("#fff", 0.6), borderColor: rgba("#fff", 0.2), background: rgba("#000", 0.12) }}
+                    >
+                      ↑ Sumário
+                    </a>
+                  </div>
                 </div>
-                {theme.allColors.length > 1 && (
-                  <div className="flex h-1">
-                    {theme.allColors.slice(0, 8).map((c, i) => (
-                      <div key={i} style={{ flex: 1, background: c, opacity: 0.7 }} />
-                    ))}
-                  </div>
-                )}
+                {/* Color strip under category banner */}
+                <div className="flex h-1.5">
+                  {theme.allColors.slice(0, 8).map((c, i) => (
+                    <div key={i} style={{ flex: 1, background: c, opacity: 0.85 }} />
+                  ))}
+                  {theme.allColors.length <= 1 && (
+                    <div style={{ flex: 1, background: rgba("#fff", 0.2) }} />
+                  )}
+                </div>
               </div>
             </div>
           )}
