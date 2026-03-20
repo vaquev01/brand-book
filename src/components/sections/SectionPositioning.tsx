@@ -101,11 +101,11 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
               Positioning Statement
             </div>
             <div
-              className="max-w-3xl mx-auto leading-[1.7] opacity-95"
+              className="max-w-3xl mx-auto leading-[1.75] opacity-95 bb-hero-quote"
               style={{
-                fontFamily: `var(--bb-heading-font, 'Georgia', serif)`,
-                fontSize: "clamp(1.1rem, 2.2vw, 1.4rem)",
-                fontWeight: 600,
+                fontFamily: `var(--bb-body-font, 'Inter', sans-serif)`,
+                fontSize: "clamp(1rem, 2vw, 1.2rem)",
+                fontWeight: 500,
                 color: `var(--bb-bg, #ffffff)`,
               }}
             >

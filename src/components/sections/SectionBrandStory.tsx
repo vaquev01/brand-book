@@ -1,12 +1,18 @@
 "use client";
+import { useState } from "react";
 import { BrandbookData } from "@/lib/types";
 import { EditableField } from "@/components/EditableField";
 
 export function SectionBrandStory({ data, num, onUpdateData }: { data: BrandbookData; num: number; onUpdateData?: (updater: (prev: BrandbookData) => BrandbookData) => void }) {
+  const [manifestoExpanded, setManifestoExpanded] = useState(false);
+  const [originExpanded, setOriginExpanded] = useState(false);
+
   if (!data.brandStory) return null;
 
   const s = data.brandStory;
   const editorialLine = s.brandPromise || s.originStory || s.manifesto;
+  const manifestoIsLong = (s.manifesto?.length ?? 0) > 300;
+  const originIsLong = (s.originStory?.length ?? 0) > 250;
 
   return (
     <section className="page-break mb-6">
@@ -74,21 +80,51 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
                 Manifesto
               </div>
               <div
-                className="whitespace-pre-line leading-[1.65] opacity-95 pl-2 md:pl-4"
+                className="relative"
                 style={{
-                  fontFamily: `var(--bb-heading-font, 'Georgia', serif)`,
-                  fontSize: "clamp(1.15rem, 2.5vw, 1.5rem)",
-                  fontWeight: 600,
-                  color: `var(--bb-bg, #ffffff)`,
+                  maxHeight: manifestoIsLong && !manifestoExpanded ? "220px" : "none",
+                  overflow: manifestoIsLong && !manifestoExpanded ? "hidden" : "visible",
+                  transition: "max-height 0.5s ease",
                 }}
               >
-                <EditableField
-                  value={s.manifesto}
-                  onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, manifesto: val } } : prev)}
-                  readOnly={!onUpdateData}
-                  multiline
-                />
+                <div
+                  className="whitespace-pre-line leading-[1.65] opacity-95 pl-2 md:pl-4 bb-hero-quote"
+                  style={{
+                    fontFamily: `var(--bb-body-font, 'Inter', sans-serif)`,
+                    fontSize: "clamp(1.05rem, 2vw, 1.25rem)",
+                    fontWeight: 500,
+                    color: `var(--bb-bg, #ffffff)`,
+                  }}
+                >
+                  <EditableField
+                    value={s.manifesto}
+                    onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, manifesto: val } } : prev)}
+                    readOnly={!onUpdateData}
+                    multiline
+                  />
+                </div>
+                {/* Gradient fade when truncated */}
+                {manifestoIsLong && !manifestoExpanded && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-20 pointer-events-none"
+                    style={{ background: `linear-gradient(to top, var(--bb-primary, #0a0a0a), transparent)` }}
+                  />
+                )}
               </div>
+              {manifestoIsLong && (
+                <button
+                  onClick={() => setManifestoExpanded(!manifestoExpanded)}
+                  className="no-print mt-4 text-sm font-semibold px-4 py-2 rounded-lg border transition-all hover:opacity-100"
+                  style={{
+                    color: `var(--bb-accent, #c0a060)`,
+                    borderColor: `var(--bb-accent, #c0a060)`,
+                    opacity: 0.7,
+                    background: "rgba(255,255,255,0.05)",
+                  }}
+                >
+                  {manifestoExpanded ? "↑ Resumir" : "↓ Ler manifesto completo"}
+                </button>
+              )}
               {/* Decorative bottom rule */}
               <div className="mt-8 w-16 h-[2px] opacity-40" style={{ background: `var(--bb-accent, #c0a060)` }} />
             </div>
@@ -112,14 +148,33 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
               <div className="w-[2px] flex-1 rounded-full bg-gradient-to-b from-gray-300 to-gray-100" />
             </div>
             {/* Story text */}
-            <div className="flex-1 min-w-0">
-              <EditableField
-                value={s.originStory}
-                onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, originStory: val } } : prev)}
-                className="text-gray-700 text-sm leading-7"
-                readOnly={!onUpdateData}
-                multiline
-              />
+            <div className="flex-1 min-w-0 relative">
+              <div
+                style={{
+                  maxHeight: originIsLong && !originExpanded ? "120px" : "none",
+                  overflow: originIsLong && !originExpanded ? "hidden" : "visible",
+                  transition: "max-height 0.4s ease",
+                }}
+              >
+                <EditableField
+                  value={s.originStory}
+                  onSave={(val) => onUpdateData?.(prev => prev.brandStory ? { ...prev, brandStory: { ...prev.brandStory, originStory: val } } : prev)}
+                  className="text-gray-700 text-[15px] leading-7"
+                  readOnly={!onUpdateData}
+                  multiline
+                />
+              </div>
+              {originIsLong && !originExpanded && (
+                <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none bg-gradient-to-t from-white to-transparent" />
+              )}
+              {originIsLong && (
+                <button
+                  onClick={() => setOriginExpanded(!originExpanded)}
+                  className="no-print mt-2 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  {originExpanded ? "↑ Resumir" : "↓ Ler história completa"}
+                </button>
+              )}
             </div>
           </div>
         </div>
