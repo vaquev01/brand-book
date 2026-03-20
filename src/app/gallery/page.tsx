@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { parseBrandbookJson, safeHex } from "@/lib/brandbookJsonHelper"
 import type { Metadata } from "next"
 import Link from "next/link"
+import { auth } from "@/app/auth"
 
 export const metadata: Metadata = {
   title: "Galeria — Brandbooks criados com IA",
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 export const revalidate = 300
 
 export default async function GalleryPage() {
+  const session = await auth()
+  const isLoggedIn = !!session?.user
+
   const shareLinks = await prisma.shareLink.findMany({
     where: {
       isActive: true,
@@ -58,13 +62,23 @@ export default async function GalleryPage() {
                 Brandbook
               </Link>
             </div>
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5"
-              style={{ background: "linear-gradient(135deg, #111827, #3730a3)", boxShadow: "0 12px 24px -8px rgba(55,48,163,0.4)" }}
-            >
-              Criar o seu
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5"
+                style={{ background: "linear-gradient(135deg, #111827, #3730a3)", boxShadow: "0 12px 24px -8px rgba(55,48,163,0.4)" }}
+              >
+                Meu Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-white px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5"
+                style={{ background: "linear-gradient(135deg, #111827, #3730a3)", boxShadow: "0 12px 24px -8px rgba(55,48,163,0.4)" }}
+              >
+                Criar o seu
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -125,7 +139,7 @@ export default async function GalleryPage() {
                       ))}
                     </div>
                     <span className="text-[10px] text-gray-300 font-medium">
-                      {brand!.views} {brand!.views === 1 ? "view" : "views"}
+                      {brand!.views} {brand!.views === 1 ? "visualização" : "visualizações"}
                     </span>
                   </div>
                 </div>

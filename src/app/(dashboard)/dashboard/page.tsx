@@ -1,5 +1,6 @@
 import { auth } from "@/app/auth"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import type { Project, BrandbookVersion } from "@/generated/prisma"
 import { ProjectFilter } from "@/components/ProjectFilter"
@@ -12,8 +13,20 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) {
     return (
-      <div className="flex items-center justify-center h-full py-20">
-        <p className="text-gray-400 text-sm">Sessão expirada. Faça login novamente.</p>
+      <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </div>
+        <p className="text-gray-500 text-sm font-medium">Sessão expirada</p>
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+          style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
+        >
+          Fazer login novamente
+        </Link>
       </div>
     )
   }
@@ -27,6 +40,24 @@ export default async function DashboardPage() {
   })
 
   const totalCount = await prisma.project.count({ where: { ownerId: userId } })
+
+  // First-time user: redirect to onboarding
+  if (totalCount === 0) {
+    const hasSeenOnboarding = await prisma.brandbookVersion.count({
+      where: { project: { ownerId: userId } },
+    })
+    if (hasSeenOnboarding === 0) {
+      // Check if user was just created (within last 5 minutes)
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { createdAt: true },
+      })
+      if (user && Date.now() - new Date(user.createdAt).getTime() < 5 * 60 * 1000) {
+        redirect("/dashboard/onboarding")
+      }
+    }
+  }
+
   const totalProjects = projects.length
   const withBrandbook = projects.filter((p) => p.brandbookVersions.length > 0).length
   const inReview = projects.filter((p) => p.status === "in_review").length

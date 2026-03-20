@@ -13,6 +13,7 @@ interface ProjectData {
   status: string
   updatedAt: string
   brandbookVersions: Array<{ brandbookJson?: unknown }>
+  versionCount?: number
 }
 
 interface Props {
@@ -150,12 +151,12 @@ function FilterProjectCard({ project, index }: { project: ProjectData; index: nu
         )
       })()}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
-        <p className="text-[11px] text-gray-300 font-medium">
+        <p className="text-[11px] text-gray-400 font-medium">
           {new Date(project.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
         </p>
-        {project.brandbookVersions.length > 0 && (
+        {(project.versionCount ?? project.brandbookVersions.length) > 0 && (
           <span className="text-[10px] text-violet-500 font-semibold bg-violet-50 px-2 py-0.5 rounded-full">
-            v{project.brandbookVersions.length}
+            v{project.versionCount ?? project.brandbookVersions.length}
           </span>
         )}
       </div>

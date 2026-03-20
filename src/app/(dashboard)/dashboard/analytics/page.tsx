@@ -5,8 +5,20 @@ export default async function AnalyticsPage() {
   const session = await auth()
   if (!session?.user?.id) {
     return (
-      <div className="flex items-center justify-center h-full py-20">
-        <p className="text-gray-400 text-sm">Sessão expirada. Faça login novamente.</p>
+      <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </div>
+        <p className="text-gray-500 text-sm font-medium">Sessão expirada</p>
+        <a
+          href="/login"
+          className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+          style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
+        >
+          Fazer login novamente
+        </a>
       </div>
     )
   }
@@ -88,9 +100,29 @@ export default async function AnalyticsPage() {
             </svg>
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-2">Ainda sem visualizações</h3>
-          <p className="text-sm text-gray-400 max-w-sm mx-auto">
+          <p className="text-sm text-gray-400 max-w-sm mx-auto mb-6">
             Compartilhe seu primeiro brandbook para começar a acompanhar visualizações, downloads e engajamento.
           </p>
+          <div className="flex items-center justify-center gap-3">
+            {projects.length > 0 ? (
+              <a
+                href={`/dashboard/editor?slug=${projects[0].slug}`}
+                className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+                style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                Compartilhar brandbook
+              </a>
+            ) : (
+              <a
+                href="/dashboard/new-brandbook"
+                className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+                style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
+              >
+                Criar primeiro brandbook
+              </a>
+            )}
+          </div>
         </div>
       )}
 

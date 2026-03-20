@@ -107,6 +107,14 @@ export default function OnboardingPage() {
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 resize-none"
                 autoFocus
               />
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs text-slate-500">
+                  {briefing.length === 0 ? "Opcional, mas recomendado" : briefing.length < 50 ? "Tente adicionar mais detalhes" : "Ótimo nível de detalhe!"}
+                </p>
+                <p className={`text-xs font-medium ${briefing.length >= 50 ? "text-emerald-400" : "text-slate-500"}`}>
+                  {briefing.length} caracteres
+                </p>
+              </div>
             </div>
           )}
 

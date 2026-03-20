@@ -2,6 +2,7 @@ import { auth } from "@/app/auth"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import type { Project, BrandbookVersion } from "@/generated/prisma"
+import { ProjectFilter } from "@/components/ProjectFilter"
 
 type ProjectWithVersions = Project & {
   brandbookVersions: BrandbookVersion[]
@@ -12,18 +13,39 @@ export default async function ProjectsPage() {
 
   if (!session?.user?.id) {
     return (
-      <div className="flex items-center justify-center h-full py-20">
-        <p className="text-gray-400 text-sm">Sessão expirada. Faça login novamente.</p>
+      <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </div>
+        <p className="text-gray-500 text-sm font-medium">Sessão expirada</p>
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5"
+          style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
+        >
+          Fazer login novamente
+        </Link>
       </div>
     )
   }
   const userId = session.user.id
 
-  const projects: ProjectWithVersions[] = await prisma.project.findMany({
-    where: { ownerId: userId },
-    orderBy: { updatedAt: "desc" },
-    include: { brandbookVersions: { take: 1, orderBy: { createdAt: "desc" } } },
-  })
+  const [projects, versionCounts] = await Promise.all([
+    prisma.project.findMany({
+      where: { ownerId: userId },
+      orderBy: { updatedAt: "desc" },
+      include: { brandbookVersions: { take: 1, orderBy: { createdAt: "desc" } } },
+    }) as Promise<ProjectWithVersions[]>,
+    prisma.brandbookVersion.groupBy({
+      by: ["projectId"],
+      _count: { id: true },
+      where: { project: { ownerId: userId } },
+    }),
+  ])
+
+  const versionMap = new Map(versionCounts.map((v) => [v.projectId, v._count.id]))
 
   return (
     <div className="animate-page-enter">
@@ -60,7 +82,7 @@ export default async function ProjectsPage() {
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-2">Nenhum projeto ainda</h3>
           <p className="text-gray-400 mb-6 max-w-sm mx-auto text-sm">
-            Crie seu primeiro brandbook ou use um template para comecar.
+            Crie seu primeiro brandbook ou use um template para começar.
           </p>
           <div className="flex items-center justify-center gap-3">
             <Link
@@ -82,60 +104,21 @@ export default async function ProjectsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project, i) => (
-            <ProjectCard key={project.id} project={project} index={i} />
-          ))}
-        </div>
+        <ProjectFilter
+          projects={projects.map((p) => ({
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            industry: p.industry,
+            status: p.status,
+            updatedAt: p.updatedAt.toISOString(),
+            brandbookVersions: p.brandbookVersions.map((v) => ({
+              brandbookJson: v.brandbookJson as unknown,
+            })),
+            versionCount: versionMap.get(p.id) ?? 0,
+          }))}
+        />
       )}
     </div>
-  )
-}
-
-const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-  draft: { bg: "bg-gray-100", text: "text-gray-500", label: "Rascunho" },
-  in_review: { bg: "bg-amber-50", text: "text-amber-600", label: "Em revisao" },
-  approved: { bg: "bg-emerald-50", text: "text-emerald-600", label: "Aprovado" },
-  archived: { bg: "bg-gray-50", text: "text-gray-400", label: "Arquivado" },
-}
-
-function ProjectCard({ project, index }: { project: ProjectWithVersions; index: number }) {
-  const status = statusConfig[project.status] ?? statusConfig.draft
-  const initial = project.name[0]?.toUpperCase() ?? "B"
-  const hue = project.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
-
-  return (
-    <Link
-      href={`/dashboard/editor?slug=${project.slug}`}
-      className={`group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-lg hover:border-violet-200/60 transition-all hover:-translate-y-0.5 animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm"
-          style={{
-            background: `linear-gradient(135deg, hsl(${hue}, 65%, 52%) 0%, hsl(${(hue + 30) % 360}, 55%, 42%) 100%)`,
-          }}
-        >
-          {initial}
-        </div>
-        <span className={`text-[11px] px-2.5 py-1 rounded-full font-semibold ${status.bg} ${status.text}`}>
-          {status.label}
-        </span>
-      </div>
-      <h3 className="font-bold text-gray-900 truncate group-hover:text-violet-700 transition-colors text-[15px]">
-        {project.name}
-      </h3>
-      <p className="text-xs text-gray-400 mt-1 truncate">{project.industry}</p>
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
-        <p className="text-[11px] text-gray-300 font-medium">
-          {new Date(project.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
-        </p>
-        {project.brandbookVersions.length > 0 && (
-          <span className="text-[10px] text-violet-500 font-semibold bg-violet-50 px-2 py-0.5 rounded-full">
-            v{project.brandbookVersions.length}
-          </span>
-        )}
-      </div>
-    </Link>
   )
 }
