@@ -128,6 +128,33 @@ export const ASSET_CATALOG = [
 
 export type AssetKey = (typeof ASSET_CATALOG)[number]["key"];
 
+/** Recommended provider per asset type for best results */
+export const PROVIDER_RECOMMENDATIONS: Partial<Record<AssetKey, { best: ImageProvider; why: string; avoid?: ImageProvider; avoidWhy?: string }>> = {
+  // Logo: Ideogram is best for text + symbol combination
+  logo_primary: { best: "ideogram", why: "Melhor para texto legível + símbolo", avoid: "stability", avoidWhy: "Texto ilegível" },
+  logo_dark_bg: { best: "ideogram", why: "Melhor para texto legível + símbolo", avoid: "stability", avoidWhy: "Texto ilegível" },
+  // Patterns: Stability/Recraft for clean tileable patterns
+  brand_pattern: { best: "recraft", why: "Vetorial limpo, tileable", avoid: "dalle3", avoidWhy: "Muito fotorrealista" },
+  // Mascot: DALL-E 3 for character design
+  brand_mascot: { best: "dalle3", why: "Melhor para personagens e ilustração" },
+  // Hero/Lifestyle: Imagen for photorealistic scenes
+  hero_visual: { best: "imagen", why: "Fotorrealismo superior" },
+  hero_lifestyle: { best: "imagen", why: "Pessoas e cenas naturais" },
+  // Mockups: DALL-E 3 for product mockups
+  business_card: { best: "dalle3", why: "Mockups fotorrealistas de alta qualidade" },
+  brand_collateral: { best: "dalle3", why: "Composições flat-lay realistas" },
+  delivery_packaging: { best: "dalle3", why: "Embalagens em contexto real" },
+  // Social: Ideogram for text-heavy posts
+  social_post_square: { best: "ideogram", why: "Texto legível em posts" },
+  instagram_story: { best: "ideogram", why: "Texto legível em stories" },
+  // Print: Imagen for realistic outdoor scenes
+  outdoor_billboard: { best: "imagen", why: "Cenários urbanos fotorrealistas" },
+  storefront_facade: { best: "imagen", why: "Arquitetura fotorrealista" },
+  // App: Recraft for UI design
+  app_mockup: { best: "recraft", why: "Design limpo de interface" },
+  app_icon: { best: "recraft", why: "Ícones vetoriais limpos" },
+};
+
 function industryVisualLanguage(industry: string): string {
   const i = industry.toLowerCase();
   if (/saas|software|tech|cloud|ai|data|platform|digital|startup|api|b2b/.test(i))

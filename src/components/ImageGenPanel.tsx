@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ApiKeys } from "@/components/ApiKeyConfig";
 import { BrandbookData, ImageProvider, GeneratedAsset, UploadedAsset, type AiTextProvider } from "@/lib/types";
-import { ASSET_CATALOG, buildImagePrompt, buildApplicationPrompt, detectSizeVariants, AssetKey, AspectRatioOption } from "@/lib/imagePrompts";
+import { ASSET_CATALOG, buildImagePrompt, buildApplicationPrompt, detectSizeVariants, AssetKey, AspectRatioOption, PROVIDER_RECOMMENDATIONS } from "@/lib/imagePrompts";
 import { rasterFileToOptimizedDataUrl } from "@/lib/imageDataUrl";
 import { downloadImageUrl, fetchImageDataUrl } from "@/lib/imageTransport";
 import {
@@ -537,17 +537,35 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
           Configure suas chaves de API clicando em <strong>⚙ APIs</strong> no cabeçalho.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {PROVIDERS.map((p) => (
+          {PROVIDERS.map((p) => {
+            // Check if this provider is recommended for the current asset being generated
+            const currentRec = Object.entries(PROVIDER_RECOMMENDATIONS).find(
+              ([, rec]) => rec.best === p.id
+            );
+            const isRecommendedForSome = !!currentRec;
+            const isAvoided = Object.values(PROVIDER_RECOMMENDATIONS).some(
+              (rec) => rec.avoid === p.id
+            );
+            return (
             <button
               key={p.id}
               onClick={() => setProvider(p.id)}
-              className={`text-left p-4 rounded-xl border-2 transition-all ${
+              className={`text-left p-4 rounded-xl border-2 transition-all relative ${
                 provider === p.id
                   ? "border-gray-900 bg-gray-900 text-white"
                   : "border-gray-200 bg-white hover:border-gray-400"
               }`}
             >
-              <div className="font-bold text-sm mb-1">{p.name}</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-bold text-sm">{p.name}</span>
+                {isRecommendedForSome && (
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                    provider === p.id ? "bg-emerald-500/30 text-emerald-300" : "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                  }`}>
+                    Rec
+                  </span>
+                )}
+              </div>
               <div className={`text-xs leading-snug ${provider === p.id ? "text-gray-300" : "text-gray-500"}`}>
                 {p.desc}
               </div>
@@ -559,7 +577,8 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
                 {p.envKey}
               </div>
             </button>
-          ))}
+            );
+          })}
         </div>
         {!currentProviderHasKey ? (
           <div className="mt-3 px-4 py-3 rounded-lg border text-xs bg-red-50 border-red-200 text-red-700">
