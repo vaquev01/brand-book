@@ -9,6 +9,107 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ═══════ BRANDBOOK VIEWER — Typography & Readability ═══════ */
+
+/* Better body text: larger, darker, optimal line-length */
+#brandbook-content p,
+#brandbook-content li,
+#brandbook-content .bb-body-text {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.75;
+  color: #374151; /* gray-700 — better contrast than gray-600 */
+  max-width: 72ch;
+}
+
+/* Section labels — slightly larger for readability */
+#brandbook-content .bb-section-label {
+  font-size: 0.6875rem; /* 11px instead of 10px */
+  letter-spacing: 0.2em;
+}
+
+/* Global fix: all 10px labels become 11px for readability */
+#brandbook-content [class*="text-[10px]"] {
+  font-size: 0.6875rem !important; /* 11px */
+}
+
+/* Gray-600 body text gets darker for contrast */
+#brandbook-content .text-gray-600 {
+  color: #374151 !important; /* gray-700 */
+}
+
+/* Tracking too wide makes text hard to scan */
+#brandbook-content [class*="tracking-[0.24em]"] {
+  letter-spacing: 0.18em !important;
+}
+#brandbook-content [class*="tracking-[0.22em]"] {
+  letter-spacing: 0.16em !important;
+}
+
+/* Hero quotes — use body font for long text readability */
+#brandbook-content .bb-hero-quote {
+  font-family: var(--bb-body-font, 'Inter', sans-serif);
+  font-weight: 500;
+  line-height: 1.7;
+  max-width: 58ch;
+  margin-inline: auto;
+}
+
+/* Section collapse animation */
+.bb-section-body {
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.3s ease;
+}
+.bb-section-body[data-collapsed="true"] {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Section number pill with brand color */
+.bb-section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: white;
+  background: var(--bb-primary, #111827);
+  flex-shrink: 0;
+}
+
+/* Progress bar at top of viewer */
+.bb-progress-bar {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  height: 3px;
+  background: #f1f5f9;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.bb-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bb-primary, #111827), var(--bb-accent, #3730a3));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Collapsed section preview */
+.bb-collapsed-preview {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
 /* ── Scroll reveal animations ─────────────────────────────────── */
 [data-reveal] {
   opacity: 0;

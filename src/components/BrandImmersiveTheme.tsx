@@ -318,15 +318,22 @@ export function BrandImmersiveTheme({
         /* ═══════ SECTION SHELLS ═══════ */
         #brandbook-content.bb-immersive .bb-section-shell {
           background: linear-gradient(180deg, var(--bb-surface-strong) 0%, var(--bb-surface) 100%);
-          border: 1px solid ${rgba(P, 0.14)};
-          border-left: 5px solid ${P};
-          border-radius: 24px;
-          box-shadow: var(--bb-shadow), inset 0 1px 0 ${rgba("#ffffff", 0.24)};
-          padding: 30px 28px 28px 24px;
+          border: 1px solid ${rgba(P, 0.18)};
+          border-left: 4px solid ${P};
+          border-radius: 20px;
+          box-shadow: var(--bb-shadow), inset 0 1px 0 ${rgba("#ffffff", 0.18)};
+          padding: 28px 26px 26px 22px;
           margin-bottom: 0;
-          backdrop-filter: blur(22px) saturate(1.22);
+          backdrop-filter: blur(28px) saturate(1.3);
           position: relative;
           overflow: hidden;
+        }
+
+        /* Better text readability in immersive mode */
+        #brandbook-content.bb-immersive p,
+        #brandbook-content.bb-immersive li {
+          line-height: 1.8;
+          font-size: 0.9375rem;
         }
 
         /* glow corner top-right */

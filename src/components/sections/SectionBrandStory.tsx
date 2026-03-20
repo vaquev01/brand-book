@@ -13,12 +13,12 @@ export function SectionBrandStory({ data, num, onUpdateData }: { data: Brandbook
       <div className="mb-6 rounded-[1.75rem] border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50/80 px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] md:px-7 md:py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400">Narrativa central</div>
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">Narrativa central</div>
             <h2 className="text-[1.7rem] md:text-[2.15rem] font-extrabold tracking-tight text-gray-950">
               {String(num).padStart(2, "0")}. Brand Story &amp; Manifesto
             </h2>
             {editorialLine && (
-              <p className="mt-2 text-sm leading-7 text-gray-600 md:text-[15px]">
+              <p className="mt-2 text-[15px] leading-7 text-gray-700 md:text-[15px]">
                 {editorialLine}
               </p>
             )}

@@ -17,12 +17,12 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
       <div className="mb-6 rounded-[1.75rem] border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50/80 px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] md:px-7 md:py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400">Estrategia de mercado</div>
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">Estrategia de mercado</div>
             <h2 className="text-[1.7rem] md:text-[2.15rem] font-extrabold tracking-tight text-gray-950">
               {String(num).padStart(2, "0")}. Posicionamento
             </h2>
             {p.positioningStatement && (
-              <p className="mt-2 text-sm leading-7 text-gray-600 md:text-[15px]">
+              <p className="mt-2 text-[15px] leading-7 text-gray-700 md:text-[15px]">
                 {p.positioningStatement}
               </p>
             )}
@@ -46,7 +46,7 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-1.5">Categoria</h3>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em] mb-1.5">Categoria</h3>
               <EditableField
                 value={p.category}
                 onSave={(val) => onUpdateData?.(prev => prev.positioning ? { ...prev, positioning: { ...prev.positioning, category: val } } : prev)}
@@ -68,7 +68,7 @@ export function SectionPositioning({ data, num, onUpdateData }: { data: Brandboo
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-1.5">Mercado-alvo</h3>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em] mb-1.5">Mercado-alvo</h3>
               <EditableField
                 value={p.targetMarket}
                 onSave={(val) => onUpdateData?.(prev => prev.positioning ? { ...prev, positioning: { ...prev.positioning, targetMarket: val } } : prev)}

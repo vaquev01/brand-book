@@ -48,12 +48,12 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
       <div className="mb-6 rounded-[1.75rem] border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50/80 px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] md:px-7 md:py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400">Fundação estratégica</div>
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">Fundação estratégica</div>
             <h2 className="text-[1.7rem] md:text-[2.15rem] font-extrabold tracking-tight text-gray-950">
               {String(num).padStart(2, "0")}. DNA da Marca &amp; Estratégia
             </h2>
             {editorialLine && (
-              <p className="mt-2 text-sm leading-7 text-gray-600 md:text-[15px]">
+              <p className="mt-2 text-[15px] leading-7 text-gray-700 md:text-[15px]">
                 {editorialLine}
               </p>
             )}
@@ -72,7 +72,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-500">
               <IconCompass />
             </div>
-            <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Propósito</h3>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Propósito</h3>
           </div>
           <EditableField
             value={data.brandConcept.purpose}
@@ -90,7 +90,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-500">
                 <IconRocket />
               </div>
-              <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Missão</h3>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Missão</h3>
             </div>
             <EditableField
               value={data.brandConcept.mission}
@@ -105,7 +105,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-500">
                 <IconEye />
               </div>
-              <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Visão</h3>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Visão</h3>
             </div>
             <EditableField
               value={data.brandConcept.vision}
@@ -138,7 +138,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
           {data.brandConcept.reasonsToBelieve && (
             <div className="rounded-[1.5rem] border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.04)]">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Reasons to Believe (RTBs)</h3>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Reasons to Believe (RTBs)</h3>
                 {onUpdateData && (
                   <button
                     onClick={() => onUpdateData(prev => ({ ...prev, brandConcept: { ...prev.brandConcept, reasonsToBelieve: [...(prev.brandConcept.reasonsToBelieve || []), "Novo RTB"] } }))}
@@ -171,7 +171,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
           )}
           {data.brandConcept.userPsychographics && (
             <div className="rounded-[1.5rem] border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-[0_16px_40px_rgba(15,23,42,0.04)]">
-              <h3 className="mb-2 text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Psicografia do Usuário</h3>
+              <h3 className="mb-2 text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Psicografia do Usuário</h3>
               <EditableField
                 value={data.brandConcept.userPsychographics}
                 onSave={(val) => onUpdateData?.(prev => ({ ...prev, brandConcept: { ...prev.brandConcept, userPsychographics: val } }))}
@@ -187,7 +187,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
       {/* ── Values — numbered visual cards ── */}
       <div className="mb-8 rounded-[1.5rem] border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-[0_16px_40px_rgba(15,23,42,0.04)]">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Valores Essenciais</h3>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Valores Essenciais</h3>
           {onUpdateData && (
             <button
               onClick={() => onUpdateData(prev => ({ ...prev, brandConcept: { ...prev.brandConcept, values: [...prev.brandConcept.values, "Novo Valor"] } }))}
@@ -233,7 +233,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
       {/* ── Personality — dark theme accent cards ── */}
       <div className="mb-8 rounded-[1.5rem] border border-gray-200 bg-gray-950 p-6 shadow-[0_18px_48px_rgba(15,23,42,0.16)]">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Personalidade</h3>
+          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Personalidade</h3>
           {onUpdateData && (
             <button
               onClick={() => onUpdateData(prev => ({ ...prev, brandConcept: { ...prev.brandConcept, personality: [...prev.brandConcept.personality, "Novo Traço"] } }))}
@@ -303,7 +303,7 @@ export function SectionDNA({ data, num, onUpdateData }: { data: BrandbookData; n
             <IconMegaphone />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="mb-3 text-[11px] font-bold text-gray-400 uppercase tracking-[0.22em]">Tom de Voz</h3>
+            <h3 className="mb-3 text-xs font-bold text-gray-500 uppercase tracking-[0.18em]">Tom de Voz</h3>
             <div className="rounded-xl bg-gray-50 border border-gray-100 px-5 py-4 italic">
               <EditableField
                 value={data.brandConcept.toneOfVoice}

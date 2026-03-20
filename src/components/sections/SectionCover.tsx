@@ -385,14 +385,18 @@ export function SectionCover({ data, visualSummary }: { data: BrandbookData; vis
           <div className="mb-5 border-t" style={{ borderColor: dividerColor }} />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex flex-col gap-3">
-              <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex gap-2.5 items-center flex-wrap">
                 {allColors.map((c, i) => (
-                  <div
-                    key={i}
-                    className="rounded-full shadow-md"
-                    style={{ width: 30, height: 30, background: c.hex, border: `2px solid ${dividerColor}` }}
-                    title={`${c.name} — ${c.hex}`}
-                  />
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <div
+                      className="rounded-xl shadow-lg transition-transform hover:scale-110"
+                      style={{ width: 40, height: 40, background: c.hex, border: `2px solid ${dividerColor}` }}
+                      title={`${c.name} — ${c.hex}`}
+                    />
+                    <span className="text-[8px] font-bold uppercase tracking-wider opacity-50" style={{ color: textColor }}>
+                      {c.hex?.replace("#", "")}
+                    </span>
+                  </div>
                 ))}
               </div>
               <div className="flex flex-wrap gap-3 md:gap-4">

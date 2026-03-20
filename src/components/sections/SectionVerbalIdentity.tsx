@@ -13,12 +13,12 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
       <div className="mb-6 rounded-[1.75rem] border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50/80 px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] md:px-7 md:py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-gray-400">Assinatura verbal</div>
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">Assinatura verbal</div>
             <h2 className="text-[1.7rem] md:text-[2.15rem] font-extrabold tracking-tight text-gray-950">
               {String(num).padStart(2, "0")}. Identidade Verbal &amp; Mensagens
             </h2>
             {editorialLine && (
-              <p className="mt-2 text-sm leading-7 text-gray-600 md:text-[15px]">
+              <p className="mt-2 text-[15px] leading-7 text-gray-700 md:text-[15px]">
                 {editorialLine}
               </p>
             )}
@@ -112,7 +112,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                   {/* Collapsible Proof Points */}
                   {((p.proofPoints && p.proofPoints.length > 0) || onUpdateData) && (
                     <details className="mt-3 group/details">
-                      <summary className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] cursor-pointer select-none hover:text-gray-600 transition flex items-center gap-1">
+                      <summary className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em] cursor-pointer select-none hover:text-gray-600 transition flex items-center gap-1">
                         <svg className="w-3 h-3 transition-transform group-open/details:rotate-90" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
                         Proof Points ({(p.proofPoints || []).length})
                       </summary>
@@ -162,7 +162,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
                   {/* Collapsible Example Copy */}
                   {((p.exampleCopy && p.exampleCopy.length > 0) || onUpdateData) && (
                     <details className="mt-2 group/details">
-                      <summary className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] cursor-pointer select-none hover:text-gray-600 transition flex items-center gap-1">
+                      <summary className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em] cursor-pointer select-none hover:text-gray-600 transition flex items-center gap-1">
                         <svg className="w-3 h-3 transition-transform group-open/details:rotate-90" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
                         Exemplos de Copy ({(p.exampleCopy || []).length})
                       </summary>
@@ -235,7 +235,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             {/* Voice Traits */}
             <div>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-2">Traços de Voz</div>
+              <div className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em] mb-2">Traços de Voz</div>
               <div className="flex flex-wrap gap-1.5">
                 {v.brandVoiceTraits.map((t, i) => (
                   <span key={i} className="rounded-full bg-gray-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm">
@@ -394,7 +394,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
 
           {/* Headlines as horizontal scrollable strip */}
           <div className="mb-4">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-2">Headlines</div>
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em] mb-2">Headlines</div>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
               {v.sampleHeadlines.map((h, i) => (
                 <div key={i} className="shrink-0 w-[220px] text-sm bg-gray-50 border rounded-xl p-3 text-gray-700">
@@ -410,7 +410,7 @@ export function SectionVerbalIdentity({ data, num, onUpdateData }: { data: Brand
 
           {/* CTAs as pills */}
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.22em] mb-2">CTAs</div>
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-[0.18em] mb-2">CTAs</div>
             <div className="flex flex-wrap gap-2">
               {v.sampleCTAs.map((c, i) => (
                 <span key={i} className="bg-indigo-50 text-indigo-800 border border-indigo-100 text-xs px-2.5 py-1 rounded-full font-semibold flex items-stretch overflow-hidden group/item">

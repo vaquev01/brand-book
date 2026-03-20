@@ -1113,20 +1113,30 @@ export function BrandbookViewer({
                   style={immersive ? undefined : defaultShellStyle}
                 >
                   {/* Collapsible section header bar */}
-                  <div className={`no-print flex items-center justify-between px-4 py-3 hover:bg-gray-50/50 transition w-full ${isSectionCollapsed ? "rounded-[1.6rem]" : "rounded-t-[1.6rem]"}`}>
-                    <button
-                      type="button"
-                      onClick={() => toggleSectionCollapse(s.id)}
-                      className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer text-left"
-                    >
-                      <span className="text-sm flex-shrink-0">{sectionCatIcon}</span>
+                  <div className={`no-print flex items-center justify-between px-4 py-3 hover:bg-gray-50/50 transition w-full cursor-pointer ${isSectionCollapsed ? "rounded-[1.6rem]" : "rounded-t-[1.6rem]"}`}
+                    onClick={() => toggleSectionCollapse(s.id)}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <span
-                        className="text-xs font-extrabold uppercase tracking-[0.15em] truncate"
-                        style={{ color: immersive ? "inherit" : rgba(theme.primaryHex, 0.7), fontFamily: `'${theme.headingFont}', sans-serif` }}
+                        className="bb-section-num"
+                        style={{ background: immersive ? undefined : `linear-gradient(135deg, ${theme.primaryHex}, ${theme.accentHex})` }}
                       >
-                        {s.num}. {s.title}
+                        {String(s.num).padStart(2, "0")}
                       </span>
-                    </button>
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className="text-sm font-bold truncate block"
+                          style={{ color: immersive ? "inherit" : "#111827" }}
+                        >
+                          {s.title}
+                        </span>
+                        {isSectionCollapsed && (
+                          <span className="text-xs text-gray-400 truncate block mt-0.5">
+                            Clique para expandir
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                       {shareToken && (
                         <SectionComments
@@ -1135,13 +1145,13 @@ export function BrandbookViewer({
                           sectionLabel={s.title}
                         />
                       )}
-                      <button
-                        type="button"
-                        onClick={() => toggleSectionCollapse(s.id)}
-                        className="text-gray-400 text-xs cursor-pointer"
+                      <svg
+                        width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"
+                        className={`text-gray-400 transition-transform duration-300 ${isSectionCollapsed ? "-rotate-90" : "rotate-0"}`}
                       >
-                        {isSectionCollapsed ? "▶" : "▼"}
-                      </button>
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
                     </div>
                   </div>
 
