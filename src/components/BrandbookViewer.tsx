@@ -121,7 +121,22 @@ export function BrandbookViewer({
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [hiddenSections, setHiddenSections] = useState<Set<string>>(new Set());
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set(DEFAULT_COLLAPSED_CATEGORIES));
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  // Text-heavy sections start collapsed; visual sections start expanded
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set([
+    "dna",
+    "positioning",
+    "brand-story",
+    "personas",
+    "verbal-identity",
+    "social-media",
+    "brand-world",
+    "ui-guidelines",
+    "tokens-a11y",
+    "ux-microcopy-motion",
+    "production-guidelines",
+    "governance",
+    "brand-health",
+  ]));
 
   const noop = () => {};
   const imgGen = useImageGeneration({
