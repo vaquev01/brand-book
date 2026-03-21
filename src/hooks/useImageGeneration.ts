@@ -38,18 +38,18 @@ export const PROVIDERS: {
   color: string;
 }[] = [
   {
+    id: "imagen",
+    name: "Google Imagen",
+    desc: "Google · Imagen 3 + Gemini · Padrão recomendado — alta qualidade, velocidade e custo-benefício",
+    envKey: "GOOGLE_API_KEY",
+    color: "bg-blue-50 border-blue-200 text-blue-800",
+  },
+  {
     id: "dalle3",
     name: "DALL-E 3",
     desc: "OpenAI · Altíssima qualidade, fotorrealista e artístico",
     envKey: "OPENAI_API_KEY",
     color: "bg-green-50 border-green-200 text-green-800",
-  },
-  {
-    id: "stability",
-    name: "Stable Diffusion XL",
-    desc: "Stability AI · Padrões, texturas e fotografia",
-    envKey: "STABILITY_API_KEY",
-    color: "bg-purple-50 border-purple-200 text-purple-800",
   },
   {
     id: "ideogram",
@@ -59,11 +59,11 @@ export const PROVIDERS: {
     color: "bg-orange-50 border-orange-200 text-orange-800",
   },
   {
-    id: "imagen",
-    name: "Google Image",
-    desc: "Google · Imagen 3 por padrão, Gemini com referências · alta qualidade e velocidade",
-    envKey: "GOOGLE_API_KEY",
-    color: "bg-blue-50 border-blue-200 text-blue-800",
+    id: "stability",
+    name: "Stable Diffusion XL",
+    desc: "Stability AI · Padrões, texturas e fotografia",
+    envKey: "STABILITY_API_KEY",
+    color: "bg-purple-50 border-purple-200 text-purple-800",
   },
   {
     id: "recraft",
@@ -108,8 +108,9 @@ function isStrictLogoAsset(key: AssetKey): boolean {
 }
 
 function pickDefaultProvider(keys: ApiKeys): ImageProvider {
-  const order: ImageProvider[] = ["dalle3", "imagen", "stability", "ideogram"];
-  return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "dalle3";
+  // Google (Imagen/Gemini) is the default — best balance of quality, speed and cost
+  const order: ImageProvider[] = ["imagen", "dalle3", "ideogram", "recraft", "stability", "flux"];
+  return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "imagen";
 }
 
 function defaultUploadedTypeFromAssetKey(

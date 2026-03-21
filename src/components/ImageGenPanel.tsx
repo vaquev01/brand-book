@@ -105,8 +105,9 @@ function isStrictLogoAsset(key: AssetKey): boolean {
 }
 
 function pickDefaultProvider(keys: ApiKeys): ImageProvider {
-  const order: ImageProvider[] = ["dalle3", "imagen", "stability", "ideogram"];
-  return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "dalle3";
+  // Google (Imagen/Gemini) is the default — best balance of quality, speed and cost
+  const order: ImageProvider[] = ["imagen", "dalle3", "ideogram", "recraft", "stability", "flux"];
+  return order.find((p) => !!keys[PROVIDER_KEY_MAP[p]]) ?? "imagen";
 }
 
 export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveToAssets, apiKeys, uploadedAssets = [], promptProvider }: Props) {
