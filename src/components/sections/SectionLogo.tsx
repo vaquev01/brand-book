@@ -263,13 +263,16 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
     if (sectionGenerating) return;
     setSectionGenerating(true);
     try {
-      // Always generate both — regeneration replaces existing
-      await handleGenerateWithDirection("logo_primary");
-      await handleGenerateWithDirection("logo_dark_bg");
+      // Generate primary first
+      await onGenerate("logo_primary" as AssetKey);
+      // Then generate dark version
+      await onGenerate("logo_dark_bg" as AssetKey);
+    } catch (err) {
+      console.error("Logo generation error:", err);
     } finally {
       setSectionGenerating(false);
     }
-  }, [onGenerate, sectionGenerating, handleGenerateWithDirection]);
+  }, [onGenerate, sectionGenerating]);
 
   // ═══ COLOR HARMONY ENGINE ═══
   // Calculates optimal logo color scheme for each brand background
@@ -507,7 +510,14 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
           </p>
           <button
             type="button"
-            onClick={handleGenerateSection}
+            onClick={async () => {
+              setSectionGenerating(true);
+              try {
+                await onGenerate("logo_primary" as AssetKey);
+                await onGenerate("logo_dark_bg" as AssetKey);
+              } catch (err) { console.error("Logo gen error:", err); }
+              finally { setSectionGenerating(false); }
+            }}
             disabled={loadingKey !== null || sectionGenerating}
             className="inline-flex items-center gap-2 text-white text-sm font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5 disabled:opacity-50"
             style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
@@ -532,7 +542,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
               {onGenerate && (
                 <button
                   type="button"
-                  onClick={() => handleGenerateWithDirection("logo_primary")}
+                  onClick={() => onGenerate("logo_primary" as AssetKey)}
                   disabled={loadingKey !== null}
                   className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition disabled:opacity-40"
                 >
@@ -569,7 +579,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
               {onGenerate && (
                 <button
                   type="button"
-                  onClick={() => handleGenerateWithDirection("logo_dark_bg")}
+                  onClick={() => onGenerate("logo_dark_bg" as AssetKey)}
                   disabled={loadingKey !== null}
                   className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition disabled:opacity-40"
                 >
