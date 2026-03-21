@@ -256,34 +256,67 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
     const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
     await onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
+  }, [onGenerate, getBriefing]);
 
-    // Auto-generate the complementary logo version for full palette coverage
-    if (assetKey === "logo_primary" && !generatedAssets["logo_dark_bg"] && !uploadedLogos[1]) {
-      await onGenerate("logo_dark_bg", { customInstruction, userReferenceImages: refs });
-    } else if (assetKey === "logo_dark_bg" && !generatedAssets["logo_primary"] && !uploadedLogos[0]) {
-      await onGenerate("logo_primary", { customInstruction, userReferenceImages: refs });
-    }
-  }, [onGenerate, getBriefing, generatedAssets, uploadedLogos]);
+  // Build the full list of backgrounds for logo generation
+  const logoBackgrounds = useMemo(() => {
+    const bgs: Array<{ key: string; name: string; hex: string }> = [
+      { key: "logo_primary", name: "Branco", hex: "#ffffff" },
+      { key: "logo_dark_bg", name: "Preto", hex: "#0a0a0a" },
+    ];
+    const allColors = [...data.colors.primary, ...data.colors.secondary].slice(0, 6);
+    allColors.forEach((c, i) => {
+      bgs.push({ key: `logo_bg_${c.hex.replace("#", "").toLowerCase()}`, name: c.name, hex: c.hex });
+    });
+    return bgs;
+  }, [data.colors]);
+
+  const [paletteProgress, setPaletteProgress] = useState<{ current: number; total: number } | null>(null);
 
   const handleGenerateSection = useCallback(async () => {
     if (!onGenerate) return;
     if (sectionGenerating) return;
     setSectionGenerating(true);
+    setPaletteProgress({ current: 0, total: logoBackgrounds.length });
+
     try {
-      const hasUploadedPrimary = !!uploadedLogos[0];
-      const hasUploadedDark = !!uploadedLogos[1];
+      for (let i = 0; i < logoBackgrounds.length; i++) {
+        const bg = logoBackgrounds[i];
+        setPaletteProgress({ current: i + 1, total: logoBackgrounds.length });
 
-      if (!hasUploadedPrimary) {
-        await handleGenerateWithDirection("logo_primary");
-      }
+        // Skip if already generated
+        if (generatedAssets?.[bg.key]) continue;
 
-      if (!hasUploadedDark) {
-        await handleGenerateWithDirection("logo_dark_bg");
+        const b = getBriefing("logo_primary");
+        const parts: string[] = [];
+        if (b.instruction.trim()) parts.push(b.instruction.trim());
+
+        // Add background-specific color instruction
+        if (bg.key !== "logo_primary" && bg.key !== "logo_dark_bg") {
+          parts.push(
+            `BACKGROUND ADAPTATION: This logo version goes on ${bg.name} (${bg.hex}) background. ` +
+            `Redistribute the logo colors for maximum harmony and contrast on this specific background. ` +
+            `The symbol and structure stay IDENTICAL — only the COLOR VALUES change. ` +
+            `Choose colors from the brand palette that create the best visual harmony with ${bg.hex}.`
+          );
+        }
+
+        const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
+        const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
+
+        // Use the appropriate base key for the generation prompt
+        const baseKey = bg.key === "logo_dark_bg" ? "logo_dark_bg" as AssetKey : "logo_primary" as AssetKey;
+        await onGenerate(baseKey, {
+          customInstruction,
+          userReferenceImages: refs,
+          storageKey: bg.key,
+        });
       }
     } finally {
       setSectionGenerating(false);
+      setPaletteProgress(null);
     }
-  }, [onGenerate, sectionGenerating, uploadedLogos, handleGenerateWithDirection]);
+  }, [onGenerate, sectionGenerating, logoBackgrounds, generatedAssets, getBriefing]);
 
   const logoPrimary = generatedImages["logo_primary"] || uploadedLogos[0]?.dataUrl || null;
   const logoDarkBg = generatedImages["logo_dark_bg"] || uploadedLogos[1]?.dataUrl || null;
@@ -514,37 +547,48 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
           return { text: "Baixo", color: "text-red-500", bg: "bg-red-50" };
         };
 
-        // Build backgrounds from ALL brand colors + white + black
-        const allBrandColors = [
-          ...data.colors.primary.map(c => ({ name: c.name, hex: c.hex, type: "primária" })),
-          ...data.colors.secondary.map(c => ({ name: c.name, hex: c.hex, type: "secundária" })),
-        ];
-        const backgrounds = [
-          { name: "Branco", hex: "#ffffff", type: "neutro" },
-          { name: "Preto", hex: "#0a0a0a", type: "neutro" },
-          ...allBrandColors.slice(0, 6),
-        ];
-
         // Estimate logo's dominant color for contrast calculation
         const logoMainColor = isDark(data.colors.primary[0]?.hex ?? "#000") ? data.colors.primary[0]?.hex ?? "#1a1a1a" : "#1a1a1a";
 
         return (
         <div className="mb-6">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Harmonia da Logo na Paleta</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Logo em Todas as Cores da Marca</h3>
+            {onGenerate && (
+              <button
+                onClick={handleGenerateSection}
+                disabled={sectionGenerating}
+                className="no-print inline-flex items-center gap-2 text-xs font-bold text-white px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
+              >
+                {sectionGenerating && paletteProgress ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    {paletteProgress.current}/{paletteProgress.total} versões
+                  </>
+                ) : (
+                  <>✦ Gerar Logo em {logoBackgrounds.length} Cores</>
+                )}
+              </button>
+            )}
+          </div>
           <p className="text-[11px] text-gray-400 mb-4">
-            Como a logo se comporta sobre cada cor da marca. {!darkBgLogo && "Gere a versão invertida para melhor resultado em fundos escuros."}
+            Cada versão adapta as cores da logo para harmonia máxima com o fundo. Um clique, todas as versões.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {backgrounds.map((bgColor) => {
+            {logoBackgrounds.map((bgColor) => {
               const bgIsDark = isDark(bgColor.hex);
-              const logoSrc = bgIsDark ? (darkBgLogo || logoPrimary) : logoPrimary;
-              const needsInvert = bgIsDark && !darkBgLogo;
+              // Check if we have a specific generated version for this background
+              const specificLogo = generatedImages?.[bgColor.key];
+              const logoSrc = specificLogo || (bgIsDark ? (darkBgLogo || logoPrimary) : logoPrimary);
+              const needsInvert = bgIsDark && !darkBgLogo && !specificLogo;
+              const hasSpecific = !!specificLogo;
               const ratio = contrastRatio(bgColor.hex, logoMainColor);
-              const harmony = harmonyLabel(bgIsDark && darkBgLogo ? 7 : ratio); // dark version assumed good
+              const harmony = harmonyLabel(hasSpecific ? 7 : (bgIsDark && darkBgLogo ? 7 : ratio));
 
               return (
               <div
-                key={bgColor.hex}
+                key={bgColor.key}
                 className="rounded-xl overflow-hidden border border-gray-100 shadow-sm group/card hover:shadow-md transition-shadow"
               >
                 {/* Logo on background */}
@@ -552,13 +596,28 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
                   className="flex items-center justify-center p-5 h-28 relative"
                   style={{ backgroundColor: bgColor.hex }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={logoSrc}
-                    alt={`Logo em ${bgColor.name}`}
-                    className="max-h-14 max-w-[80%] object-contain transition-transform group-hover/card:scale-105"
-                    style={needsInvert ? { filter: "invert(1) brightness(1.1)", opacity: 0.85 } : undefined}
-                  />
+                  {logoSrc ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={logoSrc}
+                      alt={`Logo em ${bgColor.name}`}
+                      className="max-h-14 max-w-[80%] object-contain transition-transform group-hover/card:scale-105"
+                      style={needsInvert ? { filter: "invert(1) brightness(1.1)", opacity: 0.85 } : undefined}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 opacity-40">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={isDark(bgColor.hex) ? "text-white" : "text-gray-400"}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                      </svg>
+                      <span className={`text-[8px] font-bold ${isDark(bgColor.hex) ? "text-white/40" : "text-gray-300"}`}>Gerar</span>
+                    </div>
+                  )}
+                  {/* Badge: generated specifically for this bg */}
+                  {hasSpecific && (
+                    <span className="absolute top-1.5 right-1.5 text-[7px] font-bold bg-emerald-500 text-white px-1 py-0.5 rounded">
+                      Adaptada
+                    </span>
+                  )}
                 </div>
                 {/* Info bar */}
                 <div className="px-3 py-2.5 bg-white flex items-center justify-between gap-2">
@@ -570,7 +629,7 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
                     </div>
                   </div>
                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${harmony.bg} ${harmony.color}`}>
-                    {harmony.text}
+                    {hasSpecific ? "✓" : harmony.text}
                   </span>
                 </div>
               </div>
@@ -578,10 +637,9 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
             })}
           </div>
           {/* Legend */}
-          <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> AAA/AA = Ótimo contraste</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> A = Aceitável</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Baixo = Evitar</span>
+          <div className="flex flex-wrap items-center gap-4 mt-3 text-[10px] text-gray-400">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Adaptada = Cores redistribuídas para este fundo</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Fallback = Versão genérica aplicada</span>
           </div>
         </div>
         );
