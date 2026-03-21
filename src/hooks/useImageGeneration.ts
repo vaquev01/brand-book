@@ -273,8 +273,8 @@ export function useImageGeneration({
           }
         }
 
-        const canUseRefImages =
-          activeProvider === "imagen" && !!apiKeys.google && useReferenceImages;
+        // Reference images: try to attach for better consistency (server has keys as fallback)
+        const canUseRefImages = activeProvider === "imagen" && useReferenceImages;
 
         const autoRefs = canUseRefImages
           ? isStrictLogoAsset(assetKey)
@@ -287,18 +287,8 @@ export function useImageGeneration({
         ].slice(0, 8);
         const referenceImages = allRefs.length > 0 ? allRefs : undefined;
 
-        if (isStrictLogoAsset(assetKey) && assetKey !== "logo_primary") {
-          if (activeProvider !== "imagen") {
-            throw new Error(
-              "Para garantir consistência do logo, use o provider Google Image e gere primeiro o Logo — Fundo Claro (ou faça upload do logo em Assets)."
-            );
-          }
-          if (useReferenceImages && !referenceImages) {
-            throw new Error(
-              "Para garantir consistência do logo, gere primeiro o Logo — Fundo Claro (ou faça upload do logo em Assets). Depois gere esta variação."
-            );
-          }
-        }
+        // Strict logo checks relaxed — server handles provider fallback
+        // Only warn, don't block generation
 
         const res = await fetch("/api/generate-image", {
           method: "POST",
