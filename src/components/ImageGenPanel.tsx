@@ -281,12 +281,7 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   }
 
   async function generate(assetKey: AssetKey) {
-    const providerKey = apiKeys[PROVIDER_KEY_MAP[provider]];
-    if (!providerKey) {
-      const p = PROVIDERS.find((x) => x.id === provider);
-      showError(`Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? provider}.`);
-      return;
-    }
+    // Allow generation even without client-side key — server has env var fallbacks
 
     setLoadingKey(assetKey);
     setError(null);
@@ -394,7 +389,8 @@ export function ImageGenPanel({ data, generatedAssets, onAssetGenerated, onSaveT
   }
 
   const currentProvider = PROVIDERS.find((p) => p.id === provider)!;
-  const currentProviderHasKey = !!apiKeys[PROVIDER_KEY_MAP[provider]];
+  // Server has env var fallbacks, so generation works even without client keys
+  const currentProviderHasKey = true;
   const categories = ["logo", "digital", "social", "mockup", "print"] as const;
 
   async function generateCustom() {

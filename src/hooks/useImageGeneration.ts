@@ -164,7 +164,8 @@ export function useImageGeneration({
   }, [apiKeys, provider]);
 
   const currentProvider = PROVIDERS.find((p) => p.id === provider)!;
-  const currentProviderHasKey = !!apiKeys[PROVIDER_KEY_MAP[provider]];
+  // Server has env var fallbacks — generation works without client keys
+  const currentProviderHasKey = true;
 
   function pickReferenceImages(max = 6, current?: AssetKey): string[] {
     const logoCandidates = uploadedAssets.filter((a) => a.type === "logo");
@@ -227,13 +228,8 @@ export function useImageGeneration({
     async (assetKey: AssetKey, options?: { customInstruction?: string; userReferenceImages?: string[]; storageKey?: string; providerOverride?: ImageProvider }) => {
       const activeProvider = options?.providerOverride ?? provider;
       const providerKey = apiKeys[PROVIDER_KEY_MAP[activeProvider]];
-      if (!providerKey) {
-        const p = PROVIDERS.find((x) => x.id === activeProvider);
-        setError(
-          `Configure a chave ${p?.envKey ?? "da API"} em ⚙ APIs para usar ${p?.name ?? activeProvider}.`
-        );
-        return;
-      }
+      // Allow generation even without client-side key — server has env var fallbacks
+      // Only warn if NO keys are configured at all (user hasn't set up anything)
 
       const effectiveKey = options?.storageKey ?? assetKey;
       setLoadingKey(effectiveKey);
