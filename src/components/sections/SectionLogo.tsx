@@ -497,43 +497,114 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
         )}
       </div>
 
-      {/* Main logo images */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 items-start">
-        <div>
-          <LogoCard
-            title="Logo Principal — Fundo Claro"
-            image={logoPrimary}
-            placeholderText="Gere o logo principal para visualizar aqui"
-            bgClass="bg-white border-t"
-            assetKey="logo_primary"
-            onGenerate={onGenerate ? (key: AssetKey) => handleGenerateWithDirection(key) : undefined}
-            isLoading={loadingKey === "logo_primary"}
-            generated={generatedAssets["logo_primary"] ?? null}
-            onDownload={onDownload}
-            onSaveToAssets={onSaveToAssets}
-            onPreview={(url, t) => setPreviewImage({ url, title: t })}
-            brandName={data.brandName}
-          />
-          {renderBriefingPanel("logo_primary")}
+      {/* Single generate button */}
+      {onGenerate && !logoPrimary && (
+        <div className="mb-6 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 flex flex-col items-center gap-4">
+          <div className="text-4xl">✦</div>
+          <p className="text-sm text-gray-500 text-center max-w-md">
+            Gere a logo principal e a versão invertida com um clique.<br/>
+            As cores serão automaticamente adaptadas para cada fundo da paleta.
+          </p>
+          <button
+            type="button"
+            onClick={handleGenerateSection}
+            disabled={loadingKey !== null || sectionGenerating}
+            className="inline-flex items-center gap-2 text-white text-sm font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5 disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
+          >
+            {sectionGenerating ? (
+              <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Gerando...</>
+            ) : (
+              <>✦ Gerar Logo (clara + invertida)</>
+            )}
+          </button>
         </div>
-        <div>
-          <LogoCard
-            title="Logo — Versão Invertida"
-            image={logoDarkBg}
-            placeholderText="Gere a versão invertida (fundo escuro)"
-            bgClass="bg-gray-900"
-            assetKey="logo_dark_bg"
-            onGenerate={onGenerate ? (key: AssetKey) => handleGenerateWithDirection(key) : undefined}
-            isLoading={loadingKey === "logo_dark_bg"}
-            generated={generatedAssets["logo_dark_bg"] ?? null}
-            onDownload={onDownload}
-            onSaveToAssets={onSaveToAssets}
-            onPreview={(url, t) => setPreviewImage({ url, title: t })}
-            brandName={data.brandName}
-          />
-          {renderBriefingPanel("logo_dark_bg")}
+      )}
+
+      {/* Main logo images — side by side */}
+      {(logoPrimary || logoDarkBg) && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 items-start">
+        {/* Logo Principal */}
+        <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+          <div className="px-5 py-3 bg-gray-50 border-b flex items-center justify-between">
+            <h3 className="font-bold text-sm">Logo Principal</h3>
+            <div className="no-print flex gap-1">
+              {onGenerate && (
+                <button
+                  type="button"
+                  onClick={() => handleGenerateWithDirection("logo_primary")}
+                  disabled={loadingKey !== null}
+                  className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition disabled:opacity-40"
+                >
+                  {loadingKey === "logo_primary" ? "..." : "↺ Regerar"}
+                </button>
+              )}
+              {logoPrimary && onDownload && (
+                <button onClick={() => onDownload(logoPrimary, "logo_primary")} className="text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded transition">↓</button>
+              )}
+            </div>
+          </div>
+          <div className="bg-white p-6 flex items-center justify-center h-48 relative">
+            {logoPrimary ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoPrimary} alt="Logo Principal" className="max-h-full max-w-full object-contain" />
+                {loadingKey === "logo_primary" && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-gray-900/20 border-t-gray-900 rounded-full animate-spin" />
+                  </div>
+                )}
+              </>
+            ) : (
+              <span className="text-gray-300 text-sm">Ainda não gerada</span>
+            )}
+          </div>
+        </div>
+
+        {/* Logo Invertida */}
+        <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+          <div className="px-5 py-3 bg-gray-50 border-b flex items-center justify-between">
+            <h3 className="font-bold text-sm">Logo Invertida</h3>
+            <div className="no-print flex gap-1">
+              {onGenerate && (
+                <button
+                  type="button"
+                  onClick={() => handleGenerateWithDirection("logo_dark_bg")}
+                  disabled={loadingKey !== null}
+                  className="text-[10px] font-semibold text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition disabled:opacity-40"
+                >
+                  {loadingKey === "logo_dark_bg" ? "..." : "↺ Regerar"}
+                </button>
+              )}
+              {logoDarkBg && onDownload && (
+                <button onClick={() => onDownload(logoDarkBg, "logo_dark_bg")} className="text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded transition">↓</button>
+              )}
+            </div>
+          </div>
+          <div className="bg-gray-900 p-6 flex items-center justify-center h-48 relative">
+            {logoDarkBg ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoDarkBg} alt="Logo Invertida" className="max-h-full max-w-full object-contain" />
+                {loadingKey === "logo_dark_bg" && (
+                  <div className="absolute inset-0 bg-gray-900/80 flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+                  </div>
+                )}
+              </>
+            ) : logoPrimary ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoPrimary} alt="Logo (invertida via CSS)" className="max-h-full max-w-full object-contain" style={{ filter: "invert(1) brightness(1.1)" }} />
+                <span className="absolute bottom-2 right-2 text-[8px] text-white/40 font-bold">CSS preview</span>
+              </>
+            ) : (
+              <span className="text-white/30 text-sm">Ainda não gerada</span>
+            )}
+          </div>
         </div>
       </div>
+      )}
 
       {/* Multi-background logo preview — full palette harmony system */}
       {logoPrimary && (() => {
