@@ -258,65 +258,77 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
     await onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
   }, [onGenerate, getBriefing]);
 
-  // Build the full list of backgrounds for logo generation
-  const logoBackgrounds = useMemo(() => {
-    const bgs: Array<{ key: string; name: string; hex: string }> = [
-      { key: "logo_primary", name: "Branco", hex: "#ffffff" },
-      { key: "logo_dark_bg", name: "Preto", hex: "#0a0a0a" },
-    ];
-    const allColors = [...data.colors.primary, ...data.colors.secondary].slice(0, 6);
-    allColors.forEach((c, i) => {
-      bgs.push({ key: `logo_bg_${c.hex.replace("#", "").toLowerCase()}`, name: c.name, hex: c.hex });
-    });
-    return bgs;
-  }, [data.colors]);
-
-  const [paletteProgress, setPaletteProgress] = useState<{ current: number; total: number } | null>(null);
-
   const handleGenerateSection = useCallback(async () => {
     if (!onGenerate) return;
     if (sectionGenerating) return;
     setSectionGenerating(true);
-    setPaletteProgress({ current: 0, total: logoBackgrounds.length });
-
     try {
-      for (let i = 0; i < logoBackgrounds.length; i++) {
-        const bg = logoBackgrounds[i];
-        setPaletteProgress({ current: i + 1, total: logoBackgrounds.length });
-
-        // Skip if already generated
-        if (generatedAssets?.[bg.key]) continue;
-
-        const b = getBriefing("logo_primary");
-        const parts: string[] = [];
-        if (b.instruction.trim()) parts.push(b.instruction.trim());
-
-        // Add background-specific color instruction
-        if (bg.key !== "logo_primary" && bg.key !== "logo_dark_bg") {
-          parts.push(
-            `BACKGROUND ADAPTATION: This logo version goes on ${bg.name} (${bg.hex}) background. ` +
-            `Redistribute the logo colors for maximum harmony and contrast on this specific background. ` +
-            `The symbol and structure stay IDENTICAL — only the COLOR VALUES change. ` +
-            `Choose colors from the brand palette that create the best visual harmony with ${bg.hex}.`
-          );
-        }
-
-        const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
-        const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-
-        // Use the appropriate base key for the generation prompt
-        const baseKey = bg.key === "logo_dark_bg" ? "logo_dark_bg" as AssetKey : "logo_primary" as AssetKey;
-        await onGenerate(baseKey, {
-          customInstruction,
-          userReferenceImages: refs,
-          storageKey: bg.key,
-        });
-      }
+      if (!uploadedLogos[0]) await handleGenerateWithDirection("logo_primary");
+      if (!uploadedLogos[1]) await handleGenerateWithDirection("logo_dark_bg");
     } finally {
       setSectionGenerating(false);
-      setPaletteProgress(null);
     }
-  }, [onGenerate, sectionGenerating, logoBackgrounds, generatedAssets, getBriefing]);
+  }, [onGenerate, sectionGenerating, uploadedLogos, handleGenerateWithDirection]);
+
+  // ═══ COLOR HARMONY ENGINE ═══
+  // Calculates optimal logo color scheme for each brand background
+  const colorHarmonyMap = useMemo(() => {
+    const getLum = (hex: string) => {
+      const h = hex.replace("#", "");
+      const r = parseInt(h.slice(0, 2), 16) / 255;
+      const g = parseInt(h.slice(2, 4), 16) / 255;
+      const b = parseInt(h.slice(4, 6), 16) / 255;
+      const toL = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      return 0.2126 * toL(r) + 0.7152 * toL(g) + 0.0722 * toL(b);
+    };
+    const contrast = (a: string, b: string) => {
+      const l1 = getLum(a), l2 = getLum(b);
+      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    };
+    const isDark = (hex: string) => getLum(hex) < 0.35;
+
+    const allBrandColors = [...data.colors.primary, ...data.colors.secondary];
+    const backgrounds = [
+      { name: "Branco", hex: "#ffffff" },
+      { name: "Preto", hex: "#0a0a0a" },
+      ...allBrandColors.slice(0, 6).map(c => ({ name: c.name, hex: c.hex })),
+    ];
+
+    // For each background, find the best 2 brand colors for symbol + wordmark
+    return backgrounds.map(bg => {
+      const bgDark = isDark(bg.hex);
+
+      // Rank all brand colors by contrast against this background
+      const ranked = allBrandColors
+        .map(c => ({ ...c, contrast: contrast(bg.hex, c.hex) }))
+        .sort((a, b) => b.contrast - a.contrast);
+
+      // Best for symbol: highest contrast brand color
+      const symbolColor = ranked[0] ?? { name: "Branco", hex: "#ffffff", rgb: "", cmyk: "", contrast: 21 };
+      // Best for wordmark: second highest, or white/black if needed
+      let wordmarkColor: { name: string; hex: string; contrast: number } = ranked[1] ?? symbolColor;
+
+      // If contrast is too low, use white or black
+      if (wordmarkColor.contrast < 3) {
+        wordmarkColor = bgDark
+          ? { name: "Branco", hex: "#ffffff", contrast: contrast(bg.hex, "#ffffff") }
+          : { name: "Preto", hex: "#111111", contrast: contrast(bg.hex, "#111111") };
+      }
+
+      const overallContrast = Math.min(symbolColor.contrast, wordmarkColor.contrast);
+      const quality = overallContrast >= 7 ? "AAA" : overallContrast >= 4.5 ? "AA" : overallContrast >= 3 ? "A" : "Baixo";
+
+      return {
+        bg,
+        bgDark,
+        symbolColor: { name: symbolColor.name, hex: symbolColor.hex },
+        wordmarkColor: { name: wordmarkColor.name, hex: wordmarkColor.hex },
+        quality,
+        useInvertedLogo: bgDark,
+        contrastRatio: overallContrast,
+      };
+    });
+  }, [data.colors]);
 
   const logoPrimary = generatedImages["logo_primary"] || uploadedLogos[0]?.dataUrl || null;
   const logoDarkBg = generatedImages["logo_dark_bg"] || uploadedLogos[1]?.dataUrl || null;
@@ -547,100 +559,114 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
           return { text: "Baixo", color: "text-red-500", bg: "bg-red-50" };
         };
 
-        // Estimate logo's dominant color for contrast calculation
-        const logoMainColor = isDark(data.colors.primary[0]?.hex ?? "#000") ? data.colors.primary[0]?.hex ?? "#1a1a1a" : "#1a1a1a";
-
         return (
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Logo em Todas as Cores da Marca</h3>
-            {onGenerate && (
-              <button
-                onClick={handleGenerateSection}
-                disabled={sectionGenerating}
-                className="no-print inline-flex items-center gap-2 text-xs font-bold text-white px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #111827 0%, #3730a3 100%)" }}
-              >
-                {sectionGenerating && paletteProgress ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    {paletteProgress.current}/{paletteProgress.total} versões
-                  </>
-                ) : (
-                  <>✦ Gerar Logo em {logoBackgrounds.length} Cores</>
-                )}
-              </button>
-            )}
-          </div>
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Especificação de Cores por Fundo</h3>
           <p className="text-[11px] text-gray-400 mb-4">
-            Cada versão adapta as cores da logo para harmonia máxima com o fundo. Um clique, todas as versões.
+            A mesma logo, com as cores da marca redistribuídas para harmonia máxima em cada fundo.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {logoBackgrounds.map((bgColor) => {
-              const bgIsDark = isDark(bgColor.hex);
-              // Check if we have a specific generated version for this background
-              const specificLogo = generatedImages?.[bgColor.key];
-              const logoSrc = specificLogo || (bgIsDark ? (darkBgLogo || logoPrimary) : logoPrimary);
-              const needsInvert = bgIsDark && !darkBgLogo && !specificLogo;
-              const hasSpecific = !!specificLogo;
-              const ratio = contrastRatio(bgColor.hex, logoMainColor);
-              const harmony = harmonyLabel(hasSpecific ? 7 : (bgIsDark && darkBgLogo ? 7 : ratio));
+
+          {/* Visual preview grid — same logo, CSS-adapted per background */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-5">
+            {colorHarmonyMap.map((entry) => {
+              const logoSrc = entry.bgDark ? (darkBgLogo || logoPrimary) : logoPrimary;
+              const needsInvert = entry.bgDark && !darkBgLogo;
+              const qualityStyle = entry.quality === "AAA" || entry.quality === "AA"
+                ? "bg-emerald-50 text-emerald-700"
+                : entry.quality === "A" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600";
 
               return (
-              <div
-                key={bgColor.key}
-                className="rounded-xl overflow-hidden border border-gray-100 shadow-sm group/card hover:shadow-md transition-shadow"
-              >
-                {/* Logo on background */}
-                <div
-                  className="flex items-center justify-center p-5 h-28 relative"
-                  style={{ backgroundColor: bgColor.hex }}
-                >
+              <div key={entry.bg.hex} className="rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                {/* Preview */}
+                <div className="flex items-center justify-center p-4 h-24" style={{ backgroundColor: entry.bg.hex }}>
                   {logoSrc ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={logoSrc}
-                      alt={`Logo em ${bgColor.name}`}
-                      className="max-h-14 max-w-[80%] object-contain transition-transform group-hover/card:scale-105"
+                      alt={`Logo em ${entry.bg.name}`}
+                      className="max-h-12 max-w-[75%] object-contain"
                       style={needsInvert ? { filter: "invert(1) brightness(1.1)", opacity: 0.85 } : undefined}
                     />
                   ) : (
-                    <div className="flex flex-col items-center gap-1 opacity-40">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={isDark(bgColor.hex) ? "text-white" : "text-gray-400"}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
-                      </svg>
-                      <span className={`text-[8px] font-bold ${isDark(bgColor.hex) ? "text-white/40" : "text-gray-300"}`}>Gerar</span>
-                    </div>
-                  )}
-                  {/* Badge: generated specifically for this bg */}
-                  {hasSpecific && (
-                    <span className="absolute top-1.5 right-1.5 text-[7px] font-bold bg-emerald-500 text-white px-1 py-0.5 rounded">
-                      Adaptada
-                    </span>
+                    <span className={`text-[10px] font-bold ${entry.bgDark ? "text-white/30" : "text-gray-300"}`}>Gere a logo primeiro</span>
                   )}
                 </div>
-                {/* Info bar */}
-                <div className="px-3 py-2.5 bg-white flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-4 h-4 rounded-md shrink-0 border border-gray-200" style={{ backgroundColor: bgColor.hex }} />
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold text-gray-800 truncate">{bgColor.name}</p>
-                      <p className="text-[9px] font-mono text-gray-400">{bgColor.hex}</p>
-                    </div>
+                {/* Color spec */}
+                <div className="px-3 py-2 bg-white space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-gray-700 truncate">{entry.bg.name}</span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${qualityStyle}`}>{entry.quality}</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${harmony.bg} ${harmony.color}`}>
-                    {hasSpecific ? "✓" : harmony.text}
-                  </span>
+                  {/* Recommended colors for this background */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] text-gray-400">Símbolo:</span>
+                    <div className="w-3 h-3 rounded-sm border border-gray-200" style={{ backgroundColor: entry.symbolColor.hex }} />
+                    <span className="text-[9px] font-mono text-gray-500">{entry.symbolColor.hex}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] text-gray-400">Texto:</span>
+                    <div className="w-3 h-3 rounded-sm border border-gray-200" style={{ backgroundColor: entry.wordmarkColor.hex }} />
+                    <span className="text-[9px] font-mono text-gray-500">{entry.wordmarkColor.hex}</span>
+                  </div>
                 </div>
               </div>
               );
             })}
           </div>
-          {/* Legend */}
-          <div className="flex flex-wrap items-center gap-4 mt-3 text-[10px] text-gray-400">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Adaptada = Cores redistribuídas para este fundo</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Fallback = Versão genérica aplicada</span>
-          </div>
+
+          {/* Color specification table — for designers */}
+          <details className="group/spec">
+            <summary className="cursor-pointer select-none flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-gray-700 transition-colors">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-open/spec:rotate-90"><polyline points="9 18 15 12 9 6"/></svg>
+              Tabela técnica de cores (para designers)
+            </summary>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-[11px] border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-2 pr-3 font-semibold text-gray-500">Fundo</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-500">Hex</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-500">Cor do Símbolo</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-500">Cor do Texto</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-500">Contraste</th>
+                    <th className="text-left py-2 pl-3 font-semibold text-gray-500">WCAG</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {colorHarmonyMap.map((entry) => (
+                    <tr key={entry.bg.hex} className="border-b border-gray-50 hover:bg-gray-50/50">
+                      <td className="py-2 pr-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded border border-gray-200" style={{ backgroundColor: entry.bg.hex }} />
+                          <span className="font-medium text-gray-800">{entry.bg.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 font-mono text-gray-400">{entry.bg.hex}</td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded-sm border border-gray-200" style={{ backgroundColor: entry.symbolColor.hex }} />
+                          <span className="font-mono">{entry.symbolColor.hex}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded-sm border border-gray-200" style={{ backgroundColor: entry.wordmarkColor.hex }} />
+                          <span className="font-mono">{entry.wordmarkColor.hex}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 font-mono">{entry.contrastRatio.toFixed(1)}:1</td>
+                      <td className="py-2 pl-3">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                          entry.quality === "AAA" || entry.quality === "AA" ? "bg-emerald-50 text-emerald-700" :
+                          entry.quality === "A" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-600"
+                        }`}>{entry.quality}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
         </div>
         );
       })()}
