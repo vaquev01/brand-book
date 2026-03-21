@@ -482,67 +482,99 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
         </div>
       </div>
 
-      {/* Multi-background logo preview strip — uses correct logo version per background */}
+      {/* Multi-background logo preview — full palette harmony system */}
       {logoPrimary && (() => {
         const darkBgLogo = logoDarkBg;
-        const primaryHex = data.colors.primary[0]?.hex ?? "#006B60";
-        const secondaryHex = data.colors.primary[1]?.hex ?? data.colors.secondary[0]?.hex ?? "#D5A41D";
 
-        // Determine if a background is dark (needs light logo) or light (needs dark logo)
-        const isDarkBg = (hex: string) => {
+        const getLuminance = (hex: string) => {
           const h = hex.replace("#", "");
-          const r = parseInt(h.slice(0, 2), 16);
-          const g = parseInt(h.slice(2, 4), 16);
-          const b = parseInt(h.slice(4, 6), 16);
-          return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.45;
+          const r = parseInt(h.slice(0, 2), 16) / 255;
+          const g = parseInt(h.slice(2, 4), 16) / 255;
+          const b = parseInt(h.slice(4, 6), 16) / 255;
+          const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+          return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+        };
+        const isDark = (hex: string) => getLuminance(hex) < 0.35;
+        const contrastRatio = (bg: string, fg: string) => {
+          const l1 = getLuminance(bg);
+          const l2 = getLuminance(fg);
+          return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+        };
+        const harmonyLabel = (ratio: number) => {
+          if (ratio >= 7) return { text: "AAA", color: "text-emerald-600", bg: "bg-emerald-50" };
+          if (ratio >= 4.5) return { text: "AA", color: "text-emerald-600", bg: "bg-emerald-50" };
+          if (ratio >= 3) return { text: "A", color: "text-amber-600", bg: "bg-amber-50" };
+          return { text: "Baixo", color: "text-red-500", bg: "bg-red-50" };
         };
 
-        const backgrounds = [
-          { label: "Branco", bg: "#ffffff", border: true, useDarkLogo: true },
-          { label: "Preto", bg: "#0a0a0a", border: false, useDarkLogo: false },
-          { label: data.colors.primary[0]?.name ?? "Primária", bg: primaryHex, border: false, useDarkLogo: !isDarkBg(primaryHex) },
-          { label: data.colors.primary[1]?.name ?? data.colors.secondary[0]?.name ?? "Secundária", bg: secondaryHex, border: false, useDarkLogo: !isDarkBg(secondaryHex) },
+        // Build backgrounds from ALL brand colors + white + black
+        const allBrandColors = [
+          ...data.colors.primary.map(c => ({ name: c.name, hex: c.hex, type: "primária" })),
+          ...data.colors.secondary.map(c => ({ name: c.name, hex: c.hex, type: "secundária" })),
         ];
+        const backgrounds = [
+          { name: "Branco", hex: "#ffffff", type: "neutro" },
+          { name: "Preto", hex: "#0a0a0a", type: "neutro" },
+          ...allBrandColors.slice(0, 6),
+        ];
+
+        // Estimate logo's dominant color for contrast calculation
+        const logoMainColor = isDark(data.colors.primary[0]?.hex ?? "#000") ? data.colors.primary[0]?.hex ?? "#1a1a1a" : "#1a1a1a";
 
         return (
         <div className="mb-6">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Logo em diferentes fundos</h3>
-          <p className="text-[11px] text-gray-400 mb-3">
-            {darkBgLogo ? "Versão clara e invertida aplicadas automaticamente por contraste." : "Gere a versão invertida (Logo — Versão Invertida) para melhor resultado em fundos escuros."}
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Harmonia da Logo na Paleta</h3>
+          <p className="text-[11px] text-gray-400 mb-4">
+            Como a logo se comporta sobre cada cor da marca. {!darkBgLogo && "Gere a versão invertida para melhor resultado em fundos escuros."}
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-[1.2rem] overflow-hidden border shadow-sm">
-            {backgrounds.map(({ label, bg, border, useDarkLogo }) => {
-              // Pick the right logo version: primary for light backgrounds, dark_bg for dark backgrounds
-              const logoSrc = useDarkLogo ? logoPrimary : (darkBgLogo || logoPrimary);
-              const needsInvert = !useDarkLogo && !darkBgLogo; // No dark version available, apply CSS filter
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {backgrounds.map((bgColor) => {
+              const bgIsDark = isDark(bgColor.hex);
+              const logoSrc = bgIsDark ? (darkBgLogo || logoPrimary) : logoPrimary;
+              const needsInvert = bgIsDark && !darkBgLogo;
+              const ratio = contrastRatio(bgColor.hex, logoMainColor);
+              const harmony = harmonyLabel(bgIsDark && darkBgLogo ? 7 : ratio); // dark version assumed good
 
               return (
               <div
-                key={label}
-                className={`flex flex-col items-center justify-center p-4 h-32 relative group/bg${border ? " border border-gray-100" : ""}`}
-                style={{ backgroundColor: bg }}
+                key={bgColor.hex}
+                className="rounded-xl overflow-hidden border border-gray-100 shadow-sm group/card hover:shadow-md transition-shadow"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logoSrc}
-                  alt={`Logo em ${label}`}
-                  className="max-h-16 max-w-full object-contain transition-transform group-hover/bg:scale-105"
-                  style={needsInvert ? { filter: "invert(1) brightness(1.1)", opacity: 0.9 } : undefined}
-                />
-                <div className="absolute bottom-2 flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full border border-white/30" style={{ backgroundColor: bg }} />
-                  <span className="text-[9px] font-bold" style={{ color: isDarkBg(bg) ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)" }}>
-                    {label}
+                {/* Logo on background */}
+                <div
+                  className="flex items-center justify-center p-5 h-28 relative"
+                  style={{ backgroundColor: bgColor.hex }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={logoSrc}
+                    alt={`Logo em ${bgColor.name}`}
+                    className="max-h-14 max-w-[80%] object-contain transition-transform group-hover/card:scale-105"
+                    style={needsInvert ? { filter: "invert(1) brightness(1.1)", opacity: 0.85 } : undefined}
+                  />
+                </div>
+                {/* Info bar */}
+                <div className="px-3 py-2.5 bg-white flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-4 h-4 rounded-md shrink-0 border border-gray-200" style={{ backgroundColor: bgColor.hex }} />
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-gray-800 truncate">{bgColor.name}</p>
+                      <p className="text-[9px] font-mono text-gray-400">{bgColor.hex}</p>
+                    </div>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${harmony.bg} ${harmony.color}`}>
+                    {harmony.text}
                   </span>
                 </div>
-                <span className="absolute top-2 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover/bg:opacity-100 transition-opacity"
-                  style={{ background: isDarkBg(bg) ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)", color: isDarkBg(bg) ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)" }}
-                >
-                  {bg}
-                </span>
               </div>
               );
             })}
+          </div>
+          {/* Legend */}
+          <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> AAA/AA = Ótimo contraste</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> A = Aceitável</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Baixo = Evitar</span>
           </div>
         </div>
         );
