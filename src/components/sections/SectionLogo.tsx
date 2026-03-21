@@ -255,8 +255,15 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
     if (b.referenceLinks.length > 0) parts.push(`Reference links: ${b.referenceLinks.join(", ")}`);
     const customInstruction = parts.length > 0 ? parts.join(". ") : undefined;
     const refs = b.referenceImages.length > 0 ? b.referenceImages : undefined;
-    return onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
-  }, [onGenerate, getBriefing]);
+    await onGenerate(assetKey, { customInstruction, userReferenceImages: refs });
+
+    // Auto-generate the complementary logo version for full palette coverage
+    if (assetKey === "logo_primary" && !generatedAssets["logo_dark_bg"] && !uploadedLogos[1]) {
+      await onGenerate("logo_dark_bg", { customInstruction, userReferenceImages: refs });
+    } else if (assetKey === "logo_dark_bg" && !generatedAssets["logo_primary"] && !uploadedLogos[0]) {
+      await onGenerate("logo_primary", { customInstruction, userReferenceImages: refs });
+    }
+  }, [onGenerate, getBriefing, generatedAssets, uploadedLogos]);
 
   const handleGenerateSection = useCallback(async () => {
     if (!onGenerate) return;

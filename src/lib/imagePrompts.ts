@@ -1602,8 +1602,15 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "logo_primary": {
       const basePrompt = buildDiffusionLogoPrompt(ctx, data, provider, "light");
+      const paletteColors = [...data.colors.primary, ...data.colors.secondary].slice(0, 6).map(c => `${c.name} (${c.hex})`).join(", ");
       return parts(
-        basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
+        basePrompt,
+        `COLOR SYSTEM FOR LOGO: This is the PRIMARY version on white background. The logo colors must be chosen to:
+1. Look harmonious on pure white (#FFFFFF)
+2. Use brand colors that have enough contrast against white (dark/medium values)
+3. The same mark will be adapted for dark backgrounds — so choose colors that have a clear light/dark counterpart in the palette
+4. Full brand palette for reference: ${paletteColors}
+5. Primary recognition colors should be the most saturated/distinctive brand colors`,
         sTags, q, neg(ctx, provider, `photography, photorealistic, 3D render, mockup, scene, environment, perspective distortion, background texture, table, wood, paper, drop shadow, glow, gradient, bevel, emboss, halo, outer glow, multiple logos, decorative frame, badge border, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept, ${namingNegativeTerms}`),
       );
     }
