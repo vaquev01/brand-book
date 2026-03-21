@@ -1610,9 +1610,27 @@ export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: I
 
     case "logo_dark_bg": {
       const basePrompt = buildDiffusionLogoPrompt(ctx, data, provider, "dark");
+      const allBrandColors = [...data.colors.primary, ...data.colors.secondary].slice(0, 6);
+      const colorAdaptation = allBrandColors.map(c => {
+        const h = c.hex.replace("#", "");
+        const r = parseInt(h.slice(0, 2), 16);
+        const g = parseInt(h.slice(2, 4), 16);
+        const b = parseInt(h.slice(4, 6), 16);
+        const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+        return lum < 0.4 ? `${c.name} (${c.hex}) → use lighter tint for visibility` : `${c.name} (${c.hex}) → keep as is`;
+      }).join("; ");
       return parts(
-        basePrompt, // DO NOT INCLUDE prefix, soul, journey, sensory, or tree! They leak illustrative context.
-        `VARIANT: Dark background version. Create the same conceptual mark (same symbol concept, same construction logic, same proportions) but optimized for dark backgrounds. Primary palette reversed: light elements on ${ctx.primaryColor} or deep brand color background. The mark's meaning and recognition must be identical to the light version.`,
+        basePrompt,
+        `VARIANT: Dark background version — COLOR HARMONY ADAPTATION.
+Same symbol concept, same construction logic, same proportions as the light version.
+CRITICAL COLOR RULES for dark background:
+- Dark colors that were prominent on white become INVISIBLE on dark bg — adapt them.
+- Use lighter tints of dark brand colors (increase brightness 30-50%).
+- White or light elements become the primary structural color.
+- Accent colors may need saturation boost (+10-20%) to pop on dark.
+- The palette MUST still feel like the same brand — same hue family, adjusted value/lightness.
+COLOR ADAPTATION MAP: ${colorAdaptation}.
+The mark's meaning and recognition must be identical to the light version — only the color values change to maintain harmony and contrast on the dark background.`,
         sTags, q, neg(ctx, provider, `photography, photorealistic, 3D render, mockup, scene, environment, bokeh, gradient background, lighting effects, glow, 3D, perspective, bevel, emboss, halo, physical objects, people, buildings, vehicles, nature, literal illustrations, detailed art, drawing, sketch, complex patterns, ambiguous symbol, multiple competing metaphors, ornate micro-details, childish lettering, mascot style, generic ai logo aesthetics, disconnected icon and wordmark, arbitrary monogram, forced punctuation gimmick, decorative symbol unrelated to brand concept, ${namingNegativeTerms}`),
       );
     }

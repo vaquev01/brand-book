@@ -482,30 +482,71 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
         </div>
       </div>
 
-      {/* Multi-background logo preview strip */}
-      {logoPrimary && (
+      {/* Multi-background logo preview strip — uses correct logo version per background */}
+      {logoPrimary && (() => {
+        const darkBgLogo = logoDarkBg;
+        const primaryHex = data.colors.primary[0]?.hex ?? "#006B60";
+        const secondaryHex = data.colors.primary[1]?.hex ?? data.colors.secondary[0]?.hex ?? "#D5A41D";
+
+        // Determine if a background is dark (needs light logo) or light (needs dark logo)
+        const isDarkBg = (hex: string) => {
+          const h = hex.replace("#", "");
+          const r = parseInt(h.slice(0, 2), 16);
+          const g = parseInt(h.slice(2, 4), 16);
+          const b = parseInt(h.slice(4, 6), 16);
+          return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.45;
+        };
+
+        const backgrounds = [
+          { label: "Branco", bg: "#ffffff", border: true, useDarkLogo: true },
+          { label: "Preto", bg: "#0a0a0a", border: false, useDarkLogo: false },
+          { label: data.colors.primary[0]?.name ?? "Primária", bg: primaryHex, border: false, useDarkLogo: !isDarkBg(primaryHex) },
+          { label: data.colors.primary[1]?.name ?? data.colors.secondary[0]?.name ?? "Secundária", bg: secondaryHex, border: false, useDarkLogo: !isDarkBg(secondaryHex) },
+        ];
+
+        return (
         <div className="mb-6">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Logo em diferentes fundos</h3>
+          <p className="text-[11px] text-gray-400 mb-3">
+            {darkBgLogo ? "Versão clara e invertida aplicadas automaticamente por contraste." : "Gere a versão invertida (Logo — Versão Invertida) para melhor resultado em fundos escuros."}
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-[1.2rem] overflow-hidden border shadow-sm">
-            {[
-              { label: "Branco", bg: "#ffffff", border: true },
-              { label: "Preto", bg: "#0a0a0a" },
-              { label: "Primária", bg: data.colors.primary[0]?.hex ?? "#006B60" },
-              { label: "Secundária", bg: data.colors.primary[1]?.hex ?? data.colors.secondary[0]?.hex ?? "#D5A41D" },
-            ].map(({ label, bg, border }) => (
+            {backgrounds.map(({ label, bg, border, useDarkLogo }) => {
+              // Pick the right logo version: primary for light backgrounds, dark_bg for dark backgrounds
+              const logoSrc = useDarkLogo ? logoPrimary : (darkBgLogo || logoPrimary);
+              const needsInvert = !useDarkLogo && !darkBgLogo; // No dark version available, apply CSS filter
+
+              return (
               <div
                 key={label}
-                className={`flex flex-col items-center justify-center p-4 h-28 relative${border ? " border border-gray-100" : ""}`}
+                className={`flex flex-col items-center justify-center p-4 h-32 relative group/bg${border ? " border border-gray-100" : ""}`}
                 style={{ backgroundColor: bg }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={logoPrimary} alt={`Logo em ${label}`} className="max-h-14 max-w-full object-contain" />
-                <span className="absolute bottom-2 text-[9px] font-bold opacity-60" style={{ color: bg === "#ffffff" ? "#666" : "#fff" }}>{label}</span>
+                <img
+                  src={logoSrc}
+                  alt={`Logo em ${label}`}
+                  className="max-h-16 max-w-full object-contain transition-transform group-hover/bg:scale-105"
+                  style={needsInvert ? { filter: "invert(1) brightness(1.1)", opacity: 0.9 } : undefined}
+                />
+                <div className="absolute bottom-2 flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full border border-white/30" style={{ backgroundColor: bg }} />
+                  <span className="text-[9px] font-bold" style={{ color: isDarkBg(bg) ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)" }}>
+                    {label}
+                  </span>
+                </div>
+                <span className="absolute top-2 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover/bg:opacity-100 transition-opacity"
+                  style={{ background: isDarkBg(bg) ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)", color: isDarkBg(bg) ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)" }}
+                >
+                  {bg}
+                </span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Protection zone diagram */}
       {data.logo.clearSpace && (
