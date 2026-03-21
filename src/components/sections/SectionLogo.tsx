@@ -263,12 +263,13 @@ export function SectionLogo({ data, num, generatedImages = {}, uploadedAssets = 
     if (sectionGenerating) return;
     setSectionGenerating(true);
     try {
-      if (!uploadedLogos[0]) await handleGenerateWithDirection("logo_primary");
-      if (!uploadedLogos[1]) await handleGenerateWithDirection("logo_dark_bg");
+      // Always generate both — regeneration replaces existing
+      await handleGenerateWithDirection("logo_primary");
+      await handleGenerateWithDirection("logo_dark_bg");
     } finally {
       setSectionGenerating(false);
     }
-  }, [onGenerate, sectionGenerating, uploadedLogos, handleGenerateWithDirection]);
+  }, [onGenerate, sectionGenerating, handleGenerateWithDirection]);
 
   // ═══ COLOR HARMONY ENGINE ═══
   // Calculates optimal logo color scheme for each brand background
