@@ -155,6 +155,36 @@ export const PROVIDER_RECOMMENDATIONS: Partial<Record<AssetKey, { best: ImagePro
   app_icon: { best: "recraft", why: "Ícones vetoriais limpos" },
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// BRAND DNA SEED — The genetic code that connects ALL visual assets
+// This is computed once and injected into EVERY image generation prompt.
+// The logo is the SEED; every asset is a GROWTH from that seed.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export function buildBrandDNASeed(data: BrandbookData): string {
+  const ctx = extractBrandContext(data);
+  const symbolConcept = data.logo.symbolConcept
+    ?? ((data.logo as unknown as Record<string, Record<string, string>>).semioticAnalysis?.denotation) as string | undefined
+    ?? (data.logo.symbol && !data.logo.symbol.startsWith("http") ? data.logo.symbol : null)
+    ?? `abstract mark encoding: ${ctx.purpose}`;
+
+  const primaryColors = data.colors.primary.slice(0, 3).map(c => `${c.name} ${c.hex}`).join(", ");
+  const accentColor = data.colors.secondary[0] ? `${data.colors.secondary[0].name} ${data.colors.secondary[0].hex}` : "";
+
+  return [
+    `BRAND DNA SEED (this is the genetic code — ALL visuals derive from this):`,
+    `Brand: "${data.brandName}" · ${data.industry}`,
+    `Logo Seed (the origin of all visual decisions): ${symbolConcept}`,
+    `Palette: ${primaryColors}${accentColor ? ` · accent: ${accentColor}` : ""}`,
+    `Typography: ${ctx.displayFont} (display) + ${ctx.bodyFont} (body)`,
+    `Personality: ${ctx.personality}`,
+    `Archetype: ${ctx.archetypalEnergy.split(" — ")[0]}`,
+    `Purpose: ${ctx.purpose}`,
+    ctx.tagline ? `Voice: ${ctx.tagline}` : "",
+    `COHERENCE RULE: Every visual asset must feel genetically connected to the logo seed. The symbol's geometry, rhythm, and energy must echo across patterns, mockups, photography, and applications. A viewer should sense the same brand DNA in every piece.`,
+  ].filter(Boolean).join("\n");
+}
+
 function industryVisualLanguage(industry: string): string {
   const i = industry.toLowerCase();
   if (/saas|software|tech|cloud|ai|data|platform|digital|startup|api|b2b/.test(i))
@@ -1461,12 +1491,13 @@ function buildDiffusionLogoPrompt(
   const isIdeogram = provider === "ideogram";
   const archetype = ctx.archetypalEnergy.split(" — ")[0] ?? "Creator";
   const coreValue = ctx.values.split(",")[0]?.trim() ?? ctx.personality.split(",")[0]?.trim();
-  
-  // Priority chain for logo concept: symbolConcept > semioticAnalysis > non-URL symbol > brand values
+
+  // Priority chain for logo concept
   const symbolConcept = data.logo.symbolConcept
     ?? data.logo.semioticAnalysis?.denotation
     ?? (data.logo.symbol && !data.logo.symbol.startsWith("http") && !data.logo.symbol.toLowerCase().startsWith("abstract symbol for") ? data.logo.symbol : null)
     ?? `abstract mark that visually encodes: ${ctx.purpose}. Archetype: ${archetype}. Core value: ${coreValue}. Industry: ${data.industry}`;
+
   const palette = [ctx.primaryColor, ctx.secondaryColor, ctx.accentColor]
     .filter((color, index, arr) => arr.indexOf(color) === index)
     .slice(0, 3);
@@ -1475,70 +1506,70 @@ function buildDiffusionLogoPrompt(
     .slice(0, 2)
     .map((color) => `${color.name} (${color.hex})`)
     .join(" + ");
-  const coherence = brandCoherenceDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
-  const rebrandCritical = rebrandCriticalModeDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
-  const scorecard = brandCoherenceScorecardDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
-  const planning = creativePlanningDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
-  const consciousness = consciousCreationDirective(ctx, data, variant === "light" ? "logo_primary" : "logo_dark_bg");
-  const execution = logoExecutionDirective(ctx, data);
-  const governance = logoGovernanceDirective(ctx);
 
-  const bg = variant === "light" 
-    ? "pure solid white #FFFFFF background" 
+  const bg = variant === "light"
+    ? "pure solid white #FFFFFF background"
     : "pure solid dark #0a0a0a background";
 
-  // Use LLM generated psychology if available, fallback to hardcoded archetype logic
-  const shapePsychology = (data.logo as any).shapePsychology 
-    ? (data.logo as any).shapePsychology 
-    : getShapePsychology(archetype);
-  const generativeIntent = buildImageGenerationIntentSummary({
-    brandbook: data,
-    assetKey: variant === "dark" ? "logo_dark_bg" : "logo_primary",
-  });
+  const shapePsychology = (data.logo as unknown as Record<string, unknown>).shapePsychology as string | undefined
+    ?? getShapePsychology(archetype);
 
-  // 1. ABSOLUTE MEDIUM & SUBJECT ANCHOR
-  let prompt = provider === "imagen" 
-    ? `A flat 2D vector corporate logo mark. Pure solid-color background. No photorealism, no scenes, no objects, no gradients, no shadows, no 3D effects. If the logo contains text, reproduce the exact canonical brand name "${data.brandName}" with zero spelling drift, punctuation drift, accent drift, or character substitution.\n\nAn isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `
-    : `An isolated, minimalist, flat 2D vector logo graphic for a brand named "${data.brandName}". The output must be a clean corporate logo mark centered on a ${bg}. `;
+  const execution = logoExecutionDirective(ctx, data);
 
-  // 2. FOCUS STRICTLY ON GEOMETRY (DO NOT mention what we don't want, as it triggers attention)
-  prompt += `Focus exclusively on abstract graphic design, pure geometry, and typography. The canvas must remain entirely empty except for the central logo lockup. `;
-  prompt += `Strategic Core: the logo must be the visual consequence of the brand concept, not an isolated decorative idea. Translate the brand's purpose (${ctx.purpose}), unique value (${ctx.uniqueValue}), differentiators (${ctx.differentiators}), personality (${ctx.personality}), and tone of voice (${ctx.toneOfVoice}) into one coherent identity decision. ${coherence} ${rebrandCritical} ${scorecard} ${planning} ${consciousness} ${execution} ${governance} `;
-  prompt += `${generativeIntent} `;
-  prompt += `${logoSoulAnchor(ctx, data)} `;
+  // ═══════════════════════════════════════════════════════════════
+  // SIMPLIFIED LOGO PROMPT — Signal over noise
+  // Structure: Medium → DNA → Concept → Typography → Color → Style
+  // Target: ~3,000 chars (was ~7,200)
+  // ═══════════════════════════════════════════════════════════════
 
-  // Inject archetype-matched structural reference
+  const sections: string[] = [];
+
+  // 1. MEDIUM ANCHOR (50 chars — tells the model WHAT to make)
+  sections.push(
+    provider === "imagen"
+      ? `A flat 2D vector corporate logo mark on ${bg}. No photorealism, no scenes, no 3D.`
+      : `An isolated, minimalist, flat 2D vector logo for "${data.brandName}" centered on ${bg}.`
+  );
+
+  // 2. BRAND DNA SEED (500 chars — who this brand IS)
+  sections.push(buildBrandDNASeed(data));
+
+  // 3. SYMBOL CONCEPT — THE creative brief (400 chars — this is the HEART)
+  sections.push(
+    `SYMBOL CONCEPT (follow precisely — this is the single creative thesis):
+${symbolConcept}
+BUILD the mark around this one idea. Every geometric decision serves this concept. One mark, one thesis, total commitment. Shape Psychology: ${shapePsychology}. ${execution}`
+  );
+
+  // 4. TYPOGRAPHY (300 chars — wordmark requirements)
+  sections.push(
+    `WORDMARK: Feature the exact text "${data.brandName}" in ${ctx.displayFont} typography. Perfectly legible, unchanged spelling/spacing/punctuation.${isIdeogram ? ` PRECISION: preserve every character of "${data.brandName}" exactly as written.` : ""} Symbol and wordmark must feel like ONE coherent system, not disconnected parts.`
+  );
+
+  // 5. STRUCTURAL REFERENCE — 1 principle only (150 chars)
   const structRefs = (LOGO_STRUCTURAL_REFS as Record<string, Array<{mark: string; structure: string; principle: string}>>)[archetype];
   if (structRefs?.length) {
-    const selected = structRefs.slice(0, 2);
-    const refBlock = selected.map(r => `${r.mark}: ${r.principle}`).join(". ");
-    prompt += `STRUCTURAL_REFERENCES (study the construction LOGIC, do NOT copy the visual): ${refBlock}. `;
+    const ref = structRefs[0];
+    sections.push(`CONSTRUCTION PRINCIPLE (study logic, don't copy): ${ref.mark} — ${ref.principle}.`);
   }
 
-  // 3. TYPOGRAPHY
-  const typographyRationale = (data.typography.marketing as any)?.antiBlandingRationale ?? "excellent optical kerning";
-  prompt += `Wordmark: The logo must feature the exact text "${data.brandName}" rendered perfectly in ${ctx.displayFont} style typography. This is mandatory for every provider and must remain perfectly legible with unchanged spelling, spacing, punctuation, and diacritics. Typographic direction: ${typographyRationale}. `;
-  if (isIdeogram) {
-    prompt += `TYPOGRAPHY PRECISION: preserve every character of "${data.brandName}" exactly as written; no substitutions, no omissions, no reinterpretation. `;
-  }
-  prompt += `Visual hierarchy: the main wordmark must be the primary verbal signal. Any descriptor, second line, category label, or supporting text must be visibly subordinate in size and emphasis. Typography must reinforce the same conceptual thesis as the symbol and feel strategically connected to the verbal identity. Symbol and wordmark must feel like one coherent identity system, not disconnected stacked parts. If the brand's strength lives in warmth, spontaneity, signature energy, or colloquial humanity, preserve that in the letterform behavior instead of neutralizing it. `;
-
-  // 4. SHAPE & CONCEPT
-  prompt += `SYMBOL CONCEPT (this is the creative brief — follow it precisely): ${symbolConcept}. BUILD the mark around this single symbolic thesis. Every geometric decision (angle, proportion, weight, intersection) must serve this concept. If the concept describes specific forms, USE those forms. If it describes a metaphor, TRANSLATE that metaphor into geometry. No competing ideas — one mark, one thesis, total commitment. Shape Psychology: ${shapePsychology}. `;
-  prompt += `If a distinctive verbal or naming cue exists — such as punctuation, initials, a ligature, an accent mark, or a signature character — you may integrate it into the symbol only when it emerges naturally from the strategy, strengthens recognition, remains instantly legible, and can be implemented consistently across the identity system. Do not predefine or force this move. When simplifying, preserve what is emotionally or semantically core to the brand instead of flattening it into a generic mark. `;
-  
-  const negativeSpaceMetaphor = (data.logo as any).negativeSpaceMetaphor;
+  // 6. NEGATIVE SPACE (if exists)
+  const negativeSpaceMetaphor = (data.logo as unknown as Record<string, unknown>).negativeSpaceMetaphor as string | undefined;
   if (negativeSpaceMetaphor) {
-    prompt += `OPTIONAL CREATIVE DIRECTION: If it fits naturally, you may use negative space intelligently to hide a visual metaphor (${negativeSpaceMetaphor}), but prioritize clean geometry over forced metaphors. `;
-  } else {
-    prompt += `Focus on clean, simple, unforced geometric shapes. `;
+    sections.push(`OPTIONAL: Use negative space to encode: ${negativeSpaceMetaphor}. Only if it fits naturally.`);
   }
-  
-  // 5. COLORS & STYLE
-  prompt += `Color System: Use a disciplined palette of 2 or 3 principal colors drawn from ${ctx.allColors}. Prioritize ${primaryRecognitionColors || paletteDirective} as the main identity recognition colors, and use ${paletteDirective} as the full working set when needed. The mark must stay coherent on both light and dark backgrounds without relying on gradients, lighting effects, or decorative texture. `;
-  prompt += `Visual Style: timeless 2D flat design, crisp edges, SVG-ready finish, balanced proportions, strong small-size legibility, memorable silhouette, strategically distinctive, premium but never ornamental, never generic.`;
 
-  return prompt;
+  // 7. COLOR SYSTEM (200 chars — palette discipline)
+  sections.push(
+    `COLORS: 2-3 colors from ${ctx.allColors}. Prioritize ${primaryRecognitionColors || paletteDirective}. No gradients, no decorative texture.`
+  );
+
+  // 8. STYLE ANCHOR (100 chars — final quality directive)
+  sections.push(
+    `STYLE: Timeless flat 2D, crisp edges, SVG-ready, strong at small sizes, memorable silhouette, premium but never ornamental.`
+  );
+
+  return sections.join("\n\n");
 }
 
 export function buildImagePrompt(key: AssetKey, data: BrandbookData, provider: ImageProvider): string {
@@ -1687,11 +1718,13 @@ The viewer should discover new details at each zoom level — overall texture at
     }
 
     case "hero_visual": {
+      const brandDNA = buildBrandDNASeed(data);
       const intentCopy = ctx.sampleHeadline
         ? `This image appears beside headline: "${ctx.sampleHeadline}".`
         : `Must visually communicate: ${ctx.uniqueValue}.`;
       return parts(
         prefix,
+        brandDNA,
         `PLATFORM: Website hero / key visual banner for ${B} (${data.industry}) — 16:9 widescreen cinematic composition.`,
         soul, journey,
         `INTENT: This is the brand's first visual handshake with the world. It must establish positioning, credibility, and emotional territory in one image. Not a generic "landing page" — this is a brandbook key visual.`,
@@ -1722,6 +1755,7 @@ The viewer should discover new details at each zoom level — overall texture at
     case "hero_lifestyle": {
       return parts(
         prefix,
+        buildBrandDNASeed(data),
         `PLATFORM: Editorial lifestyle photography for ${B} (${data.industry}) — brandbook application for web, campaigns, and social.`,
         soul, journey,
         `INTENT: Human storytelling. Show a real person living the brand promise — the AFTER state, the desired outcome achieved. This must feel like a documentary moment, not a stock photo.`,
@@ -1772,7 +1806,8 @@ The viewer should discover new details at each zoom level — overall texture at
     case "instagram_story": {
       return parts(
         prefix,
-        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not attempt to render interface text, buttons, follower counts, or navigation elements — these will be unreadable. Generate only the visual content that would appear in this format.`,
+        buildBrandDNASeed(data),
+        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not render interface text, buttons, or navigation.`,
         `A branded Instagram Story visual for ${B}. Full-bleed vertical 9:16 format.`,
         soul, platCtx,
         `THE STORY CONTENT (full-bleed 9:16 behind the UI): Branded visual in ${ctx.primaryColor} dominant, ${ctx.secondaryColor} accent. ${ctx.visualMetaphor} as hero element in the center. Brand pattern or gradient as background. Clean, vertical, mobile-first design.`,
@@ -1789,7 +1824,8 @@ The viewer should discover new details at each zoom level — overall texture at
     case "social_cover": {
       return parts(
         prefix,
-        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not attempt to render interface text, buttons, follower counts, or navigation elements — these will be unreadable. Generate only the visual content that would appear in this format.`,
+        buildBrandDNASeed(data),
+        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not render interface text, buttons, or navigation.`,
         `A branded social media cover banner for ${B}. Wide 16:9 format, suitable for LinkedIn or similar platform header.`,
         soul, platCtx,
         `THE BANNER CONTENT (16:9 inside the LinkedIn frame): Bold brand graphic. Dominant ${ctx.primaryColor} background. ${ctx.visualMetaphor} as abstract geometric/graphic element on the right 60%. Left 35% kept clean (profile photo overlaps here).`,
@@ -1806,7 +1842,8 @@ The viewer should discover new details at each zoom level — overall texture at
     case "social_post_square": {
       return parts(
         prefix,
-        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not attempt to render interface text, buttons, follower counts, or navigation elements — these will be unreadable. Generate only the visual content that would appear in this format.`,
+        buildBrandDNASeed(data),
+        `IMPORTANT: Focus on the CONTENT IMAGE itself, not the platform UI. Do not render interface text, buttons, or navigation.`,
         `A branded social media post image for ${B}. Square 1:1 format for Instagram feed.`,
         soul, platCtx,
         `THE POST IMAGE (square, inside the frame): A strong branded visual — ${ctx.marketingArch}. Bold, single-minded graphic design piece. NOT a random photo — a designed post with clear brand identity.`,
