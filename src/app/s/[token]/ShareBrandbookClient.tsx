@@ -3,8 +3,9 @@
 import { BrandbookViewer } from "@/components/BrandbookViewer"
 import { ClientPortal } from "@/components/ClientPortal"
 import { FontLoader } from "@/components/FontLoader"
-import type { BrandbookData } from "@/lib/types"
-import { useMemo, useState, useEffect, useRef } from "react"
+import type { BrandbookData, GeneratedAsset, UploadedAsset, Colors } from "@/lib/types"
+import { EMPTY_KEYS } from "@/components/ApiKeyConfig"
+import { useMemo, useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 
 const SECTION_IDS = [
@@ -70,9 +71,30 @@ function hexWithAlpha(hex: string, alpha: number): string {
   return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`
 }
 
-export function ShareBrandbookClient({ brandbook, generatedImages, projectName, shareToken }: Props) {
+export function ShareBrandbookClient({ brandbook: initialBrandbook, generatedImages: initialImages, projectName, shareToken }: Props) {
   const [showIntro, setShowIntro] = useState(true)
   const [scrolled, setScrolled] = useState(false)
+
+  // ─── Full editor state for shared access ───
+  const [brandbookData, setBrandbookData] = useState<BrandbookData>(initialBrandbook)
+  const [generatedAssets, setGeneratedAssets] = useState<Record<string, GeneratedAsset>>(() => {
+    const assets: Record<string, GeneratedAsset> = {}
+    for (const [key, url] of Object.entries(initialImages)) {
+      assets[key] = { key, url, provider: "imagen", prompt: "", generatedAt: new Date().toISOString() }
+    }
+    return assets
+  })
+  const [uploadedAssets, setUploadedAssets] = useState<UploadedAsset[]>([])
+
+  const updateBrandbook = useCallback((updater: (prev: BrandbookData) => BrandbookData) => {
+    setBrandbookData(prev => updater(prev))
+  }, [])
+
+  const handleAssetGenerated = useCallback((key: string, asset: GeneratedAsset) => {
+    setGeneratedAssets(prev => ({ ...prev, [key]: asset }))
+  }, [])
+
+  const brandbook = brandbookData
 
   const primaryHex = brandbook.colors?.primary?.[0]?.hex ?? "#111111"
   const accentHex = brandbook.colors?.primary?.[1]?.hex ?? brandbook.colors?.secondary?.[0]?.hex ?? "#6366f1"
@@ -373,7 +395,16 @@ export function ShareBrandbookClient({ brandbook, generatedImages, projectName, 
           <FontLoader data={brandbook} />
           <BrandbookViewer
             data={brandbook}
-            generatedImages={generatedImages}
+            generatedImages={Object.fromEntries(
+              Object.entries(generatedAssets).map(([k, v]) => [k, v.url])
+            )}
+            uploadedAssets={uploadedAssets}
+            generatedAssets={generatedAssets}
+            apiKeys={EMPTY_KEYS}
+            onAssetGenerated={handleAssetGenerated}
+            onSaveToAssets={(asset) => setUploadedAssets(prev => [...prev, asset])}
+            onUpdateColors={(colors: Colors) => updateBrandbook(prev => ({ ...prev, colors }))}
+            onUpdateData={updateBrandbook}
             shareToken={shareToken}
           />
         </motion.main>
